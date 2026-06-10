@@ -4,6 +4,8 @@ Reusable defaults for building AI agents, skills, prompts, and instruction packs
 
 AgentDefaults is intended to be a practical library of agent-building patterns: system instructions, reusable skill definitions, task prompts, workflow templates, evaluation checklists, and implementation notes that can be copied into agentic coding tools, custom assistants, internal automation agents, or AI-enabled developer workflows.
 
+For fast agent discovery and stack selection, see [`INDEX.md`](INDEX.md).
+
 ## Purpose
 
 Modern AI agents are only as good as the defaults they start with. This repository exists to collect well-structured, reusable defaults that help agents behave more consistently, produce higher-quality work, and follow clear operating constraints.
@@ -118,6 +120,7 @@ agentdefaults/
 │   └── agent-handoff.md
 ├── examples/
 │   └── README.md
+├── INDEX.md
 └── README.md
 ```
 
