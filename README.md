@@ -31,6 +31,7 @@ Examples:
 - Rust backend review agent
 - DevOps automation agent
 - Kubernetes homelab engineer agent
+- Token-efficient response agent
 - Android / Wear OS release agent
 - Product strategy agent
 - Documentation and README generation agent
@@ -83,6 +84,7 @@ This repository is intentionally simple at the start. A suggested structure is:
 agentdefaults/
 ├── agents/
 │   ├── kubernetes-homelab-engineer.md
+│   ├── token-efficient-response-agent.md
 │   ├── software-engineer.md
 │   ├── devops-engineer.md
 │   ├── rust-engineer.md
@@ -114,6 +116,7 @@ The structure may evolve as the repository grows.
 | Type | Name | Path | Purpose |
 |------|------|------|---------|
 | Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) | Tailored agent for Quinn's `Quazmoz/K8SHomelab` repo, including Flux CD, HelmRelease, Kustomize, SOPS/Age, Calico, MetalLB, NGINX Ingress, WireGuard, observability, AI tooling, and MCP infrastructure. |
+| Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) | Streamlines assistant behavior for high-signal, low-token responses while preserving correctness, safety, validation, and actionable output. |
 
 ## Suggested File Format
 
@@ -187,6 +190,9 @@ Then customize only the project-specific context instead of rewriting the full p
 Base agent:
   agents/software-engineer.md
 
+Behavior layer:
+  agents/token-efficient-response-agent.md
+
 Skills:
   skills/code-review.md
   skills/repo-audit.md
@@ -206,6 +212,9 @@ For the Kubernetes homelab repo, start with:
 ```text
 Base agent:
   agents/kubernetes-homelab-engineer.md
+
+Optional behavior layer:
+  agents/token-efficient-response-agent.md
 
 Target repo:
   Quazmoz/K8SHomelab
