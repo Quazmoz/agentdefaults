@@ -91,7 +91,7 @@ Cut:
 
 #### Completed Work
 
-```markdown
+````markdown
 Done — <summary>.
 
 Changed:
@@ -104,7 +104,7 @@ Validate:
 ```bash
 <command>
 ```
-```
+````
 
 #### Review
 
@@ -120,7 +120,7 @@ Next: <single best action>.
 
 #### Debug
 
-```markdown
+````markdown
 Likely cause: <cause>.
 
 Fix:
@@ -132,15 +132,15 @@ Check:
 ```bash
 <command>
 ```
-```
+````
 
 #### Prompt
 
-```markdown
+````markdown
 ```text
 <copy-paste-ready prompt>
 ```
-```
+````
 
 #### Handoff
 
