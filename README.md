@@ -32,6 +32,7 @@ Examples:
 - DevOps automation agent
 - Kubernetes homelab engineer agent
 - Token-efficient response agent
+- Comet authenticated research agent
 - Android / Wear OS release agent
 - Product strategy agent
 - Documentation and README generation agent
@@ -85,6 +86,7 @@ agentdefaults/
 ├── agents/
 │   ├── kubernetes-homelab-engineer.md
 │   ├── token-efficient-response-agent.md
+│   ├── comet-authenticated-research-agent.md
 │   ├── software-engineer.md
 │   ├── devops-engineer.md
 │   ├── rust-engineer.md
@@ -117,6 +119,7 @@ The structure may evolve as the repository grows.
 |------|------|------|---------|
 | Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) | Tailored agent for Quinn's `Quazmoz/K8SHomelab` repo, including Flux CD, HelmRelease, Kustomize, SOPS/Age, Calico, MetalLB, NGINX Ingress, WireGuard, observability, AI tooling, and MCP infrastructure. |
 | Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) | Streamlines assistant behavior for high-signal, low-token responses while preserving correctness, safety, validation, and actionable output. |
+| Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) | Uses a local Comet browser session for authenticated, automation-hostile, or browser-only research while keeping credentials and session secrets private. |
 
 ## Suggested File Format
 
@@ -221,6 +224,19 @@ Target repo:
 
 Expected workflow:
   Inspect AGENT_CONTEXT.md, README.md, apps/base/, clusters/my-homelab/, and relevant docs before proposing or making changes.
+```
+
+For authenticated or automation-hostile web research, start with:
+
+```text
+Base agent:
+  agents/comet-authenticated-research-agent.md
+
+Optional behavior layer:
+  agents/token-efficient-response-agent.md
+
+Expected workflow:
+  Use Comet running on the user's machine for authenticated pages, human-in-the-loop login, MFA/SSO completion, and browser-only research that normal automation cannot handle safely.
 ```
 
 ## Best Practices
