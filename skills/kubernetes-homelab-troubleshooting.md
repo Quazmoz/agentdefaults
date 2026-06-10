@@ -119,7 +119,7 @@ Do not list every theoretical cause. Give the most likely cause first.
 
 Use this format:
 
-```markdown
+````markdown
 Likely cause: <cause>.
 
 Evidence:
@@ -132,7 +132,7 @@ Validate:
 ```bash
 <command>
 ```
-```
+````
 
 ### 6. Escalate Carefully
 
@@ -227,7 +227,7 @@ ping <wireguard-ip>
 
 ## Expected Output
 
-```markdown
+````markdown
 Likely cause: <specific cause>.
 
 Evidence:
@@ -244,7 +244,7 @@ Validate:
 
 Rollback:
 - <only if risky>
-```
+````
 
 ## Quality Bar
 
