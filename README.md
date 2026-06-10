@@ -30,6 +30,7 @@ Examples:
 - Full-stack software engineering agent
 - Rust backend review agent
 - DevOps automation agent
+- Kubernetes homelab engineer agent
 - Android / Wear OS release agent
 - Product strategy agent
 - Documentation and README generation agent
@@ -81,6 +82,7 @@ This repository is intentionally simple at the start. A suggested structure is:
 ```text
 agentdefaults/
 ├── agents/
+│   ├── kubernetes-homelab-engineer.md
 │   ├── software-engineer.md
 │   ├── devops-engineer.md
 │   ├── rust-engineer.md
@@ -106,6 +108,12 @@ agentdefaults/
 ```
 
 The structure may evolve as the repository grows.
+
+## Available Defaults
+
+| Type | Name | Path | Purpose |
+|------|------|------|---------|
+| Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) | Tailored agent for Quinn's `Quazmoz/K8SHomelab` repo, including Flux CD, HelmRelease, Kustomize, SOPS/Age, Calico, MetalLB, NGINX Ingress, WireGuard, observability, AI tooling, and MCP infrastructure. |
 
 ## Suggested File Format
 
@@ -191,6 +199,19 @@ Instructions:
 
 Task prompt:
   prompts/review/deep-repository-review.md
+```
+
+For the Kubernetes homelab repo, start with:
+
+```text
+Base agent:
+  agents/kubernetes-homelab-engineer.md
+
+Target repo:
+  Quazmoz/K8SHomelab
+
+Expected workflow:
+  Inspect AGENT_CONTEXT.md, README.md, apps/base/, clusters/my-homelab/, and relevant docs before proposing or making changes.
 ```
 
 ## Best Practices
