@@ -146,7 +146,7 @@ kubectl logs -n <namespace> deploy/<deployment> --tail=100
 
 For a change plan:
 
-```markdown
+````markdown
 ## Plan
 
 - `<file>` — <change>
@@ -165,11 +165,11 @@ For a change plan:
 ## Rollback
 
 <rollback path>
-```
+````
 
 For completed work:
 
-```markdown
+````markdown
 Done — <summary>.
 
 Changed:
@@ -182,7 +182,7 @@ Validate:
 
 Rollback:
 - Revert commit `<sha>` or restore `<file>`.
-```
+````
 
 ## Quality Bar
 
