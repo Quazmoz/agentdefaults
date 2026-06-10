@@ -43,6 +43,11 @@ Skills are reusable task modules that can be composed into larger agents. A skil
 
 Examples:
 
+- Kubernetes GitOps change management
+- Kubernetes homelab troubleshooting
+- Token-efficient response compression
+- Comet authenticated research
+- Comet local bridge safety
 - Code review
 - Repository audit
 - Release readiness review
@@ -92,6 +97,11 @@ agentdefaults/
 │   ├── rust-engineer.md
 │   └── product-strategist.md
 ├── skills/
+│   ├── kubernetes-gitops-change-management.md
+│   ├── kubernetes-homelab-troubleshooting.md
+│   ├── token-efficient-response-compression.md
+│   ├── comet-authenticated-research.md
+│   ├── comet-local-bridge-safety.md
 │   ├── code-review.md
 │   ├── repo-audit.md
 │   ├── release-readiness.md
@@ -120,6 +130,11 @@ The structure may evolve as the repository grows.
 | Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) | Tailored agent for Quinn's `Quazmoz/K8SHomelab` repo, including Flux CD, HelmRelease, Kustomize, SOPS/Age, Calico, MetalLB, NGINX Ingress, WireGuard, observability, AI tooling, and MCP infrastructure. |
 | Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) | Streamlines assistant behavior for high-signal, low-token responses while preserving correctness, safety, validation, and actionable output. |
 | Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) | Uses a local Comet browser session for authenticated, automation-hostile, or browser-only research while keeping credentials and session secrets private. |
+| Skill | Kubernetes GitOps Change Management | [`skills/kubernetes-gitops-change-management.md`](skills/kubernetes-gitops-change-management.md) | Adds, modifies, and reviews Kubernetes resources safely in Flux/Kustomize/HelmRelease repositories. |
+| Skill | Kubernetes Homelab Troubleshooting | [`skills/kubernetes-homelab-troubleshooting.md`](skills/kubernetes-homelab-troubleshooting.md) | Diagnoses Flux, DNS, ingress, MetalLB, Calico, WireGuard, scheduling, storage, and node issues with low-blast-radius steps. |
+| Skill | Token-Efficient Response Compression | [`skills/token-efficient-response-compression.md`](skills/token-efficient-response-compression.md) | Compresses verbose findings, tool results, and implementation details into concise, safe, actionable responses. |
+| Skill | Comet Authenticated Research | [`skills/comet-authenticated-research.md`](skills/comet-authenticated-research.md) | Runs safe human-in-the-loop authenticated research through Comet while avoiding credential/session exposure. |
+| Skill | Comet Local Bridge Safety | [`skills/comet-local-bridge-safety.md`](skills/comet-local-bridge-safety.md) | Designs and reviews safe local Comet bridge command surfaces, confirmations, and threat controls. |
 
 ## Suggested File Format
 
@@ -197,6 +212,7 @@ Behavior layer:
   agents/token-efficient-response-agent.md
 
 Skills:
+  skills/token-efficient-response-compression.md
   skills/code-review.md
   skills/repo-audit.md
   skills/test-plan-generation.md
@@ -219,6 +235,11 @@ Base agent:
 Optional behavior layer:
   agents/token-efficient-response-agent.md
 
+Skills:
+  skills/kubernetes-gitops-change-management.md
+  skills/kubernetes-homelab-troubleshooting.md
+  skills/token-efficient-response-compression.md
+
 Target repo:
   Quazmoz/K8SHomelab
 
@@ -234,6 +255,11 @@ Base agent:
 
 Optional behavior layer:
   agents/token-efficient-response-agent.md
+
+Skills:
+  skills/comet-authenticated-research.md
+  skills/comet-local-bridge-safety.md
+  skills/token-efficient-response-compression.md
 
 Expected workflow:
   Use Comet running on the user's machine for authenticated pages, human-in-the-loop login, MFA/SSO completion, and browser-only research that normal automation cannot handle safely.
