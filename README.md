@@ -35,6 +35,7 @@ Examples:
 - Kubernetes homelab engineer agent
 - Token-efficient response agent
 - Comet authenticated research agent
+- SEO and AI search optimization agent
 - Android / Wear OS release agent
 - Product strategy agent
 - Documentation and README generation agent
@@ -94,6 +95,7 @@ agentdefaults/
 │   ├── kubernetes-homelab-engineer.md
 │   ├── token-efficient-response-agent.md
 │   ├── comet-authenticated-research-agent.md
+│   ├── seo-ai-search-optimization-agent.md
 │   ├── software-engineer.md
 │   ├── devops-engineer.md
 │   ├── rust-engineer.md
@@ -133,6 +135,7 @@ The structure may evolve as the repository grows.
 | Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) | Tailored agent for Quinn's `Quazmoz/K8SHomelab` repo, including Flux CD, HelmRelease, Kustomize, SOPS/Age, Calico, MetalLB, NGINX Ingress, WireGuard, observability, AI tooling, and MCP infrastructure. |
 | Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) | Streamlines assistant behavior for high-signal, low-token responses while preserving correctness, safety, validation, and actionable output. |
 | Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) | Uses a local Comet browser session for authenticated, automation-hostile, or browser-only research while keeping credentials and session secrets private. |
+| Agent | SEO and AI Search Optimization Agent | [`agents/seo-ai-search-optimization-agent.md`](agents/seo-ai-search-optimization-agent.md) | Audits classic SEO and AI-search readiness for websites, apps, GitHub repos, YouTube launches, Product Hunt pages, and consultant/product landing pages. |
 | Skill | Kubernetes GitOps Change Management | [`skills/kubernetes-gitops-change-management.md`](skills/kubernetes-gitops-change-management.md) | Adds, modifies, and reviews Kubernetes resources safely in Flux/Kustomize/HelmRelease repositories. |
 | Skill | Kubernetes Homelab Troubleshooting | [`skills/kubernetes-homelab-troubleshooting.md`](skills/kubernetes-homelab-troubleshooting.md) | Diagnoses Flux, DNS, ingress, MetalLB, Calico, WireGuard, scheduling, storage, and node issues with low-blast-radius steps. |
 | Skill | Token-Efficient Response Compression | [`skills/token-efficient-response-compression.md`](skills/token-efficient-response-compression.md) | Compresses verbose findings, tool results, and implementation details into concise, safe, actionable responses. |
@@ -266,6 +269,22 @@ Skills:
 
 Expected workflow:
   Use Comet running on the user's machine for authenticated pages, human-in-the-loop login, MFA/SSO completion, and browser-only research that normal automation cannot handle safely.
+```
+
+For SEO, AI search visibility, and launch discoverability, start with:
+
+```text
+Base agent:
+  agents/seo-ai-search-optimization-agent.md
+
+Optional behavior layer:
+  agents/token-efficient-response-agent.md
+
+Useful companion for private dashboards:
+  agents/comet-authenticated-research-agent.md
+
+Expected workflow:
+  Inspect the target website, app listing, GitHub repo, YouTube page, Product Hunt page, Search Console export, or analytics data before making recommendations. Produce prioritized classic SEO, AI-search readiness, content, metadata, structured data, internal-link, and measurement fixes.
 ```
 
 ## Best Practices
