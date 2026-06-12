@@ -11,6 +11,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Work on Quinn's Kubernetes homelab | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md`, `skills/kubernetes-homelab-troubleshooting.md`, `skills/token-efficient-response-compression.md` |
 | Make any agent more concise | `agents/token-efficient-response-agent.md` | `skills/token-efficient-response-compression.md` |
 | Research authenticated or automation-hostile sites with Comet | `agents/comet-authenticated-research-agent.md` | `skills/comet-authenticated-research.md`, `skills/comet-local-bridge-safety.md`, `skills/token-efficient-response-compression.md` |
+| Improve classic SEO and AI search visibility | `agents/seo-ai-search-optimization-agent.md` | `skills/token-efficient-response-compression.md` |
 | Design or review a local Comet bridge | `agents/comet-authenticated-research-agent.md` | `skills/comet-local-bridge-safety.md` |
 | Diagnose Kubernetes homelab runtime issues | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-homelab-troubleshooting.md` |
 | Add or modify Kubernetes GitOps manifests | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md` |
@@ -81,6 +82,33 @@ Key guardrails:
 - Use the least invasive page context available.
 - Require confirmation before account-mutating actions.
 - Treat Comet summaries as research aids, not source-of-truth.
+
+### SEO and AI Search Optimization Agent
+
+**Path:** `agents/seo-ai-search-optimization-agent.md`
+
+Use for practical search visibility work across classic SEO, Google AI search features, answer engines, app/product launches, GitHub projects, YouTube videos, Product Hunt pages, and consultant/product landing pages.
+
+Best for:
+
+- Website SEO audits
+- AI-search readiness reviews
+- Consultant site and portfolio optimization
+- Android / Wear OS app landing page optimization
+- Google Play listing and website alignment
+- GitHub README discoverability
+- YouTube and Product Hunt launch discoverability
+- Content gap analysis and topic planning
+- Metadata, schema, internal link, sitemap, robots.txt, and measurement fixes
+- Turning product features into high-intent landing pages and content briefs
+
+Key guardrails:
+
+- Treat AI SEO, AEO, and GEO as extensions of durable SEO fundamentals, not hacks.
+- Do not promise rankings, AI Overview inclusion, or answer-engine citations.
+- Do not recommend keyword stuffing, fake reviews, fake mentions, fake backlinks, doorway pages, cloaking, or scaled low-value AI content.
+- Do not add structured data for content that is not visible to users.
+- Tie recommendations to business outcomes and measurement.
 
 ## Skills
 
@@ -195,6 +223,22 @@ Skills:
   skills/token-efficient-response-compression.md
 ```
 
+### SEO and AI Search Optimization
+
+```text
+Base agent:
+  agents/seo-ai-search-optimization-agent.md
+
+Behavior layer:
+  agents/token-efficient-response-agent.md
+
+Optional for private dashboards:
+  agents/comet-authenticated-research-agent.md
+
+Useful inputs:
+  target URL, business goal, conversion action, analytics/Search Console data, app listing, GitHub repo, YouTube/Product Hunt URLs, competitors, target market
+```
+
 ### Concise General Technical Agent
 
 ```text
@@ -214,6 +258,7 @@ Skills:
 5. For repo work, inspect relevant files before making changes.
 6. For authenticated browsing, keep credentials and session secrets out of agent context.
 7. For risky infrastructure work, include validation and rollback.
+8. For SEO and AI-search work, inspect the actual page, repo, listing, or analytics data before making specific claims when tools are available.
 
 ## Maintenance Rules
 
@@ -229,7 +274,7 @@ When adding a new default:
 
 Current index includes:
 
-- 3 agents
+- 4 agents
 - 5 skills
 
 Future index sections should add prompts, instructions, and examples as they are created.
