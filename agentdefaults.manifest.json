@@ -1,0 +1,7 @@
+{
+  "name": "AgentDefaults",
+  "version": "0.1.0",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, and benchmark artifacts.",
+  "primary_entrypoint": "AGENTS.md",
+  "validation": "scripts/validate-agentdefaults.py"
+}
