@@ -11,6 +11,7 @@ Show how to use AgentDefaults with repository-level assistant instructions and p
 .github/agents/token-economy-orchestrator.agent.md
 .github/agents/terse-technical-coding.agent.md
 .github/agents/token-efficiency-benchmark.agent.md
+.github/agents/palmierpro-video-editor.agent.md
 ```
 
 ## Use
