@@ -1,7 +1,36 @@
 {
   "name": "AgentDefaults",
   "version": "0.1.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, and benchmark artifacts.",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
-  "validation": "scripts/validate-agentdefaults.py"
+  "validation": "scripts/validate-agentdefaults.py",
+  "featured_stacks": [
+    {
+      "name": "Palmier Pro MCP Video Editing",
+      "quickstart": "docs/quickstarts/palmierpro-mcp.md",
+      "agent": "agents/palmierpro-mcp-video-editor-agent.md",
+      "skills": [
+        "skills/palmierpro-mcp-setup-and-safety.md",
+        "skills/palmierpro-timeline-editing.md",
+        "skills/palmierpro-transcript-cuts-and-captions.md",
+        "skills/palmierpro-ai-generation-workflow.md"
+      ],
+      "prompts": [
+        "prompts/palmierpro/full-edit-pass.md",
+        "prompts/palmierpro/transcript-cleanup-pass.md",
+        "prompts/palmierpro/short-form-social-cutdown.md"
+      ],
+      "example": "examples/palmierpro-mcp-workflow.md"
+    },
+    {
+      "name": "Token Economy",
+      "agent": "agents/token-economy-orchestrator.md",
+      "skills": [
+        "skills/context-budgeting-and-pruning.md",
+        "skills/token-output-budgeting.md",
+        "skills/token-efficient-response-compression.md",
+        "skills/token-efficiency-measurement.md"
+      ]
+    }
+  ]
 }
