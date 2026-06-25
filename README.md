@@ -44,6 +44,7 @@ Canonical content:
 agents/   complete reusable agent profiles
 skills/   composable behavior/task modules
 prompts/  copy-paste task prompts and benchmarks
+docs/     integration guides and benchmark artifacts
 ```
 
 Tool wrappers:
@@ -69,6 +70,7 @@ agentdefaults/
 ├── CLAUDE.md
 ├── GEMINI.md
 ├── .github/
+│   ├── FUNDING.yml
 │   ├── copilot-instructions.md
 │   └── agents/
 │       ├── token-economy-orchestrator.agent.md
@@ -102,6 +104,8 @@ agentdefaults/
 │       ├── compress-memory-file.md
 │       └── compare-models.md
 ├── docs/
+│   ├── benchmarks/
+│   │   └── token-efficiency-smoke-test.md
 │   └── tool-integration-guide.md
 ├── INDEX.md
 └── README.md
@@ -126,7 +130,7 @@ agentdefaults/
 | Agent | SEO and AI Search Optimization Agent | [`agents/seo-ai-search-optimization-agent.md`](agents/seo-ai-search-optimization-agent.md) | Classic SEO and AI-search visibility reviews. |
 | Skill | Token-Efficient Response Compression | [`skills/token-efficient-response-compression.md`](skills/token-efficient-response-compression.md) | Compresses verbose output safely. |
 | Skill | Context Budgeting and Pruning | [`skills/context-budgeting-and-pruning.md`](skills/context-budgeting-and-pruning.md) | Reduces input/context token usage. |
-| Skill | Token Output Budgeting | [`skills/token-output-budgeting.md`](skills/token-output-budgeting.md) | Applies verbosity modes and compact response templates. |
+| Skill | Token Output Budgeting | [`skills/token-output-budgeting.md`](skills/token-output-budgeting.md) | Applies verbosity modes, compact response templates, and validation micro-examples. |
 | Skill | Prompt and Memory Compression | [`skills/prompt-and-memory-compression.md`](skills/prompt-and-memory-compression.md) | Compresses reusable prompt/memory files. |
 | Skill | Token Efficiency Measurement | [`skills/token-efficiency-measurement.md`](skills/token-efficiency-measurement.md) | Measures savings and quality regressions. |
 | Prompt | Common Task Token Efficiency Benchmark | [`prompts/token-efficiency/common-task-benchmark.md`](prompts/token-efficiency/common-task-benchmark.md) | Benchmarks baseline vs candidate prompts. |
@@ -134,6 +138,7 @@ agentdefaults/
 | Prompt | Compress Memory or Instruction File | [`prompts/token-efficiency/compress-memory-file.md`](prompts/token-efficiency/compress-memory-file.md) | Compresses recurring instruction files. |
 | Prompt | Compare Models for Token Efficiency | [`prompts/token-efficiency/compare-models.md`](prompts/token-efficiency/compare-models.md) | Tests prompt behavior across models. |
 | Guide | Tool Integration Guide | [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) | Explains usage by tool and wrapper type. |
+| Benchmark | Token Efficiency Smoke Test | [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md) | Documents the initial local IDE-agent token-efficiency smoke-test result. |
 
 ## Usage
 
@@ -194,6 +199,7 @@ prompts/token-efficiency/agent-retrofit.md
 skills/token-efficiency-measurement.md
 prompts/token-efficiency/common-task-benchmark.md
 prompts/token-efficiency/compare-models.md
+docs/benchmarks/token-efficiency-smoke-test.md
 ```
 
 ### GitHub Copilot Custom Agents
@@ -228,6 +234,7 @@ required_files=(
   "GEMINI.md"
   "INDEX.md"
   "README.md"
+  ".github/FUNDING.yml"
   ".github/copilot-instructions.md"
   ".github/agents/token-economy-orchestrator.agent.md"
   ".github/agents/terse-technical-coding.agent.md"
@@ -235,6 +242,7 @@ required_files=(
   ".cursor/rules/agentdefaults.mdc"
   ".windsurfrules"
   "docs/tool-integration-guide.md"
+  "docs/benchmarks/token-efficiency-smoke-test.md"
   "agents/token-efficient-response-agent.md"
   "agents/token-economy-orchestrator.md"
   "agents/terse-technical-coding-agent.md"
@@ -273,6 +281,7 @@ paths = [
     Path(".github/copilot-instructions.md"),
     *Path(".github/agents").glob("*.agent.md"),
     Path("docs/tool-integration-guide.md"),
+    Path("docs/benchmarks/token-efficiency-smoke-test.md"),
 ]
 failures = []
 
@@ -287,7 +296,7 @@ if failures:
     print("\n".join(failures))
     raise SystemExit(1)
 
-print(f"Structure check passed for {len(paths)} Markdown defaults and wrappers.")
+print(f"Structure check passed for {len(paths)} Markdown defaults, wrappers, and benchmark artifacts.")
 PY
 ```
 
@@ -366,6 +375,8 @@ Average quality drop:           <= 0.5 points
 Safety/production tasks:        no quality drop allowed
 Validation/citations/risks:     preserved when required
 ```
+
+Initial local smoke-test results are documented in [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md).
 
 ### 6. Tool Compatibility Test
 
