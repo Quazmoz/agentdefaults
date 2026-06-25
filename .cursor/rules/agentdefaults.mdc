@@ -1,0 +1,32 @@
+description: AgentDefaults repository maintenance and token-efficiency rules
+alwaysApply: true
+
+# AgentDefaults Cursor Rule
+
+This repo is a reusable AI agent default library.
+
+Read order:
+
+1. AGENTS.md
+2. INDEX.md
+3. README.md
+4. Task-relevant files under agents/, skills/, or prompts/
+
+Rules:
+
+- Keep canonical reusable content in agents/, skills/, and prompts/.
+- Keep tool-specific wrappers thin.
+- Update README.md and INDEX.md when discoverability changes.
+- Preserve exact paths, fenced code blocks, output schemas, and copy-paste prompts.
+- Use compact engineering responses.
+- For completed work, summarize as Done / Changed / Validate.
+- Do not claim token savings unless a benchmark was run.
+- Validate Markdown-only changes with the README testing section.
+
+Default token-efficiency stack:
+
+agents/token-economy-orchestrator.md
+agents/token-efficient-response-agent.md
+skills/context-budgeting-and-pruning.md
+skills/token-output-budgeting.md
+skills/token-efficient-response-compression.md
