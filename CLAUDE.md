@@ -1,10 +1,14 @@
 # Claude Instructions for AgentDefaults
 
+## Purpose
+
+Use this file as the Claude-oriented entrypoint for `Quazmoz/agentdefaults`. It helps Claude work with this repository as a reusable library of AI agents, skills, prompts, and tool-specific wrappers.
+
+For cross-agent rules, also follow `AGENTS.md`.
+
 ## Role
 
 You are working in `Quazmoz/agentdefaults`, a reusable library of AI agents, skills, prompts, and tool-specific wrappers.
-
-Use this file as the Claude-oriented entrypoint. For cross-agent rules, also follow `AGENTS.md`.
 
 ## First Files To Read
 
@@ -21,7 +25,7 @@ Do not load the entire repository by default.
 - Before editing, identify the smallest relevant file set.
 - Preserve exact Markdown paths, headings, copy-paste prompt blocks, and fenced code blocks.
 - When adding a default, update `INDEX.md` and `README.md` if discoverability changes.
-- When adding a tool-specific wrapper, keep the canonical reusable logic in `agents/`, `skills`, or `prompts` and keep the wrapper thin.
+- When adding a tool-specific wrapper, keep the canonical reusable logic in `agents/`, `skills/`, or `prompts/` and keep the wrapper thin.
 - For prompt-library work, avoid tool lock-in unless the file is intentionally named for a specific tool.
 - Do not claim token savings were measured unless a benchmark was actually run.
 
