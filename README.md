@@ -1,201 +1,102 @@
+<div align="center">
+
 # AgentDefaults
 
-Reusable defaults for building AI agents, skills, prompts, instruction packs, and tool-specific agent wrappers.
+**Reusable defaults for AI agents, skills, prompts, wrappers, examples, and benchmarkable token-efficiency workflows.**
 
-AgentDefaults is a practical library of agent-building patterns that can be copied into agentic coding tools, custom assistants, internal automation agents, IDE agents, MCP workflows, or local model runners.
+![Markdown](https://img.shields.io/badge/content-Markdown-blue)
+![Agent UX](https://img.shields.io/badge/focus-agent%20UX-purple)
+![Token Efficiency](https://img.shields.io/badge/token%20efficiency-benchmarked-brightgreen)
+![Self Hosted Friendly](https://img.shields.io/badge/local%20models-friendly-orange)
 
-For fast agent discovery and stack selection, see [`INDEX.md`](INDEX.md).
+[Start with the User Guide](docs/user-guide.md) · [Browse the Index](INDEX.md) · [Run Validation](scripts/validate-agentdefaults.py) · [View Benchmarks](docs/benchmarks/token-efficiency-fresh-2026-06-25.md)
 
-## Purpose
+</div>
 
-Modern AI agents need reliable defaults: system instructions, reusable skills, task prompts, context rules, benchmark prompts, and tool-specific wrappers.
+---
 
-Use this repository to:
+## Why This Exists
+
+Modern AI engineering work needs reusable defaults: agent roles, behavior skills, task prompts, tool-specific instruction wrappers, validation checks, and benchmark artifacts.
+
+AgentDefaults helps you:
 
 - Bootstrap coding, DevOps, automation, research, product, or documentation agents.
-- Reuse proven prompts instead of rewriting instructions from scratch.
-- Maintain consistent behavior across Claude, Gemini, GitHub Copilot, Cursor, Windsurf, Codex-style agents, and custom tools.
-- Build composable skill packs for repeatable workflows.
-- Reduce context, tool-result, and output token waste without sacrificing correctness or safety.
-- Benchmark whether concise prompts actually improve common task performance.
+- Keep behavior consistent across repo-aware coding tools, chat models, local models, and IDE assistants.
+- Reduce input/context/output token waste without sacrificing correctness or validation.
+- Benchmark concise-agent behavior instead of assuming shorter prompts are better.
+- Reuse proven instruction stacks instead of rewriting the same agent setup every time.
 
-## Compatibility Targets
+## Start In 60 Seconds
 
-| Tool / Runner | Primary Files | Purpose |
+```bash
+git clone https://github.com/Quazmoz/agentdefaults.git
+cd agentdefaults
+python3 scripts/validate-agentdefaults.py
+```
+
+Then choose a path:
+
+| I want to... | Start here |
+|---|---|
+| Pick the right files quickly | [`docs/user-guide.md`](docs/user-guide.md) |
+| Use a local repo-aware coding CLI | [`docs/quickstarts/cli.md`](docs/quickstarts/cli.md) |
+| Use Claude-style repo instructions | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
+| Use Gemini-style repo instructions | [`docs/quickstarts/gemini.md`](docs/quickstarts/gemini.md) |
+| Use editor rule files | [`docs/quickstarts/editor.md`](docs/quickstarts/editor.md) |
+| Use repository assistant profile wrappers | [`docs/quickstarts/repo-assistant.md`](docs/quickstarts/repo-assistant.md) |
+| Add a new reusable default | [`docs/patterns/default.md`](docs/patterns/default.md) |
+| Copy a ready-made example | [`examples/`](examples/) |
+
+## The Core Model
+
+AgentDefaults separates **canonical reusable content** from **thin tool wrappers**.
+
+| Layer | Folder / File | Purpose |
 |---|---|---|
-| Generic agents / Codex-style agents | [`AGENTS.md`](AGENTS.md), [`INDEX.md`](INDEX.md) | Broad repository-level instructions and stack selection. |
-| Claude / Claude Code | [`CLAUDE.md`](CLAUDE.md), [`AGENTS.md`](AGENTS.md), [`INDEX.md`](INDEX.md) | Claude-oriented entrypoint with shared generic rules. |
-| Gemini / Gemini CLI | [`GEMINI.md`](GEMINI.md), [`AGENTS.md`](AGENTS.md), [`INDEX.md`](INDEX.md) | Gemini-oriented entrypoint with shared generic rules. |
-| GitHub Copilot repository instructions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Repo-wide Copilot behavior and maintenance rules. |
-| GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) | Selectable Copilot agent profile wrappers. |
-| Cursor | [`.cursor/rules/agentdefaults.mdc`](.cursor/rules/agentdefaults.mdc) | Cursor rule wrapper pointing back to canonical files. |
-| Windsurf | [`.windsurfrules`](.windsurfrules) | Windsurf rule wrapper pointing back to canonical files. |
-| Any chat model | `agents/`, `skills/`, `prompts/` | Copy-paste reusable agent stacks. |
+| Entrypoints | [`AGENTS.md`](AGENTS.md), [`CLAUDE.md`](CLAUDE.md), [`GEMINI.md`](GEMINI.md) | Broad repo-level instructions for supported tools. |
+| Tool wrappers | [`.github/copilot-instructions.md`](.github/copilot-instructions.md), [`.github/agents/`](.github/agents/) | Tool-native profiles that point back to canonical files. |
+| Editor rules | [`.cursor/rules/agentdefaults.mdc`](.cursor/rules/agentdefaults.mdc), [`.windsurfrules`](.windsurfrules) | Thin editor integration files. |
+| Agents | [`agents/`](agents/) | Full reusable agent profiles. |
+| Skills | [`skills/`](skills/) | Composable behavior and task modules. |
+| Prompts | [`prompts/`](prompts/) | Copy-paste benchmark and task prompts. |
+| Docs | [`docs/`](docs/) | Quickstarts, integration guides, patterns, and benchmarks. |
+| Examples | [`examples/`](examples/) | Practical copy-paste recipes. |
+| Manifest | [`agentdefaults.manifest.json`](agentdefaults.manifest.json) | Machine-readable repo summary. |
 
-For setup details, see [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md).
-
-## Repository Model
-
-AgentDefaults separates **canonical reusable content** from **tool-specific wrappers**.
-
-Canonical content:
-
-```text
-agents/   complete reusable agent profiles
-skills/   composable behavior/task modules
-prompts/  copy-paste task prompts and benchmarks
-docs/     integration guides and benchmark artifacts
-```
-
-Tool wrappers:
-
-```text
-AGENTS.md
-CLAUDE.md
-GEMINI.md
-.github/copilot-instructions.md
-.github/agents/*.agent.md
-.cursor/rules/agentdefaults.mdc
-.windsurfrules
-docs/tool-integration-guide.md
-```
-
-Rule: update canonical content first, then keep wrappers thin and discoverable.
-
-## Recommended Repository Structure
-
-```text
-agentdefaults/
-├── AGENTS.md
-├── CLAUDE.md
-├── GEMINI.md
-├── .github/
-│   ├── FUNDING.yml
-│   ├── copilot-instructions.md
-│   └── agents/
-│       ├── token-economy-orchestrator.agent.md
-│       ├── terse-technical-coding.agent.md
-│       └── token-efficiency-benchmark.agent.md
-├── .cursor/
-│   └── rules/
-│       └── agentdefaults.mdc
-├── .windsurfrules
-├── agents/
-│   ├── kubernetes-homelab-engineer.md
-│   ├── token-efficient-response-agent.md
-│   ├── token-economy-orchestrator.md
-│   ├── terse-technical-coding-agent.md
-│   ├── comet-authenticated-research-agent.md
-│   └── seo-ai-search-optimization-agent.md
-├── skills/
-│   ├── token-efficient-response-compression.md
-│   ├── context-budgeting-and-pruning.md
-│   ├── token-output-budgeting.md
-│   ├── prompt-and-memory-compression.md
-│   ├── token-efficiency-measurement.md
-│   ├── kubernetes-gitops-change-management.md
-│   ├── kubernetes-homelab-troubleshooting.md
-│   ├── comet-authenticated-research.md
-│   └── comet-local-bridge-safety.md
-├── prompts/
-│   └── token-efficiency/
-│       ├── common-task-benchmark.md
-│       ├── agent-retrofit.md
-│       ├── compress-memory-file.md
-│       └── compare-models.md
-├── docs/
-│   ├── benchmarks/
-│   │   ├── token-efficiency-smoke-test.md
-│   │   └── token-efficiency-fresh-2026-06-25.md
-│   └── tool-integration-guide.md
-├── INDEX.md
-└── README.md
-```
-
-## Available Defaults
-
-| Type | Name | Path | Purpose |
-|---|---|---|---|
-| Entrypoint | Generic Agent Instructions | [`AGENTS.md`](AGENTS.md) | Broad tool-agnostic entrypoint for AI coding agents. |
-| Entrypoint | Claude Instructions | [`CLAUDE.md`](CLAUDE.md) | Claude-oriented repo instructions that reference shared generic rules. |
-| Entrypoint | Gemini Instructions | [`GEMINI.md`](GEMINI.md) | Gemini-oriented repo instructions that reference shared generic rules. |
-| Copilot | Copilot Instructions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Repository-wide GitHub Copilot behavior. |
-| Copilot Agent | Token Economy Orchestrator | [`.github/agents/token-economy-orchestrator.agent.md`](.github/agents/token-economy-orchestrator.agent.md) | Copilot wrapper for token economy work. |
-| Copilot Agent | Terse Technical Coding Agent | [`.github/agents/terse-technical-coding.agent.md`](.github/agents/terse-technical-coding.agent.md) | Copilot wrapper for terse coding and repo maintenance. |
-| Copilot Agent | Token Efficiency Benchmark Agent | [`.github/agents/token-efficiency-benchmark.agent.md`](.github/agents/token-efficiency-benchmark.agent.md) | Copilot wrapper for token benchmark reports. |
-| Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) | Kubernetes homelab and GitOps specialist. |
-| Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) | High-signal, low-token behavior layer. |
-| Agent | Token Economy Orchestrator | [`agents/token-economy-orchestrator.md`](agents/token-economy-orchestrator.md) | Manages input, tool, and output token budgets. |
-| Agent | Terse Technical Coding Agent | [`agents/terse-technical-coding-agent.md`](agents/terse-technical-coding-agent.md) | Senior-engineer coding behavior with focused diffs. |
-| Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) | Safe authenticated/browser research workflow. |
-| Agent | SEO and AI Search Optimization Agent | [`agents/seo-ai-search-optimization-agent.md`](agents/seo-ai-search-optimization-agent.md) | Classic SEO and AI-search visibility reviews. |
-| Skill | Token-Efficient Response Compression | [`skills/token-efficient-response-compression.md`](skills/token-efficient-response-compression.md) | Compresses verbose output safely. |
-| Skill | Context Budgeting and Pruning | [`skills/context-budgeting-and-pruning.md`](skills/context-budgeting-and-pruning.md) | Reduces input/context token usage. |
-| Skill | Token Output Budgeting | [`skills/token-output-budgeting.md`](skills/token-output-budgeting.md) | Applies verbosity modes, compact response templates, and validation micro-examples. |
-| Skill | Prompt and Memory Compression | [`skills/prompt-and-memory-compression.md`](skills/prompt-and-memory-compression.md) | Compresses reusable prompt/memory files. |
-| Skill | Token Efficiency Measurement | [`skills/token-efficiency-measurement.md`](skills/token-efficiency-measurement.md) | Measures savings and quality regressions. |
-| Prompt | Common Task Token Efficiency Benchmark | [`prompts/token-efficiency/common-task-benchmark.md`](prompts/token-efficiency/common-task-benchmark.md) | Benchmarks baseline vs candidate prompts. |
-| Prompt | Token Efficiency Agent Retrofit | [`prompts/token-efficiency/agent-retrofit.md`](prompts/token-efficiency/agent-retrofit.md) | Adds token-efficiency behavior to existing agents. |
-| Prompt | Compress Memory or Instruction File | [`prompts/token-efficiency/compress-memory-file.md`](prompts/token-efficiency/compress-memory-file.md) | Compresses recurring instruction files. |
-| Prompt | Compare Models for Token Efficiency | [`prompts/token-efficiency/compare-models.md`](prompts/token-efficiency/compare-models.md) | Tests prompt behavior across models. |
-| Guide | Tool Integration Guide | [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) | Explains usage by tool and wrapper type. |
-| Benchmark | Token Efficiency Smoke Test | [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md) | Documents the initial local IDE-agent token-efficiency smoke-test result. |
-| Benchmark | Token Efficiency Fresh Benchmark | [`docs/benchmarks/token-efficiency-fresh-2026-06-25.md`](docs/benchmarks/token-efficiency-fresh-2026-06-25.md) | Documents the fresh third-pass local benchmark after validation micro-examples. |
-
-## Usage
-
-Copy the relevant agent, skill, prompt, or instruction into your target tool.
-
-General pattern:
-
-```text
-Base / entrypoint:
-  AGENTS.md or tool-specific file
-
-Behavior layer:
-  agents/token-economy-orchestrator.md
-  agents/token-efficient-response-agent.md
-
-Skills:
-  skills/context-budgeting-and-pruning.md
-  skills/token-output-budgeting.md
-  skills/token-efficient-response-compression.md
-
-Task:
-  <your task>
-```
+Rule: **update canonical content first, then keep wrappers thin and discoverable.**
 
 ## Recommended Stacks
 
-### Concise General Technical Agent
+### Token Economy Stack
+
+Use when you want smaller outputs, narrower context, and measurable savings.
 
 ```text
+AGENTS.md
 agents/token-economy-orchestrator.md
 agents/token-efficient-response-agent.md
 skills/context-budgeting-and-pruning.md
 skills/token-output-budgeting.md
 skills/token-efficient-response-compression.md
+skills/token-efficiency-measurement.md
 ```
 
-### Terse Coding Agent
+### Terse Coding Stack
+
+Use when you want focused implementation work with compact status reporting.
 
 ```text
+AGENTS.md
 agents/terse-technical-coding-agent.md
 skills/context-budgeting-and-pruning.md
 skills/token-output-budgeting.md
 skills/token-efficient-response-compression.md
 ```
 
-### Prompt and Memory Compression
+### Benchmark Stack
 
-```text
-skills/prompt-and-memory-compression.md
-skills/token-efficiency-measurement.md
-prompts/token-efficiency/compress-memory-file.md
-prompts/token-efficiency/agent-retrofit.md
-```
-
-### Benchmark Token Improvements
+Use when you want to measure baseline vs candidate behavior.
 
 ```text
 skills/token-efficiency-measurement.md
@@ -205,198 +106,108 @@ docs/benchmarks/token-efficiency-smoke-test.md
 docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 ```
 
-### GitHub Copilot Custom Agents
+## Tool Compatibility
 
-```text
-.github/agents/token-economy-orchestrator.agent.md
-.github/agents/terse-technical-coding.agent.md
-.github/agents/token-efficiency-benchmark.agent.md
-```
+| Tool / Runner | Primary file(s) | Notes |
+|---|---|---|
+| Generic repo-aware agents | [`AGENTS.md`](AGENTS.md) | Base instruction file for broad compatibility. |
+| Claude / Claude Code | [`CLAUDE.md`](CLAUDE.md) | Claude-oriented wrapper, delegates shared rules to `AGENTS.md`. |
+| Gemini / Gemini CLI | [`GEMINI.md`](GEMINI.md) | Gemini-oriented wrapper, delegates shared rules to `AGENTS.md`. |
+| GitHub Copilot repo instructions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Repo-wide behavior and maintenance rules. |
+| GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) | Selectable profile wrappers. |
+| Cursor | [`.cursor/rules/agentdefaults.mdc`](.cursor/rules/agentdefaults.mdc) | Thin rule wrapper pointing back to canonical files. |
+| Windsurf | [`.windsurfrules`](.windsurfrules) | Thin wrapper pointing back to canonical files. |
+| Any chat/local model | [`agents/`](agents/), [`skills/`](skills/), [`prompts/`](prompts/) | Copy-paste the smallest useful stack. |
 
-After committing these files to the default branch, refresh the Copilot/GitHub agent UI and check whether the descriptions appear.
+## Available Defaults
 
-## Testing the Defaults
+| Type | Name | Path |
+|---|---|---|
+| Agent | Token Economy Orchestrator | [`agents/token-economy-orchestrator.md`](agents/token-economy-orchestrator.md) |
+| Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) |
+| Agent | Terse Technical Coding Agent | [`agents/terse-technical-coding-agent.md`](agents/terse-technical-coding-agent.md) |
+| Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) |
+| Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) |
+| Agent | SEO and AI Search Optimization Agent | [`agents/seo-ai-search-optimization-agent.md`](agents/seo-ai-search-optimization-agent.md) |
+| Skill | Context Budgeting and Pruning | [`skills/context-budgeting-and-pruning.md`](skills/context-budgeting-and-pruning.md) |
+| Skill | Token Output Budgeting | [`skills/token-output-budgeting.md`](skills/token-output-budgeting.md) |
+| Skill | Token-Efficient Response Compression | [`skills/token-efficient-response-compression.md`](skills/token-efficient-response-compression.md) |
+| Skill | Prompt and Memory Compression | [`skills/prompt-and-memory-compression.md`](skills/prompt-and-memory-compression.md) |
+| Skill | Token Efficiency Measurement | [`skills/token-efficiency-measurement.md`](skills/token-efficiency-measurement.md) |
+| Prompt | Common Task Token Efficiency Benchmark | [`prompts/token-efficiency/common-task-benchmark.md`](prompts/token-efficiency/common-task-benchmark.md) |
+| Prompt | Compare Models for Token Efficiency | [`prompts/token-efficiency/compare-models.md`](prompts/token-efficiency/compare-models.md) |
 
-This repository is mostly Markdown, so testing means validating three things:
+For the full list, use [`INDEX.md`](INDEX.md).
 
-1. Files are present, discoverable, and internally linked.
-2. Each agent/skill/prompt has the required structure.
-3. The token-efficiency pack reduces tokens without materially reducing answer quality.
+## Examples
 
-### 1. Static Repository Check
+| Recipe | Use |
+|---|---|
+| [`examples/coding.md`](examples/coding.md) | Build a compact coding workflow. |
+| [`examples/benchmark.md`](examples/benchmark.md) | Run a token-efficiency benchmark. |
+| [`examples/compression.md`](examples/compression.md) | Compress prompt, memory, or instruction files. |
+| [`examples/handoff.md`](examples/handoff.md) | Create compact continuation handoffs. |
+| [`examples/local-model.md`](examples/local-model.md) | Use AgentDefaults with a chat/local model. |
+| [`examples/repository-profile.md`](examples/repository-profile.md) | Use a thin repository profile wrapper. |
 
-From a local clone, run:
+## Patterns For New Defaults
 
-```bash
-git clone https://github.com/Quazmoz/agentdefaults.git
-cd agentdefaults
+| Pattern | Use |
+|---|---|
+| [`docs/patterns/default.md`](docs/patterns/default.md) | Generic reusable default structure. |
+| [`docs/patterns/skill.md`](docs/patterns/skill.md) | New skill structure. |
+| [`docs/patterns/prompt.md`](docs/patterns/prompt.md) | New prompt structure. |
+| [`docs/patterns/benchmark.md`](docs/patterns/benchmark.md) | New benchmark artifact structure. |
 
-required_files=(
-  "AGENTS.md"
-  "CLAUDE.md"
-  "GEMINI.md"
-  "INDEX.md"
-  "README.md"
-  ".github/FUNDING.yml"
-  ".github/copilot-instructions.md"
-  ".github/agents/token-economy-orchestrator.agent.md"
-  ".github/agents/terse-technical-coding.agent.md"
-  ".github/agents/token-efficiency-benchmark.agent.md"
-  ".cursor/rules/agentdefaults.mdc"
-  ".windsurfrules"
-  "docs/tool-integration-guide.md"
-  "docs/benchmarks/token-efficiency-smoke-test.md"
-  "docs/benchmarks/token-efficiency-fresh-2026-06-25.md"
-  "agents/token-efficient-response-agent.md"
-  "agents/token-economy-orchestrator.md"
-  "agents/terse-technical-coding-agent.md"
-  "skills/token-efficient-response-compression.md"
-  "skills/context-budgeting-and-pruning.md"
-  "skills/token-output-budgeting.md"
-  "skills/prompt-and-memory-compression.md"
-  "skills/token-efficiency-measurement.md"
-  "prompts/token-efficiency/common-task-benchmark.md"
-  "prompts/token-efficiency/agent-retrofit.md"
-  "prompts/token-efficiency/compress-memory-file.md"
-  "prompts/token-efficiency/compare-models.md"
-)
+## Validation
 
-for file in "${required_files[@]}"; do
-  test -f "$file" || { echo "missing: $file"; exit 1; }
-done
-
-echo "All required integration and token-efficiency files exist."
-```
-
-### 2. Markdown Structure Check
+Run the reusable validator instead of copying long snippets from the README:
 
 ```bash
-python3 - <<'PY'
-from pathlib import Path
-
-required_sections = ["## Purpose"]
-paths = [
-    *Path("agents").glob("*.md"),
-    *Path("skills").glob("*.md"),
-    *Path("prompts/token-efficiency").glob("*.md"),
-    Path("AGENTS.md"),
-    Path("CLAUDE.md"),
-    Path("GEMINI.md"),
-    Path(".github/copilot-instructions.md"),
-    *Path(".github/agents").glob("*.agent.md"),
-    Path("docs/tool-integration-guide.md"),
-    Path("docs/benchmarks/token-efficiency-smoke-test.md"),
-    Path("docs/benchmarks/token-efficiency-fresh-2026-06-25.md"),
-]
-failures = []
-
-for path in paths:
-    text = path.read_text(encoding="utf-8")
-    missing = [section for section in required_sections if section not in text]
-    if missing:
-        failures.append(f"{path}: missing {', '.join(missing)}")
-
-if failures:
-    print("Structure check failed:")
-    print("\n".join(failures))
-    raise SystemExit(1)
-
-print(f"Structure check passed for {len(paths)} Markdown defaults, wrappers, and benchmark artifacts.")
-PY
+python3 scripts/validate-agentdefaults.py
 ```
 
-### 3. Link and Path Check
+It checks:
 
-```bash
-python3 - <<'PY'
-import re
-from pathlib import Path
+- Required files exist.
+- Markdown defaults include `## Purpose`.
+- Local Markdown links resolve.
 
-failures = []
-for md in Path(".").rglob("*.md"):
-    text = md.read_text(encoding="utf-8")
-    for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
-        if target.startswith(("http://", "https://", "#")):
-            continue
-        if not any(target.endswith(ext) for ext in [".md", ".mdc", ".agent.md", ".windsurfrules"]):
-            continue
-        resolved = (md.parent / target).resolve()
-        if not resolved.exists():
-            failures.append(f"{md}: broken link -> {target}")
+## Benchmark Evidence
 
-if failures:
-    print("Broken links:")
-    print("\n".join(failures))
-    raise SystemExit(1)
+| Artifact | Result | Scope |
+|---|---:|---|
+| [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md) | 38.8% average output savings | Initial local IDE-agent smoke test. |
+| [`docs/benchmarks/token-efficiency-fresh-2026-06-25.md`](docs/benchmarks/token-efficiency-fresh-2026-06-25.md) | 35.4% average output savings | Fresh third-pass local benchmark after validation micro-examples. |
 
-print("Markdown link check passed.")
-PY
-```
+These are repo-internal validation artifacts, not public benchmark claims. For stronger evidence, run [`prompts/token-efficiency/compare-models.md`](prompts/token-efficiency/compare-models.md) across multiple model classes with exact provider token counts.
 
-### 4. Agent Smoke Test
-
-Paste this into any model or IDE agent after adding the token-efficiency stack:
+## Repository Map
 
 ```text
-Use the AgentDefaults token economy stack:
-- agents/token-economy-orchestrator.md
-- agents/token-efficient-response-agent.md
-- skills/context-budgeting-and-pruning.md
-- skills/token-output-budgeting.md
-- skills/token-efficient-response-compression.md
-
-Task:
-Explain why a React component re-renders when a parent passes an inline object prop. Give the cause, fix, and validation check in under 120 words.
+agentdefaults/
+├── AGENTS.md
+├── CLAUDE.md
+├── GEMINI.md
+├── agentdefaults.manifest.json
+├── scripts/
+│   └── validate-agentdefaults.py
+├── docs/
+│   ├── user-guide.md
+│   ├── ux-roadmap.md
+│   ├── quickstarts/
+│   ├── patterns/
+│   └── benchmarks/
+├── examples/
+├── agents/
+├── skills/
+├── prompts/
+├── .github/
+├── .cursor/
+├── .windsurfrules
+├── INDEX.md
+└── README.md
 ```
-
-Expected result:
-
-- Starts with the cause.
-- Uses compact technical language.
-- Gives a fix such as stable object identity, `useMemo`, or moving the object outside render.
-- Includes a validation check.
-- Avoids generic React background.
-
-### 5. Token-Efficiency Benchmark
-
-Use [`prompts/token-efficiency/common-task-benchmark.md`](prompts/token-efficiency/common-task-benchmark.md) to compare a baseline agent against a token-efficient candidate.
-
-Minimum process:
-
-```text
-1. Run the same task with the baseline prompt.
-2. Run the same task with the token-efficiency stack.
-3. Count input and output tokens using API usage, model logs, tokenizer output, or approximate chars / 4.
-4. Score quality from 1-5 using skills/token-efficiency-measurement.md.
-5. Adopt only if output tokens drop and quality stays within the allowed threshold.
-```
-
-Suggested pass criteria:
-
-```text
-Average output-token reduction: >= 30%
-Average net-token reduction:    >= 20% when input/tool tokens are counted
-Average quality drop:           <= 0.5 points
-Safety/production tasks:        no quality drop allowed
-Validation/citations/risks:     preserved when required
-```
-
-Initial local smoke-test results are documented in [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md). Fresh third-pass results after validation micro-examples are documented in [`docs/benchmarks/token-efficiency-fresh-2026-06-25.md`](docs/benchmarks/token-efficiency-fresh-2026-06-25.md).
-
-### 6. Tool Compatibility Test
-
-For each supported tool:
-
-```text
-Claude:  confirm CLAUDE.md and AGENTS.md are picked up or manually attached.
-Gemini:  confirm GEMINI.md and AGENTS.md are picked up or manually attached.
-Copilot: confirm .github/copilot-instructions.md applies and .github/agents/*.agent.md profiles appear.
-Cursor:  confirm .cursor/rules/agentdefaults.mdc applies.
-Windsurf: confirm .windsurfrules applies.
-Generic: paste AGENTS.md + selected stack into the model.
-```
-
-Then run the Agent Smoke Test above.
 
 ## Token Efficiency Philosophy
 
@@ -406,33 +217,22 @@ Then run the Agent Smoke Test above.
 - Benchmark quality separately from token savings.
 - Keep prompts usable across hosted frontier models, coding agents, and local LLMs.
 
-## Best Practices
-
-When adding new defaults:
-
-1. Prefer clear instructions over clever wording.
-2. State the expected output format.
-3. Define the agent's scope and non-goals.
-4. Include quality checks.
-5. Avoid embedding secrets, private URLs, credentials, or environment-specific values.
-6. Keep prompts modular and reusable.
-7. Update `README.md`, `INDEX.md`, and `docs/tool-integration-guide.md` when adding a new tool wrapper.
-8. For token-efficiency defaults, include measurement guidance.
-
-## Status
-
-Early but usable scaffold for cross-tool agent defaults.
-
 ## Contributing
 
 Before adding a new default, ask:
 
-- Is this reusable across more than one project?
-- Is the expected output clear?
-- Does it define enough context for an agent to perform well?
-- Are safety boundaries and destructive-action limits explicit?
-- Can another engineer quickly adapt it?
-- Can token-efficiency claims be measured or at least estimated honestly?
+1. Is this reusable across more than one project?
+2. Is the expected output clear?
+3. Does it define enough context for an agent to perform well?
+4. Are safety boundaries and destructive-action limits explicit?
+5. Can another engineer quickly adapt it?
+6. Can token-efficiency claims be measured or honestly estimated?
+
+Use [`docs/patterns/default.md`](docs/patterns/default.md) for new reusable content.
+
+## Status
+
+Usable cross-tool scaffold with benchmarked token-efficiency defaults, tool wrappers, quickstarts, examples, patterns, and validation tooling.
 
 ## License
 
