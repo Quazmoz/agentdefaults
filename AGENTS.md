@@ -18,6 +18,7 @@ Use this repository as a reusable library of agents, skills, prompts, and instru
 - `CLAUDE.md` — Claude-oriented entrypoint.
 - `GEMINI.md` — Gemini-oriented entrypoint.
 - `docs/tool-integration-guide.md` — integration guide by tool.
+- `docs/quickstarts/palmierpro-mcp.md` — Palmier Pro MCP video-editing quickstart.
 
 ## Default Operating Rules
 
