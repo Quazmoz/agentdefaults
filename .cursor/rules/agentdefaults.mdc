@@ -23,7 +23,7 @@ Rules:
 - Use compact engineering responses.
 - For completed work, summarize as Done / Changed / Validate.
 - Do not claim token savings unless a benchmark was run.
-- Validate Markdown-only changes with the README testing section.
+- Validate Markdown-only changes by running `python3 scripts/validate-agentdefaults.py`.
 
 Default token-efficiency stack:
 

@@ -40,6 +40,18 @@ Quality           Human/rubric score for correctness and usefulness
 
 Do not claim improvement from output savings alone if quality drops materially.
 
+## Token Counting Methods
+
+Pick the most accurate method available and always record which one you used:
+
+1. Provider usage metadata from API/tool logs (most accurate).
+2. Native tokenizer for the exact model.
+3. Compatible tokenizer from the same model family.
+4. Generic tokenizer when the family is unknown.
+5. Approximation `ceil(characters / 4)` for English-heavy text (least accurate).
+
+Label any result that uses methods 4-5 as `approx` and avoid over-precise percentages.
+
 ## Benchmark Procedure
 
 ### 1. Freeze Test Conditions
@@ -178,7 +190,7 @@ A compact benchmark report with savings, quality, and adoption decision.
 ```text
 Measure token-efficiency impact for this agent/prompt/skill. Compare baseline vs candidate under the same model, settings, tools, task text, and context.
 
-For each task, record input tokens, output tokens, tool calls, tool/result tokens if available, quality score from 1-5, and notes. If no tokenizer is available, estimate tokens as ceil(characters / 4) and mark approximate.
+For each task, record input tokens, output tokens, tool calls, tool/result tokens if available, the counting method used, quality score from 1-5, and notes. Prefer provider usage metadata, then a native or compatible tokenizer; if none is available, estimate tokens as ceil(characters / 4) and mark approximate.
 
 Calculate input_saved_pct, output_saved_pct, and net_saved_pct. Score quality separately; candidate passes only if quality is no more than 0.5 points below baseline, and safety/production tasks must match or exceed baseline quality.
 

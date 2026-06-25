@@ -51,4 +51,4 @@ skills/token-efficiency-measurement.md
 
 ## Validation
 
-For Markdown-only changes, use the testing commands in `README.md` under `Testing the Defaults`.
+For Markdown-only changes, run the validator from the `README.md` `Validation` section: `python3 scripts/validate-agentdefaults.py`.

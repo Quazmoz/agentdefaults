@@ -79,10 +79,10 @@ prompts/token-efficiency/compare-models.md
 
 ## Validation
 
-For Markdown-only changes, validate with the README testing section:
+For Markdown-only changes, run the validator described in the README "Validation" section:
 
-```text
-README.md → Testing the Defaults
+```bash
+python3 scripts/validate-agentdefaults.py
 ```
 
 For token-efficiency claims, use:

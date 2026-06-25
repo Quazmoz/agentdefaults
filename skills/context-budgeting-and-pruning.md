@@ -16,6 +16,7 @@ Use when:
 - The agent is repeatedly reading the same context
 - You want smaller prompts without losing key facts
 - You need a compact handoff to another model or session
+- A system prompt, RAG/retrieval payload, MCP tool output, or memory store is bloated and needs an input-token audit
 
 Do not use to remove required citations, exact errors, security details, or user constraints.
 
@@ -51,22 +52,35 @@ Use this priority order for engineering tasks:
 7. Broad repo search
 8. Generated/vendor/lock/build files only when directly relevant
 
-### 3. Use a Context Ledger
+### 3. Classify Each Context Block
 
-Maintain a compact ledger while working:
+Tag every candidate block (file, doc, log, retrieved chunk, memory, prior turn, tool output) so the keep/cut decision is explicit, not vibes-based:
+
+| Tag | Meaning | Action |
+|-----|---------|--------|
+| `required` | Needed for safety, correctness, or an explicit user constraint | Keep as-is |
+| `useful` | Improves quality but not strictly required | Keep snippet |
+| `replaceable` | Can become a shorter summary or pointer | Compress |
+| `duplicate` | Already represented elsewhere | Drop |
+| `stale` | Old or superseded by newer context | Drop |
+| `risky` | Contains secrets/private data/unneeded PII | Drop or redact |
+
+### 4. Use a Context Ledger
+
+Maintain a compact ledger while working. Pair each source with an action: `keep` (as-is), `snippet` (exact lines/facts only), `summary` (compact rewrite), `pointer` (cite path/URL; read only if needed), `drop`, or `redact`.
 
 ```markdown
 Context ledger:
 - Goal: <task>
 - Known: <facts>
 - Open question: <only blockers>
-- Relevant files: `<path>`, `<path>`
+- Sources: `<path>` → snippet, `<doc>` → pointer, `<log>` → summary
 - Do not need: <excluded context>
 ```
 
 Do not print the ledger unless it helps the user or becomes a handoff.
 
-### 4. Prune Aggressively
+### 5. Prune Aggressively
 
 Remove or avoid:
 
@@ -88,7 +102,7 @@ Keep:
 - Decisions already made
 - Validation results
 
-### 5. Summarize Long Inputs
+### 6. Summarize Long Inputs
 
 When an input is large, compress it into:
 
@@ -103,7 +117,25 @@ Discarded:
 - <why remaining content not needed>
 ```
 
-### 6. Handoff Before Context Overflow
+### 7. Scope Retrieval and Memory
+
+For RAG/retrieval context:
+
+- Retrieve narrowly by entity, timeframe, and task intent; cap chunks per source.
+- Prefer a few diverse high-confidence sources over many near-duplicates.
+- Summarize retrieved chunks into a fact table before generating; keep citation/source IDs, not full documents, unless the answer needs exact wording.
+
+For injected memory:
+
+- Include a memory only when it affects the current answer.
+- Prefer durable preferences and project facts over incidental history.
+- Drop outdated or contradictory memory unless resolving it is the task.
+
+### 8. Redact Risky Context
+
+Never load unnecessary secrets, API keys, OAuth tokens, cookies, session/local storage, private keys, MFA codes, or raw PII unrelated to the task. Prefer a synthetic or summarized example over a full customer/user record.
+
+### 9. Handoff Before Context Overflow
 
 When the session is long, produce:
 
@@ -152,7 +184,7 @@ Avoid:
 ```text
 Apply context budgeting. Load only the smallest context needed for the task. Prioritize user-provided requirements/errors, direct files, adjacent tests/usages, config, and docs before broad search. Avoid generated/vendor/build outputs unless directly relevant.
 
-Maintain a compact context ledger: goal, known facts, open blockers, relevant files, excluded context. Summarize large inputs into relevant facts and exact identifiers. Preserve user constraints, exact errors, file paths, safety boundaries, and validation results. Prune duplicates and superseded context.
+Classify each candidate block as required, useful, replaceable, duplicate, stale, or risky. Maintain a compact context ledger pairing each source with an action: keep, snippet, summary, pointer, drop, or redact. Summarize large inputs into relevant facts and exact identifiers. For RAG, retrieve narrowly and keep source IDs over full documents; for memory, include only what affects the current answer. Never load unnecessary secrets, tokens, cookies, private keys, or raw PII.
 
-If context gets long, produce a handoff with goal, done, current state, relevant files, next steps, constraints, and validation status.
+Preserve user constraints, exact errors, file paths, safety boundaries, and validation results. Prune duplicates and superseded context. If context gets long, produce a handoff with goal, done, current state, relevant files, next steps, constraints, and validation status.
 ```

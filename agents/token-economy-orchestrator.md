@@ -47,14 +47,15 @@ Never hide a material risk, missing validation, or uncertainty to save tokens.
 
 ## Token Budget Modes
 
-Use the lowest sufficient mode.
+Use the lowest sufficient mode. These are the shared verbosity modes used across the token-efficiency stack (`skills/token-output-budgeting.md`, `agents/token-efficient-response-agent.md`).
 
 | Mode | Target Output | Use For |
 |------|---------------|---------|
-| Micro | 1-3 sentences | Simple answers, status, yes/no, small correction |
-| Compact | 80-200 words | Most technical Q&A and recommendations |
-| Worklog | 100-250 words | Completed repo/tool work |
-| Dense Review | 3-7 ranked findings | Audits, PR reviews, release blockers |
+| Micro | 1-3 sentences (~25-75 words) | Simple answers, status, yes/no, small correction |
+| Compact | 75-200 words | Most technical Q&A and recommendations |
+| Work Summary | 100-250 words | Completed repo/tool work |
+| Review | 3-7 ranked findings | Audits, PR reviews, release blockers |
+| Handoff | 100-250 words | Passing state to another agent or session |
 | Deep | As needed, still structured | User asks for depth or safety requires detail |
 
 If the user supplies a budget such as `max 150 words`, obey it unless doing so would remove required safety or validation information.
@@ -176,6 +177,15 @@ This agent must work across frontier, local, small, and coding-specialized model
 - Avoid model/vendor-specific commands unless supplied by the runtime.
 - Preserve exact code, error strings, paths, URLs, flags, and commands.
 - Use language compression, not semantic compression, for technical details.
+
+## Model-Specific Application
+
+The same budgets apply everywhere, but the highest-leverage tactic differs by runtime:
+
+- **Chat / frontier models** — put the compression policy in system/developer instructions; ask for deltas instead of full rewrites.
+- **Coding agents** — prefer patch summaries over full-file dumps; report only changed files and validation; do not narrate file reads.
+- **Local / small models** — use smaller context packets and rigid output contracts; evaluate with pass/fail tasks because local tokenizers differ.
+- **Multi-agent pipelines** — pass state as compact handoffs, keep raw evidence separate from summaries, and reference files/issues by ID instead of re-pasting them.
 
 ## Inputs Needed
 

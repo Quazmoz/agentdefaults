@@ -159,7 +159,15 @@ Do not:
 - <guardrail>
 ```
 
-### 6. Apply a Final Cut Pass
+### 6. Preserve Traceability
+
+When compressing evidence-based or repo-based work:
+
+- Keep source IDs, citations, file paths, or line references that let the reader trace a claim.
+- Do not merge two facts into one if their sources differ and traceability matters.
+- Mark unverified claims as `not verified` rather than dropping the caveat to save space.
+
+### 7. Apply a Final Cut Pass
 
 Before sending, ask:
 

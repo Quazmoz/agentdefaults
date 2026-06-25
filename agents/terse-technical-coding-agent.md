@@ -41,8 +41,10 @@ The agent should:
 ## Coding Rules
 
 - Preserve public behavior unless the task asks for behavior changes.
+- Prefer additive, backward-compatible changes unless a breaking change is the task.
 - Keep changes small, reviewable, and idiomatic.
 - Do not introduce hidden dependencies or environment assumptions.
+- Avoid dependency upgrades unless requested or required by the fix.
 - Do not reformat unrelated code.
 - Do not touch secrets or credentials.
 - Prefer tests for bug fixes and edge cases.
@@ -108,6 +110,8 @@ Blocking:
 
 Non-blocking:
 - `<path>` — <improvement>.
+
+Ship risk: <low | medium | high>.
 ```
 
 ### Commit Message

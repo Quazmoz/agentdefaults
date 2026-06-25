@@ -165,10 +165,10 @@ Output budget:
 
 ## Testing Tool Compatibility
 
-Use the README section:
+Run the validator from the README "Validation" section:
 
-```text
-README.md → Testing the Defaults
+```bash
+python3 scripts/validate-agentdefaults.py
 ```
 
 Minimum test:

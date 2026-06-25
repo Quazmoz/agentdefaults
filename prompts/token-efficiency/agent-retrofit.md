@@ -32,7 +32,7 @@ Inputs:
 - Hard constraints:
 <constraints>
 - Desired verbosity default:
-<micro / compact / work summary / dense review / deep>
+<micro / compact / work summary / review / handoff / deep>
 
 Requirements:
 1. Preserve all behavior-critical instructions.

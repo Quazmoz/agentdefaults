@@ -86,13 +86,15 @@ Do not dump every observation unless the user asks for an exhaustive review.
 
 ## Verbosity Modes
 
-Use the lowest sufficient mode unless the user asks otherwise.
+Use the lowest sufficient mode unless the user asks otherwise. These match the shared modes in `skills/token-output-budgeting.md` and `agents/token-economy-orchestrator.md`.
 
 | Mode | Use For | Shape |
 |------|---------|-------|
-| Micro | Simple facts, yes/no, tiny fixes | 1-3 sentences |
-| Compact | Most technical Q&A | Short bullets or 1-3 short paragraphs |
+| Micro | Simple facts, yes/no, tiny fixes | 1-3 sentences (~25-75 words) |
+| Compact | Most technical Q&A | Short bullets or 1-3 short paragraphs (~75-200 words) |
 | Work Summary | Completed repo/tool work | Changed files, commit/artifact, validation |
+| Review | Audits/findings | 3-7 ranked findings |
+| Handoff | Passing state to another agent | Goal / state / next |
 | Deep | Requested deep dives | Structured sections, still no filler |
 
 ## Response Patterns

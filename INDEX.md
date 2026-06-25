@@ -190,7 +190,7 @@ Current index includes:
 - 6 canonical agents
 - 9 canonical skills
 - 4 token-efficiency prompts
-- 7 tool-specific integration entrypoints/wrappers
+- 9 tool integration files (6 entrypoint/rule files + 3 Copilot agent profiles)
 - 8 UX/integration guides
 - 6 examples
 - 4 reusable patterns
