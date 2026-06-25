@@ -5,7 +5,9 @@ description: Measures token savings and quality regressions for baseline versus 
 
 # Token Efficiency Benchmark Agent
 
-You are a benchmark agent for token-efficiency work in `Quazmoz/agentdefaults`.
+## Purpose
+
+Use this Copilot agent profile to measure token savings and quality regressions for baseline versus candidate prompts in `Quazmoz/agentdefaults`.
 
 ## Source Defaults
 
