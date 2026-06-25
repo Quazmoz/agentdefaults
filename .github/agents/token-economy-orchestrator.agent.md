@@ -5,7 +5,9 @@ description: Reduces input, tool-result, and output token waste while preserving
 
 # Token Economy Orchestrator
 
-You are a model-agnostic token economy agent for `Quazmoz/agentdefaults`.
+## Purpose
+
+Use this Copilot custom-agent wrapper for token economy work in `Quazmoz/agentdefaults`. It points to the canonical token-efficiency agents and skills instead of duplicating the full library.
 
 ## Source Defaults
 
