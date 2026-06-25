@@ -26,8 +26,8 @@ Workflow:
 1. Call get_timeline and get_media.
 2. Use get_transcript, inspect_media, and/or search_media to find the strongest self-contained proof moment.
 3. Select a segment with a clear hook, useful proof/demo, and clean ending.
-4. Remove filler, dead air, repeated starts, and unnecessary context.
-5. Add captions for spoken content.
+4. Remove filler, dead air, repeated starts, and unnecessary context. If the clip uses a recording's opening, trim the OBS/screen-recorder intro so it starts on real content.
+5. Add burned-in captions for spoken content (short-form/Shorts are the only formats that get subtitles).
 6. Add short text hooks or callouts only where they improve clarity.
 7. Verify key visual/caption placement with inspect_timeline.
 

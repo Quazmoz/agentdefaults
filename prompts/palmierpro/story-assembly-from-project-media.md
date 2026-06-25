@@ -44,21 +44,23 @@ Workflow:
    - result or lesson learned
    - caveats, limitations, cost/platform constraints, or review notes
    - close/CTA if present in the footage
-8. If the user asked for an actual edit, create a reviewable first-pass timeline using Palmier tools. Prefer moving/placing existing media, transcript cleanup, captions, and text callouts. Do not use paid generation/upscale unless I explicitly approve.
+8. If the user asked for an actual edit, create a reviewable first-pass timeline using Palmier tools. Prefer moving/placing existing media, transcript cleanup, and text callouts. Do not use paid generation/upscale unless I explicitly approve.
 9. If the user asked only for analysis, do not edit the timeline. Return the editorial map and proposed timeline sequence.
 
 Editing rules:
 - Treat all timing as Palmier project frames.
 - Do not assume content from filenames.
+- Trim the capture-software intro (OBS Studio / screen recorder) from the start of each source recording so every clip begins on real content, not the capture window.
+- Add transitions where relevant — fade in/out at the open/close and a quick dip-to-black at major scene changes — using opacity keyframes (set_keyframes). Keep clean cuts within a continuous scene.
 - Use inspect_media and transcript evidence before describing a clip.
 - Use get_transcript and remove_words for word-aligned cleanup after clips are on the timeline.
 - Preserve technical nuance and caveats. Do not make the creator sound more certain than the footage supports.
 - Keep screen recordings, terminal output, code, app UI, dashboards, Play Console views, GitHub views, and editor timelines visible long enough for technical viewers to understand.
 - Favor a strong technical YouTube arc over chronological raw-recording order.
 - Remove or demote rambling setup, repeated takes, failed starts, dead air, loading pauses, and duplicated explanations.
-- Add captions and concise callouts only where they improve comprehension.
+- Add concise callouts only where they improve comprehension. Do not overlay captions/subtitles on long-form — captions are burned in for Shorts only.
 - Prefer high-CTR but accurate callouts such as "AI EDITED THIS", "ONE PROMPT APP?", "MCP WORKFLOW", "LOCAL AI TEST", "PLAY STORE RESULT", or similarly short text only when supported by the footage.
-- Verify important visual/caption/callout placement with inspect_timeline.
+- Verify important visual/callout placement with inspect_timeline.
 - Do not delete source media or folders.
 - Do not export unless I ask.
 
@@ -138,13 +140,13 @@ Cut/demote:
 - Repeated setup takes, long loading pauses, and duplicate explanations.
 
 Manual review:
-- Confirm captions over terminal/editor footage do not block commands or UI state.
+- Confirm callouts over terminal/editor footage do not block commands or UI state.
 ```
 
 For editing use:
 
 ```text
-Done — assembled a proof-first AI-engineering story arc from the project media, promoted the strongest demo moments, demoted repeated setup takes, and added captions/callouts where they improve clarity. Review the caveats section before export.
+Done — assembled a proof-first AI-engineering story arc from the project media, promoted the strongest demo moments, demoted repeated setup takes, and added callouts where they improve clarity. Review the caveats section before export.
 ```
 
 ## Quality Bar

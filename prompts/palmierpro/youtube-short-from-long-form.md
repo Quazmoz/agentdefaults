@@ -37,7 +37,7 @@ Workflow:
 4. Create a vertical Shorts timeline or section using Palmier tools. Use set_project_settings if needed and available for 9:16 vertical output.
 5. Place the screen recording/app/code/demo as the main visual whenever it carries the proof.
 6. Place Quinn's facecam as picture-in-picture only where it improves trust, reaction, or narration.
-7. Add captions and concise hook/callout text.
+7. Add burned-in captions (Shorts are the only format that gets subtitles) and concise hook/callout text.
 8. Verify layout, captions, facecam placement, and important UI visibility with inspect_timeline.
 9. Do not export unless I ask.
 

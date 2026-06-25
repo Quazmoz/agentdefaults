@@ -6,6 +6,8 @@ Provide a reusable workflow for transcript-driven editing, filler-word removal, 
 
 Use this skill when the user wants a talking-head video, tutorial, demo, podcast segment, interview, or screen recording tightened without manually calculating every frame.
 
+**Caption scope:** the transcript-cleanup steps apply to any video, but burned-in captions are for vertical Shorts / short-form clips only. Do not add a caption track to long-form (16:9) videos unless the user explicitly asks — long-form uses callouts and lower-thirds via add_texts instead.
+
 ## When To Use
 
 Use this skill for:
@@ -17,7 +19,7 @@ Use this skill for:
 - cleaning stumbles
 - tightening long pauses
 - finding a quote or topic in spoken media
-- creating captions
+- creating captions (Shorts / short-form only)
 - verifying what remains audible after edits
 - converting long-form footage into clean spoken segments
 

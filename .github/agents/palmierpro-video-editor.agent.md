@@ -40,7 +40,7 @@ prompts/palmierpro/short-form-social-cutdown.md
 - Treat Palmier timing as project frames.
 - Use `get_transcript` and `remove_words` for word-aligned speech cleanup.
 - Re-read `get_transcript` after `remove_words` before cutting more words.
-- Use `add_captions` for automatic captions.
+- Use `add_captions` for automatic captions on Shorts/short-form only — never caption long-form (16:9) videos.
 - Use `inspect_timeline` to verify important visual overlays and placement.
 - Confirm before paid generation, upscaling, source media deletion, folder deletion, or overwrite exports.
 - Do not export unless requested.
@@ -51,7 +51,7 @@ prompts/palmierpro/short-form-social-cutdown.md
 - Clean a talking-head tutorial.
 - Build a first-pass YouTube edit.
 - Create a short-form social cutdown.
-- Add captions and callouts.
+- Add callouts, and burned-in captions for Shorts.
 - Place existing b-roll.
 - Propose AI generation prompts for approval.
 - Export a review file after user request.

@@ -125,6 +125,8 @@ Rules:
 - Audio clips belong on audio tracks.
 - Clips on the same track overwrite/trim/split existing material when placed with `add_clips`.
 - Use `insert_clips` when the edit should ripple without overwriting existing clips.
+- Trim the capture-software intro (OBS Studio / screen recorder) from the start of every source recording: each separately-recorded clip usually opens on the capture window for ~0.5–1s before cutting to the screenshare/app. Inspect each recording's first second, then `ripple_delete_ranges` that pre-roll so the clip starts on real content.
+- Add transitions where relevant — a fade in/out at the open/close and a quick dip-to-black at major scene changes (e.g. slides↔code, between distinct demos). Palmier has no transition tool: build dips with `set_keyframes` on `opacity` (outgoing clip's last ~7 frames → 0, incoming clip's first ~7 frames 0 → 1), or overlap two clips on separate tracks for a true crossfade. Keep narration continuous under the dip, and keep clean cuts within a continuous scene.
 - Use `inspect_timeline` to verify actual composited visuals, overlay placement, layer order, and transitions.
 
 ### 4. Handle Transcript Editing Correctly
@@ -158,7 +160,9 @@ After a cut, transcript indices shift. Re-read the transcript before cutting mor
 
 ### 5. Caption and Text Overlay Rules
 
-For automatic captions:
+**Captions policy:** burn captions into vertical Shorts / short-form clips only. Never overlay subtitles on long-form (16:9) videos — long-form gets title cards, lower thirds, and callouts via `add_texts`, but no caption track. Add captions to a long-form edit only if the user explicitly asks.
+
+For automatic captions (Shorts/short-form only):
 
 ```text
 call add_captions
@@ -187,7 +191,8 @@ centerY: 0.9 -> near bottom
 Keep overlays readable on mobile:
 
 - Short phrases.
-- High contrast.
+- High contrast: use bold accent colors, not a flat white/gray that blends into the footage.
+- `add_texts` has no background-box or stroke option; for legibility over mixed/busy footage, stack a black (or contrasting) offset copy of the text on a lower track as a drop shadow, with the colored text on top.
 - Avoid crowding captions and lower thirds in the same vertical area.
 - Verify with `inspect_timeline` after adding important text.
 
@@ -275,7 +280,7 @@ Minimal map:
 Default response style after editing:
 
 ```text
-Done — tightened the intro, removed repeated takes, added captions, and placed the app-demo callout.
+Done — tightened the intro, removed repeated takes, and placed the app-demo callout.
 ```
 
 Use longer responses only when:
