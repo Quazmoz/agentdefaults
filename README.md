@@ -105,7 +105,8 @@ agentdefaults/
 │       └── compare-models.md
 ├── docs/
 │   ├── benchmarks/
-│   │   └── token-efficiency-smoke-test.md
+│   │   ├── token-efficiency-smoke-test.md
+│   │   └── token-efficiency-fresh-2026-06-25.md
 │   └── tool-integration-guide.md
 ├── INDEX.md
 └── README.md
@@ -139,6 +140,7 @@ agentdefaults/
 | Prompt | Compare Models for Token Efficiency | [`prompts/token-efficiency/compare-models.md`](prompts/token-efficiency/compare-models.md) | Tests prompt behavior across models. |
 | Guide | Tool Integration Guide | [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) | Explains usage by tool and wrapper type. |
 | Benchmark | Token Efficiency Smoke Test | [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md) | Documents the initial local IDE-agent token-efficiency smoke-test result. |
+| Benchmark | Token Efficiency Fresh Benchmark | [`docs/benchmarks/token-efficiency-fresh-2026-06-25.md`](docs/benchmarks/token-efficiency-fresh-2026-06-25.md) | Documents the fresh third-pass local benchmark after validation micro-examples. |
 
 ## Usage
 
@@ -200,6 +202,7 @@ skills/token-efficiency-measurement.md
 prompts/token-efficiency/common-task-benchmark.md
 prompts/token-efficiency/compare-models.md
 docs/benchmarks/token-efficiency-smoke-test.md
+docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 ```
 
 ### GitHub Copilot Custom Agents
@@ -243,6 +246,7 @@ required_files=(
   ".windsurfrules"
   "docs/tool-integration-guide.md"
   "docs/benchmarks/token-efficiency-smoke-test.md"
+  "docs/benchmarks/token-efficiency-fresh-2026-06-25.md"
   "agents/token-efficient-response-agent.md"
   "agents/token-economy-orchestrator.md"
   "agents/terse-technical-coding-agent.md"
@@ -282,6 +286,7 @@ paths = [
     *Path(".github/agents").glob("*.agent.md"),
     Path("docs/tool-integration-guide.md"),
     Path("docs/benchmarks/token-efficiency-smoke-test.md"),
+    Path("docs/benchmarks/token-efficiency-fresh-2026-06-25.md"),
 ]
 failures = []
 
@@ -376,7 +381,7 @@ Safety/production tasks:        no quality drop allowed
 Validation/citations/risks:     preserved when required
 ```
 
-Initial local smoke-test results are documented in [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md).
+Initial local smoke-test results are documented in [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md). Fresh third-pass results after validation micro-examples are documented in [`docs/benchmarks/token-efficiency-fresh-2026-06-25.md`](docs/benchmarks/token-efficiency-fresh-2026-06-25.md).
 
 ### 6. Tool Compatibility Test
 
