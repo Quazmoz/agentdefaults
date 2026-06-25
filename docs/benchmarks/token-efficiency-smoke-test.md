@@ -53,6 +53,17 @@ Average quality delta:  0.0
 Decision:               initial pass
 ```
 
+## Validation Micro-Examples Note
+
+A follow-up source review confirmed that `skills/token-output-budgeting.md` now includes compact validation micro-examples for:
+
+- React render checks using `console.count` or React Profiler.
+- Stable prop identity using `useMemo`.
+- Secret/security checks using `gitleaks detect --source . --no-git`.
+- CI/Docker checks using a minimal build/test command.
+
+These examples are intended to improve validation specificity without adding generic background or excessive prose.
+
 ## Regressions
 
 No material regressions found in this smoke test.
@@ -64,6 +75,7 @@ Task 5 fell below 30% savings individually, but the average result passed the ta
 - This was a local IDE-agent run.
 - Token counts were estimated, not measured with model/provider tokenizer output.
 - Baseline and candidate behavior may not be fully independent when run inside one IDE-agent session.
+- A follow-up source review confirmed the validation micro-example guidance exists, but it did not perform fresh independent model generations.
 - This result should not be used as a public benchmark claim without a controlled multi-model run.
 
 ## Next Validation
