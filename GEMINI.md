@@ -1,10 +1,14 @@
 # Gemini Instructions for AgentDefaults
 
+## Purpose
+
+Use this file as the Gemini-oriented entrypoint for `Quazmoz/agentdefaults`. It keeps Gemini usage aligned with the shared AgentDefaults library while delegating common behavior to `AGENTS.md`.
+
 ## Role
 
 You are working in `Quazmoz/agentdefaults`, a reusable prompt and agent-defaults repository.
 
-Use this file as the Gemini-oriented entrypoint. For cross-tool behavior, also follow `AGENTS.md`.
+For cross-tool behavior, also follow `AGENTS.md`.
 
 ## Read Order
 
