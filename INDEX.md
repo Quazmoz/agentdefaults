@@ -16,6 +16,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Editor rule usage | `docs/quickstarts/editor.md` | `.cursor/rules/agentdefaults.mdc`, `.windsurfrules` |
 | Repository assistant profiles | `docs/quickstarts/repo-assistant.md` | `.github/copilot-instructions.md`, `.github/agents/*.agent.md` |
 | Palmier Pro MCP video editing | `docs/quickstarts/palmierpro-mcp.md` | `agents/palmierpro-mcp-video-editor-agent.md`, Palmier skills/prompts |
+| Palmier Pro story assembly | `prompts/palmierpro/story-assembly-from-project-media.md` | Inspect all project video media, infer intent, extract main points, and assemble a YouTube story arc. |
 | Any chat/local model usage | `examples/local-model.md` | copy-paste selected stack |
 | Reduce GitHub Copilot spend (AI Credits) | `skills/copilot-token-efficiency.md` | `examples/copilot-token-efficiency.md`, `skills/context-budgeting-and-pruning.md` |
 | Make any agent more concise | `agents/token-efficient-response-agent.md` | `skills/token-efficient-response-compression.md`, `skills/token-output-budgeting.md` |
@@ -90,6 +91,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Prompt | Path | Use |
 |---|---|---|
+| Palmier Pro Story Assembly From Project Media | `prompts/palmierpro/story-assembly-from-project-media.md` | Inspect all relevant project video assets, infer intent, extract main points, and build a YouTube story arc for an AI-engineering creator. |
 | Palmier Pro Full Edit Pass | `prompts/palmierpro/full-edit-pass.md` | Run a complete first-pass Palmier timeline edit. |
 | Palmier Pro Transcript Cleanup Pass | `prompts/palmierpro/transcript-cleanup-pass.md` | Clean speech without broader timeline restructuring. |
 | Palmier Pro Short-Form Social Cutdown | `prompts/palmierpro/short-form-social-cutdown.md` | Create a short-form social clip from a longer Palmier project. |
@@ -148,6 +150,7 @@ Tool map:
   docs/palmierpro-mcp-tool-map.md
 
 Prompts:
+  prompts/palmierpro/story-assembly-from-project-media.md
   prompts/palmierpro/full-edit-pass.md
   prompts/palmierpro/transcript-cleanup-pass.md
   prompts/palmierpro/short-form-social-cutdown.md
@@ -251,7 +254,7 @@ Current index includes:
 
 - 7 canonical agents
 - 14 canonical skills
-- 7 canonical prompts
+- 8 canonical prompts
 - 10 tool integration files (6 entrypoint/rule files + 4 Copilot agent profiles)
 - 10 UX/integration guides and tool maps
 - 8 examples
