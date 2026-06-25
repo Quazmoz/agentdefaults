@@ -21,7 +21,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Make a coding agent terse and senior-engineer focused | `agents/terse-technical-coding-agent.md` | `skills/context-budgeting-and-pruning.md`, `skills/token-output-budgeting.md` |
 | Compress reusable prompts or memory files | `skills/prompt-and-memory-compression.md` | `prompts/token-efficiency/compress-memory-file.md`, `prompts/token-efficiency/agent-retrofit.md` |
 | Measure token savings for common tasks | `skills/token-efficiency-measurement.md` | `prompts/token-efficiency/common-task-benchmark.md`, `prompts/token-efficiency/compare-models.md` |
-| Review existing benchmark evidence | `docs/benchmarks/token-efficiency-smoke-test.md` | Treat as an initial local smoke test, not a controlled public benchmark |
+| Review existing benchmark evidence | `docs/benchmarks/token-efficiency-fresh-2026-06-25.md` | Prefer the fresh benchmark; compare with the historical smoke test |
 | Work on Quinn's Kubernetes homelab | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md`, `skills/kubernetes-homelab-troubleshooting.md` |
 | Research authenticated or automation-hostile sites with Comet | `agents/comet-authenticated-research-agent.md` | `skills/comet-authenticated-research.md`, `skills/comet-local-bridge-safety.md` |
 | Improve classic SEO and AI search visibility | `agents/seo-ai-search-optimization-agent.md` | `skills/token-efficient-response-compression.md`, `skills/token-output-budgeting.md` |
@@ -148,6 +148,7 @@ Use for practical search visibility work across classic SEO, AI-search readiness
 | Artifact | Path | Use |
 |---|---|---|
 | Token Efficiency Smoke Test | `docs/benchmarks/token-efficiency-smoke-test.md` | Initial local IDE-agent smoke-test result using estimated token counts. |
+| Token Efficiency Fresh Benchmark | `docs/benchmarks/token-efficiency-fresh-2026-06-25.md` | Fresh third-pass local benchmark after validation micro-examples. |
 
 ## Recommended Stacks
 
@@ -209,6 +210,7 @@ Prompts:
 
 Artifacts:
   docs/benchmarks/token-efficiency-smoke-test.md
+  docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 ```
 
 ## Selection Rules
@@ -240,4 +242,4 @@ Current index includes:
 - 4 token-efficiency prompts
 - 7 tool-specific integration entrypoints/wrappers
 - 1 cross-tool integration guide
-- 1 benchmark artifact
+- 2 benchmark artifacts
