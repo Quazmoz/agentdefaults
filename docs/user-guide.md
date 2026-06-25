@@ -4,29 +4,24 @@
 
 Help users choose the right AgentDefaults entrypoint, stack, and validation path.
 
-## Choose Your Entrypoint
+## Entrypoints
 
-| Tool style | Start with | Add |
-|---|---|---|
-| Generic repo-aware coding agent | `AGENTS.md` | selected canonical agents and skills |
-| Claude | `CLAUDE.md` | `AGENTS.md`, then selected stack |
-| Gemini | `GEMINI.md` | `AGENTS.md`, then selected stack |
-| Cursor | `.cursor/rules/agentdefaults.mdc` | `AGENTS.md`, then selected stack |
-| Windsurf | `.windsurfrules` | `AGENTS.md`, then selected stack |
-| GitHub repo assistant | `.github/copilot-instructions.md` | optional profile from `.github/agents/` |
-| Chat or local model | `agents/`, `skills/`, `prompts/` | copy the smallest useful stack |
+- Generic repo-aware coding agent: `AGENTS.md`
+- Claude: `CLAUDE.md`
+- Gemini: `GEMINI.md`
+- Cursor: `.cursor/rules/agentdefaults.mdc`
+- Windsurf: `.windsurfrules`
+- Chat or local model: copy files from `agents/`, `skills/`, and `prompts/`
 
-## Choose Your Goal
+## Goals
 
-| Goal | Use |
-|---|---|
-| Reduce verbose answers | `agents/token-efficient-response-agent.md` and `skills/token-output-budgeting.md` |
-| Manage token budgets | `agents/token-economy-orchestrator.md` |
-| Build a terse coding agent | `agents/terse-technical-coding-agent.md` |
-| Benchmark token savings | `prompts/token-efficiency/common-task-benchmark.md` |
-| Compare models | `prompts/token-efficiency/compare-models.md` |
-| Compress prompts or memory files | `skills/prompt-and-memory-compression.md` |
-| Add a reusable default | `templates/` |
+- Reduce verbose answers: `agents/token-efficient-response-agent.md` and `skills/token-output-budgeting.md`
+- Manage token budgets: `agents/token-economy-orchestrator.md`
+- Build a terse coding agent: `agents/terse-technical-coding-agent.md`
+- Benchmark token savings: `prompts/token-efficiency/common-task-benchmark.md`
+- Compare models: `prompts/token-efficiency/compare-models.md`
+- Compress prompts or memory files: `skills/prompt-and-memory-compression.md`
+- Add a reusable default: `docs/patterns/`
 
 ## Recommended Token-Efficiency Stack
 
