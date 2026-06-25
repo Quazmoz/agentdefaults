@@ -1,49 +1,93 @@
 # AgentDefaults Index
 
-Fast lookup for agents, skills, prompts, and recommended stacks.
+Fast lookup for agents, skills, prompts, wrappers, and recommended stacks.
 
-Use this file when an AI agent needs to quickly determine which defaults exist and how to compose them. Use `README.md` for the broader human-facing project overview.
+Use this file when an AI agent needs to quickly determine which defaults exist and how to compose them. Use `README.md` for the broader human-facing overview and `docs/tool-integration-guide.md` for tool-specific setup.
 
 ## Quick Selection
 
-| Need | Start With | Add Skills / Prompts |
-|------|------------|----------------------|
-| Work on Quinn's Kubernetes homelab | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md`, `skills/kubernetes-homelab-troubleshooting.md`, `skills/context-budgeting-and-pruning.md`, `skills/token-output-budgeting.md` |
+| Need | Start With | Add / Use |
+|---|---|---|
+| Generic repo-level agent instructions | `AGENTS.md` | `INDEX.md`, `README.md` |
+| Claude / Claude Code usage | `CLAUDE.md` | `AGENTS.md`, `INDEX.md`, selected `agents/` + `skills/` |
+| Gemini / Gemini CLI usage | `GEMINI.md` | `AGENTS.md`, `INDEX.md`, selected `agents/` + `skills/` |
+| GitHub Copilot repo-wide behavior | `.github/copilot-instructions.md` | `AGENTS.md`, `INDEX.md` |
+| GitHub Copilot selectable agents | `.github/agents/*.agent.md` | Commit to default branch, refresh Copilot/GitHub agent UI |
+| Cursor usage | `.cursor/rules/agentdefaults.mdc` | `AGENTS.md`, `INDEX.md` |
+| Windsurf usage | `.windsurfrules` | `AGENTS.md`, `INDEX.md` |
+| Any chat/local model usage | `agents/`, `skills/`, `prompts/` | Copy-paste selected stack |
 | Make any agent more concise | `agents/token-efficient-response-agent.md` | `skills/token-efficient-response-compression.md`, `skills/token-output-budgeting.md` |
-| Manage context/tool/output token budgets across long tasks | `agents/token-economy-orchestrator.md` | `skills/context-budgeting-and-pruning.md`, `skills/token-output-budgeting.md`, `skills/token-efficiency-measurement.md` |
+| Manage context/tool/output token budgets | `agents/token-economy-orchestrator.md` | `skills/context-budgeting-and-pruning.md`, `skills/token-output-budgeting.md`, `skills/token-efficiency-measurement.md` |
 | Make a coding agent terse and senior-engineer focused | `agents/terse-technical-coding-agent.md` | `skills/context-budgeting-and-pruning.md`, `skills/token-output-budgeting.md` |
 | Compress reusable prompts or memory files | `skills/prompt-and-memory-compression.md` | `prompts/token-efficiency/compress-memory-file.md`, `prompts/token-efficiency/agent-retrofit.md` |
 | Measure token savings for common tasks | `skills/token-efficiency-measurement.md` | `prompts/token-efficiency/common-task-benchmark.md`, `prompts/token-efficiency/compare-models.md` |
-| Research authenticated or automation-hostile sites with Comet | `agents/comet-authenticated-research-agent.md` | `skills/comet-authenticated-research.md`, `skills/comet-local-bridge-safety.md`, `skills/context-budgeting-and-pruning.md` |
+| Work on Quinn's Kubernetes homelab | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md`, `skills/kubernetes-homelab-troubleshooting.md` |
+| Research authenticated or automation-hostile sites with Comet | `agents/comet-authenticated-research-agent.md` | `skills/comet-authenticated-research.md`, `skills/comet-local-bridge-safety.md` |
 | Improve classic SEO and AI search visibility | `agents/seo-ai-search-optimization-agent.md` | `skills/token-efficient-response-compression.md`, `skills/token-output-budgeting.md` |
-| Design or review a local Comet bridge | `agents/comet-authenticated-research-agent.md` | `skills/comet-local-bridge-safety.md` |
-| Diagnose Kubernetes homelab runtime issues | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-homelab-troubleshooting.md`, `skills/context-budgeting-and-pruning.md` |
-| Add or modify Kubernetes GitOps manifests | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md`, `skills/token-output-budgeting.md` |
 
-## Agents
+## Tool Entrypoints
+
+### Generic Agents / Codex-Style Agents
+
+**Path:** `AGENTS.md`
+
+Use as the broad repository-level instruction file for any tool that supports generic agent manifests or manual context attachment.
+
+### Claude
+
+**Path:** `CLAUDE.md`
+
+Use as the Claude-oriented entrypoint. It references `AGENTS.md`, `INDEX.md`, and task-relevant canonical files while discouraging whole-repo context loading.
+
+### Gemini
+
+**Path:** `GEMINI.md`
+
+Use as the Gemini-oriented entrypoint. It keeps Gemini-specific guidance thin and delegates shared behavior to `AGENTS.md`.
+
+### GitHub Copilot Repository Instructions
+
+**Path:** `.github/copilot-instructions.md`
+
+Use for repository-wide Copilot behavior and maintenance rules.
+
+### GitHub Copilot Custom Agent Profiles
+
+**Paths:**
+
+```text
+.github/agents/token-economy-orchestrator.agent.md
+.github/agents/terse-technical-coding.agent.md
+.github/agents/token-efficiency-benchmark.agent.md
+```
+
+Use these as selectable Copilot custom-agent wrappers. They intentionally reference canonical files instead of duplicating the full library.
+
+### Cursor
+
+**Path:** `.cursor/rules/agentdefaults.mdc`
+
+Use as a thin Cursor rule wrapper for this repository.
+
+### Windsurf
+
+**Path:** `.windsurfrules`
+
+Use as a thin Windsurf wrapper for this repository.
+
+### Cross-Tool Guide
+
+**Path:** `docs/tool-integration-guide.md`
+
+Use for practical tool-by-tool setup and maintenance guidance.
+
+## Canonical Agents
 
 ### Kubernetes Homelab Engineer
 
 **Path:** `agents/kubernetes-homelab-engineer.md`
 
-Use for Quinn's `Quazmoz/K8SHomelab` repo and similar production-style homelab Kubernetes environments.
-
-Best for:
-
-- Flux CD / GitOps workflows
-- HelmRelease and Kustomize changes
-- Kubernetes app deployment
-- Homelab networking, storage, scheduling, and observability
-- Calico, MetalLB, NGINX Ingress, WireGuard, SOPS/Age
-- OpenWebUI, Phoenix, n8n, AWX, MCPO, Context Forge, and MCP infrastructure
-
-Key guardrails:
-
-- Preserve GitOps as source of truth.
-- Never commit plaintext secrets.
-- Respect Oracle/WireGuard node constraints.
-- Treat the repo as public unless proven otherwise.
-- Include validation and rollback for risky changes.
+Use for Quinn's `Quazmoz/K8SHomelab` repo and similar production-style Kubernetes homelab environments.
 
 ### Token-Efficient Response Agent
 
@@ -51,41 +95,11 @@ Key guardrails:
 
 Use as a behavior layer when responses should be concise, direct, and high-signal.
 
-Best for:
-
-- Reducing verbose agent output
-- Expert technical Q&A
-- Compact repo-work summaries
-- Iterative coding workflows
-- Prompt and handoff compression
-
-Key guardrails:
-
-- Brevity must not override safety, accuracy, citations, validation, or uncertainty.
-- Do not claim commands or checks were run unless they actually were.
-- Prefer the lowest sufficient verbosity.
-
 ### Token Economy Orchestrator
 
 **Path:** `agents/token-economy-orchestrator.md`
 
-Use when the agent must actively manage input, context, tool-result, and output tokens across long-running workflows.
-
-Best for:
-
-- Long agent sessions
-- Multi-file repo tasks
-- Context-window preservation
-- Cost and latency reduction
-- Benchmarkable prompt/agent optimization
-- Model-agnostic concise behavior across hosted and local LLMs
-
-Key guardrails:
-
-- Compress language, not meaning.
-- Preserve exact code, paths, commands, errors, citations, validation, risks, and user constraints.
-- Do not reduce safety or correctness for token savings.
-- Use compact handoffs before context gets noisy.
+Use when the agent must manage input, context, tool-result, and output tokens across long-running workflows.
 
 ### Terse Technical Coding Agent
 
@@ -93,274 +107,49 @@ Key guardrails:
 
 Use for senior-engineer coding workflows where the assistant should make focused changes and avoid excessive narration.
 
-Best for:
-
-- IDE coding agents
-- Bug fixes and refactors
-- PR review comments
-- CI failure analysis
-- Release-blocker triage
-- Small-to-medium implementation tasks
-
-Key guardrails:
-
-- Keep diffs focused and reviewable.
-- Preserve behavior unless asked to change it.
-- Do not reformat unrelated code.
-- Validation must be run or explicitly marked not run.
-- Compact communication must not mean unreadable source code.
-
 ### Comet Authenticated Research Agent
 
 **Path:** `agents/comet-authenticated-research-agent.md`
 
 Use when research requires Comet running locally as a visible browser, especially for authenticated or automation-hostile pages.
 
-Best for:
-
-- Authenticated website research
-- Human-in-the-loop login, MFA, SSO, CAPTCHA, or approval flows
-- JavaScript-heavy dashboards and portals
-- Pages that block or degrade headless automation
-- Browser-only verification where Comet adds value
-
-Key guardrails:
-
-- Never ask for passwords, MFA codes, cookies, tokens, session storage, local storage, request headers, or private keys.
-- User must authenticate directly in Comet.
-- Use the least invasive page context available.
-- Require confirmation before account-mutating actions.
-- Treat Comet summaries as research aids, not source-of-truth.
-
 ### SEO and AI Search Optimization Agent
 
 **Path:** `agents/seo-ai-search-optimization-agent.md`
 
-Use for practical search visibility work across classic SEO, Google AI search features, answer engines, app/product launches, GitHub projects, YouTube videos, Product Hunt pages, and consultant/product landing pages.
-
-Best for:
-
-- Website SEO audits
-- AI-search readiness reviews
-- Consultant site and portfolio optimization
-- Android / Wear OS app landing page optimization
-- Google Play listing and website alignment
-- GitHub README discoverability
-- YouTube and Product Hunt launch discoverability
-- Content gap analysis and topic planning
-- Metadata, schema, internal link, sitemap, robots.txt, and measurement fixes
-- Turning product features into high-intent landing pages and content briefs
-
-Key guardrails:
-
-- Treat AI SEO, AEO, and GEO as extensions of durable SEO fundamentals, not hacks.
-- Do not promise rankings, AI Overview inclusion, or answer-engine citations.
-- Do not recommend keyword stuffing, fake reviews, fake mentions, fake backlinks, doorway pages, cloaking, or scaled low-value AI content.
-- Do not add structured data for content that is not visible to users.
-- Tie recommendations to business outcomes and measurement.
-
-## Skills
-
-### Token-Efficient Response Compression
-
-**Path:** `skills/token-efficient-response-compression.md`
-
-Use to compress verbose agent output without losing correctness.
-
-Covers:
-
-- Direct answers
-- Decisions
-- Work summaries
-- Reviews
-- Debugging
-- Prompts
-- Agent handoffs
-
-### Context Budgeting and Pruning
-
-**Path:** `skills/context-budgeting-and-pruning.md`
-
-Use to reduce input/context token usage before the agent answers or changes code.
-
-Covers:
-
-- Smallest-relevant-context selection
-- Context source ranking
-- Context ledgers
-- Large-input summarization
-- Duplicate/superseded context pruning
-- Compact handoff creation
-
-### Token Output Budgeting
-
-**Path:** `skills/token-output-budgeting.md`
-
-Use to control output verbosity with explicit modes and final cut passes.
-
-Covers:
-
-- Micro, compact, work-summary, review, handoff, and deep modes
-- `Cause → Fix → Check`
-- `Issue → Impact → Fix`
-- `Path — change`
-- `Done → Changed → Validate`
-- Exact technical identifier preservation
-
-### Prompt and Memory Compression
-
-**Path:** `skills/prompt-and-memory-compression.md`
-
-Use to rewrite reusable prompts, memory files, and instruction files into smaller recurring context.
-
-Covers:
-
-- Behavior-preserving compression
-- Exact preservation of code, commands, paths, schemas, and safety rules
-- Deduplication and normalization
-- Approximate token savings reports
-- Human-review risk notes
-
-### Token Efficiency Measurement
-
-**Path:** `skills/token-efficiency-measurement.md`
-
-Use to verify whether concise prompts improve token usage without degrading quality.
-
-Covers:
-
-- Baseline vs candidate comparison
-- Input/output/tool token tracking
-- 1-5 quality scoring
-- Savings formulas
-- Pass/fail criteria
-- Safety-critical regression checks
-
-### Kubernetes GitOps Change Management
-
-**Path:** `skills/kubernetes-gitops-change-management.md`
-
-Use for safe Kubernetes repo changes.
-
-Covers:
-
-- Kustomize inclusion
-- HelmRelease and manifest review
-- Secret safety
-- Storage and scheduling guardrails
-- Ingress and MetalLB safety
-- Validation and rollback
-
-### Kubernetes Homelab Troubleshooting
-
-**Path:** `skills/kubernetes-homelab-troubleshooting.md`
-
-Use for diagnosing Kubernetes homelab failures.
-
-Covers:
-
-- Flux errors
-- Pod scheduling and image failures
-- DNS and CoreDNS
-- Ingress failures
-- MetalLB issues
-- Calico and VXLAN
-- WireGuard and Oracle node problems
-- Local PV/PVC binding issues
-
-### Comet Authenticated Research
-
-**Path:** `skills/comet-authenticated-research.md`
-
-Use for human-in-the-loop authenticated research through Comet.
-
-Covers:
-
-- Safe login flow
-- Account/workspace confirmation
-- Minimal page context collection
-- Verification of material claims
-- Separation of account-specific and general findings
-- Stop-points before mutating actions
-
-### Comet Local Bridge Safety
-
-**Path:** `skills/comet-local-bridge-safety.md`
-
-Use when building or reviewing a bridge between an agent and local Comet.
-
-Covers:
-
-- Narrow command surfaces
-- Local-only binding
-- Session-secret denial
-- User confirmation for mutations
-- Prompt-injection resistance
-- Bridge threat modeling
-- Safe logging and redaction
-
-## Prompts
-
-### Common Task Token Efficiency Benchmark
-
-**Path:** `prompts/token-efficiency/common-task-benchmark.md`
-
-Use to benchmark baseline vs token-efficient prompts across common engineering tasks.
-
-Covers:
-
-- Shared task set
-- Equal test conditions
-- Output and net savings calculations
-- Quality scoring
-- Adopt/revise/reject decision
-
-### Token Efficiency Agent Retrofit
-
-**Path:** `prompts/token-efficiency/agent-retrofit.md`
-
-Use to add token-efficiency behavior to an existing agent or prompt while preserving its original role.
-
-Covers:
-
-- Context budgeting additions
-- Tool economy additions
-- Output budgeting additions
-- Behavior-critical preservation
-- Change notes and benchmark recommendation
-
-### Compress Memory or Instruction File
-
-**Path:** `prompts/token-efficiency/compress-memory-file.md`
-
-Use to compress reusable memory or instruction files for lower recurring input-token cost.
-
-Covers:
-
-- Exact preservation rules
-- Deduplication
-- Compact directive rewriting
-- Approximate savings report
-- Human-review notes
-
-### Compare Models for Token Efficiency
-
-**Path:** `prompts/token-efficiency/compare-models.md`
-
-Use to compare whether the same token-efficiency prompt works across different models and runtimes.
-
-Covers:
-
-- Identical task comparison
-- Model-specific regressions
-- Output savings and quality table
-- Recommended default prompt/mode
+Use for practical search visibility work across classic SEO, AI-search readiness, websites, app listings, GitHub repos, YouTube videos, Product Hunt pages, and landing pages.
+
+## Canonical Skills
+
+| Skill | Path | Use |
+|---|---|---|
+| Token-Efficient Response Compression | `skills/token-efficient-response-compression.md` | Compress verbose output without losing correctness. |
+| Context Budgeting and Pruning | `skills/context-budgeting-and-pruning.md` | Reduce input/context token usage. |
+| Token Output Budgeting | `skills/token-output-budgeting.md` | Control response verbosity with explicit modes. |
+| Prompt and Memory Compression | `skills/prompt-and-memory-compression.md` | Compress recurring prompt/memory/instruction files. |
+| Token Efficiency Measurement | `skills/token-efficiency-measurement.md` | Measure savings and quality regressions. |
+| Kubernetes GitOps Change Management | `skills/kubernetes-gitops-change-management.md` | Safely add/modify Kubernetes GitOps resources. |
+| Kubernetes Homelab Troubleshooting | `skills/kubernetes-homelab-troubleshooting.md` | Diagnose Kubernetes homelab runtime issues. |
+| Comet Authenticated Research | `skills/comet-authenticated-research.md` | Safe human-in-the-loop authenticated research. |
+| Comet Local Bridge Safety | `skills/comet-local-bridge-safety.md` | Safe local browser bridge design/review. |
+
+## Canonical Prompts
+
+| Prompt | Path | Use |
+|---|---|---|
+| Common Task Token Efficiency Benchmark | `prompts/token-efficiency/common-task-benchmark.md` | Benchmark baseline vs candidate prompts across common tasks. |
+| Token Efficiency Agent Retrofit | `prompts/token-efficiency/agent-retrofit.md` | Retrofit existing prompts/agents with token-efficient behavior. |
+| Compress Memory or Instruction File | `prompts/token-efficiency/compress-memory-file.md` | Compress recurring instruction files with an audit report. |
+| Compare Models for Token Efficiency | `prompts/token-efficiency/compare-models.md` | Compare prompt behavior across hosted/coding/local models. |
 
 ## Recommended Stacks
 
-### Token Economy Stack
+### Cross-Tool Token Economy Stack
 
 ```text
+Entrypoint:
+  AGENTS.md or tool-specific wrapper
+
 Behavior layers:
   agents/token-economy-orchestrator.md
   agents/token-efficient-response-agent.md
@@ -369,29 +158,24 @@ Skills:
   skills/context-budgeting-and-pruning.md
   skills/token-output-budgeting.md
   skills/token-efficient-response-compression.md
-  skills/token-efficiency-measurement.md
-
-Prompts:
-  prompts/token-efficiency/common-task-benchmark.md
 ```
 
-### Terse Coding Work
+### Terse Coding Stack
 
 ```text
-Base / behavior layer:
+Entrypoint:
+  AGENTS.md, CLAUDE.md, GEMINI.md, or .github/agents/terse-technical-coding.agent.md
+
+Agent:
   agents/terse-technical-coding-agent.md
 
 Skills:
   skills/context-budgeting-and-pruning.md
   skills/token-output-budgeting.md
   skills/token-efficient-response-compression.md
-
-Optional measurement:
-  skills/token-efficiency-measurement.md
-  prompts/token-efficiency/common-task-benchmark.md
 ```
 
-### Prompt / Memory Compression
+### Prompt / Memory Compression Stack
 
 ```text
 Skills:
@@ -401,104 +185,48 @@ Skills:
 Prompts:
   prompts/token-efficiency/compress-memory-file.md
   prompts/token-efficiency/agent-retrofit.md
+```
+
+### Benchmark Stack
+
+```text
+Agent wrapper:
+  .github/agents/token-efficiency-benchmark.agent.md
+
+Skills:
+  skills/token-efficiency-measurement.md
+
+Prompts:
+  prompts/token-efficiency/common-task-benchmark.md
   prompts/token-efficiency/compare-models.md
-```
-
-### Kubernetes Homelab Work
-
-```text
-Base agent:
-  agents/kubernetes-homelab-engineer.md
-
-Behavior layer:
-  agents/token-economy-orchestrator.md
-  agents/token-efficient-response-agent.md
-
-Skills:
-  skills/kubernetes-gitops-change-management.md
-  skills/kubernetes-homelab-troubleshooting.md
-  skills/context-budgeting-and-pruning.md
-  skills/token-output-budgeting.md
-```
-
-### Comet Authenticated Research
-
-```text
-Base agent:
-  agents/comet-authenticated-research-agent.md
-
-Behavior layer:
-  agents/token-economy-orchestrator.md
-  agents/token-efficient-response-agent.md
-
-Skills:
-  skills/comet-authenticated-research.md
-  skills/comet-local-bridge-safety.md
-  skills/context-budgeting-and-pruning.md
-  skills/token-output-budgeting.md
-```
-
-### SEO and AI Search Optimization
-
-```text
-Base agent:
-  agents/seo-ai-search-optimization-agent.md
-
-Behavior layer:
-  agents/token-economy-orchestrator.md
-  agents/token-efficient-response-agent.md
-
-Optional for private dashboards:
-  agents/comet-authenticated-research-agent.md
-
-Useful inputs:
-  target URL, business goal, conversion action, analytics/Search Console data, app listing, GitHub repo, YouTube/Product Hunt URLs, competitors, target market
-```
-
-### Concise General Technical Agent
-
-```text
-Behavior layer:
-  agents/token-economy-orchestrator.md
-  agents/token-efficient-response-agent.md
-
-Skills:
-  skills/context-budgeting-and-pruning.md
-  skills/token-output-budgeting.md
-  skills/token-efficient-response-compression.md
 ```
 
 ## Selection Rules
 
-1. Choose **one domain agent** first.
-2. Add `agents/token-economy-orchestrator.md` for long-running work where context/tool/output budgets matter.
-3. Add `agents/token-efficient-response-agent.md` when concise behavior is desired.
-4. Add `agents/terse-technical-coding-agent.md` for coding sessions that need senior, low-narration behavior.
-5. Add only the skills needed for the task.
-6. Prefer narrow skills over copying every file into context.
-7. For repo work, inspect relevant files before making changes.
-8. For authenticated browsing, keep credentials and session secrets out of agent context.
-9. For risky infrastructure work, include validation and rollback.
-10. For SEO and AI-search work, inspect the actual page, repo, listing, or analytics data before making specific claims when tools are available.
-11. For token-efficiency claims, use `skills/token-efficiency-measurement.md` or `prompts/token-efficiency/common-task-benchmark.md`.
+1. Choose the tool entrypoint first: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Copilot, Cursor, Windsurf, or manual copy-paste.
+2. Choose one canonical agent or behavior layer.
+3. Add only the skills needed for the task.
+4. Prefer narrow context over whole-repo ingestion.
+5. Preserve exact paths, commands, schemas, safety rules, and validation status.
+6. For token-efficiency claims, use `skills/token-efficiency-measurement.md` or `prompts/token-efficiency/common-task-benchmark.md`.
+7. When adding a wrapper, update `README.md`, this `INDEX.md`, and `docs/tool-integration-guide.md`.
 
 ## Maintenance Rules
 
 When adding a new default:
 
-1. Add the file under `agents/`, `skills/`, `prompts/`, or `instructions/`.
-2. Add it to `README.md` if it should be visible to humans.
-3. Add it to this `INDEX.md` if agents should discover and compose it.
-4. Include purpose, when-to-use, inputs, expected output, quality bar, and notes.
-5. Keep copy-paste prompt blocks self-contained.
-6. For token-efficiency defaults, include measurement or evaluation guidance.
+1. Add the canonical file under `agents/`, `skills/`, or `prompts/`.
+2. Add a wrapper only if a tool benefits from a native file location.
+3. Keep wrappers thin; do not duplicate full canonical files everywhere.
+4. Update `README.md` and `INDEX.md`.
+5. Add or update testing guidance if discoverability changes.
 
 ## Status
 
 Current index includes:
 
-- 6 agents
-- 9 skills
+- 6 canonical agents
+- 9 canonical skills
 - 4 token-efficiency prompts
-
-Future index sections should add instructions and examples as they are created.
+- 7 tool-specific integration entrypoints/wrappers
+- 1 cross-tool integration guide
