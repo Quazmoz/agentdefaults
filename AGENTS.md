@@ -44,6 +44,7 @@ skills/palmierpro-transcript-cuts-and-captions.md
 skills/palmierpro-ai-generation-workflow.md
 docs/palmierpro-mcp-tool-map.md
 prompts/palmierpro/story-assembly-from-project-media.md
+prompts/palmierpro/youtube-short-from-long-form.md
 ```
 
 ### General token-efficient assistant
