@@ -1,0 +1,30 @@
+# AgentDefaults Windsurf Rules
+
+This repository is a reusable AI agent defaults library.
+
+Read first:
+
+1. `AGENTS.md`
+2. `INDEX.md`
+3. `README.md`
+4. Task-relevant files only
+
+Repository rules:
+
+- Canonical reusable content belongs in `agents/`, `skills/`, and `prompts/`.
+- Tool wrappers should stay thin and point to canonical files.
+- Update `README.md` and `INDEX.md` when adding or renaming defaults.
+- Preserve exact Markdown paths, code fences, output schemas, and copy-paste prompt blocks.
+- Use compact, direct engineering responses.
+- Use `Done / Changed / Validate` for completed work.
+- Do not claim benchmarks or tests were run unless actually run.
+
+Default token-efficiency stack:
+
+```text
+agents/token-economy-orchestrator.md
+agents/token-efficient-response-agent.md
+skills/context-budgeting-and-pruning.md
+skills/token-output-budgeting.md
+skills/token-efficient-response-compression.md
+```
