@@ -73,6 +73,7 @@ REQUIRED_FILES = [
     "prompts/token-efficiency/compare-models.md",
     "prompts/palmierpro/full-edit-pass.md",
     "prompts/palmierpro/story-assembly-from-project-media.md",
+    "prompts/palmierpro/youtube-short-from-long-form.md",
     "prompts/palmierpro/transcript-cleanup-pass.md",
     "prompts/palmierpro/short-form-social-cutdown.md",
 ]
