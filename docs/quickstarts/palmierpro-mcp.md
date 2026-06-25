@@ -69,6 +69,16 @@ skills/palmierpro-timeline-editing.md
 skills/palmierpro-transcript-cuts-and-captions.md
 ```
 
+### Story Assembly From Project Media
+
+```text
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-mcp-setup-and-safety.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+prompts/palmierpro/story-assembly-from-project-media.md
+```
+
 ### Paid AI Generation Inside Palmier
 
 ```text
@@ -105,6 +115,22 @@ Use the Palmier Pro MCP stack from AgentDefaults. Start by calling get_timeline 
 ```
 
 ## Common Workflows
+
+### Story Assembly From Project Media
+
+Use:
+
+```text
+prompts/palmierpro/story-assembly-from-project-media.md
+```
+
+Best for:
+
+- understanding all raw video files in the current Palmier project
+- extracting the main points from scattered footage
+- identifying the intended YouTube angle
+- assembling a proof-first AI-engineering story arc
+- deciding which clips to promote, cut, or demote before a full edit
 
 ### Full Edit Pass
 
@@ -206,6 +232,7 @@ skills/palmierpro-mcp-setup-and-safety.md
 skills/palmierpro-timeline-editing.md
 skills/palmierpro-transcript-cuts-and-captions.md
 skills/palmierpro-ai-generation-workflow.md
+prompts/palmierpro/story-assembly-from-project-media.md
 docs/palmierpro-mcp-tool-map.md
 examples/palmierpro-mcp-workflow.md
 ```
