@@ -1,6 +1,6 @@
 # AgentDefaults Index
 
-Fast lookup for agents, skills, prompts, wrappers, quickstarts, examples, patterns, benchmark artifacts, and recommended stacks.
+Fast lookup for agents, skills, prompts, wrappers, quickstarts, examples, patterns, benchmark artifacts, MCP workflows, and recommended stacks.
 
 Use this file when an AI agent needs to quickly determine which defaults exist and how to compose them. Use [`README.md`](README.md) for the human-facing overview and [`docs/user-guide.md`](docs/user-guide.md) for guided selection.
 
@@ -15,6 +15,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Gemini / Gemini CLI usage | `docs/quickstarts/gemini.md` | `GEMINI.md`, `AGENTS.md`, selected stack |
 | Editor rule usage | `docs/quickstarts/editor.md` | `.cursor/rules/agentdefaults.mdc`, `.windsurfrules` |
 | Repository assistant profiles | `docs/quickstarts/repo-assistant.md` | `.github/copilot-instructions.md`, `.github/agents/*.agent.md` |
+| Palmier Pro MCP video editing | `docs/quickstarts/palmierpro-mcp.md` | `agents/palmierpro-mcp-video-editor-agent.md`, Palmier skills/prompts |
 | Any chat/local model usage | `examples/local-model.md` | copy-paste selected stack |
 | Reduce GitHub Copilot spend (AI Credits) | `skills/copilot-token-efficiency.md` | `examples/copilot-token-efficiency.md`, `skills/context-budgeting-and-pruning.md` |
 | Make any agent more concise | `agents/token-efficient-response-agent.md` | `skills/token-efficient-response-compression.md`, `skills/token-output-budgeting.md` |
@@ -37,6 +38,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | GitHub Copilot custom agent profiles | `.github/agents/*.agent.md` | Selectable profile wrappers that point back to canonical files. |
 | Cursor | `.cursor/rules/agentdefaults.mdc` | Thin editor rule wrapper. |
 | Windsurf | `.windsurfrules` | Thin editor wrapper. |
+| Palmier Pro MCP | `docs/quickstarts/palmierpro-mcp.md` | Video-editing workflow through Palmier Pro's local MCP server. |
 
 ## UX Guides
 
@@ -45,6 +47,8 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | User Guide | `docs/user-guide.md` | Choose the right entrypoint, stack, and validation path. |
 | UX Roadmap | `docs/ux-roadmap.md` | Track follow-up usability improvements. |
 | Tool Integration Guide | `docs/tool-integration-guide.md` | Practical tool-by-tool setup and maintenance guidance. |
+| Palmier Pro MCP Quickstart | `docs/quickstarts/palmierpro-mcp.md` | Connect and use Palmier Pro through MCP. |
+| Palmier Pro MCP Tool Map | `docs/palmierpro-mcp-tool-map.md` | Choose the right Palmier MCP tool by editing intent. |
 | CLI Quickstart | `docs/quickstarts/cli.md` | Local repo-aware coding CLI usage. |
 | Claude Quickstart | `docs/quickstarts/claude.md` | Claude-style usage. |
 | Gemini Quickstart | `docs/quickstarts/gemini.md` | Gemini-style usage. |
@@ -55,6 +59,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Agent | Path | Use |
 |---|---|---|
+| Palmier Pro MCP Video Editor | `agents/palmierpro-mcp-video-editor-agent.md` | Video editing, transcript cleanup, captions, approved generation, and export workflows in Palmier Pro over MCP. |
 | Kubernetes Homelab Engineer | `agents/kubernetes-homelab-engineer.md` | Kubernetes homelab and GitOps specialist. |
 | Token-Efficient Response Agent | `agents/token-efficient-response-agent.md` | High-signal, low-token behavior layer. |
 | Token Economy Orchestrator | `agents/token-economy-orchestrator.md` | Manage input, context, tool-result, and output token budgets. |
@@ -66,6 +71,10 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Skill | Path | Use |
 |---|---|---|
+| Palmier Pro MCP Setup and Safety | `skills/palmierpro-mcp-setup-and-safety.md` | Connect safely, read state, and protect against unintended paid/destructive actions. |
+| Palmier Pro Timeline Editing | `skills/palmierpro-timeline-editing.md` | Frame-accurate timeline edits, b-roll, overlays, sync, properties, and verification. |
+| Palmier Pro Transcript Cuts and Captions | `skills/palmierpro-transcript-cuts-and-captions.md` | Filler removal, retake cleanup, dead-air reduction, and caption creation. |
+| Palmier Pro AI Generation Workflow | `skills/palmierpro-ai-generation-workflow.md` | Approved image/video/audio generation, upscaling, prompts, references, and organization. |
 | GitHub Copilot Token Efficiency | `skills/copilot-token-efficiency.md` | Cut Copilot spend via model selection, context scoping, modes, and `.github` files. |
 | Token-Efficient Response Compression | `skills/token-efficient-response-compression.md` | Compress verbose output without losing correctness. |
 | Context Budgeting and Pruning | `skills/context-budgeting-and-pruning.md` | Reduce input/context token usage. |
@@ -81,6 +90,9 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Prompt | Path | Use |
 |---|---|---|
+| Palmier Pro Full Edit Pass | `prompts/palmierpro/full-edit-pass.md` | Run a complete first-pass Palmier timeline edit. |
+| Palmier Pro Transcript Cleanup Pass | `prompts/palmierpro/transcript-cleanup-pass.md` | Clean speech without broader timeline restructuring. |
+| Palmier Pro Short-Form Social Cutdown | `prompts/palmierpro/short-form-social-cutdown.md` | Create a short-form social clip from a longer Palmier project. |
 | Common Task Token Efficiency Benchmark | `prompts/token-efficiency/common-task-benchmark.md` | Benchmark baseline vs candidate prompts across common tasks. |
 | Token Efficiency Agent Retrofit | `prompts/token-efficiency/agent-retrofit.md` | Retrofit existing prompts/agents with token-efficient behavior. |
 | Compress Memory or Instruction File | `prompts/token-efficiency/compress-memory-file.md` | Compress recurring instruction files with an audit report. |
@@ -90,6 +102,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Example | Path | Use |
 |---|---|---|
+| Palmier Pro MCP Workflow | `examples/palmierpro-mcp-workflow.md` | Copy-paste Palmier Pro MCP editing workflows. |
 | GitHub Copilot Token Efficiency | `examples/copilot-token-efficiency.md` | Drop-in `.github` files + habits to lower Copilot cost. |
 | Coding | `examples/coding.md` | Compact coding workflow. |
 | Benchmark | `examples/benchmark.md` | Token-efficiency benchmark recipe. |
@@ -115,6 +128,33 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Token Efficiency Fresh Benchmark | `docs/benchmarks/token-efficiency-fresh-2026-06-25.md` | Fresh third-pass local benchmark after validation micro-examples. |
 
 ## Recommended Stacks
+
+### Palmier Pro MCP Video Editing Stack
+
+```text
+Entrypoint:
+  docs/quickstarts/palmierpro-mcp.md
+
+Agent:
+  agents/palmierpro-mcp-video-editor-agent.md
+
+Skills:
+  skills/palmierpro-mcp-setup-and-safety.md
+  skills/palmierpro-timeline-editing.md
+  skills/palmierpro-transcript-cuts-and-captions.md
+  skills/palmierpro-ai-generation-workflow.md
+
+Tool map:
+  docs/palmierpro-mcp-tool-map.md
+
+Prompts:
+  prompts/palmierpro/full-edit-pass.md
+  prompts/palmierpro/transcript-cleanup-pass.md
+  prompts/palmierpro/short-form-social-cutdown.md
+
+Example:
+  examples/palmierpro-mcp-workflow.md
+```
 
 ### GitHub Copilot Cost-Reduction Stack
 
@@ -191,8 +231,9 @@ Artifacts:
 3. Add only the skills needed for the task.
 4. Prefer narrow context over whole-repo ingestion.
 5. Preserve exact paths, commands, schemas, safety rules, and validation status.
-6. For token-efficiency claims, use `skills/token-efficiency-measurement.md` or benchmark prompts.
-7. When adding new discoverable files, update `README.md`, this `INDEX.md`, and the validation script.
+6. For MCP tools, treat live tool output as the source of truth over static docs.
+7. For token-efficiency claims, use `skills/token-efficiency-measurement.md` or benchmark prompts.
+8. When adding new discoverable files, update `README.md`, this `INDEX.md`, and the validation script.
 
 ## Maintenance Rules
 
@@ -208,13 +249,12 @@ When adding a new default:
 
 Current index includes:
 
-- 6 canonical agents
-- 10 canonical skills
-- 4 token-efficiency prompts
-- 9 tool integration files (6 entrypoint/rule files + 3 Copilot agent profiles)
-- 8 UX/integration guides
-- 7 examples
+- 7 canonical agents
+- 14 canonical skills
+- 7 canonical prompts
+- 10 tool integration files (6 entrypoint/rule files + 4 Copilot agent profiles)
+- 10 UX/integration guides and tool maps
+- 8 examples
 - 4 reusable patterns
 - 2 benchmark artifacts
 - 1 machine-readable manifest
-- 1 validation script
