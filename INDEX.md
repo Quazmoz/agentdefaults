@@ -1,6 +1,6 @@
 # AgentDefaults Index
 
-Fast lookup for agents, skills, prompts, wrappers, and recommended stacks.
+Fast lookup for agents, skills, prompts, wrappers, benchmark artifacts, and recommended stacks.
 
 Use this file when an AI agent needs to quickly determine which defaults exist and how to compose them. Use `README.md` for the broader human-facing overview and `docs/tool-integration-guide.md` for tool-specific setup.
 
@@ -21,6 +21,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Make a coding agent terse and senior-engineer focused | `agents/terse-technical-coding-agent.md` | `skills/context-budgeting-and-pruning.md`, `skills/token-output-budgeting.md` |
 | Compress reusable prompts or memory files | `skills/prompt-and-memory-compression.md` | `prompts/token-efficiency/compress-memory-file.md`, `prompts/token-efficiency/agent-retrofit.md` |
 | Measure token savings for common tasks | `skills/token-efficiency-measurement.md` | `prompts/token-efficiency/common-task-benchmark.md`, `prompts/token-efficiency/compare-models.md` |
+| Review existing benchmark evidence | `docs/benchmarks/token-efficiency-smoke-test.md` | Treat as an initial local smoke test, not a controlled public benchmark |
 | Work on Quinn's Kubernetes homelab | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md`, `skills/kubernetes-homelab-troubleshooting.md` |
 | Research authenticated or automation-hostile sites with Comet | `agents/comet-authenticated-research-agent.md` | `skills/comet-authenticated-research.md`, `skills/comet-local-bridge-safety.md` |
 | Improve classic SEO and AI search visibility | `agents/seo-ai-search-optimization-agent.md` | `skills/token-efficient-response-compression.md`, `skills/token-output-budgeting.md` |
@@ -125,7 +126,7 @@ Use for practical search visibility work across classic SEO, AI-search readiness
 |---|---|---|
 | Token-Efficient Response Compression | `skills/token-efficient-response-compression.md` | Compress verbose output without losing correctness. |
 | Context Budgeting and Pruning | `skills/context-budgeting-and-pruning.md` | Reduce input/context token usage. |
-| Token Output Budgeting | `skills/token-output-budgeting.md` | Control response verbosity with explicit modes. |
+| Token Output Budgeting | `skills/token-output-budgeting.md` | Control response verbosity with explicit modes and validation micro-examples. |
 | Prompt and Memory Compression | `skills/prompt-and-memory-compression.md` | Compress recurring prompt/memory/instruction files. |
 | Token Efficiency Measurement | `skills/token-efficiency-measurement.md` | Measure savings and quality regressions. |
 | Kubernetes GitOps Change Management | `skills/kubernetes-gitops-change-management.md` | Safely add/modify Kubernetes GitOps resources. |
@@ -141,6 +142,12 @@ Use for practical search visibility work across classic SEO, AI-search readiness
 | Token Efficiency Agent Retrofit | `prompts/token-efficiency/agent-retrofit.md` | Retrofit existing prompts/agents with token-efficient behavior. |
 | Compress Memory or Instruction File | `prompts/token-efficiency/compress-memory-file.md` | Compress recurring instruction files with an audit report. |
 | Compare Models for Token Efficiency | `prompts/token-efficiency/compare-models.md` | Compare prompt behavior across hosted/coding/local models. |
+
+## Benchmark Artifacts
+
+| Artifact | Path | Use |
+|---|---|---|
+| Token Efficiency Smoke Test | `docs/benchmarks/token-efficiency-smoke-test.md` | Initial local IDE-agent smoke-test result using estimated token counts. |
 
 ## Recommended Stacks
 
@@ -199,6 +206,9 @@ Skills:
 Prompts:
   prompts/token-efficiency/common-task-benchmark.md
   prompts/token-efficiency/compare-models.md
+
+Artifacts:
+  docs/benchmarks/token-efficiency-smoke-test.md
 ```
 
 ## Selection Rules
@@ -230,3 +240,4 @@ Current index includes:
 - 4 token-efficiency prompts
 - 7 tool-specific integration entrypoints/wrappers
 - 1 cross-tool integration guide
+- 1 benchmark artifact
