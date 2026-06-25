@@ -79,6 +79,16 @@ skills/palmierpro-transcript-cuts-and-captions.md
 prompts/palmierpro/story-assembly-from-project-media.md
 ```
 
+### YouTube Short From Long-Form
+
+```text
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-mcp-setup-and-safety.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+prompts/palmierpro/youtube-short-from-long-form.md
+```
+
 ### Paid AI Generation Inside Palmier
 
 ```text
@@ -132,6 +142,22 @@ Best for:
 - assembling a proof-first AI-engineering story arc
 - deciding which clips to promote, cut, or demote before a full edit
 
+### YouTube Short From Long-Form
+
+Use:
+
+```text
+prompts/palmierpro/youtube-short-from-long-form.md
+```
+
+Best for:
+
+- creating a 9:16 YouTube Short from a long-form Palmier project
+- choosing one proof/demo moment instead of summarizing the whole video
+- keeping screen recordings, code, terminal output, app UI, and Play Console screens readable on mobile
+- placing Quinn's facecam safely around the screenshare without blocking captions or important UI
+- creating a fast hook, proof, and clean ending from longer technical footage
+
 ### Full Edit Pass
 
 Use:
@@ -173,10 +199,10 @@ prompts/palmierpro/short-form-social-cutdown.md
 
 Best for:
 
-- YouTube Shorts
 - TikTok
 - Instagram Reels
 - X/LinkedIn clips
+- non-Shorts social variants
 - extracting a proof/demo moment from a longer video
 
 ## Safety Rules To Keep
@@ -233,6 +259,7 @@ skills/palmierpro-timeline-editing.md
 skills/palmierpro-transcript-cuts-and-captions.md
 skills/palmierpro-ai-generation-workflow.md
 prompts/palmierpro/story-assembly-from-project-media.md
+prompts/palmierpro/youtube-short-from-long-form.md
 docs/palmierpro-mcp-tool-map.md
 examples/palmierpro-mcp-workflow.md
 ```
