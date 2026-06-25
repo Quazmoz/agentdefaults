@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Copilot Token-Efficiency Playbook</title>
+<style>
+  :root {
+    --ground: #F7F9FB;
+    --card: #FFFFFF;
+    --ink: #0D1B2A;
+    --ink-soft: #29384A;
+    --muted: #5A6B7B;
+    --rule: #E2E8EE;
+    --rule-strong: #CFD8E1;
+    --accent: #0A6E7A;
+    --accent-deep: #075560;
+    --accent-soft: #E1F0F1;
+    --free: #1F9E6B;
+    --free-soft: #E5F4EC;
+    --mid: #C8901A;
+    --mid-soft: #F8EFD8;
+    --high: #C2541F;
+    --high-soft: #F8E6DC;
+    --shadow: 0 1px 2px rgba(13,27,42,.04), 0 8px 24px rgba(13,27,42,.06);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    --sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+
+  /* ---------- Hero ---------- */
+  header {
+    border-bottom: 1px solid var(--rule);
+    background:
+      radial-gradient(120% 120% at 88% -10%, var(--accent-soft) 0%, rgba(225,240,241,0) 46%),
+      var(--card);
+  }
+  .hero {
+    padding: 72px 0 56px;
+    display: grid;
+    gap: 26px;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: rise .7s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 5.4vw, 58px);
+    font-weight: 800;
+    letter-spacing: -.022em;
+    line-height: 1.04;
+    max-width: 16ch;
+  }
+  .hero h1 .hl { color: var(--accent); }
+  .lede {
+    font-size: clamp(17px, 2vw, 20px);
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .lede b { color: var(--ink); font-weight: 650; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .stat { background: var(--card); padding: 20px 22px; }
+  .stat .n {
+    font-family: var(--mono);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .stat .n.tealn { color: var(--accent); }
+  .stat .n.freen { color: var(--free); }
+  .stat .l {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ---------- Sections ---------- */
+  main { padding: 8px 0 0; }
+  section { padding: 56px 0; border-bottom: 1px solid var(--rule); }
+  .sec-head { margin-bottom: 30px; display: grid; gap: 10px; }
+  .sec-head h2 {
+    font-size: clamp(24px, 3.4vw, 34px);
+    font-weight: 800;
+    letter-spacing: -.018em;
+  }
+  .sec-head p { margin: 0; color: var(--muted); max-width: 64ch; font-size: 16px; }
+
+  /* ---------- Levers ---------- */
+  .levers { display: grid; gap: 14px; }
+  .lever {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 54px 1fr 168px;
+    gap: 22px;
+    align-items: center;
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .lever:hover { transform: translateY(-2px); border-color: var(--rule-strong); }
+  .rank {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .lever h3 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+  .lever p { margin: 5px 0 0; color: var(--ink-soft); font-size: 14.5px; }
+  .lever p code, .matrix code, .filecard code, .guard code {
+    font-family: var(--mono);
+    font-size: .86em;
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 1px 5px;
+    color: var(--accent-deep);
+  }
+  .meter { display: grid; gap: 7px; justify-items: end; }
+  .meter .cap {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .bar { width: 100%; height: 8px; border-radius: 99px; background: var(--rule); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-deep)); }
+
+  /* ---------- Matrix ---------- */
+  .matrix-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow); }
+  table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; background: var(--card); }
+  table.matrix th, table.matrix td { text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.matrix thead th {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    background: #FBFCFD;
+  }
+  table.matrix tbody tr:last-child td { border-bottom: 0; }
+  table.matrix td.task { font-weight: 600; color: var(--ink); width: 31%; }
+  table.matrix td .ex { color: var(--muted); font-size: 13.5px; }
+  .tier {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 12.5px; font-weight: 600;
+    padding: 4px 10px; border-radius: 99px; white-space: nowrap;
+  }
+  .tier::before { content: ""; width: 8px; height: 8px; border-radius: 99px; background: currentColor; }
+  .tier.free { color: var(--free); background: var(--free-soft); }
+  .tier.mid  { color: var(--mid);  background: var(--mid-soft); }
+  .tier.high { color: var(--high); background: var(--high-soft); }
+  .cost { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: .04em; }
+  .cost.free { color: var(--free); }
+  .cost.mid  { color: var(--mid); }
+  .cost.high { color: var(--high); }
+
+  /* ---------- File cards ---------- */
+  .files { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .filecard {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
+  }
+  .filecard .path {
+    font-family: var(--mono); font-size: 12.5px; color: var(--accent-deep);
+    padding: 14px 16px; border-bottom: 1px solid var(--rule); background: #FBFCFD;
+    word-break: break-all; font-weight: 600;
+  }
+  .filecard .body { padding: 16px; }
+  .filecard h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .filecard p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+  .filecard .lever-tag { margin-top: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---------- Guardrail ---------- */
+  .guard {
+    background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--accent);
+    border-radius: 12px; padding: 26px 28px; box-shadow: var(--shadow);
+  }
+  .guard h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; letter-spacing: -.015em; }
+  .guard p { margin: 0 0 16px; color: var(--ink-soft); max-width: 70ch; }
+  .keep { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft);
+    background: var(--ground); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 11px;
+  }
+  .order { margin-top: 18px; font-size: 14px; color: var(--muted); }
+  .order b { color: var(--accent-deep); }
+
+  /* ---------- Footer ---------- */
+  footer { padding: 44px 0 64px; }
+  .foot-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: start; }
+  footer h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+  footer p { margin: 0 0 10px; color: var(--ink-soft); font-size: 14.5px; }
+  footer a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  footer a:hover { border-bottom-color: var(--accent); }
+  .caveat {
+    font-size: 13px; color: var(--muted); background: var(--card);
+    border: 1px dashed var(--rule-strong); border-radius: 12px; padding: 16px 18px; line-height: 1.55;
+  }
+  .src { margin-top: 26px; font-size: 12.5px; color: var(--muted); font-family: var(--mono); }
+
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .hero { animation: none; opacity: 1; transform: none; }
+    .lever { transition: none; }
+  }
+
+  /* Static rendering: print / PDF / save-as. Never let the hero animation hide content. */
+  @media print {
+    .hero { opacity: 1 !important; transform: none !important; animation: none !important; }
+    header, .lever, .filecard, .guard { break-inside: avoid; }
+    section { padding: 34px 0; }
+  }
+
+  @media (max-width: 860px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .files { grid-template-columns: 1fr; }
+    .lever { grid-template-columns: 40px 1fr; }
+    .meter { grid-column: 1 / -1; justify-items: start; }
+    .meter .bar { width: 100%; }
+    .foot-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="hero">
+      <p class="eyebrow">GitHub Copilot · Cost Playbook · v1 — Jun 2026</p>
+      <h1>Three weeks ago, Copilot started billing <span class="hl">by the token.</span></h1>
+      <p class="lede">On <b>June 1, 2026</b> Copilot moved to usage-based <b>AI Credits</b>. Every chat, edit, and agent request is now metered on input + output + cached tokens at the model's own rate. <b>Token efficiency is no longer a nicety — it's the invoice.</b> Here is the team playbook to cut that bill without losing quality.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="n tealn">Jun 1</div>
+          <div class="l">Switched to usage-based AI Credits</div>
+        </div>
+        <div class="stat">
+          <div class="n">tokens = $</div>
+          <div class="l">Input + output + cached, per model rate</div>
+        </div>
+        <div class="stat">
+          <div class="n">10–20&times;</div>
+          <div class="l">Cost spread, frugal vs top-tier model</div>
+        </div>
+        <div class="stat">
+          <div class="n freen">$0</div>
+          <div class="l">Inline completions on paid plans</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section>
+      <div class="sec-head">
+        <p class="eyebrow">The 6 levers, ranked by impact</p>
+        <h2>Where the money actually goes</h2>
+        <p>Pull these top to bottom. The first two — model choice and context scope — move the bill more than the rest combined. Everything here is Copilot-native, not generic advice.</p>
+      </div>
+      <div class="levers">
+
+        <div class="lever">
+          <div class="rank">1</div>
+          <div>
+            <h3>Match the model to the task</h3>
+            <p>The dominant lever. A frugal model can cost ~10–20&times; less per token for the same routine work. Prefer <b>auto-selection</b> — it routes by task and discounts the rate. Never run a reasoning model on a rename.</p>
+          </div>
+          <div class="meter"><span class="cap">Impact</span><div class="bar"><i style="width:100%"></i></div></div>
+        </div>
+
+        <div class="lever">
+          <div class="rank">2</div>
+          <div>
+            <h3>Scope the context</h3>
+            <p>Input tokens are billed every request. Attach specific files with <code>#file</code> / <code>#selection</code> instead of <code>@workspace</code> for narrow tasks — and <b>start a fresh chat per task</b>, since long threads re-bill stale context on every turn.</p>
+          </div>
+          <div class="meter"><span class="cap">Impact</span><div class="bar"><i style="width:88%"></i></div></div>
+        </div>
+
+        <div class="lever">
+          <div class="rank">3</div>
+          <div>
+            <h3>Pick the cheapest sufficient mode</h3>
+            <p>Cost climbs <code>completions → ask → edit → agent</code>. Completions are free; agent loops re-send context and tools each turn and quietly become the largest single line item. Reserve agent for genuinely multi-step work.</p>
+          </div>
+          <div class="meter"><span class="cap">Impact</span><div class="bar"><i style="width:66%"></i></div></div>
+        </div>
+
+        <div class="lever">
+          <div class="rank">4</div>
+          <div>
+            <h3>Cut output verbosity</h3>
+            <p>Output tokens bill too. A standing &ldquo;be concise, prefer diffs over full-file rewrites&rdquo; instruction trims every future response. Set it once in <code>copilot-instructions.md</code>.</p>
+          </div>
+          <div class="meter"><span class="cap">Impact</span><div class="bar"><i style="width:50%"></i></div></div>
+        </div>
+
+        <div class="lever">
+          <div class="rank">5</div>
+          <div>
+            <h3>Reuse, don't re-type</h3>
+            <p>Stop paying to re-establish context. <code>*.instructions.md</code> (with <code>applyTo</code> globs) and <code>*.prompt.md</code> load standing rules and recurring prompts automatically instead of re-sending them by hand.</p>
+          </div>
+          <div class="meter"><span class="cap">Impact</span><div class="bar"><i style="width:38%"></i></div></div>
+        </div>
+
+        <div class="lever">
+          <div class="rank">6</div>
+          <div>
+            <h3>Make code review deliberate</h3>
+            <p>Automated Copilot code review spends credits <i>and</i> GitHub Actions minutes per run. Scope it to meaningful PRs and paths rather than firing on every push.</p>
+          </div>
+          <div class="meter"><span class="cap">Impact</span><div class="bar"><i style="width:26%"></i></div></div>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <p class="eyebrow">Lever 1, in practice</p>
+        <h2>The model-selection matrix</h2>
+        <p>The single most useful habit to teach. Default down the list; reach up only when the task earns it. Cost shown is relative per-token rate, not a quota.</p>
+      </div>
+      <div class="matrix-wrap">
+        <table class="matrix">
+          <thead>
+            <tr><th>Task</th><th>Use</th><th>Relative cost</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="task">Autocomplete, boilerplate, obvious edits</td>
+              <td><span class="tier free">Inline completions</span> <div class="ex">No chat request at all</div></td>
+              <td class="cost free">FREE</td>
+            </tr>
+            <tr>
+              <td class="task">Simple Q&amp;A, rename, small fix, docstring</td>
+              <td><span class="tier free">Frugal / fast</span> <div class="ex">GPT-5 mini · Gemini Flash · Claude Haiku</div></td>
+              <td class="cost free">$</td>
+            </tr>
+            <tr>
+              <td class="task">Day-to-day chat, scoped edits, reviews</td>
+              <td><span class="tier mid">Standard</span> <div class="ex">Mid Sonnet · GPT-5 class</div></td>
+              <td class="cost mid">$$</td>
+            </tr>
+            <tr>
+              <td class="task">Hard architecture, deep debugging, big refactors</td>
+              <td><span class="tier high">High / reasoning</span> <div class="ex">Claude Opus · GPT-5.5 — only when earned</div></td>
+              <td class="cost high">$$$$</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <p class="eyebrow">Levers 4 &amp; 5 · ship these Monday</p>
+        <h2>Three files that pay for themselves</h2>
+        <p>Drop these in any repo. They load automatically, so the whole team stops paying to re-establish conventions and context in every thread.</p>
+      </div>
+      <div class="files">
+        <div class="filecard">
+          <div class="path">.github/copilot-instructions.md</div>
+          <div class="body">
+            <h3>Repo-wide standing rules</h3>
+            <p>&ldquo;Lead with the answer. Prefer diffs over full-file rewrites. Be terse for experts.&rdquo; Applies to every chat, edit, and agent request.</p>
+            <div class="lever-tag">cuts output tokens</div>
+          </div>
+        </div>
+        <div class="filecard">
+          <div class="path">.github/instructions/*.instructions.md</div>
+          <div class="body">
+            <h3>Path-specific rules</h3>
+            <p>Frontmatter <code>applyTo: "**/*.test.*"</code> targets a glob. Matching files <b>stack</b> (union, no override) — keep each one small.</p>
+            <div class="lever-tag">scopes context</div>
+          </div>
+        </div>
+        <div class="filecard">
+          <div class="path">.github/prompts/*.prompt.md</div>
+          <div class="body">
+            <h3>Reusable prompts</h3>
+            <p>A saved review checklist or scaffold. Invoke it instead of re-typing — and re-paying for — a long prompt every time.</p>
+            <div class="lever-tag">reuse, don't re-type</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="guard">
+        <h2>Don't save credits by getting it wrong</h2>
+        <p>Cheaper-but-wrong is the most expensive outcome — it costs a second request, a bad merge, or an outage. Compression never touches these:</p>
+        <div class="keep">
+          <span class="chip">exact paths &amp; commands</span>
+          <span class="chip">error strings</span>
+          <span class="chip">identifiers &amp; versions</span>
+          <span class="chip">security warnings</span>
+          <span class="chip">material risks</span>
+          <span class="chip">validation status</span>
+          <span class="chip">the actual answer</span>
+        </div>
+        <p class="order">Priority when cost conflicts with quality: <b>safety → correctness → user intent → validation → credit savings.</b></p>
+      </div>
+    </section>
+
+    <footer>
+      <div class="foot-grid">
+        <div>
+          <h3>Prove it, don't assume it</h3>
+          <p>Track AI Credit usage in GitHub billing before and after — org cost centers and budgets land on Business / Enterprise. A-B one real task (verbose baseline vs. this config, same model) and score quality 1–5 separately; adopt only if quality holds.</p>
+          <p><b>Plan credits (monthly, as of Jun 2026):</b> Pro $10 · Pro+ $39 · Business $19/user · Enterprise $39/user. Free = completions only.</p>
+          <p class="src">Source: AgentDefaults · skills/copilot-token-efficiency.md · examples/copilot-token-efficiency.md</p>
+        </div>
+        <div class="caveat">
+          <b>Verify before you quote.</b> GitHub changes model rates, multipliers, and plan allowances often, and the move off legacy premium-request billing is recent. Confirm current numbers at <a href="https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing">docs.github.com → Copilot billing → models &amp; pricing</a> before presenting figures as fact.
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</main>
+</body>
+</html>
