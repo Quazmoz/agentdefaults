@@ -141,6 +141,36 @@ Use these structures:
 - `Pick / Why / Avoid`
 - `Done / Changed / Validate`
 
+### 6. Validation Micro-Examples
+
+Use tiny validation examples when they prevent vague or unverifiable answers. Keep them one line unless more detail is required.
+
+#### React render check
+
+```text
+Check: add `console.count("Child render")` or use React Profiler; unchanged deps should not increment child renders.
+```
+
+#### Stable prop identity
+
+```tsx
+const options = useMemo(() => ({ enabled, limit }), [enabled, limit]);
+```
+
+#### Secret/security check
+
+```bash
+gitleaks detect --source . --no-git
+```
+
+#### CI/Docker check
+
+```bash
+docker build -t app:test . && npm test
+```
+
+Prefer project-native commands when known, for example `npm test`, `pnpm test`, `cargo test`, `go test ./...`, `pytest`, or `./gradlew test`.
+
 ## Expected Output
 
 A response that is materially shorter than a default assistant response and still complete enough to act on.
@@ -171,6 +201,8 @@ The goal is not maximum compression. The goal is maximum useful density.
 Apply token output budgeting. Pick the lowest sufficient output mode: micro, compact, work summary, review, handoff, or deep. Start with the answer/result. Use compressed structures like Cause → Fix → Check, Issue → Impact → Fix, Path — change, or Done → Changed → Validate.
 
 Remove filler, repetition, generic background, obvious explanations, low-priority alternatives, and closing offers. Preserve exact commands, paths, errors, code identifiers, version numbers, citations, validation status, user constraints, uncertainty, and safety warnings.
+
+Use validation micro-examples when they make the answer more actionable without becoming verbose: one-line render checks, stable identity examples, secret scans, or project-native test/build commands.
 
 Do not optimize for the fewest possible words. Optimize for the fewest words that still let the user act correctly.
 ```
