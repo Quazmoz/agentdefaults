@@ -19,6 +19,7 @@ Help users choose the right AgentDefaults entrypoint, stack, and validation path
 
 - Edit videos through Palmier Pro MCP: `docs/quickstarts/palmierpro-mcp.md`
 - Analyze all Palmier project video media and assemble the main YouTube story: `prompts/palmierpro/story-assembly-from-project-media.md`
+- Create a 9:16 YouTube Short from long-form Palmier content: `prompts/palmierpro/youtube-short-from-long-form.md`
 - Run a Palmier first-pass edit: `prompts/palmierpro/full-edit-pass.md`
 - Clean Palmier timeline transcripts: `prompts/palmierpro/transcript-cleanup-pass.md`
 - Create Palmier short-form cutdowns: `prompts/palmierpro/short-form-social-cutdown.md`
@@ -41,6 +42,7 @@ skills/palmierpro-transcript-cuts-and-captions.md
 skills/palmierpro-ai-generation-workflow.md
 docs/palmierpro-mcp-tool-map.md
 prompts/palmierpro/story-assembly-from-project-media.md
+prompts/palmierpro/youtube-short-from-long-form.md
 ```
 
 ## Recommended Token-Efficiency Stack
