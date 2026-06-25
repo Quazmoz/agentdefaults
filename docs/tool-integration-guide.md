@@ -7,7 +7,7 @@ This guide explains how to use AgentDefaults with common AI coding tools without
 AgentDefaults should work in two modes:
 
 1. **Prompt library mode** — copy files from `agents/`, `skills/`, or `prompts/` into any chat/model/tool.
-2. **Native wrapper mode** — use tool-specific files such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, or `.github/agents/*.agent.md`.
+2. **Native wrapper mode** — use tool-specific files such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.github/agents/*.agent.md`, or an MCP quickstart.
 
 ## Canonical Content vs Wrappers
 
@@ -29,6 +29,7 @@ GEMINI.md
 .github/agents/*.agent.md
 .cursor/rules/agentdefaults.mdc
 .windsurfrules
+docs/quickstarts/*.md
 ```
 
 Rule: update canonical content first, then keep wrappers thin and discoverable.
@@ -42,6 +43,7 @@ Use these files:
 .github/agents/token-economy-orchestrator.agent.md
 .github/agents/terse-technical-coding.agent.md
 .github/agents/token-efficiency-benchmark.agent.md
+.github/agents/palmierpro-video-editor.agent.md
 ```
 
 Recommended uses:
@@ -85,6 +87,16 @@ skills/token-output-budgeting.md
 skills/token-efficient-response-compression.md
 ```
 
+For Palmier Pro work through Claude Code, start with:
+
+```text
+docs/quickstarts/palmierpro-mcp.md
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-mcp-setup-and-safety.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+```
+
 ## Gemini / Gemini CLI
 
 Use these files:
@@ -120,6 +132,13 @@ Best for:
 - Custom MCP/IDE agents
 - Any tool that reads repository-level instructions
 
+For Palmier Pro via Codex, connect MCP first, then use:
+
+```text
+docs/quickstarts/palmierpro-mcp.md
+prompts/palmierpro/full-edit-pass.md
+```
+
 ## Cursor
 
 Use:
@@ -132,6 +151,8 @@ INDEX.md
 
 The Cursor rule is intentionally thin. It points back to the canonical AgentDefaults files rather than duplicating the full library.
 
+For Palmier Pro, use the app's `Help -> MCP Instructions -> Install in Cursor` flow when available, or use the manual MCP JSON from `docs/quickstarts/palmierpro-mcp.md`.
+
 ## Windsurf
 
 Use:
@@ -143,6 +164,38 @@ INDEX.md
 ```
 
 The Windsurf wrapper should stay compact and focused on repository maintenance rules.
+
+## Palmier Pro MCP
+
+Use:
+
+```text
+docs/quickstarts/palmierpro-mcp.md
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-mcp-setup-and-safety.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+skills/palmierpro-ai-generation-workflow.md
+docs/palmierpro-mcp-tool-map.md
+```
+
+Best for:
+
+- First-pass video edits
+- Transcript cleanup
+- Captioning
+- Short-form cutdowns
+- Existing b-roll placement
+- Approved AI generation inside Palmier Pro
+- Review exports
+
+Rules:
+
+- Palmier Pro must be open with a project loaded.
+- The MCP client should connect to the local Palmier endpoint from the quickstart.
+- Live Palmier tool output is the source of truth over static docs.
+- Generation/upscale actions require explicit user approval.
+- Final export should happen only when requested.
 
 ## Copy-Paste Usage For Any Model
 
@@ -161,6 +214,20 @@ Task:
 
 Output budget:
 <word limit or mode>
+```
+
+For any MCP-capable model connected to Palmier Pro, paste this stack:
+
+```text
+Use AgentDefaults Palmier Pro MCP stack:
+- docs/quickstarts/palmierpro-mcp.md
+- agents/palmierpro-mcp-video-editor-agent.md
+- skills/palmierpro-mcp-setup-and-safety.md
+- skills/palmierpro-timeline-editing.md
+- skills/palmierpro-transcript-cuts-and-captions.md
+
+Task:
+<your video-editing task>
 ```
 
 ## Testing Tool Compatibility
