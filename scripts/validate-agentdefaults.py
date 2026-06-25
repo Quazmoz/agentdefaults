@@ -72,6 +72,7 @@ REQUIRED_FILES = [
     "prompts/token-efficiency/compress-memory-file.md",
     "prompts/token-efficiency/compare-models.md",
     "prompts/palmierpro/full-edit-pass.md",
+    "prompts/palmierpro/story-assembly-from-project-media.md",
     "prompts/palmierpro/transcript-cleanup-pass.md",
     "prompts/palmierpro/short-form-social-cutdown.md",
 ]
