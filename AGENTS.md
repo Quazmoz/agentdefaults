@@ -43,6 +43,7 @@ skills/palmierpro-timeline-editing.md
 skills/palmierpro-transcript-cuts-and-captions.md
 skills/palmierpro-ai-generation-workflow.md
 docs/palmierpro-mcp-tool-map.md
+prompts/palmierpro/story-assembly-from-project-media.md
 ```
 
 ### General token-efficient assistant
