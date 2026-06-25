@@ -29,6 +29,18 @@ Do not load the entire repository by default.
 - For prompt-library work, avoid tool lock-in unless the file is intentionally named for a specific tool.
 - Do not claim token savings were measured unless a benchmark was actually run.
 
+## Default Stack For Palmier Pro MCP Work
+
+```text
+docs/quickstarts/palmierpro-mcp.md
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-mcp-setup-and-safety.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+skills/palmierpro-ai-generation-workflow.md
+docs/palmierpro-mcp-tool-map.md
+```
+
 ## Default Stack For Token-Efficient Work
 
 ```text
