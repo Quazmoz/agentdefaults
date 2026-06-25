@@ -1,5 +1,7 @@
+---
 description: AgentDefaults repository maintenance and token-efficiency rules
 alwaysApply: true
+---
 
 # AgentDefaults Cursor Rule
 
