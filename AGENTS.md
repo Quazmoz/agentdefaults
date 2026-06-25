@@ -33,6 +33,18 @@ Use this repository as a reusable library of agents, skills, prompts, and instru
 
 ## Recommended Stacks
 
+### Palmier Pro MCP video editing
+
+```text
+docs/quickstarts/palmierpro-mcp.md
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-mcp-setup-and-safety.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+skills/palmierpro-ai-generation-workflow.md
+docs/palmierpro-mcp-tool-map.md
+```
+
 ### General token-efficient assistant
 
 ```text
