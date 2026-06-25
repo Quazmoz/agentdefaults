@@ -68,6 +68,18 @@ Rule: **update canonical content first, then keep wrappers thin and discoverable
 
 ## Recommended Stacks
 
+### GitHub Copilot Cost-Reduction Stack
+
+Use when a team wants to lower GitHub Copilot spend (usage-based AI Credits) without losing quality.
+
+```text
+.github/copilot-instructions.md   (drop-in from examples/copilot-token-efficiency.md)
+skills/copilot-token-efficiency.md
+skills/context-budgeting-and-pruning.md
+skills/token-output-budgeting.md
+skills/token-efficiency-measurement.md
+```
+
 ### Token Economy Stack
 
 Use when you want smaller outputs, narrower context, and measurable savings.
@@ -129,6 +141,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) |
 | Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) |
 | Agent | SEO and AI Search Optimization Agent | [`agents/seo-ai-search-optimization-agent.md`](agents/seo-ai-search-optimization-agent.md) |
+| Skill | GitHub Copilot Token Efficiency | [`skills/copilot-token-efficiency.md`](skills/copilot-token-efficiency.md) |
 | Skill | Context Budgeting and Pruning | [`skills/context-budgeting-and-pruning.md`](skills/context-budgeting-and-pruning.md) |
 | Skill | Token Output Budgeting | [`skills/token-output-budgeting.md`](skills/token-output-budgeting.md) |
 | Skill | Token-Efficient Response Compression | [`skills/token-efficient-response-compression.md`](skills/token-efficient-response-compression.md) |
@@ -143,6 +156,7 @@ For the full list, use [`INDEX.md`](INDEX.md).
 
 | Recipe | Use |
 |---|---|
+| [`examples/copilot-token-efficiency.md`](examples/copilot-token-efficiency.md) | Drop-in `.github` files + habits to lower GitHub Copilot cost. |
 | [`examples/coding.md`](examples/coding.md) | Build a compact coding workflow. |
 | [`examples/benchmark.md`](examples/benchmark.md) | Run a token-efficiency benchmark. |
 | [`examples/compression.md`](examples/compression.md) | Compress prompt, memory, or instruction files. |

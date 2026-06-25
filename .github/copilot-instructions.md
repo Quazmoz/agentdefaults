@@ -43,11 +43,14 @@ Use this stack when the user asks to reduce token usage or make agents more effi
 ```text
 agents/token-economy-orchestrator.md
 agents/token-efficient-response-agent.md
+skills/copilot-token-efficiency.md
 skills/context-budgeting-and-pruning.md
 skills/token-output-budgeting.md
 skills/token-efficient-response-compression.md
 skills/token-efficiency-measurement.md
 ```
+
+For reducing a user's own Copilot spend (model selection, AI Credits, context scoping, `.github` customization files), lead with `skills/copilot-token-efficiency.md` and the `examples/copilot-token-efficiency.md` recipe.
 
 ## Validation
 

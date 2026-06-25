@@ -16,6 +16,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Editor rule usage | `docs/quickstarts/editor.md` | `.cursor/rules/agentdefaults.mdc`, `.windsurfrules` |
 | Repository assistant profiles | `docs/quickstarts/repo-assistant.md` | `.github/copilot-instructions.md`, `.github/agents/*.agent.md` |
 | Any chat/local model usage | `examples/local-model.md` | copy-paste selected stack |
+| Reduce GitHub Copilot spend (AI Credits) | `skills/copilot-token-efficiency.md` | `examples/copilot-token-efficiency.md`, `skills/context-budgeting-and-pruning.md` |
 | Make any agent more concise | `agents/token-efficient-response-agent.md` | `skills/token-efficient-response-compression.md`, `skills/token-output-budgeting.md` |
 | Manage context/tool/output token budgets | `agents/token-economy-orchestrator.md` | `skills/context-budgeting-and-pruning.md`, `skills/token-output-budgeting.md`, `skills/token-efficiency-measurement.md` |
 | Make a coding agent terse and senior-engineer focused | `examples/coding.md` | `agents/terse-technical-coding-agent.md`, token-output skills |
@@ -65,6 +66,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Skill | Path | Use |
 |---|---|---|
+| GitHub Copilot Token Efficiency | `skills/copilot-token-efficiency.md` | Cut Copilot spend via model selection, context scoping, modes, and `.github` files. |
 | Token-Efficient Response Compression | `skills/token-efficient-response-compression.md` | Compress verbose output without losing correctness. |
 | Context Budgeting and Pruning | `skills/context-budgeting-and-pruning.md` | Reduce input/context token usage. |
 | Token Output Budgeting | `skills/token-output-budgeting.md` | Control response verbosity with explicit modes and validation micro-examples. |
@@ -88,6 +90,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Example | Path | Use |
 |---|---|---|
+| GitHub Copilot Token Efficiency | `examples/copilot-token-efficiency.md` | Drop-in `.github` files + habits to lower Copilot cost. |
 | Coding | `examples/coding.md` | Compact coding workflow. |
 | Benchmark | `examples/benchmark.md` | Token-efficiency benchmark recipe. |
 | Compression | `examples/compression.md` | Prompt, memory, or instruction compression. |
@@ -112,6 +115,24 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Token Efficiency Fresh Benchmark | `docs/benchmarks/token-efficiency-fresh-2026-06-25.md` | Fresh third-pass local benchmark after validation micro-examples. |
 
 ## Recommended Stacks
+
+### GitHub Copilot Cost-Reduction Stack
+
+```text
+Entrypoint:
+  .github/copilot-instructions.md (drop-in from examples/copilot-token-efficiency.md)
+
+Skill:
+  skills/copilot-token-efficiency.md
+
+Supporting skills:
+  skills/context-budgeting-and-pruning.md
+  skills/token-output-budgeting.md
+  skills/token-efficiency-measurement.md
+
+Example:
+  examples/copilot-token-efficiency.md
+```
 
 ### Cross-Tool Token Economy Stack
 
@@ -188,11 +209,11 @@ When adding a new default:
 Current index includes:
 
 - 6 canonical agents
-- 9 canonical skills
+- 10 canonical skills
 - 4 token-efficiency prompts
 - 9 tool integration files (6 entrypoint/rule files + 3 Copilot agent profiles)
 - 8 UX/integration guides
-- 6 examples
+- 7 examples
 - 4 reusable patterns
 - 2 benchmark artifacts
 - 1 machine-readable manifest

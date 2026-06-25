@@ -16,6 +16,7 @@ Use these canonical files as your source behavior:
 ```text
 agents/token-economy-orchestrator.md
 agents/token-efficient-response-agent.md
+skills/copilot-token-efficiency.md
 skills/context-budgeting-and-pruning.md
 skills/token-output-budgeting.md
 skills/token-efficient-response-compression.md
@@ -37,6 +38,7 @@ skills/token-efficient-response-compression.md
 - Compress an existing prompt or instruction file.
 - Make an agent response shorter without losing quality.
 - Build a token-efficient agent stack.
+- Lower a user's GitHub Copilot spend (model selection, context scoping, `.github` customization files) via `skills/copilot-token-efficiency.md`.
 - Create a compact handoff.
 - Review a verbose prompt for token waste.
 - Add or improve token-efficiency measurement guidance.

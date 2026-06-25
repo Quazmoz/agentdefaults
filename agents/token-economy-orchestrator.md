@@ -184,6 +184,7 @@ The same budgets apply everywhere, but the highest-leverage tactic differs by ru
 
 - **Chat / frontier models** — put the compression policy in system/developer instructions; ask for deltas instead of full rewrites.
 - **Coding agents** — prefer patch summaries over full-file dumps; report only changed files and validation; do not narrate file reads.
+- **GitHub Copilot** — tokens are billed directly (usage-based AI Credits): pick the cheapest model that fits the task, prefer auto-selection, scope context with `#`-references over `@workspace`, use the cheapest sufficient mode (completions are free; agent loops cost most), and standardize concise output via `.github/copilot-instructions.md`. See `skills/copilot-token-efficiency.md`.
 - **Local / small models** — use smaller context packets and rigid output contracts; evaluate with pass/fail tasks because local tokenizers differ.
 - **Multi-agent pipelines** — pass state as compact handoffs, keep raw evidence separate from summaries, and reference files/issues by ID instead of re-pasting them.
 
@@ -241,4 +242,5 @@ Pair this agent with:
 - `skills/context-budgeting-and-pruning.md`
 - `skills/token-output-budgeting.md`
 - `skills/token-efficiency-measurement.md`
+- `skills/copilot-token-efficiency.md` (GitHub Copilot cost mechanics)
 - `prompts/token-efficiency/common-task-benchmark.md`
