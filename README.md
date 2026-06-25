@@ -72,7 +72,7 @@ Rule: **update canonical content first, then keep wrappers thin and discoverable
 
 ### Palmier Pro MCP Video Editing Stack
 
-Use when you want an agent to operate Palmier Pro through MCP for timeline edits, story assembly, transcript cleanup, captions, b-roll, generation approval workflows, and exports.
+Use when you want an agent to operate Palmier Pro through MCP for timeline edits, story assembly, YouTube Shorts, transcript cleanup, captions, b-roll, generation approval workflows, and exports.
 
 ```text
 docs/quickstarts/palmierpro-mcp.md
@@ -83,6 +83,7 @@ skills/palmierpro-transcript-cuts-and-captions.md
 skills/palmierpro-ai-generation-workflow.md
 docs/palmierpro-mcp-tool-map.md
 prompts/palmierpro/story-assembly-from-project-media.md
+prompts/palmierpro/youtube-short-from-long-form.md
 prompts/palmierpro/full-edit-pass.md
 examples/palmierpro-mcp-workflow.md
 ```
@@ -173,6 +174,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Skill | Prompt and Memory Compression | [`skills/prompt-and-memory-compression.md`](skills/prompt-and-memory-compression.md) |
 | Skill | Token Efficiency Measurement | [`skills/token-efficiency-measurement.md`](skills/token-efficiency-measurement.md) |
 | Prompt | Palmier Pro Story Assembly From Project Media | [`prompts/palmierpro/story-assembly-from-project-media.md`](prompts/palmierpro/story-assembly-from-project-media.md) |
+| Prompt | Palmier Pro YouTube Short From Long-Form | [`prompts/palmierpro/youtube-short-from-long-form.md`](prompts/palmierpro/youtube-short-from-long-form.md) |
 | Prompt | Palmier Pro Full Edit Pass | [`prompts/palmierpro/full-edit-pass.md`](prompts/palmierpro/full-edit-pass.md) |
 | Prompt | Palmier Pro Transcript Cleanup Pass | [`prompts/palmierpro/transcript-cleanup-pass.md`](prompts/palmierpro/transcript-cleanup-pass.md) |
 | Prompt | Palmier Pro Short-Form Social Cutdown | [`prompts/palmierpro/short-form-social-cutdown.md`](prompts/palmierpro/short-form-social-cutdown.md) |
