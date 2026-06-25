@@ -237,6 +237,163 @@ Provide the target repository, branch, and requested scope.
 
 Then customize only the project-specific context instead of rewriting the full prompt stack.
 
+## Testing the Defaults
+
+This repository is mostly Markdown, so testing means validating three things:
+
+1. The files are present, discoverable, and internally linked.
+2. Each agent/skill/prompt has the required structure.
+3. The token-efficiency pack reduces tokens without materially reducing answer quality.
+
+### 1. Static Repository Check
+
+From a local clone, run:
+
+```bash
+git clone https://github.com/Quazmoz/agentdefaults.git
+cd agentdefaults
+
+required_files=(
+  "INDEX.md"
+  "README.md"
+  "agents/token-efficient-response-agent.md"
+  "agents/token-economy-orchestrator.md"
+  "agents/terse-technical-coding-agent.md"
+  "skills/token-efficient-response-compression.md"
+  "skills/context-budgeting-and-pruning.md"
+  "skills/token-output-budgeting.md"
+  "skills/prompt-and-memory-compression.md"
+  "skills/token-efficiency-measurement.md"
+  "prompts/token-efficiency/common-task-benchmark.md"
+  "prompts/token-efficiency/agent-retrofit.md"
+  "prompts/token-efficiency/compress-memory-file.md"
+  "prompts/token-efficiency/compare-models.md"
+)
+
+for file in "${required_files[@]}"; do
+  test -f "$file" || { echo "missing: $file"; exit 1; }
+done
+
+echo "All required token-efficiency files exist."
+```
+
+### 2. Markdown Structure Check
+
+Run this lightweight check to make sure reusable defaults include the expected sections:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+
+required_sections = ["## Purpose", "## When To Use"]
+paths = [*Path("agents").glob("*.md"), *Path("skills").glob("*.md"), *Path("prompts/token-efficiency").glob("*.md")]
+failures = []
+
+for path in paths:
+    text = path.read_text(encoding="utf-8")
+    missing = [section for section in required_sections if section not in text]
+    if missing:
+        failures.append(f"{path}: missing {', '.join(missing)}")
+
+if failures:
+    print("Structure check failed:")
+    print("\n".join(failures))
+    raise SystemExit(1)
+
+print(f"Structure check passed for {len(paths)} Markdown defaults.")
+PY
+```
+
+### 3. Link and Path Check
+
+Run this to catch broken relative Markdown links:
+
+```bash
+python3 - <<'PY'
+import re
+from pathlib import Path
+
+failures = []
+for md in Path(".").rglob("*.md"):
+    text = md.read_text(encoding="utf-8")
+    for target in re.findall(r"\[[^\]]+\]\(([^)]+\.md)\)", text):
+        if target.startswith(("http://", "https://", "#")):
+            continue
+        resolved = (md.parent / target).resolve()
+        if not resolved.exists():
+            failures.append(f"{md}: broken link -> {target}")
+
+if failures:
+    print("Broken links:")
+    print("\n".join(failures))
+    raise SystemExit(1)
+
+print("Markdown link check passed.")
+PY
+```
+
+### 4. Agent Smoke Test
+
+Paste this into any model or IDE agent after adding one of the token-efficiency stacks:
+
+```text
+Use the token economy stack from AgentDefaults:
+- agents/token-economy-orchestrator.md
+- agents/token-efficient-response-agent.md
+- skills/context-budgeting-and-pruning.md
+- skills/token-output-budgeting.md
+- skills/token-efficient-response-compression.md
+
+Task:
+Explain why a React component re-renders when a parent passes an inline object prop. Give the cause, fix, and validation check in under 120 words.
+```
+
+Expected result:
+
+- Starts with the cause.
+- Uses compact technical language.
+- Gives a fix such as stable object identity, `useMemo`, or moving the object outside render.
+- Includes a validation check.
+- Avoids generic React background.
+
+### 5. Token-Efficiency Benchmark
+
+Use [`prompts/token-efficiency/common-task-benchmark.md`](prompts/token-efficiency/common-task-benchmark.md) to compare a baseline agent against a token-efficient candidate.
+
+Minimum benchmark process:
+
+```text
+1. Run the same task with the baseline prompt.
+2. Run the same task with the token-efficiency stack.
+3. Count input and output tokens using API usage, model logs, tokenizer output, or approximate chars / 4.
+4. Score quality from 1-5 using skills/token-efficiency-measurement.md.
+5. Adopt only if output tokens drop and quality stays within the allowed threshold.
+```
+
+Suggested pass criteria:
+
+```text
+Average output-token reduction: >= 30%
+Average net-token reduction:    >= 20% when input/tool tokens are counted
+Average quality drop:           <= 0.5 points
+Safety/production tasks:        no quality drop allowed
+Validation/citations/risks:     preserved when required
+```
+
+### 6. Model-Agnostic Test
+
+Use [`prompts/token-efficiency/compare-models.md`](prompts/token-efficiency/compare-models.md) to run the same candidate prompt across multiple models.
+
+At minimum, compare:
+
+```text
+- One frontier chat model
+- One coding-specialized model
+- One local or smaller model
+```
+
+The token-efficiency pack is working if all models preserve exact technical details, safety rules, and output schemas while reducing unnecessary prose.
+
 ## Example Agent Stacks
 
 ### Concise General Technical Agent
