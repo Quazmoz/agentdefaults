@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Validate AgentDefaults repository structure and Markdown links."""
+"""Validate AgentDefaults repository structure, JSON, and Markdown links."""
 
 from pathlib import Path
+import json
 import re
 import sys
 
@@ -14,6 +15,7 @@ REQUIRED_FILES = [
     "INDEX.md",
     "README.md",
     "agentdefaults.manifest.json",
+    ".gitignore",
     ".github/FUNDING.yml",
     ".github/copilot-instructions.md",
     ".github/agents/token-economy-orchestrator.agent.md",
@@ -26,12 +28,14 @@ REQUIRED_FILES = [
     "docs/ux-roadmap.md",
     "docs/tool-integration-guide.md",
     "docs/palmierpro-mcp-tool-map.md",
+    "docs/app-market-research-acceptance-tests.md",
     "docs/quickstarts/cli.md",
     "docs/quickstarts/claude.md",
     "docs/quickstarts/gemini.md",
     "docs/quickstarts/editor.md",
     "docs/quickstarts/repo-assistant.md",
     "docs/quickstarts/palmierpro-mcp.md",
+    "docs/quickstarts/app-market-research.md",
     "docs/benchmarks/token-efficiency-smoke-test.md",
     "docs/benchmarks/token-efficiency-fresh-2026-06-25.md",
     "docs/patterns/default.md",
@@ -46,6 +50,8 @@ REQUIRED_FILES = [
     "examples/local-model.md",
     "examples/repository-profile.md",
     "examples/palmierpro-mcp-workflow.md",
+    "examples/app-market-research-brief.yaml",
+    "schemas/app-market-research-brief.schema.json",
     "agents/token-efficient-response-agent.md",
     "agents/token-economy-orchestrator.md",
     "agents/terse-technical-coding-agent.md",
@@ -53,6 +59,7 @@ REQUIRED_FILES = [
     "agents/comet-authenticated-research-agent.md",
     "agents/seo-ai-search-optimization-agent.md",
     "agents/palmierpro-mcp-video-editor-agent.md",
+    "agents/app-market-research-agent.md",
     "skills/copilot-token-efficiency.md",
     "skills/token-efficient-response-compression.md",
     "skills/context-budgeting-and-pruning.md",
@@ -67,6 +74,15 @@ REQUIRED_FILES = [
     "skills/palmierpro-timeline-editing.md",
     "skills/palmierpro-transcript-cuts-and-captions.md",
     "skills/palmierpro-ai-generation-workflow.md",
+    "skills/browser-research-foundations.md",
+    "skills/authenticated-browser-handoff.md",
+    "skills/play-store-autocomplete-research.md",
+    "skills/play-store-competitor-discovery.md",
+    "skills/play-store-listing-teardown.md",
+    "skills/forum-demand-mining.md",
+    "skills/play-console-search-term-analysis.md",
+    "skills/market-opportunity-clustering.md",
+    "skills/app-market-research-orchestrator.md",
     "prompts/token-efficiency/common-task-benchmark.md",
     "prompts/token-efficiency/agent-retrofit.md",
     "prompts/token-efficiency/compress-memory-file.md",
@@ -96,6 +112,11 @@ PURPOSE_FILES = [
     "CLAUDE.md",
     "GEMINI.md",
     ".github/copilot-instructions.md",
+]
+
+JSON_FILES = [
+    "agentdefaults.manifest.json",
+    "schemas/app-market-research-brief.schema.json",
 ]
 
 LINK_EXTENSIONS = (
@@ -147,6 +168,21 @@ def check_purpose_sections():
     return 0
 
 
+def check_json_files():
+    failures = []
+    for name in JSON_FILES:
+        path = ROOT / name
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            failures.append(f"{name}: {exc}")
+
+    if failures:
+        return print_fail("JSON files", failures)
+    print(f"PASS: JSON files ({len(JSON_FILES)} checked)")
+    return 0
+
+
 def should_check_link(target):
     if target.startswith(("http://", "https://", "mailto:", "#")):
         return False
@@ -177,7 +213,12 @@ def check_links():
 def main():
     print("AgentDefaults validation")
     print("========================")
-    failures = check_required_files() + check_purpose_sections() + check_links()
+    failures = (
+        check_required_files()
+        + check_purpose_sections()
+        + check_json_files()
+        + check_links()
+    )
     if failures:
         print("\nResult: FAIL")
         return 1

@@ -1,0 +1,20 @@
+# Browser research runtime data
+research-runs/
+browser-profiles/
+browser-profile/
+session-data/
+cookies/
+local-storage/
+downloads/private/
+exports/private/
+*.private.csv
+*.private.json
+*.private.zip
+
+# Common local artifacts
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+!.env.example

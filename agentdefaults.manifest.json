@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.1.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, MCP workflows, and benchmark artifacts.",
+  "version": "0.2.0",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -21,6 +21,25 @@
         "prompts/palmierpro/short-form-social-cutdown.md"
       ],
       "example": "examples/palmierpro-mcp-workflow.md"
+    },
+    {
+      "name": "App Market Browser Research",
+      "quickstart": "docs/quickstarts/app-market-research.md",
+      "agent": "agents/app-market-research-agent.md",
+      "skills": [
+        "skills/browser-research-foundations.md",
+        "skills/authenticated-browser-handoff.md",
+        "skills/play-store-autocomplete-research.md",
+        "skills/play-store-competitor-discovery.md",
+        "skills/play-store-listing-teardown.md",
+        "skills/forum-demand-mining.md",
+        "skills/play-console-search-term-analysis.md",
+        "skills/market-opportunity-clustering.md",
+        "skills/app-market-research-orchestrator.md"
+      ],
+      "schema": "schemas/app-market-research-brief.schema.json",
+      "example": "examples/app-market-research-brief.yaml",
+      "acceptance_tests": "docs/app-market-research-acceptance-tests.md"
     },
     {
       "name": "Token Economy",

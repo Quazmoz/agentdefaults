@@ -1,6 +1,8 @@
 # AgentDefaults Index
 
-Fast lookup for agents, skills, prompts, wrappers, quickstarts, examples, patterns, benchmark artifacts, MCP workflows, and recommended stacks.
+## Purpose
+
+Provide fast lookup for agents, skills, prompts, wrappers, quickstarts, examples, schemas, benchmark artifacts, MCP workflows, browser-research workflows, and recommended stacks.
 
 Use this file when an AI agent needs to quickly determine which defaults exist and how to compose them. Use [`README.md`](README.md) for the human-facing overview and [`docs/user-guide.md`](docs/user-guide.md) for guided selection.
 
@@ -16,6 +18,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Editor rule usage | `docs/quickstarts/editor.md` | `.cursor/rules/agentdefaults.mdc`, `.windsurfrules` |
 | Repository assistant profiles | `docs/quickstarts/repo-assistant.md` | `.github/copilot-instructions.md`, `.github/agents/*.agent.md` |
 | Palmier Pro MCP video editing | `docs/quickstarts/palmierpro-mcp.md` | `agents/palmierpro-mcp-video-editor-agent.md`, Palmier skills/prompts |
+| Browser-based app-market research | `docs/quickstarts/app-market-research.md` | `agents/app-market-research-agent.md`, browser-research skills, brief schema |
 | Palmier Pro story assembly | `prompts/palmierpro/story-assembly-from-project-media.md` | Inspect all project video media, infer intent, extract main points, and assemble a YouTube story arc. |
 | YouTube Short from long-form Palmier project | `prompts/palmierpro/youtube-short-from-long-form.md` | Create a 9:16 Short with facecam/screenshare placement and mobile-readable captions. |
 | Any chat/local model usage | `examples/local-model.md` | copy-paste selected stack |
@@ -41,6 +44,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Cursor | `.cursor/rules/agentdefaults.mdc` | Thin editor rule wrapper. |
 | Windsurf | `.windsurfrules` | Thin editor wrapper. |
 | Palmier Pro MCP | `docs/quickstarts/palmierpro-mcp.md` | Video-editing workflow through Palmier Pro's local MCP server. |
+| Browser-capable agent | `docs/quickstarts/app-market-research.md` | App-market research with adapter-based browser control and human authentication. |
 
 ## UX Guides
 
@@ -50,6 +54,8 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | UX Roadmap | `docs/ux-roadmap.md` | Track follow-up usability improvements. |
 | Tool Integration Guide | `docs/tool-integration-guide.md` | Practical tool-by-tool setup and maintenance guidance. |
 | Palmier Pro MCP Quickstart | `docs/quickstarts/palmierpro-mcp.md` | Connect and use Palmier Pro through MCP. |
+| App Market Research Quickstart | `docs/quickstarts/app-market-research.md` | Run public and authenticated app-market research. |
+| App Market Research Acceptance Tests | `docs/app-market-research-acceptance-tests.md` | Validate browser adapters, resume behavior, privacy, and consequential-action safety. |
 | Palmier Pro MCP Tool Map | `docs/palmierpro-mcp-tool-map.md` | Choose the right Palmier MCP tool by editing intent. |
 | CLI Quickstart | `docs/quickstarts/cli.md` | Local repo-aware coding CLI usage. |
 | Claude Quickstart | `docs/quickstarts/claude.md` | Claude-style usage. |
@@ -62,6 +68,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Agent | Path | Use |
 |---|---|---|
 | Palmier Pro MCP Video Editor | `agents/palmierpro-mcp-video-editor-agent.md` | Video editing, transcript cleanup, captions, approved generation, and export workflows in Palmier Pro over MCP. |
+| App Market Research Agent | `agents/app-market-research-agent.md` | Resumable Google Play, Wear OS, public-community, and approved Play Console research. |
 | Kubernetes Homelab Engineer | `agents/kubernetes-homelab-engineer.md` | Kubernetes homelab and GitOps specialist. |
 | Token-Efficient Response Agent | `agents/token-efficient-response-agent.md` | High-signal, low-token behavior layer. |
 | Token Economy Orchestrator | `agents/token-economy-orchestrator.md` | Manage input, context, tool-result, and output token budgets. |
@@ -73,6 +80,15 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 
 | Skill | Path | Use |
 |---|---|---|
+| Browser Research Foundations | `skills/browser-research-foundations.md` | Shared navigation, provenance, checkpoint, privacy, and failure-handling rules. |
+| Authenticated Browser Handoff | `skills/authenticated-browser-handoff.md` | Secure login, CAPTCHA, MFA, consent, takeover, resume, and consequential-action protection. |
+| Play Store Autocomplete Research | `skills/play-store-autocomplete-research.md` | Collect visible suggestions with locale, rank, normalization, and checkpoints. |
+| Play Store Competitor Discovery | `skills/play-store-competitor-discovery.md` | Find direct competitors and substitutes while verifying device support. |
+| Play Store Listing Teardown | `skills/play-store-listing-teardown.md` | Analyze positioning, screenshots, monetization, reviews, and update themes. |
+| Forum Demand Mining | `skills/forum-demand-mining.md` | Mine public communities for unmet needs, app-search intent, and workarounds. |
+| Play Console Search Term Analysis | `skills/play-console-search-term-analysis.md` | Parse approved official exports with human-controlled authentication. |
+| Market Opportunity Clustering | `skills/market-opportunity-clustering.md` | Produce evidence-linked opportunity clusters and transparent scoring. |
+| App Market Research Orchestrator | `skills/app-market-research-orchestrator.md` | Validate briefs, sequence sources, pause for auth, resume, and generate manifests. |
 | Palmier Pro MCP Setup and Safety | `skills/palmierpro-mcp-setup-and-safety.md` | Connect safely, read state, and protect against unintended paid/destructive actions. |
 | Palmier Pro Timeline Editing | `skills/palmierpro-timeline-editing.md` | Frame-accurate timeline edits, b-roll, overlays, sync, properties, and verification. |
 | Palmier Pro Transcript Cuts and Captions | `skills/palmierpro-transcript-cuts-and-captions.md` | Filler removal, retake cleanup, dead-air reduction, and caption creation. |
@@ -102,12 +118,19 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Compress Memory or Instruction File | `prompts/token-efficiency/compress-memory-file.md` | Compress recurring instruction files with an audit report. |
 | Compare Models for Token Efficiency | `prompts/token-efficiency/compare-models.md` | Compare prompt behavior across hosted/coding/local models. |
 
+## Schemas
+
+| Schema | Path | Use |
+|---|---|---|
+| App Market Research Brief | `schemas/app-market-research-brief.schema.json` | Validate markets, seeds, sources, outputs, and scoring options before browsing. |
+
 ## Examples
 
 | Example | Path | Use |
 |---|---|---|
+| App Market Research Brief | `examples/app-market-research-brief.yaml` | Copy-paste Wear OS research brief for GB and US sources. |
 | Palmier Pro MCP Workflow | `examples/palmierpro-mcp-workflow.md` | Copy-paste Palmier Pro MCP editing workflows. |
-| GitHub Copilot Token Efficiency | `examples/copilot-token-efficiency.md` | Drop-in `.github` files + habits to lower Copilot cost. |
+| GitHub Copilot Token Efficiency | `examples/copilot-token-efficiency.md` | Drop-in `.github` files + habits to lower GitHub Copilot cost. |
 | Coding | `examples/coding.md` | Compact coding workflow. |
 | Benchmark | `examples/benchmark.md` | Token-efficiency benchmark recipe. |
 | Compression | `examples/compression.md` | Prompt, memory, or instruction compression. |
@@ -132,6 +155,36 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Token Efficiency Fresh Benchmark | `docs/benchmarks/token-efficiency-fresh-2026-06-25.md` | Fresh third-pass local benchmark after validation micro-examples. |
 
 ## Recommended Stacks
+
+### App Market Browser Research Stack
+
+```text
+Entrypoint:
+  docs/quickstarts/app-market-research.md
+
+Agent:
+  agents/app-market-research-agent.md
+
+Skills:
+  skills/browser-research-foundations.md
+  skills/authenticated-browser-handoff.md
+  skills/play-store-autocomplete-research.md
+  skills/play-store-competitor-discovery.md
+  skills/play-store-listing-teardown.md
+  skills/forum-demand-mining.md
+  skills/play-console-search-term-analysis.md
+  skills/market-opportunity-clustering.md
+  skills/app-market-research-orchestrator.md
+
+Schema:
+  schemas/app-market-research-brief.schema.json
+
+Example:
+  examples/app-market-research-brief.yaml
+
+Acceptance tests:
+  docs/app-market-research-acceptance-tests.md
+```
 
 ### Palmier Pro MCP Video Editing Stack
 
@@ -238,8 +291,9 @@ Artifacts:
 4. Prefer narrow context over whole-repo ingestion.
 5. Preserve exact paths, commands, schemas, safety rules, and validation status.
 6. For MCP tools, treat live tool output as the source of truth over static docs.
-7. For token-efficiency claims, use `skills/token-efficiency-measurement.md` or benchmark prompts.
-8. When adding new discoverable files, update `README.md`, this `INDEX.md`, and the validation script.
+7. For browser research, treat visible source evidence and approved exports as the source of truth.
+8. For token-efficiency claims, use `skills/token-efficiency-measurement.md` or benchmark prompts.
+9. When adding new discoverable files, update `README.md`, this `INDEX.md`, and the validation script.
 
 ## Maintenance Rules
 
@@ -248,19 +302,20 @@ When adding a new default:
 1. Add canonical content under `agents/`, `skills/`, or `prompts/` when possible.
 2. Add a wrapper only if a tool benefits from a native file location.
 3. Keep wrappers thin; do not duplicate full canonical files everywhere.
-4. Add a guide, example, or pattern when it materially improves UX.
+4. Add a guide, example, schema, or pattern when it materially improves UX.
 5. Run `python3 scripts/validate-agentdefaults.py`.
 
 ## Status
 
 Current index includes:
 
-- 7 canonical agents
-- 14 canonical skills
+- 8 canonical agents
+- 23 canonical skills
 - 9 canonical prompts
 - 10 tool integration files (6 entrypoint/rule files + 4 Copilot agent profiles)
-- 10 UX/integration guides and tool maps
-- 8 examples
+- 12 UX/integration guides, acceptance tests, and tool maps
+- 9 examples
 - 4 reusable patterns
 - 2 benchmark artifacts
+- 1 machine-readable workflow schema
 - 1 machine-readable manifest

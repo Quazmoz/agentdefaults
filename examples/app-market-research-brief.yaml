@@ -1,0 +1,52 @@
+platform: wear_os
+markets:
+  - country: GB
+    locale: en-GB
+    language: en
+  - country: US
+    locale: en-US
+    language: en
+
+seed_keywords:
+  - wear os timer
+  - wear os medication
+  - wear os fidget
+  - wear os offline utility
+  - phone monitoring watch app
+
+sources:
+  - google_play_autocomplete
+  - google_play_listings
+  - reddit
+  - xda
+  - play_console
+
+competitor_limit_per_keyword: 10
+date_range_months: 24
+
+authenticated_sources:
+  - play_console
+
+developer_constraints:
+  team_size: 1
+  preferred_business_model: one_time_paid
+  avoid:
+    - inaccessible_private_apis
+    - high_background_battery_use
+    - high_policy_risk
+    - server_required_for_core_functionality
+
+outputs:
+  - csv
+  - json
+  - markdown
+  - screenshots
+
+scoring_weights:
+  evidence_strength: 1.4
+  watch_native_usefulness: 1.4
+  technical_feasibility: 1.3
+  differentiation_potential: 1.1
+  monetization_potential: 1.0
+  policy_risk: -1.2
+  maintenance_burden: -0.9

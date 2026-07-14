@@ -2,7 +2,7 @@
 
 # AgentDefaults
 
-**Reusable defaults for AI agents, skills, prompts, wrappers, examples, and benchmarkable token-efficiency workflows.**
+**Reusable defaults for AI agents, skills, prompts, wrappers, browser research, examples, and benchmarkable token-efficiency workflows.**
 
 ![Markdown](https://img.shields.io/badge/content-Markdown-blue)
 ![Agent UX](https://img.shields.io/badge/focus-agent%20UX-purple)
@@ -47,6 +47,7 @@ Then choose a path:
 | Use editor rule files | [`docs/quickstarts/editor.md`](docs/quickstarts/editor.md) |
 | Use repository assistant profile wrappers | [`docs/quickstarts/repo-assistant.md`](docs/quickstarts/repo-assistant.md) |
 | Use Palmier Pro through MCP | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
+| Research Google Play, Wear OS, forums, and Play Console | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) |
 | Add a new reusable default | [`docs/patterns/default.md`](docs/patterns/default.md) |
 | Copy a ready-made example | [`examples/`](examples/) |
 
@@ -62,6 +63,7 @@ AgentDefaults separates **canonical reusable content** from **thin tool wrappers
 | Agents | [`agents/`](agents/) | Full reusable agent profiles. |
 | Skills | [`skills/`](skills/) | Composable behavior and task modules. |
 | Prompts | [`prompts/`](prompts/) | Copy-paste benchmark and task prompts. |
+| Schemas | [`schemas/`](schemas/) | Machine-readable contracts for structured workflows. |
 | Docs | [`docs/`](docs/) | Quickstarts, integration guides, patterns, tool maps, and benchmarks. |
 | Examples | [`examples/`](examples/) | Practical copy-paste recipes. |
 | Manifest | [`agentdefaults.manifest.json`](agentdefaults.manifest.json) | Machine-readable repo summary. |
@@ -86,6 +88,26 @@ prompts/palmierpro/story-assembly-from-project-media.md
 prompts/palmierpro/youtube-short-from-long-form.md
 prompts/palmierpro/full-edit-pass.md
 examples/palmierpro-mcp-workflow.md
+```
+
+### App Market Browser Research Stack
+
+Use when you want a browser-capable agent to research Google Play autocomplete, competitors, listings, Reddit, XDA, public forums, and approved Play Console data with resumable checkpoints and secure human authentication.
+
+```text
+docs/quickstarts/app-market-research.md
+agents/app-market-research-agent.md
+skills/browser-research-foundations.md
+skills/authenticated-browser-handoff.md
+skills/play-store-autocomplete-research.md
+skills/play-store-competitor-discovery.md
+skills/play-store-listing-teardown.md
+skills/forum-demand-mining.md
+skills/play-console-search-term-analysis.md
+skills/market-opportunity-clustering.md
+skills/app-market-research-orchestrator.md
+schemas/app-market-research-brief.schema.json
+examples/app-market-research-brief.yaml
 ```
 
 ### GitHub Copilot Cost-Reduction Stack
@@ -150,6 +172,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Cursor | [`.cursor/rules/agentdefaults.mdc`](.cursor/rules/agentdefaults.mdc) | Thin rule wrapper pointing back to canonical files. |
 | Windsurf | [`.windsurfrules`](.windsurfrules) | Thin wrapper pointing back to canonical files. |
 | MCP-connected apps | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) | Palmier Pro video-editing workflow over local MCP. |
+| Browser-capable agents | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) | Adapter-based public and authenticated market research with human takeover. |
 | Any chat/local model | [`agents/`](agents/), [`skills/`](skills/), [`prompts/`](prompts/) | Copy-paste the smallest useful stack. |
 
 ## Available Defaults
@@ -157,12 +180,22 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Type | Name | Path |
 |---|---|---|
 | Agent | Palmier Pro MCP Video Editor | [`agents/palmierpro-mcp-video-editor-agent.md`](agents/palmierpro-mcp-video-editor-agent.md) |
+| Agent | App Market Research Agent | [`agents/app-market-research-agent.md`](agents/app-market-research-agent.md) |
 | Agent | Token Economy Orchestrator | [`agents/token-economy-orchestrator.md`](agents/token-economy-orchestrator.md) |
 | Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) |
 | Agent | Terse Technical Coding Agent | [`agents/terse-technical-coding-agent.md`](agents/terse-technical-coding-agent.md) |
 | Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) |
 | Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) |
 | Agent | SEO and AI Search Optimization Agent | [`agents/seo-ai-search-optimization-agent.md`](agents/seo-ai-search-optimization-agent.md) |
+| Skill | Browser Research Foundations | [`skills/browser-research-foundations.md`](skills/browser-research-foundations.md) |
+| Skill | Authenticated Browser Handoff | [`skills/authenticated-browser-handoff.md`](skills/authenticated-browser-handoff.md) |
+| Skill | Play Store Autocomplete Research | [`skills/play-store-autocomplete-research.md`](skills/play-store-autocomplete-research.md) |
+| Skill | Play Store Competitor Discovery | [`skills/play-store-competitor-discovery.md`](skills/play-store-competitor-discovery.md) |
+| Skill | Play Store Listing Teardown | [`skills/play-store-listing-teardown.md`](skills/play-store-listing-teardown.md) |
+| Skill | Forum Demand Mining | [`skills/forum-demand-mining.md`](skills/forum-demand-mining.md) |
+| Skill | Play Console Search Term Analysis | [`skills/play-console-search-term-analysis.md`](skills/play-console-search-term-analysis.md) |
+| Skill | Market Opportunity Clustering | [`skills/market-opportunity-clustering.md`](skills/market-opportunity-clustering.md) |
+| Skill | App Market Research Orchestrator | [`skills/app-market-research-orchestrator.md`](skills/app-market-research-orchestrator.md) |
 | Skill | Palmier Pro MCP Setup and Safety | [`skills/palmierpro-mcp-setup-and-safety.md`](skills/palmierpro-mcp-setup-and-safety.md) |
 | Skill | Palmier Pro Timeline Editing | [`skills/palmierpro-timeline-editing.md`](skills/palmierpro-timeline-editing.md) |
 | Skill | Palmier Pro Transcript Cuts and Captions | [`skills/palmierpro-transcript-cuts-and-captions.md`](skills/palmierpro-transcript-cuts-and-captions.md) |
@@ -187,6 +220,7 @@ For the full list, use [`INDEX.md`](INDEX.md).
 
 | Recipe | Use |
 |---|---|
+| [`examples/app-market-research-brief.yaml`](examples/app-market-research-brief.yaml) | Ready-to-adapt Wear OS market-research brief. |
 | [`examples/palmierpro-mcp-workflow.md`](examples/palmierpro-mcp-workflow.md) | Copy-paste Palmier Pro MCP editing workflows. |
 | [`examples/copilot-token-efficiency.md`](examples/copilot-token-efficiency.md) | Drop-in `.github` files + habits to lower GitHub Copilot cost. |
 | [`examples/coding.md`](examples/coding.md) | Build a compact coding workflow. |
@@ -217,6 +251,7 @@ It checks:
 
 - Required files exist.
 - Markdown defaults include `## Purpose`.
+- JSON manifests and schemas parse.
 - Local Markdown links resolve.
 
 ## Benchmark Evidence
@@ -238,10 +273,13 @@ agentdefaults/
 ├── agentdefaults.manifest.json
 ├── scripts/
 │   └── validate-agentdefaults.py
+├── schemas/
+│   └── app-market-research-brief.schema.json
 ├── docs/
 │   ├── user-guide.md
 │   ├── ux-roadmap.md
 │   ├── palmierpro-mcp-tool-map.md
+│   ├── app-market-research-acceptance-tests.md
 │   ├── quickstarts/
 │   ├── patterns/
 │   └── benchmarks/
@@ -262,7 +300,7 @@ agentdefaults/
 - Reduce input/context, tool-result, and output waste.
 - Preserve exact technical identifiers and safety rules.
 - Benchmark quality separately from token savings.
-- Keep prompts usable across hosted frontier models, coding agents, local LLMs, and MCP tools.
+- Keep prompts usable across hosted frontier models, coding agents, local LLMs, browser agents, and MCP tools.
 
 ## Contributing
 
@@ -279,7 +317,7 @@ Use [`docs/patterns/default.md`](docs/patterns/default.md) for new reusable cont
 
 ## Status
 
-Usable cross-tool scaffold with benchmarked token-efficiency defaults, Palmier Pro MCP video-editing defaults, tool wrappers, quickstarts, examples, patterns, and validation tooling.
+Usable cross-tool scaffold with benchmarked token-efficiency defaults, browser-based app-market research skills, Palmier Pro MCP video-editing defaults, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
 
 ## License
 
