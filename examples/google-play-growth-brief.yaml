@@ -1,0 +1,89 @@
+# Google Play growth brief
+app:
+  name: BaroGuard
+  package_name: com.example.baroguard
+  play_listing_url: https://play.google.com/store/apps/details?id=com.example.baroguard
+  website_url: https://example.com/apps/baroguard
+  repository_url: https://github.com/example/baroguard
+  platform:
+    - wear_os
+  primary_job: Show live barometric pressure and short-term pressure trends on a watch.
+  target_audience: Wear OS users who want fast weather-context and altitude-aware pressure checks.
+  monetization: one_time_paid
+  price_notes: Verify current local prices in Play Console.
+  release_status: production
+
+markets:
+  - country: GB
+    locale: en-GB
+    language: English
+    priority: 1
+  - country: US
+    locale: en-US
+    language: English
+    priority: 2
+
+objectives:
+  - play_search_relevance
+  - store_listing_conversion
+  - buyer_conversion
+  - ratings_and_reviews
+  - web_search_visibility
+  - ai_recommendations
+
+sources:
+  - public_play_listing
+  - app_build
+  - play_console_acquisition
+  - play_console_search_terms
+  - play_console_store_performance
+  - play_console_ratings_reviews
+  - android_vitals
+  - website
+  - search_console
+  - web_analytics
+  - github
+  - youtube
+  - public_reviews
+  - competitor_listings
+  - official_platform_docs
+  - ai_recommendation_tests
+
+constraints:
+  solo_developer: true
+  no_paid_ads: true
+  no_backlink_outreach: true
+  max_hours_per_week: 6
+  audit_only: false
+  draft_only: true
+  implementation_scope:
+    - repository_docs
+    - website_code
+    - play_listing_draft
+    - creative_briefs
+
+target_prompts:
+  - Best Wear OS barometer app
+  - Wear OS app for pressure trends
+  - One-time purchase barometer app for Galaxy Watch
+  - Privacy-friendly watch barometer without an account
+  - BaroGuard alternatives
+
+competitors:
+  - Add verified package names or listing URLs after competitor discovery.
+
+outputs:
+  - diagnostic_scorecard
+  - query_map
+  - metadata_copy
+  - creative_storyboard
+  - quality_plan
+  - localization_plan
+  - web_seo_plan
+  - entity_record
+  - crawler_policy
+  - ai_prompt_test
+  - experiment_backlog
+  - thirty_day_plan
+  - markdown
+  - json
