@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdefaults.local/schemas/google-play-growth-brief.schema.json",
+  "title": "Google Play Growth Brief",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "app",
+    "markets",
+    "objectives",
+    "sources",
+    "outputs"
+  ],
+  "properties": {
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "package_name",
+        "platform",
+        "primary_job",
+        "monetization"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "package_name": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$"
+        },
+        "play_listing_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "website_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "repository_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "platform": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "android_phone",
+              "android_tablet",
+              "wear_os",
+              "android_tv",
+              "android_auto",
+              "android_automotive",
+              "android_xr",
+              "chromeos"
+            ]
+          }
+        },
+        "primary_job": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_audience": {
+          "type": "string"
+        },
+        "monetization": {
+          "type": "string",
+          "enum": [
+            "free",
+            "one_time_paid",
+            "in_app_products",
+            "subscription",
+            "ads",
+            "hybrid",
+            "unknown"
+          ]
+        },
+        "price_notes": {
+          "type": "string"
+        },
+        "release_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "testing",
+            "production",
+            "unpublished",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "markets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "country",
+          "locale",
+          "language"
+        ],
+        "properties": {
+          "country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+          },
+          "locale": {
+            "type": "string",
+            "minLength": 2
+          },
+          "language": {
+            "type": "string",
+            "minLength": 2
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      }
+    },
+    "objectives": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "play_search_relevance",
+          "play_recommendation_visibility",
+          "store_listing_conversion",
+          "buyer_conversion",
+          "organic_installs",
+          "activation",
+          "retention",
+          "ratings_and_reviews",
+          "web_search_visibility",
+          "ai_recommendations"
+        ]
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "public_play_listing",
+          "current_listing_export",
+          "app_build",
+          "play_console_acquisition",
+          "play_console_search_terms",
+          "play_console_store_performance",
+          "play_console_ratings_reviews",
+          "android_vitals",
+          "retention_export",
+          "refund_export",
+          "website",
+          "search_console",
+          "web_analytics",
+          "github",
+          "youtube",
+          "public_reviews",
+          "public_forums",
+          "competitor_listings",
+          "official_platform_docs",
+          "ai_recommendation_tests"
+        ]
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "solo_developer": {
+          "type": "boolean"
+        },
+        "no_paid_ads": {
+          "type": "boolean"
+        },
+        "no_backlink_outreach": {
+          "type": "boolean"
+        },
+        "max_hours_per_week": {
+          "type": "number",
+          "minimum": 0
+        },
+        "audit_only": {
+          "type": "boolean"
+        },
+        "draft_only": {
+          "type": "boolean"
+        },
+        "implementation_scope": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "repository_docs",
+              "website_code",
+              "play_listing_draft",
+              "creative_briefs",
+              "analytics_instrumentation",
+              "no_implementation"
+            ]
+          }
+        }
+      }
+    },
+    "target_prompts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "competitors": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "diagnostic_scorecard",
+          "query_map",
+          "metadata_copy",
+          "creative_storyboard",
+          "quality_plan",
+          "localization_plan",
+          "web_seo_plan",
+          "entity_record",
+          "crawler_policy",
+          "ai_prompt_test",
+          "experiment_backlog",
+          "thirty_day_plan",
+          "implementation_patch",
+          "markdown",
+          "json",
+          "csv"
+        ]
+      }
+    }
+  }
+}

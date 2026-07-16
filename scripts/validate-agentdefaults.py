@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate AgentDefaults repository structure, JSON, and Markdown links."""
+"""Validate AgentDefaults repository structure, JSON, manifest references, and Markdown links."""
 
 from pathlib import Path
 import json
@@ -22,6 +22,7 @@ REQUIRED_FILES = [
     ".github/agents/terse-technical-coding.agent.md",
     ".github/agents/token-efficiency-benchmark.agent.md",
     ".github/agents/palmierpro-video-editor.agent.md",
+    ".github/agents/google-play-growth-optimizer.agent.md",
     ".cursor/rules/agentdefaults.mdc",
     ".windsurfrules",
     "docs/user-guide.md",
@@ -29,6 +30,7 @@ REQUIRED_FILES = [
     "docs/tool-integration-guide.md",
     "docs/palmierpro-mcp-tool-map.md",
     "docs/app-market-research-acceptance-tests.md",
+    "docs/google-play-growth-acceptance-tests.md",
     "docs/quickstarts/cli.md",
     "docs/quickstarts/claude.md",
     "docs/quickstarts/gemini.md",
@@ -36,6 +38,7 @@ REQUIRED_FILES = [
     "docs/quickstarts/repo-assistant.md",
     "docs/quickstarts/palmierpro-mcp.md",
     "docs/quickstarts/app-market-research.md",
+    "docs/quickstarts/google-play-growth.md",
     "docs/benchmarks/token-efficiency-smoke-test.md",
     "docs/benchmarks/token-efficiency-fresh-2026-06-25.md",
     "docs/patterns/default.md",
@@ -51,7 +54,9 @@ REQUIRED_FILES = [
     "examples/repository-profile.md",
     "examples/palmierpro-mcp-workflow.md",
     "examples/app-market-research-brief.yaml",
+    "examples/google-play-growth-brief.yaml",
     "schemas/app-market-research-brief.schema.json",
+    "schemas/google-play-growth-brief.schema.json",
     "agents/token-efficient-response-agent.md",
     "agents/token-economy-orchestrator.md",
     "agents/terse-technical-coding-agent.md",
@@ -60,6 +65,7 @@ REQUIRED_FILES = [
     "agents/seo-ai-search-optimization-agent.md",
     "agents/palmierpro-mcp-video-editor-agent.md",
     "agents/app-market-research-agent.md",
+    "agents/google-play-growth-optimizer-agent.md",
     "skills/copilot-token-efficiency.md",
     "skills/token-efficient-response-compression.md",
     "skills/context-budgeting-and-pruning.md",
@@ -83,6 +89,14 @@ REQUIRED_FILES = [
     "skills/play-console-search-term-analysis.md",
     "skills/market-opportunity-clustering.md",
     "skills/app-market-research-orchestrator.md",
+    "skills/google-play-aso-foundations.md",
+    "skills/google-play-keyword-and-metadata-optimization.md",
+    "skills/google-play-creative-conversion-optimization.md",
+    "skills/google-play-quality-and-retention-signals.md",
+    "skills/app-web-seo-and-entity-optimization.md",
+    "skills/ai-agent-recommendation-readiness.md",
+    "skills/app-growth-experimentation-and-measurement.md",
+    "skills/google-play-growth-orchestrator.md",
     "prompts/token-efficiency/common-task-benchmark.md",
     "prompts/token-efficiency/agent-retrofit.md",
     "prompts/token-efficiency/compress-memory-file.md",
@@ -117,6 +131,7 @@ PURPOSE_FILES = [
 JSON_FILES = [
     "agentdefaults.manifest.json",
     "schemas/app-market-research-brief.schema.json",
+    "schemas/google-play-growth-brief.schema.json",
 ]
 
 LINK_EXTENSIONS = (
@@ -183,6 +198,47 @@ def check_json_files():
     return 0
 
 
+def iter_manifest_paths(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key in {
+                "primary_entrypoint",
+                "validation",
+                "quickstart",
+                "agent",
+                "schema",
+                "example",
+                "acceptance_tests",
+                "wrapper",
+            } and isinstance(child, str):
+                yield child
+            elif key in {"skills", "prompts"} and isinstance(child, list):
+                for item in child:
+                    if isinstance(item, str):
+                        yield item
+            yield from iter_manifest_paths(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from iter_manifest_paths(child)
+
+
+def check_manifest_references():
+    path = ROOT / "agentdefaults.manifest.json"
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return print_fail("manifest references", [str(exc)])
+
+    missing = sorted({
+        ref for ref in iter_manifest_paths(manifest)
+        if not (ROOT / ref).is_file()
+    })
+    if missing:
+        return print_fail("manifest references", missing)
+    print("PASS: manifest references")
+    return 0
+
+
 def should_check_link(target):
     if target.startswith(("http://", "https://", "mailto:", "#")):
         return False
@@ -217,6 +273,7 @@ def main():
         check_required_files()
         + check_purpose_sections()
         + check_json_files()
+        + check_manifest_references()
         + check_links()
     )
     if failures:

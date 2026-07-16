@@ -1,10 +1,29 @@
 {
   "name": "AgentDefaults",
-  "version": "0.2.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, MCP workflows, and benchmark artifacts.",
+  "version": "0.3.0",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, app growth, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
+    {
+      "name": "Google Play Growth Optimization",
+      "quickstart": "docs/quickstarts/google-play-growth.md",
+      "agent": "agents/google-play-growth-optimizer-agent.md",
+      "skills": [
+        "skills/google-play-aso-foundations.md",
+        "skills/google-play-keyword-and-metadata-optimization.md",
+        "skills/google-play-creative-conversion-optimization.md",
+        "skills/google-play-quality-and-retention-signals.md",
+        "skills/app-web-seo-and-entity-optimization.md",
+        "skills/ai-agent-recommendation-readiness.md",
+        "skills/app-growth-experimentation-and-measurement.md",
+        "skills/google-play-growth-orchestrator.md"
+      ],
+      "schema": "schemas/google-play-growth-brief.schema.json",
+      "example": "examples/google-play-growth-brief.yaml",
+      "acceptance_tests": "docs/google-play-growth-acceptance-tests.md",
+      "wrapper": ".github/agents/google-play-growth-optimizer.agent.md"
+    },
     {
       "name": "Palmier Pro MCP Video Editing",
       "quickstart": "docs/quickstarts/palmierpro-mcp.md",
