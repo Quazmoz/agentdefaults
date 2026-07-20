@@ -19,6 +19,10 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Repository assistant profiles | `docs/quickstarts/repo-assistant.md` | `.github/copilot-instructions.md`, `.github/agents/*.agent.md` |
 | Palmier Pro MCP video editing | `docs/quickstarts/palmierpro-mcp.md` | `agents/palmierpro-mcp-video-editor-agent.md`, Palmier skills/prompts |
 | Browser-based app-market research | `docs/quickstarts/app-market-research.md` | `agents/app-market-research-agent.md`, browser-research skills, brief schema |
+| Google Play growth / ASO optimization | `docs/quickstarts/google-play-growth.md` | `agents/google-play-growth-optimizer-agent.md`, Google Play growth skills, growth brief schema |
+| Build or fix a Wear OS app | `WEAROS_DEVELOPMENT_INDEX.md` | `agents/wearos-app-developer.md`, `skills/wearos-screen-edge-safety.md` |
+| Prepare a Wear OS app for Play release | `WEAROS_INDEX.md` | `agents/android-wearos-release-engineer.md`, `skills/wearos-playstore-readiness.md` |
+| Plan a US-to-Europe trip | `TRAVEL_INDEX.md` | `agents/us-europe-travel-advisor.md`, `skills/us-europe-baggage-packing-research.md` |
 | Palmier Pro story assembly | `prompts/palmierpro/story-assembly-from-project-media.md` | Inspect all project video media, infer intent, extract main points, and assemble a YouTube story arc. |
 | YouTube Short from long-form Palmier project | `prompts/palmierpro/youtube-short-from-long-form.md` | Create a 9:16 Short with facecam/screenshare placement and mobile-readable captions. |
 | Any chat/local model usage | `examples/local-model.md` | copy-paste selected stack |
@@ -55,6 +59,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Tool Integration Guide | `docs/tool-integration-guide.md` | Practical tool-by-tool setup and maintenance guidance. |
 | Palmier Pro MCP Quickstart | `docs/quickstarts/palmierpro-mcp.md` | Connect and use Palmier Pro through MCP. |
 | App Market Research Quickstart | `docs/quickstarts/app-market-research.md` | Run public and authenticated app-market research. |
+| Google Play Growth Quickstart | `docs/quickstarts/google-play-growth.md` | Run the Google Play growth / ASO optimization workflow. |
 | App Market Research Acceptance Tests | `docs/app-market-research-acceptance-tests.md` | Validate browser adapters, resume behavior, privacy, and consequential-action safety. |
 | Palmier Pro MCP Tool Map | `docs/palmierpro-mcp-tool-map.md` | Choose the right Palmier MCP tool by editing intent. |
 | CLI Quickstart | `docs/quickstarts/cli.md` | Local repo-aware coding CLI usage. |
@@ -62,6 +67,16 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Gemini Quickstart | `docs/quickstarts/gemini.md` | Gemini-style usage. |
 | Editor Quickstart | `docs/quickstarts/editor.md` | Cursor/Windsurf-style editor rule usage. |
 | Repository Assistant Quickstart | `docs/quickstarts/repo-assistant.md` | Repository-level assistant wrappers and profile files. |
+
+## Domain Sub-Indexes
+
+Focused root-level indexes for the larger domain packs:
+
+| Sub-Index | Path | Use |
+|---|---|---|
+| Wear OS Development | `WEAROS_DEVELOPMENT_INDEX.md` | Building or fixing Wear OS app features. |
+| Wear OS Release | `WEAROS_INDEX.md` | Final Wear OS Play Store release readiness. |
+| US-Europe Travel | `TRAVEL_INDEX.md` | US-to-Europe travel-prep pack. |
 
 ## Canonical Agents
 
@@ -75,6 +90,10 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Terse Technical Coding Agent | `agents/terse-technical-coding-agent.md` | Senior-engineer coding workflows with focused diffs. |
 | Comet Authenticated Research Agent | `agents/comet-authenticated-research-agent.md` | Human-in-the-loop authenticated/browser research workflow. |
 | SEO and AI Search Optimization Agent | `agents/seo-ai-search-optimization-agent.md` | Classic SEO and AI-search visibility reviews. |
+| Google Play Growth Optimizer | `agents/google-play-growth-optimizer-agent.md` | ASO, listing conversion, quality, SEO/AEO, and AI-recommendation readiness for Android/Wear OS apps. |
+| Wear OS App Developer | `agents/wearos-app-developer.md` | Build/fix Wear OS apps with round-screen safety and Play quality guardrails. |
+| Android Wear OS Release Engineer | `agents/android-wearos-release-engineer.md` | Final Play Store release readiness, packaging, listing, privacy, and watch-face format checks. |
+| US to Europe Travel Advisor | `agents/us-europe-travel-advisor.md` | Research-first US-to-Europe trip prep: baggage, customs, entry, money, and outlets. |
 
 ## Canonical Skills
 
@@ -103,6 +122,17 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Kubernetes Homelab Troubleshooting | `skills/kubernetes-homelab-troubleshooting.md` | Diagnose Kubernetes homelab runtime issues. |
 | Comet Authenticated Research | `skills/comet-authenticated-research.md` | Safe human-in-the-loop authenticated research. |
 | Comet Local Bridge Safety | `skills/comet-local-bridge-safety.md` | Safe local browser bridge design/review. |
+| Google Play Growth Orchestrator | `skills/google-play-growth-orchestrator.md` | Validate a growth brief, sequence the growth skills, and produce a prioritized plan. |
+| Google Play ASO Foundations | `skills/google-play-aso-foundations.md` | Core Play ranking/conversion factors and policy-safe ASO principles. |
+| Google Play Keyword and Metadata Optimization | `skills/google-play-keyword-and-metadata-optimization.md` | Title, short/long description, and keyword work within field limits and policy. |
+| Google Play Creative Conversion Optimization | `skills/google-play-creative-conversion-optimization.md` | Icon, screenshots, feature graphic, and store-listing experiments. |
+| Google Play Quality and Retention Signals | `skills/google-play-quality-and-retention-signals.md` | Android vitals, ratings/reviews, retention, and quality as growth work. |
+| App Web SEO and Entity Optimization | `skills/app-web-seo-and-entity-optimization.md` | Crawlable product pages, canonical entity facts, and AEO for apps. |
+| AI Agent Recommendation Readiness | `skills/ai-agent-recommendation-readiness.md` | Make an app safely quotable/recommendable by AI assistants; crawler controls. |
+| App Growth Experimentation and Measurement | `skills/app-growth-experimentation-and-measurement.md` | Experiment design, metrics, and honest measurement for app growth. |
+| Wear OS Play Store Readiness | `skills/wearos-playstore-readiness.md` | Pre-submission Wear OS release, listing, screenshot, and privacy review. |
+| Wear OS Screen Edge Safety | `skills/wearos-screen-edge-safety.md` | Prevent/fix clipped text/controls, overlap, font-scaling, and missing scroll indicators. |
+| US-Europe Baggage and Packing Research | `skills/us-europe-baggage-packing-research.md` | Baggage, customs, packing, money, outlet, and return-to-US research workflow. |
 
 ## Canonical Prompts
 
@@ -117,12 +147,16 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Token Efficiency Agent Retrofit | `prompts/token-efficiency/agent-retrofit.md` | Retrofit existing prompts/agents with token-efficient behavior. |
 | Compress Memory or Instruction File | `prompts/token-efficiency/compress-memory-file.md` | Compress recurring instruction files with an audit report. |
 | Compare Models for Token Efficiency | `prompts/token-efficiency/compare-models.md` | Compare prompt behavior across hosted/coding/local models. |
+| Wear OS App Development | `prompts/implementation/wearos-app-development.md` | One-shot implementation prompt for building/fixing a Wear OS feature. |
+| Wear OS Release Readiness Review | `prompts/review/wearos-release-readiness-review.md` | One-shot prompt to review and fix a Wear OS repo for Play release. |
+| US-Europe Trip Prep | `prompts/planning/us-europe-trip-prep.md` | One-shot US-to-Europe trip-prep guide prompt. |
 
 ## Schemas
 
 | Schema | Path | Use |
 |---|---|---|
 | App Market Research Brief | `schemas/app-market-research-brief.schema.json` | Validate markets, seeds, sources, outputs, and scoring options before browsing. |
+| Google Play Growth Brief | `schemas/google-play-growth-brief.schema.json` | Validate app, markets, objectives, sources, and outputs for a growth engagement. |
 
 ## Examples
 
@@ -137,6 +171,11 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Handoff | `examples/handoff.md` | Compact continuation handoff. |
 | Local Model | `examples/local-model.md` | Chat/local model copy-paste usage. |
 | Repository Profile | `examples/repository-profile.md` | Thin repository profile wrapper usage. |
+| Google Play Growth Brief | `examples/google-play-growth-brief.yaml` | Copy-paste Wear OS Google Play growth brief. |
+| US-Europe Travel Prep Stack | `examples/stacks/us-europe-travel-prep.md` | Composed travel-prep stack (agent, skill, behavior layer, prompt). |
+| Wear OS Play Store Release Stack | `examples/stacks/wearos-playstore-release.md` | Composed Wear OS release stack. |
+| Wear OS Tool Configs | `examples/tool-configs/wearos-CLAUDE.md`, `examples/tool-configs/wearos-codex-AGENTS.md` | Copy-in `CLAUDE.md` / `AGENTS.md` for a Wear OS app repo. |
+| Travel Tool Configs | `examples/tool-configs/travel-CLAUDE.md`, `examples/tool-configs/travel-codex-AGENTS.md` | Copy-in `CLAUDE.md` / `AGENTS.md` for a travel-prep workspace. |
 
 ## Patterns
 
@@ -152,7 +191,7 @@ Use this file when an AI agent needs to quickly determine which defaults exist a
 | Artifact | Path | Use |
 |---|---|---|
 | Token Efficiency Smoke Test | `docs/benchmarks/token-efficiency-smoke-test.md` | Initial local IDE-agent smoke-test result using estimated token counts. |
-| Token Efficiency Fresh Benchmark | `docs/benchmarks/token-efficiency-fresh-2026-06-25.md` | Fresh third-pass local benchmark after validation micro-examples. |
+| Token Efficiency Fresh Benchmark | `docs/benchmarks/token-efficiency-fresh-2026-06-25.md` | Fresh local benchmark after validation micro-examples. |
 
 ## Recommended Stacks
 
@@ -283,6 +322,92 @@ Artifacts:
   docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 ```
 
+### Google Play Growth Stack
+
+```text
+Entrypoint:
+  docs/quickstarts/google-play-growth.md
+
+Agent:
+  agents/google-play-growth-optimizer-agent.md
+
+Skills:
+  skills/google-play-growth-orchestrator.md
+  skills/google-play-aso-foundations.md
+  skills/google-play-keyword-and-metadata-optimization.md
+  skills/google-play-creative-conversion-optimization.md
+  skills/google-play-quality-and-retention-signals.md
+  skills/app-web-seo-and-entity-optimization.md
+  skills/ai-agent-recommendation-readiness.md
+  skills/app-growth-experimentation-and-measurement.md
+
+Schema:
+  schemas/google-play-growth-brief.schema.json
+
+Example:
+  examples/google-play-growth-brief.yaml
+
+Acceptance tests:
+  docs/google-play-growth-acceptance-tests.md
+```
+
+### Wear OS Development Stack
+
+```text
+Sub-index:
+  WEAROS_DEVELOPMENT_INDEX.md
+
+Agent:
+  agents/wearos-app-developer.md
+
+Skills:
+  skills/wearos-screen-edge-safety.md
+  skills/token-efficient-response-compression.md
+
+Prompt:
+  prompts/implementation/wearos-app-development.md
+```
+
+### Wear OS Play Store Release Stack
+
+```text
+Sub-index:
+  WEAROS_INDEX.md
+
+Agent:
+  agents/android-wearos-release-engineer.md
+
+Skills:
+  skills/wearos-playstore-readiness.md
+  skills/wearos-screen-edge-safety.md
+
+Prompt:
+  prompts/review/wearos-release-readiness-review.md
+
+Example:
+  examples/stacks/wearos-playstore-release.md
+```
+
+### US-Europe Travel Prep Stack
+
+```text
+Sub-index:
+  TRAVEL_INDEX.md
+
+Agent:
+  agents/us-europe-travel-advisor.md
+
+Skills:
+  skills/us-europe-baggage-packing-research.md
+  skills/token-efficient-response-compression.md
+
+Prompt:
+  prompts/planning/us-europe-trip-prep.md
+
+Example:
+  examples/stacks/us-europe-travel-prep.md
+```
+
 ## Selection Rules
 
 1. Choose the tool entrypoint first.
@@ -309,13 +434,14 @@ When adding a new default:
 
 Current index includes:
 
-- 8 canonical agents
-- 23 canonical skills
-- 9 canonical prompts
-- 10 tool integration files (6 entrypoint/rule files + 4 Copilot agent profiles)
-- 12 UX/integration guides, acceptance tests, and tool maps
-- 9 examples
+- 12 canonical agents
+- 34 canonical skills
+- 12 canonical prompts
+- 11 tool integration files (6 entrypoint/rule files + 5 Copilot agent profiles)
+- 3 domain sub-indexes (Wear OS development, Wear OS release, US-Europe travel)
+- 8 quickstarts plus UX/integration guides, acceptance tests, and tool maps
+- 16 examples
 - 4 reusable patterns
 - 2 benchmark artifacts
-- 1 machine-readable workflow schema
+- 2 machine-readable workflow schemas
 - 1 machine-readable manifest

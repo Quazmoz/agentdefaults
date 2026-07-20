@@ -237,8 +237,8 @@ Defaults:
 
 ```text
 mode: video
-codec: H.264
-resolution: Match Timeline
+codec: h.264
+resolution: matchtimeline
 outputPath: omit unless user specifies a destination
 ```
 
@@ -246,9 +246,10 @@ Use:
 
 - `mode=video` for MP4-style deliverables.
 - `mode=xml` for Premiere Pro / DaVinci Resolve handoff.
+- `mode=fcpxml` for Final Cut Pro handoff (set `fcpxmlTarget` to `fcp` or `resolve`).
 - `mode=palmier` for a self-contained Palmier project package.
 
-Video exports run in the background. Report that rendering has started and provide the returned destination when available. XML and Palmier package exports finish inline.
+Video exports run in the background. Report that rendering has started and provide the returned destination when available; use `manage_exports` to check job status. XML, FCPXML, and Palmier package exports finish inline.
 
 ## Core Tool Map
 
@@ -265,14 +266,15 @@ Minimal map:
 | Understand project | `get_timeline`, `get_media`, `inspect_timeline` |
 | Understand source media | `inspect_media`, `search_media` |
 | Place media | `add_clips`, `insert_clips`, `import_media` |
-| Move/trim/split | `move_clips`, `set_clip_properties`, `split_clip`, `ripple_delete_ranges` |
-| Clean speech | `get_transcript`, `remove_words`, `ripple_delete_ranges` |
-| Captions/text | `add_captions`, `add_texts` |
-| Audio sync | `sync_audio` |
+| Move/trim/split | `move_clips`, `set_clip_properties`, `split_clips`, `ripple_delete_ranges` |
+| Layout / picture-in-picture | `apply_layout`, `set_clip_properties`, `set_keyframes` |
+| Clean speech | `get_transcript`, `remove_words`, `remove_silence`, `ripple_delete_ranges` |
+| Captions/text | `add_captions`, `add_texts`, `update_text` |
+| Audio sync / multicam | `sync_clips`, `manage_multicam`, `change_cam`, `get_multicam` |
 | Generation | `list_models`, `generate_image`, `generate_video`, `generate_audio`, `upscale_media` |
 | Color/effects | `inspect_color`, `apply_color`, `apply_effect` |
-| Organize library | `list_folders`, `create_folder`, `move_to_folder`, `rename_media`, `rename_folder` |
-| Export | `export_project` |
+| Organize library | `organize_media` |
+| Export | `export_project`, `manage_exports` |
 | Recover | `undo` |
 
 ## Output Style

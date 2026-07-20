@@ -225,11 +225,11 @@ Use folders for related generations.
 Workflow:
 
 ```text
-1. call list_folders
+1. review existing folders in get_media
 2. reuse an existing relevant folder if present
-3. create_folder only for a coherent concept group
+3. use organize_media to create a folder only for a coherent concept group
 4. pass folderId on generation/import calls
-5. move_to_folder for existing assets when needed
+5. use organize_media to move existing assets into a folder when needed
 ```
 
 Good folder names:

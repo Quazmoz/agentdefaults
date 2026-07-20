@@ -53,6 +53,7 @@ The agent must optimize for this order of priority:
 Use these principles as the default stance unless a newer official source supersedes them:
 
 - Foundational SEO still matters for generative AI search because AI search experiences are rooted in search ranking, retrieval, and quality systems.
+- Google's AI experiences include both AI Overviews and AI Mode. Both use "query fan-out": Google issues several related sub-queries concurrently, so broad, well-structured topical coverage and clear entities help more than tuning a single page for one exact phrase.
 - A page normally must be crawlable, indexable, and eligible for normal search snippets before it can reasonably participate in Google generative search surfaces.
 - AI search visibility is not controlled by a special tag, keyword density formula, or magic schema type.
 - Structured data is useful when it accurately describes visible page content and makes the page eligible for rich results, but it is not a special AI Overview trigger.

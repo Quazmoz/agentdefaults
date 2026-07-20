@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Document a fresh third-pass benchmark of the AgentDefaults token-efficiency stack after adding validation micro-examples.
+Document a fresh benchmark of the AgentDefaults token-efficiency stack, run after adding validation micro-examples (a later pass than the initial smoke test).
 
 ## Date
 

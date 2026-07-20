@@ -69,8 +69,10 @@ target_prompts:
   - Privacy-friendly watch barometer without an account
   - BaroGuard alternatives
 
-competitors:
-  - Add verified package names or listing URLs after competitor discovery.
+competitors: []
+# Add verified competitor package names or listing URLs after competitor discovery, e.g.:
+#   - com.example.competitor-barometer
+#   - https://play.google.com/store/apps/details?id=com.example.other-barometer
 
 outputs:
   - diagnostic_scorecard

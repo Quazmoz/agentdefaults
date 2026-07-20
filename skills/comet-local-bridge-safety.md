@@ -81,6 +81,8 @@ read_password_field()
 export_browser_profile()
 ```
 
+A raw Chromium DevTools Protocol (CDP) / `--remote-debugging-port` connection cannot enforce any of the above. It grants full access to all tabs, the DOM, and cookies (`Network.getCookies`, `Storage.getCookies`), and any local process on that port can connect. The allowlist, secret-redaction, and active-tab rules in this skill hold only for a separate broker process that sits in front of CDP and never forwards cookie/storage/profile commands. Do not point the agent directly at Comet's debug port; treat a raw CDP endpoint as equivalent to full-profile access.
+
 ### 3. Require Explicit Confirmation For Mutations
 
 Commands that can mutate state require user confirmation in the visible browser or a clear prompt.

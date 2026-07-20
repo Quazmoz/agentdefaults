@@ -85,6 +85,15 @@ If the app includes complications:
 - supported types are appropriate
 - empty and error states are useful
 
+If the app ships a watch face:
+
+- as of 2026-01-14, only Watch Face Format (WFF) watch faces can be published or updated on Google Play; treat a legacy AndroidX / Wearable Support Library watch face as a release blocker (migrate to WFF, e.g. via Watch Face Studio 1.8.7+)
+- always-on display draws no more than ~15% of pixels
+- memory stays within limits (roughly ≤10 MB ambient, ≤100 MB interactive)
+- no more than 8 complication slots
+- listing icon, category tag, shape count, source-file size, and tooling version meet current watch-face requirements
+- re-verify thresholds against the current Wear OS app quality page
+
 If the app uses sensors:
 
 - listeners are lifecycle-scoped

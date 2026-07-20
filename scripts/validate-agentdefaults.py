@@ -14,6 +14,9 @@ REQUIRED_FILES = [
     "GEMINI.md",
     "INDEX.md",
     "README.md",
+    "TRAVEL_INDEX.md",
+    "WEAROS_INDEX.md",
+    "WEAROS_DEVELOPMENT_INDEX.md",
     "agentdefaults.manifest.json",
     ".gitignore",
     ".github/FUNDING.yml",
@@ -55,6 +58,12 @@ REQUIRED_FILES = [
     "examples/palmierpro-mcp-workflow.md",
     "examples/app-market-research-brief.yaml",
     "examples/google-play-growth-brief.yaml",
+    "examples/stacks/us-europe-travel-prep.md",
+    "examples/stacks/wearos-playstore-release.md",
+    "examples/tool-configs/travel-CLAUDE.md",
+    "examples/tool-configs/travel-codex-AGENTS.md",
+    "examples/tool-configs/wearos-CLAUDE.md",
+    "examples/tool-configs/wearos-codex-AGENTS.md",
     "schemas/app-market-research-brief.schema.json",
     "schemas/google-play-growth-brief.schema.json",
     "agents/token-efficient-response-agent.md",
@@ -66,6 +75,9 @@ REQUIRED_FILES = [
     "agents/palmierpro-mcp-video-editor-agent.md",
     "agents/app-market-research-agent.md",
     "agents/google-play-growth-optimizer-agent.md",
+    "agents/android-wearos-release-engineer.md",
+    "agents/wearos-app-developer.md",
+    "agents/us-europe-travel-advisor.md",
     "skills/copilot-token-efficiency.md",
     "skills/token-efficient-response-compression.md",
     "skills/context-budgeting-and-pruning.md",
@@ -97,6 +109,9 @@ REQUIRED_FILES = [
     "skills/ai-agent-recommendation-readiness.md",
     "skills/app-growth-experimentation-and-measurement.md",
     "skills/google-play-growth-orchestrator.md",
+    "skills/wearos-playstore-readiness.md",
+    "skills/wearos-screen-edge-safety.md",
+    "skills/us-europe-baggage-packing-research.md",
     "prompts/token-efficiency/common-task-benchmark.md",
     "prompts/token-efficiency/agent-retrofit.md",
     "prompts/token-efficiency/compress-memory-file.md",
@@ -106,6 +121,9 @@ REQUIRED_FILES = [
     "prompts/palmierpro/youtube-short-from-long-form.md",
     "prompts/palmierpro/transcript-cleanup-pass.md",
     "prompts/palmierpro/short-form-social-cutdown.md",
+    "prompts/implementation/wearos-app-development.md",
+    "prompts/planning/us-europe-trip-prep.md",
+    "prompts/review/wearos-release-readiness-review.md",
 ]
 
 PURPOSE_GLOBS = [
@@ -113,18 +131,30 @@ PURPOSE_GLOBS = [
     "skills/*.md",
     "prompts/token-efficiency/*.md",
     "prompts/palmierpro/*.md",
+    "prompts/implementation/*.md",
+    "prompts/planning/*.md",
+    "prompts/review/*.md",
     "docs/*.md",
     "docs/quickstarts/*.md",
     "docs/benchmarks/*.md",
     "docs/patterns/*.md",
     "examples/*.md",
+    "examples/stacks/*.md",
     ".github/agents/*.agent.md",
 ]
 
+# Root-level index files that follow the repo's ## Purpose convention.
+# `examples/tool-configs/*` are intentionally excluded: they are copy-in
+# CLAUDE.md / AGENTS.md templates for target repos and mirror those formats,
+# which do not use a ## Purpose section.
 PURPOSE_FILES = [
     "AGENTS.md",
     "CLAUDE.md",
     "GEMINI.md",
+    "INDEX.md",
+    "TRAVEL_INDEX.md",
+    "WEAROS_INDEX.md",
+    "WEAROS_DEVELOPMENT_INDEX.md",
     ".github/copilot-instructions.md",
 ]
 

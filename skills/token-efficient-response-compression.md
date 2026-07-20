@@ -37,7 +37,7 @@ Choose one response type:
 
 | Type | Use For | Output Shape |
 |------|---------|--------------|
-| Direct answer | Simple Q&A | 1-5 sentences |
+| Direct answer | Simple Q&A | 1-3 sentences |
 | Decision | Choosing between options | Pick + 2-3 reasons |
 | Work summary | Completed repo/tool work | Done + changed files + validation |
 | Review | Audits/findings | Top findings ranked |

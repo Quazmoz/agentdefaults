@@ -27,7 +27,7 @@ As of June 2026, Copilot bills paid plans with **usage-based AI Credits** (credi
 - **Inline code completions and next-edit suggestions are free** on all paid plans — they do not consume credits.
 - **Chat, edit (inline/multi-file), and agent requests consume credits**, priced by token usage (input + output + cached) at the selected model's rate.
 - **Model rate varies by an order of magnitude** — a frugal model can cost ~10–20× less per token than a top-tier reasoning model for the same task.
-- **Legacy plans** may still use premium-request multipliers (base GPT-4o/GPT-4.1 = included; other models from ~0.25× up to ~50×). The same tactics apply; the unit differs.
+- **Legacy plans** may still use premium-request multipliers: a base tier is included at 1×, and other models carry higher multipliers (legacy annual multipliers rose in June 2026). The same tactics apply; only the unit differs.
 - **Copilot code review** consumes credits and GitHub Actions minutes — treat it as a deliberate spend, not an always-on default.
 
 Exact prices, multipliers, and plan allowances change often. Confirm current values at GitHub's docs before quoting numbers: `https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing`.

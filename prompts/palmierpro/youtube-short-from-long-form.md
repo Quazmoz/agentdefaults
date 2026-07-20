@@ -44,7 +44,7 @@ Workflow:
 Facecam + screenshare layout rules:
 - The screenshare/demo/code/app footage should usually be the primary visual.
 - Reframe the screenshare so the active UI, terminal, code, app, approval result, or editor timeline is readable on mobile.
-- Use crop/pan/scale/position tools available in Palmier rather than blindly squeezing a full 16:9 screen into 9:16.
+- Use apply_layout for the facecam + screenshare arrangement, then set_clip_properties transform (crop/pan/scale/position) and set_keyframes for fine control, rather than blindly squeezing a full 16:9 screen into 9:16.
 - Put Quinn's facecam in a corner or side area that does not cover captions, terminal commands, app buttons, Play Console status, important code, or the active cursor/demo area.
 - Prefer a lower-left or lower-right facecam only if the bottom area is not occupied by captions or critical UI.
 - If captions are bottom-centered, move facecam to an upper corner or side lane.

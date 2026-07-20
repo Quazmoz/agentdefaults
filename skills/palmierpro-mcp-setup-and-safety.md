@@ -81,17 +81,19 @@ These are usually reversible, inspectable, or low-risk:
 - `search_media`
 - `get_transcript`
 - `list_models`
-- `list_folders`
 - `add_clips` when placing existing media non-destructively into clear space
 - `insert_clips`
 - `move_clips`
 - `set_clip_properties`
-- `split_clip`
+- `split_clips`
+- `apply_layout`
 - `remove_words` for obvious cleanup requested by the user
+- `remove_silence` for requested dead-air cleanup
 - `ripple_delete_ranges` for requested dead-air cleanup
 - `add_captions`
 - `add_texts`
-- `sync_audio` when the user asked for sync/alignment
+- `update_text`
+- `sync_clips` when the user asked for sync/alignment
 - `undo`
 
 ### Confirm First
@@ -103,8 +105,7 @@ Ask for explicit approval before:
 - `generate_audio`
 - `upscale_media`
 - broad deletion of timeline clips not clearly covered by the user's request
-- `delete_media`
-- `delete_folder`
+- deleting media or folders via `organize_media`
 - overwriting a named export destination
 - exporting a final deliverable when the user only asked for a draft/edit pass
 
@@ -170,7 +171,7 @@ Use timeline edits before library deletion.
 
 Prefer:
 
-- `remove_clips` over `delete_media`
+- `remove_clips` over deleting source media via `organize_media`
 - hiding/muting/removing timeline clips over deleting source media
 - `undo` over manual reconstruction
 - exporting a copy rather than overwriting an existing named file

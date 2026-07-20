@@ -185,12 +185,12 @@ A response that is materially shorter than a default assistant response and stil
 - Validation/citations retained when required
 - Uses the smallest response mode that fits the task
 
-## Measurement Target
+## Expected Targets (not measured)
 
-For common technical tasks, this skill should reduce output tokens by:
+These are targets, not measured results. The repo's own local runs observed roughly 30-40% estimated output savings (see `docs/benchmarks/`); measure your own workload before quoting a number. For common technical tasks, aim to reduce output tokens by:
 
-- 25-40% for already concise models
-- 40-70% for verbose default assistants
+- 25-40% for verbose default assistants
+- 15-30% for already concise models
 - 10-25% for tasks requiring citations, safety caveats, or detailed validation
 
 The goal is not maximum compression. The goal is maximum useful density.

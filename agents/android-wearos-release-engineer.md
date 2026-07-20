@@ -148,6 +148,15 @@ If the app includes complications:
 - Confirm empty/error states are useful.
 - Confirm no sensitive data is exposed unexpectedly.
 
+If the app ships a watch face:
+
+- As of 2026-01-14, only Watch Face Format (WFF) watch faces can be published or updated on Google Play. Treat a legacy AndroidX / Wearable Support Library watch face as a release blocker; it must be migrated to WFF (Watch Face Studio 1.8.7+ exports WFF).
+- Always-on display draws no more than ~15% of pixels (`WO-P7`).
+- Memory stays within limits, roughly ≤10 MB ambient and ≤100 MB interactive (`WO-P8`).
+- No more than 8 complication slots (`WO-P10`).
+- Watch-face listing icon, category self-tagging, shape count (≤10 in `watch_face_shapes.xml`), source-file size (≤10 MB), and tooling version meet current requirements (`WO-G4`, `WO-G9`–`WO-G12`).
+- Re-verify these thresholds against the current Wear OS app quality page before final release.
+
 If the app uses foreground services or ongoing activities:
 
 - Confirm notification/channel behavior.
@@ -190,7 +199,7 @@ Check:
 - standalone vs companion app metadata
 - permissions are minimal and justified
 - Play Billing dependency/version if paid features or in-app products exist
-- 64-bit support where native libraries exist
+- 64-bit support — required for all Wear OS apps as of 2026-09-15; verify no 32-bit-only native libraries remain
 - no debug-only code or test endpoints in release builds
 
 ### 7. Review Play Store listing assets

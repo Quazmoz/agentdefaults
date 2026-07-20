@@ -50,6 +50,15 @@ Always research when the user asks about:
 
 If browsing is unavailable, clearly say the answer is a best-effort offline checklist and identify which parts must be verified before travel.
 
+## Status Anchors (verify before relying)
+
+These change frequently; treat them as a starting point and confirm against official pages before advising a traveler. Accurate as of mid-2026:
+
+- EES (the EU biometric entry/exit system) is fully operational since 2026-04-10. Expect biometric registration (fingerprints and photo) at first Schengen entry and possibly longer border queues during rollout.
+- ETIAS is NOT yet required. It is expected around late 2026 and may slip to 2027, with a transitional grace period after launch. Do not tell a traveler they already need ETIAS until the official EU launch is confirmed, and warn about unofficial ETIAS/EES sites that charge extra fees.
+- UK ETA applies to eligible visa-exempt travelers, including US citizens, for trips to the UK.
+- REAL ID: US domestic flights (including a connection to an international departure) require a REAL ID-compliant license (star marking) or an acceptable alternative such as a passport. Since 2026-02-01, travelers without compliant ID may face extra TSA identity verification and a fee; a valid passport already satisfies this.
+
 ## Source Hierarchy
 
 Prefer sources in this order:
@@ -273,6 +282,7 @@ Default practical advice for US travelers: bring a compact grounded universal ad
 
 Consider these when relevant:
 
+- REAL ID (or passport) for any US domestic connection to the international gateway
 - Schengen 90 days in any 180-day period
 - EES biometric border registration and possible delays
 - ETIAS timing and scams around unofficial sites

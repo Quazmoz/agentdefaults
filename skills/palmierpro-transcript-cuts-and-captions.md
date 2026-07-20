@@ -126,6 +126,8 @@ cut the dead air while the page loads
 remove a visual-only mistake between two spoken sections
 ```
 
+For bulk removal of silent, speech-free spans across a clip, prefer `remove_silence` (purpose-built for dead-air cleanup) and reserve `ripple_delete_ranges` for specific known ranges and visual-only mistakes.
+
 ## Retake Cleanup
 
 When multiple takes exist:
@@ -143,7 +145,7 @@ Do not remove a retake solely because wording is similar; compare meaning and cl
 For speech-adjacent pauses:
 
 - Prefer `remove_words` if the pause belongs to removed filler or a false start.
-- Use `ripple_delete_ranges` for actual silent spans.
+- Use `remove_silence` for bulk silent spans, or `ripple_delete_ranges` for a specific known silent range.
 - Avoid cutting every breath; overly tight tutorial edits can sound unnatural.
 
 For technical demos:
@@ -163,18 +165,18 @@ Prefer `add_captions` over manually converting transcript words into text clips.
 
 Set language explicitly when the speech is not the system default language.
 
-Useful defaults:
+Useful parameters (confirm exact keys against the live tool):
 
 ```text
-fontName: Helvetica-Bold
-fontSize: 48
-centerX: 0.5
-centerY: 0.9
-textCase: auto
+language:        set when speech is not the system default
+maxWords:        words per caption line (keep short for mobile)
+transform:       { centerX: 0.5, centerY: 0.9 }   # normalized placement
 censorProfanity: user preference
+highlightColor / animation: optional karaoke-style emphasis
+fontSize / fontFamily / fontWeight / color: caption styling
 ```
 
-For short-form social clips, consider larger captions and higher placement if platform UI would cover the bottom.
+For short-form social clips, consider larger captions and higher placement (lower `centerY`) if platform UI would cover the bottom.
 
 ## Manual Text vs Captions
 

@@ -56,21 +56,15 @@ Do not remove material risks, citations, validation, or uncertainty just to save
 
 ## Token Budget Rules
 
+Pick the mode from the Verbosity Modes table below. As quick anchors:
+
 ### Small Tasks
 
-Target:
-
-```text
-1-5 sentences
-```
+Target: Micro to Compact (1-3 sentences, up to ~200 words).
 
 ### Normal Tasks
 
-Target:
-
-```text
-100-300 words
-```
+Target: Compact to Work Summary (~75-250 words).
 
 ### Complex Tasks
 

@@ -6,7 +6,7 @@ Help users connect an AI agent to Palmier Pro through MCP and choose the right A
 
 ## Requirements
 
-- Palmier Pro installed on a supported Mac.
+- Palmier Pro installed on a Mac running macOS 26 (Tahoe) or later (see palmier.io for current requirements).
 - Palmier Pro open with a project loaded.
 - MCP enabled in Palmier Pro.
 - An MCP-capable client such as Claude Code, Codex, Cursor, or Claude Desktop.

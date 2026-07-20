@@ -117,13 +117,15 @@ Use `set_clip_properties` for:
 - `volume`
 - `opacity`
 - `transform`
-- text-style fields
+- text-style fields on a text clip (to change an existing text clip's content or style, prefer `update_text`)
 
 Use separate calls when different clips need different property values.
 
+To arrange facecam-plus-screenshare, picture-in-picture, or stacked multi-clip layouts, prefer `apply_layout`, then fine-tune with `set_clip_properties` transform and `set_keyframes`.
+
 ### Split a Clip
 
-Use `split_clip` only when:
+Use `split_clips` only when:
 
 - `atFrame` is strictly inside the clip's visible timeline range.
 - A split is necessary for independent movement, styling, or removal.
@@ -145,20 +147,24 @@ Use `ripple_delete_ranges` for:
 
 Prefer batching all ranges in one call when the ranges are known.
 
-### Sync Audio
+For bulk removal of silent, speech-free spans, prefer `remove_silence` (purpose-built for dead-air cleanup) and reserve `ripple_delete_ranges` for specific known frame ranges and visual-only gaps.
 
-Use `sync_audio` when:
+### Sync Clips
+
+Use `sync_clips` when:
 
 - camera audio and external audio need alignment
-- multicam clips share waveform content
+- two clips share waveform content and must line up
 - the user says audio is out of sync
+
+For true multicam (multiple angles cut against one reference), use `manage_multicam`, `change_cam`, and `get_multicam` instead of waveform sync alone.
 
 Workflow:
 
 ```text
 1. identify the reference clip that should stay fixed
 2. identify target clip(s) to move
-3. call sync_audio
+3. call sync_clips
 4. verify confidence and timeline alignment
 ```
 

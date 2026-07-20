@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.3.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, app growth, MCP workflows, and benchmark artifacts.",
+  "version": "0.4.0",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -69,6 +69,44 @@
         "skills/token-efficient-response-compression.md",
         "skills/token-efficiency-measurement.md"
       ]
+    },
+    {
+      "name": "Wear OS Development",
+      "quickstart": "WEAROS_DEVELOPMENT_INDEX.md",
+      "agent": "agents/wearos-app-developer.md",
+      "skills": [
+        "skills/wearos-screen-edge-safety.md",
+        "skills/token-efficient-response-compression.md"
+      ],
+      "prompts": [
+        "prompts/implementation/wearos-app-development.md"
+      ]
+    },
+    {
+      "name": "Wear OS Play Store Release",
+      "quickstart": "WEAROS_INDEX.md",
+      "agent": "agents/android-wearos-release-engineer.md",
+      "skills": [
+        "skills/wearos-playstore-readiness.md",
+        "skills/wearos-screen-edge-safety.md"
+      ],
+      "prompts": [
+        "prompts/review/wearos-release-readiness-review.md"
+      ],
+      "example": "examples/stacks/wearos-playstore-release.md"
+    },
+    {
+      "name": "US-Europe Travel Prep",
+      "quickstart": "TRAVEL_INDEX.md",
+      "agent": "agents/us-europe-travel-advisor.md",
+      "skills": [
+        "skills/us-europe-baggage-packing-research.md",
+        "skills/token-efficient-response-compression.md"
+      ],
+      "prompts": [
+        "prompts/planning/us-europe-trip-prep.md"
+      ],
+      "example": "examples/stacks/us-europe-travel-prep.md"
     }
   ]
 }

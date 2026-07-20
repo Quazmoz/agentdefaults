@@ -1,6 +1,8 @@
 # Wear OS AgentDefaults Index
 
-Fast lookup for the Wear OS release-readiness pack.
+## Purpose
+
+Fast lookup for the Wear OS release-readiness pack: the release-engineer agent, the Play Store readiness skill, the release-review prompt, the composed stack, and copy-in tool configs. Use it when preparing an existing Wear OS app for Play Store submission. For building or fixing features, see [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md).
 
 ## Quick Selection
 
@@ -66,6 +68,20 @@ Task prompt:
 - screenshot and Play listing review
 - privacy policy alignment
 - billing readiness checks
+
+## Relationship To Wear OS Development Pack
+
+Use this release pack (`agents/android-wearos-release-engineer.md`) for final Play Store readiness: listing, screenshots, privacy, target SDK, packaging, and upload checks.
+
+Use the development pack while building or fixing features:
+
+```text
+agents/wearos-app-developer.md
+skills/wearos-screen-edge-safety.md
+WEAROS_DEVELOPMENT_INDEX.md
+```
+
+For Play Console issues about clipped content, use both packs together.
 
 ## Minimal Use In A Target Repo
 

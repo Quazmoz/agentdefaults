@@ -1,6 +1,8 @@
 # Travel AgentDefaults Index
 
-Fast lookup for the US-to-Europe travel-prep pack.
+## Purpose
+
+Fast lookup for the US-to-Europe travel-prep pack: the travel advisor agent, the baggage/customs research skill, the trip-prep prompt, and the composed stack. Use it to assemble a research-first travel assistant that checks current official sources before answering rule-sensitive questions.
 
 ## Quick Selection
 

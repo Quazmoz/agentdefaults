@@ -1,5 +1,9 @@
 # Play Store Portfolio Description Audit
 
+## Purpose
+
+Record the 2026-07-16 audit of Quinn Favo / Quazmoz Play Store listing openings, capturing the recommended short descriptions, replacement opening paragraphs, their verification sources, and the manual Play Console follow-up. Use it as the evidence trail for the portfolio listing-copy changes, not as a claim of guaranteed ranking improvement.
+
 Audit date: 2026-07-16
 
 Scope: 20 apps currently listed as live on the Quinn Favo app portfolio plus 4 apps currently listed as in development.
@@ -11,6 +15,7 @@ All 20 live listings benefit from an opening-copy change.
 - 14 live listings open primarily with the app name and a category definition.
 - 6 live listings begin with a usable outcome or action but weaken it with a repetitive, feature-first, or definition-style second sentence.
 - Several proposed hooks from the original audit were rejected because they introduced unsupported medical, mental-health, hearing-safety, hardware-diagnostic, weather-warning, or guaranteed-outcome claims.
+- Entity / naming risk: two live apps share the "FidgetDrop" brand — "FidgetDrop: Wear OS Fidget" (`Quazmoz/wearos-haptic-fidget-app`) and "FidgetDrop Haptic Fidget" (`Quazmoz/fidgetdrop-android-haptic-fidget-app`). Distinguish them consistently (for example "FidgetDrop (Wear OS)" vs "FidgetDrop (Android)") across Play, the website, and canonical entity records so search and AI recommendations resolve the right app.
 
 The recommended changes are conversion-focused. They should not be described as guaranteed Google Play ranking improvements.
 

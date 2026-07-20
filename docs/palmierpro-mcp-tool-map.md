@@ -23,7 +23,7 @@ Palmier Pro -> Help -> MCP Instructions
 | Read timeline state | `get_timeline` | Call at session start. Returns fps, resolution, tracks, clips, totalFrames, and canGenerate. |
 | Read media library | `get_media` | Call before referencing assets. Watch generation/import status. |
 | Change project settings | `set_project_settings` | Use deliberately; affects project-level output. |
-| Recover last assistant edit | `undo` | Reverts assistant's latest timeline edit from this session. Re-read state after undo. |
+| Recover last edit | `undo` | Reverts the most recent action from the shared editor undo history (may be a user action, not only an assistant edit). Re-read state after undo. |
 
 ## Media Understanding
 
@@ -41,13 +41,15 @@ Palmier Pro -> Help -> MCP Instructions
 | Place media | `add_clips` | Places existing assets; same-track overlap overwrites/clears landing range. |
 | Insert media | `insert_clips` | Ripples existing timeline material to open a gap. |
 | Remove clips | `remove_clips` | Timeline removal, safer than deleting source media. |
-| Remove tracks | `remove_tracks` | Use only when track cleanup is intentional. |
+| Manage tracks (reorder/configure/remove) | `manage_tracks` | Use only when track cleanup or reordering is intentional. |
 | Move/reorder clips | `move_clips` | Move in time and/or to compatible tracks. |
 | Change clip properties | `set_clip_properties` | Trim, duration, speed, volume, opacity, transform, text properties. |
+| Arrange picture-in-picture / stacked layouts | `apply_layout` | Purpose-built for facecam+screenshare and multi-clip layouts; fall back to `set_clip_properties` transform + `set_keyframes` for fine control. |
 | Set animation/automation | `set_keyframes` | Keyframes for volume, opacity, rotation, position, scale, or crop. |
-| Split clip | `split_clip` | Split at a frame strictly inside the clip range. |
-| Delete ranges and close gaps | `ripple_delete_ranges` | Use for non-word-aligned spans or visual-only dead air. |
-| Sync audio | `sync_audio` | Align target clips to a fixed reference clip by waveform. |
+| Split clips | `split_clips` | Split at a frame strictly inside the clip range. |
+| Delete ranges and close gaps | `ripple_delete_ranges` | Use for specific non-word-aligned spans or visual-only dead air. |
+| Remove silent spans | `remove_silence` | Bulk dead-air / speech-free cleanup; prefer over manual `ripple_delete_ranges` for silence. |
+| Sync clips | `sync_clips` | Align target clips to a fixed reference clip by waveform. For multicam, use `manage_multicam` / `change_cam` / `get_multicam`. |
 
 ## Transcript and Captions
 
@@ -57,6 +59,8 @@ Palmier Pro -> Help -> MCP Instructions
 | Cut by word | `remove_words` | Primary tool for filler, retakes, and speech cleanup. Re-read transcript after use. |
 | Add automatic captions | `add_captions` | Preferred captioning path. Transcribes and creates styled caption clips. |
 | Add manual text | `add_texts` | Titles, lower thirds, callouts, hook text, manual emphasis. |
+| Edit existing text | `update_text` | Change content or style of an existing text clip; use `add_texts` only to create new overlays. |
+| Clean up noisy audio | `denoise_audio` | Reduce background noise on captured audio before finalizing. |
 
 ## AI Generation and Upscaling
 
@@ -80,19 +84,14 @@ Palmier Pro -> Help -> MCP Instructions
 
 | Need | Tool | Notes |
 |---|---|---|
-| List folders | `list_folders` | Check before creating folders. |
-| Create folder | `create_folder` | Group related generated/imported assets. |
-| Move assets | `move_to_folder` | Organize media into existing or new folders. |
-| Rename media | `rename_media` | Use for clear library names. |
-| Rename folder | `rename_folder` | Use for cleanup. |
-| Delete media | `delete_media` | Destructive; confirm first. Prefer timeline removal. |
-| Delete folder | `delete_folder` | Destructive; confirm first. |
+| Organize media and folders (create/move/rename/delete) | `organize_media` | Single tool for folder and media organization. Deletion is destructive; confirm first, and prefer timeline `remove_clips` over deleting source media. |
 
 ## Export and Feedback
 
 | Need | Tool | Notes |
 |---|---|---|
-| Export deliverable | `export_project` | Video, XML, or Palmier package. Video renders in background. |
+| Export deliverable | `export_project` | Modes: `video`, `xml` (Premiere/Resolve), `fcpxml` (Final Cut; set `fcpxmlTarget`), and `palmier` package. Video renders in background. |
+| Check/manage export jobs | `manage_exports` | Inspect or manage background export jobs. |
 | Report tool issue | `send_feedback` | Use for concrete Palmier limitation, bug, or product suggestion. |
 
 ## High-Leverage Workflows
@@ -130,7 +129,7 @@ get_media
 list_models
 inspect reference media
 ask approval with model + prompt + duration/aspect
-create_folder if useful
+organize_media if a folder is useful
 generate_image or generate_video
 get_media later for readiness
 add_clips or insert_clips
@@ -141,7 +140,7 @@ inspect_timeline
 
 ```text
 inspect_timeline important moments
-export_project mode=video codec=H.264 resolution=Match Timeline
+export_project mode=video codec=h.264 resolution=matchtimeline
 ```
 
 ## Decision Rules

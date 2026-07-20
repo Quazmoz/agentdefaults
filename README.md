@@ -6,7 +6,7 @@
 
 ![Markdown](https://img.shields.io/badge/content-Markdown-blue)
 ![Agent UX](https://img.shields.io/badge/focus-agent%20UX-purple)
-![Token Efficiency](https://img.shields.io/badge/token%20efficiency-benchmarked-brightgreen)
+![Token Efficiency](https://img.shields.io/badge/token%20efficiency-self--tested%20(estimated)-informational)
 ![Self Hosted Friendly](https://img.shields.io/badge/local%20models-friendly-orange)
 ![MCP Ready](https://img.shields.io/badge/MCP-video%20editing-cyan)
 
@@ -48,6 +48,9 @@ Then choose a path:
 | Use repository assistant profile wrappers | [`docs/quickstarts/repo-assistant.md`](docs/quickstarts/repo-assistant.md) |
 | Use Palmier Pro through MCP | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
 | Research Google Play, Wear OS, forums, and Play Console | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) |
+| Optimize Google Play growth / ASO | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
+| Build or release a Wear OS app | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) |
+| Plan a US-to-Europe trip | [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md) |
 | Add a new reusable default | [`docs/patterns/default.md`](docs/patterns/default.md) |
 | Copy a ready-made example | [`examples/`](examples/) |
 
@@ -108,6 +111,52 @@ skills/market-opportunity-clustering.md
 skills/app-market-research-orchestrator.md
 schemas/app-market-research-brief.schema.json
 examples/app-market-research-brief.yaml
+```
+
+### Google Play Growth Stack
+
+Use when you want to improve Google Play discovery, listing conversion, app quality, web/AEO visibility, and AI-recommendation readiness for an Android or Wear OS app.
+
+```text
+docs/quickstarts/google-play-growth.md
+agents/google-play-growth-optimizer-agent.md
+skills/google-play-growth-orchestrator.md
+skills/google-play-aso-foundations.md
+skills/google-play-keyword-and-metadata-optimization.md
+skills/google-play-creative-conversion-optimization.md
+skills/google-play-quality-and-retention-signals.md
+skills/app-web-seo-and-entity-optimization.md
+skills/ai-agent-recommendation-readiness.md
+skills/app-growth-experimentation-and-measurement.md
+schemas/google-play-growth-brief.schema.json
+examples/google-play-growth-brief.yaml
+```
+
+### Wear OS Stacks
+
+Use the development stack while building or fixing features, and the release stack for final Play Store readiness. See [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) and [`WEAROS_INDEX.md`](WEAROS_INDEX.md).
+
+```text
+# Development
+agents/wearos-app-developer.md
+skills/wearos-screen-edge-safety.md
+prompts/implementation/wearos-app-development.md
+
+# Release readiness
+agents/android-wearos-release-engineer.md
+skills/wearos-playstore-readiness.md
+prompts/review/wearos-release-readiness-review.md
+```
+
+### US-Europe Travel Prep Stack
+
+Use when preparing for a trip from the US to one or more European countries, with current, source-backed baggage, customs, entry, money, and outlet guidance. See [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md).
+
+```text
+agents/us-europe-travel-advisor.md
+skills/us-europe-baggage-packing-research.md
+prompts/planning/us-europe-trip-prep.md
+examples/stacks/us-europe-travel-prep.md
 ```
 
 ### GitHub Copilot Cost-Reduction Stack
@@ -187,6 +236,10 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Agent | Kubernetes Homelab Engineer | [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) |
 | Agent | Comet Authenticated Research Agent | [`agents/comet-authenticated-research-agent.md`](agents/comet-authenticated-research-agent.md) |
 | Agent | SEO and AI Search Optimization Agent | [`agents/seo-ai-search-optimization-agent.md`](agents/seo-ai-search-optimization-agent.md) |
+| Agent | Google Play Growth Optimizer | [`agents/google-play-growth-optimizer-agent.md`](agents/google-play-growth-optimizer-agent.md) |
+| Agent | Wear OS App Developer | [`agents/wearos-app-developer.md`](agents/wearos-app-developer.md) |
+| Agent | Android Wear OS Release Engineer | [`agents/android-wearos-release-engineer.md`](agents/android-wearos-release-engineer.md) |
+| Agent | US to Europe Travel Advisor | [`agents/us-europe-travel-advisor.md`](agents/us-europe-travel-advisor.md) |
 | Skill | Browser Research Foundations | [`skills/browser-research-foundations.md`](skills/browser-research-foundations.md) |
 | Skill | Authenticated Browser Handoff | [`skills/authenticated-browser-handoff.md`](skills/authenticated-browser-handoff.md) |
 | Skill | Play Store Autocomplete Research | [`skills/play-store-autocomplete-research.md`](skills/play-store-autocomplete-research.md) |
@@ -206,6 +259,21 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Skill | Token-Efficient Response Compression | [`skills/token-efficient-response-compression.md`](skills/token-efficient-response-compression.md) |
 | Skill | Prompt and Memory Compression | [`skills/prompt-and-memory-compression.md`](skills/prompt-and-memory-compression.md) |
 | Skill | Token Efficiency Measurement | [`skills/token-efficiency-measurement.md`](skills/token-efficiency-measurement.md) |
+| Skill | Kubernetes GitOps Change Management | [`skills/kubernetes-gitops-change-management.md`](skills/kubernetes-gitops-change-management.md) |
+| Skill | Kubernetes Homelab Troubleshooting | [`skills/kubernetes-homelab-troubleshooting.md`](skills/kubernetes-homelab-troubleshooting.md) |
+| Skill | Comet Authenticated Research | [`skills/comet-authenticated-research.md`](skills/comet-authenticated-research.md) |
+| Skill | Comet Local Bridge Safety | [`skills/comet-local-bridge-safety.md`](skills/comet-local-bridge-safety.md) |
+| Skill | Google Play Growth Orchestrator | [`skills/google-play-growth-orchestrator.md`](skills/google-play-growth-orchestrator.md) |
+| Skill | Google Play ASO Foundations | [`skills/google-play-aso-foundations.md`](skills/google-play-aso-foundations.md) |
+| Skill | Google Play Keyword and Metadata Optimization | [`skills/google-play-keyword-and-metadata-optimization.md`](skills/google-play-keyword-and-metadata-optimization.md) |
+| Skill | Google Play Creative Conversion Optimization | [`skills/google-play-creative-conversion-optimization.md`](skills/google-play-creative-conversion-optimization.md) |
+| Skill | Google Play Quality and Retention Signals | [`skills/google-play-quality-and-retention-signals.md`](skills/google-play-quality-and-retention-signals.md) |
+| Skill | App Web SEO and Entity Optimization | [`skills/app-web-seo-and-entity-optimization.md`](skills/app-web-seo-and-entity-optimization.md) |
+| Skill | AI Agent Recommendation Readiness | [`skills/ai-agent-recommendation-readiness.md`](skills/ai-agent-recommendation-readiness.md) |
+| Skill | App Growth Experimentation and Measurement | [`skills/app-growth-experimentation-and-measurement.md`](skills/app-growth-experimentation-and-measurement.md) |
+| Skill | Wear OS Play Store Readiness | [`skills/wearos-playstore-readiness.md`](skills/wearos-playstore-readiness.md) |
+| Skill | Wear OS Screen Edge Safety | [`skills/wearos-screen-edge-safety.md`](skills/wearos-screen-edge-safety.md) |
+| Skill | US-Europe Baggage and Packing Research | [`skills/us-europe-baggage-packing-research.md`](skills/us-europe-baggage-packing-research.md) |
 | Prompt | Palmier Pro Story Assembly From Project Media | [`prompts/palmierpro/story-assembly-from-project-media.md`](prompts/palmierpro/story-assembly-from-project-media.md) |
 | Prompt | Palmier Pro YouTube Short From Long-Form | [`prompts/palmierpro/youtube-short-from-long-form.md`](prompts/palmierpro/youtube-short-from-long-form.md) |
 | Prompt | Palmier Pro Full Edit Pass | [`prompts/palmierpro/full-edit-pass.md`](prompts/palmierpro/full-edit-pass.md) |
@@ -258,8 +326,8 @@ It checks:
 
 | Artifact | Result | Scope |
 |---|---:|---|
-| [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md) | 38.8% average output savings | Initial local IDE-agent smoke test. |
-| [`docs/benchmarks/token-efficiency-fresh-2026-06-25.md`](docs/benchmarks/token-efficiency-fresh-2026-06-25.md) | 35.4% average output savings | Fresh third-pass local benchmark after validation micro-examples. |
+| [`docs/benchmarks/token-efficiency-smoke-test.md`](docs/benchmarks/token-efficiency-smoke-test.md) | ~38.8% average output savings (estimated, chars/4) | Initial local IDE-agent smoke test. |
+| [`docs/benchmarks/token-efficiency-fresh-2026-06-25.md`](docs/benchmarks/token-efficiency-fresh-2026-06-25.md) | ~35.4% average output savings (estimated, chars/4) | Fresh local benchmark after validation micro-examples. |
 
 These are repo-internal validation artifacts, not public benchmark claims. For stronger evidence, run [`prompts/token-efficiency/compare-models.md`](prompts/token-efficiency/compare-models.md) across multiple model classes with exact provider token counts.
 
@@ -291,6 +359,9 @@ agentdefaults/
 ├── .cursor/
 ├── .windsurfrules
 ├── INDEX.md
+├── WEAROS_INDEX.md
+├── WEAROS_DEVELOPMENT_INDEX.md
+├── TRAVEL_INDEX.md
 └── README.md
 ```
 

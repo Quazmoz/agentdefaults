@@ -44,6 +44,7 @@ Use these files:
 .github/agents/terse-technical-coding.agent.md
 .github/agents/token-efficiency-benchmark.agent.md
 .github/agents/palmierpro-video-editor.agent.md
+.github/agents/google-play-growth-optimizer.agent.md
 ```
 
 Recommended uses:

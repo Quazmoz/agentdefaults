@@ -1,6 +1,8 @@
 # Wear OS Development AgentDefaults Index
 
-Fast lookup for the Wear OS app development pack.
+## Purpose
+
+Fast lookup for the Wear OS app development pack: the app-developer agent, the screen-edge safety skill, and the implementation prompt. Use it while building or fixing Wear OS features. For final Play Store release readiness, see [`WEAROS_INDEX.md`](WEAROS_INDEX.md).
 
 ## Quick Selection
 

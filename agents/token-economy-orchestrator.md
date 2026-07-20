@@ -219,7 +219,7 @@ A successful output:
 - Avoids repeated explanations
 - Shows only useful validation
 - Does not invent work performed
-- Reduces output tokens by at least 30% versus a normal baseline for common technical tasks
+- Targets at least ~30% fewer output tokens versus a normal baseline for common technical tasks (measure to confirm; not a guaranteed result)
 
 ## Copy-Paste Agent Prompt
 

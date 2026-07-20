@@ -47,7 +47,7 @@ Important development anchors:
 - `WO-V14` font size: essential text should be at least 12sp and non-essential text at least 10sp.
 - `WO-V15` splash screen: show a 48x48dp app icon on a black background and match the launcher icon.
 - `WO-V16` watch shapes: content must fit inside the physical display area, text/controls must not overlap, text/controls must not be cut off by screen edges, and the app must support a circle at least 192dp.
-- `WO-P1` target API level: check current Google Play target API requirements.
+- `WO-P1` target API level: check current Google Play target API requirements (as of 2026, new and updated Wear OS apps must target API 35 / Android 15 by 2026-08-31; always re-verify).
 - `WO-P2` basic experience: the app must install, launch, and complete necessary tasks without crashing.
 
 ## Repository Context To Inspect First
@@ -93,6 +93,8 @@ Do not assume a specific module layout or Compose package family.
 
 ## Kotlin and Compose Stack Rules
 
+For a new app, default to Wear Compose Material 3 (`androidx.wear.compose:compose-material3`); Material 2 (`androidx.wear.compose:compose-material`) is officially superseded and should be used only to match an existing Material 2 codebase. When modifying an existing app, match the stack already present.
+
 ### Material 3 Wear Compose
 
 If the repo uses `androidx.wear.compose.material3`, prefer current Material 3 patterns where available:
@@ -118,6 +120,10 @@ If the repo uses `androidx.wear.compose.material`, use the project-standard Mate
 ### XML or custom views
 
 If the repo uses XML or custom drawing, do not force a Compose rewrite just for a screen-edge fix. Use scroll containers, dimension resources, round-resource variants, text wrapping, and screenshots to verify the fix.
+
+### Horologist
+
+If the repo uses Horologist Compose Material, Compose Layout, or Composables, prefer migrating those specific modules to Wear Compose Material 3 — Google has superseded them. Functional Horologist modules (for example media and auth) remain useful and do not need migration.
 
 ### Kotlin quality
 

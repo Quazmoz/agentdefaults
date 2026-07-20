@@ -163,7 +163,7 @@ This skill usually shapes internal behavior. When asked to output the pruning re
 
 A successful context-pruning pass:
 
-- Reduces loaded context by at least 30% compared with broad inspection
+- Targets at least ~30% less loaded context than broad inspection (measure to confirm; not a guaranteed result)
 - Keeps all facts required for correctness
 - Avoids repeated reads
 - Keeps exact technical identifiers intact

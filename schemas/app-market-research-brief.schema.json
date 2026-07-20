@@ -35,8 +35,8 @@
         "properties": {
           "country": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 2
+            "pattern": "^[A-Z]{2}$",
+            "description": "ISO 3166-1 alpha-2 country code, uppercase (e.g. GB, US)."
           },
           "locale": {
             "type": "string",
@@ -92,6 +92,7 @@
     "authenticated_sources": {
       "type": "array",
       "uniqueItems": true,
+      "description": "Subset of `sources` that require human-controlled authentication. Any value listed here must also appear in `sources`.",
       "items": {
         "type": "string",
         "enum": [
@@ -121,8 +122,10 @@
     },
     "scoring_weights": {
       "type": "object",
+      "description": "Weights per scoring dimension defined in skills/market-opportunity-clustering.md. Keys not defined there are ignored at scoring time.",
       "additionalProperties": {
-        "type": "number"
+        "type": "number",
+        "minimum": 0
       }
     }
   }
