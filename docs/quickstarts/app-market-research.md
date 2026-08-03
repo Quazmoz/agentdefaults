@@ -32,6 +32,27 @@ Example:
   examples/app-market-research-brief.yaml
 ```
 
+For focused subreddit or public-community history research, use the smaller specialized stack:
+
+```text
+Quickstart:
+  docs/quickstarts/community-app-validation.md
+
+Agent:
+  agents/community-app-idea-validation-agent.md
+
+Skill:
+  skills/subreddit-app-idea-validation.md
+
+Prompt:
+  prompts/research/validate-app-idea-in-community.md
+
+GitHub Copilot wrapper:
+  .github/agents/community-app-idea-validator.agent.md
+```
+
+Use that specialization for questions such as whether a subreddit has discussed an app concept before, what solutions commenters recommended, what remains unresolved, and whether a new validation post would add useful evidence.
+
 ## Setup
 
 1. Copy the agent and relevant skill files into the browser-capable agent's context.
@@ -41,6 +62,7 @@ Example:
 5. Run public research first.
 6. Take control of the browser only when authentication, CAPTCHA, consent, or account selection is required.
 7. Review the final evidence map and manual-validation queue before making product decisions.
+8. For one-community app-idea history questions, load the specialized community-validation stack instead of the full workflow.
 
 ## Antigravity-Style Adapter Notes
 
@@ -75,6 +97,16 @@ Run public sources first. Save a checkpoint after each seed, keyword, listing, a
 Produce CSV, JSON, Markdown, screenshots only where useful, failure logs, an evidence map, opportunity clusters, and a final manifest. Keep authenticated artifacts private.
 ```
 
+For a focused community-history question:
+
+```text
+Load agents/community-app-idea-validation-agent.md and skills/subreddit-app-idea-validation.md.
+
+Research all available history in <COMMUNITY> for <APP IDEA OR USER PROBLEM>. Search exact concept terms, problem-first language, app-search intent, workarounds, dissatisfaction, competitor names, builder posts, and launches. Emphasize recent evidence, read comments, verify current alternatives, and collapse duplicate promotion campaigns.
+
+Check current community rules. Decide whether to post now, narrow the question, comment on an existing thread, research elsewhere first, or not post. Explain what unresolved decision a new post would test. Separate market demand from medical, scientific, legal, financial, or regulatory validity when the topic is sensitive.
+```
+
 ## Output Layout
 
 ```text
@@ -91,6 +123,21 @@ research-runs/<run-id>/
   screenshots/
   reports/
   logs/
+```
+
+Focused community-validation runs may instead use:
+
+```text
+research-runs/<run-id>/
+  brief.md
+  checkpoints/
+  community_history.csv
+  community_history.json
+  solution_map.md
+  unmet_needs.md
+  post_recommendation.md
+  source_index.md
+  manual_review_queue.md
 ```
 
 ## Authentication and Human Takeover
@@ -127,6 +174,9 @@ Use [`../app-market-research-acceptance-tests.md`](../app-market-research-accept
 - Dynamic page structure may change.
 - Autocomplete is a discovery signal, not a volume metric.
 - Forum frequency is not market size.
+- Native community and external search indexes are incomplete.
+- Launch-post engagement may overstate independent demand.
+- Community anecdotes do not establish safety, efficacy, causality, or professional consensus.
 - Some Play Console metrics may be sampled, thresholded, or unavailable.
 - Browser agents may lose tab, port, or control state.
 - Authenticated exports must remain private.
