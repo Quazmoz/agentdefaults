@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.4.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.5.0",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -59,6 +59,20 @@
       "schema": "schemas/app-market-research-brief.schema.json",
       "example": "examples/app-market-research-brief.yaml",
       "acceptance_tests": "docs/app-market-research-acceptance-tests.md"
+    },
+    {
+      "name": "Community App Idea Validation",
+      "quickstart": "docs/quickstarts/community-app-validation.md",
+      "agent": "agents/community-app-idea-validation-agent.md",
+      "skills": [
+        "skills/browser-research-foundations.md",
+        "skills/forum-demand-mining.md",
+        "skills/subreddit-app-idea-validation.md"
+      ],
+      "prompts": [
+        "prompts/research/validate-app-idea-in-community.md"
+      ],
+      "wrapper": ".github/agents/community-app-idea-validator.agent.md"
     },
     {
       "name": "Token Economy",
