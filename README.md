@@ -48,6 +48,7 @@ Then choose a path:
 | Use repository assistant profile wrappers | [`docs/quickstarts/repo-assistant.md`](docs/quickstarts/repo-assistant.md) |
 | Use Palmier Pro through MCP | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
 | Research Google Play, Wear OS, forums, and Play Console | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) |
+| Validate an app idea using subreddit or community history | [`docs/quickstarts/community-app-validation.md`](docs/quickstarts/community-app-validation.md) |
 | Optimize Google Play growth / ASO | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
 | Build or release a Wear OS app | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) |
 | Plan a US-to-Europe trip | [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md) |
@@ -112,6 +113,22 @@ skills/app-market-research-orchestrator.md
 schemas/app-market-research-brief.schema.json
 examples/app-market-research-brief.yaml
 ```
+
+### Community App Idea Validation Stack
+
+Use when the core question is whether one app idea has appeared before in a subreddit or public community, which solutions were recommended, what remains unresolved, and whether a new validation post would add useful evidence.
+
+```text
+docs/quickstarts/community-app-validation.md
+agents/community-app-idea-validation-agent.md
+skills/browser-research-foundations.md
+skills/forum-demand-mining.md
+skills/subreddit-app-idea-validation.md
+prompts/research/validate-app-idea-in-community.md
+.github/agents/community-app-idea-validator.agent.md
+```
+
+The stack searches exact concepts, problem-first language, workarounds, dissatisfaction, competitor launches, and comments. It separates community demand from medical, scientific, legal, financial, or regulatory validity in sensitive domains.
 
 ### Google Play Growth Stack
 
@@ -221,7 +238,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Cursor | [`.cursor/rules/agentdefaults.mdc`](.cursor/rules/agentdefaults.mdc) | Thin rule wrapper pointing back to canonical files. |
 | Windsurf | [`.windsurfrules`](.windsurfrules) | Thin wrapper pointing back to canonical files. |
 | MCP-connected apps | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) | Palmier Pro video-editing workflow over local MCP. |
-| Browser-capable agents | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) | Adapter-based public and authenticated market research with human takeover. |
+| Browser-capable agents | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md), [`docs/quickstarts/community-app-validation.md`](docs/quickstarts/community-app-validation.md) | Broad market research or focused community-history validation. |
 | Any chat/local model | [`agents/`](agents/), [`skills/`](skills/), [`prompts/`](prompts/) | Copy-paste the smallest useful stack. |
 
 ## Available Defaults
@@ -230,6 +247,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 |---|---|---|
 | Agent | Palmier Pro MCP Video Editor | [`agents/palmierpro-mcp-video-editor-agent.md`](agents/palmierpro-mcp-video-editor-agent.md) |
 | Agent | App Market Research Agent | [`agents/app-market-research-agent.md`](agents/app-market-research-agent.md) |
+| Agent | Community App Idea Validation Agent | [`agents/community-app-idea-validation-agent.md`](agents/community-app-idea-validation-agent.md) |
 | Agent | Token Economy Orchestrator | [`agents/token-economy-orchestrator.md`](agents/token-economy-orchestrator.md) |
 | Agent | Token-Efficient Response Agent | [`agents/token-efficient-response-agent.md`](agents/token-efficient-response-agent.md) |
 | Agent | Terse Technical Coding Agent | [`agents/terse-technical-coding-agent.md`](agents/terse-technical-coding-agent.md) |
@@ -246,6 +264,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Skill | Play Store Competitor Discovery | [`skills/play-store-competitor-discovery.md`](skills/play-store-competitor-discovery.md) |
 | Skill | Play Store Listing Teardown | [`skills/play-store-listing-teardown.md`](skills/play-store-listing-teardown.md) |
 | Skill | Forum Demand Mining | [`skills/forum-demand-mining.md`](skills/forum-demand-mining.md) |
+| Skill | Subreddit App Idea Validation | [`skills/subreddit-app-idea-validation.md`](skills/subreddit-app-idea-validation.md) |
 | Skill | Play Console Search Term Analysis | [`skills/play-console-search-term-analysis.md`](skills/play-console-search-term-analysis.md) |
 | Skill | Market Opportunity Clustering | [`skills/market-opportunity-clustering.md`](skills/market-opportunity-clustering.md) |
 | Skill | App Market Research Orchestrator | [`skills/app-market-research-orchestrator.md`](skills/app-market-research-orchestrator.md) |
@@ -274,6 +293,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Skill | Wear OS Play Store Readiness | [`skills/wearos-playstore-readiness.md`](skills/wearos-playstore-readiness.md) |
 | Skill | Wear OS Screen Edge Safety | [`skills/wearos-screen-edge-safety.md`](skills/wearos-screen-edge-safety.md) |
 | Skill | US-Europe Baggage and Packing Research | [`skills/us-europe-baggage-packing-research.md`](skills/us-europe-baggage-packing-research.md) |
+| Prompt | Validate an App Idea in a Community | [`prompts/research/validate-app-idea-in-community.md`](prompts/research/validate-app-idea-in-community.md) |
 | Prompt | Palmier Pro Story Assembly From Project Media | [`prompts/palmierpro/story-assembly-from-project-media.md`](prompts/palmierpro/story-assembly-from-project-media.md) |
 | Prompt | Palmier Pro YouTube Short From Long-Form | [`prompts/palmierpro/youtube-short-from-long-form.md`](prompts/palmierpro/youtube-short-from-long-form.md) |
 | Prompt | Palmier Pro Full Edit Pass | [`prompts/palmierpro/full-edit-pass.md`](prompts/palmierpro/full-edit-pass.md) |
@@ -349,13 +369,20 @@ agentdefaults/
 │   ├── palmierpro-mcp-tool-map.md
 │   ├── app-market-research-acceptance-tests.md
 │   ├── quickstarts/
+│   │   └── community-app-validation.md
 │   ├── patterns/
 │   └── benchmarks/
 ├── examples/
 ├── agents/
+│   └── community-app-idea-validation-agent.md
 ├── skills/
+│   └── subreddit-app-idea-validation.md
 ├── prompts/
+│   └── research/
+│       └── validate-app-idea-in-community.md
 ├── .github/
+│   └── agents/
+│       └── community-app-idea-validator.agent.md
 ├── .cursor/
 ├── .windsurfrules
 ├── INDEX.md
@@ -388,7 +415,7 @@ Use [`docs/patterns/default.md`](docs/patterns/default.md) for new reusable cont
 
 ## Status
 
-Usable cross-tool scaffold with benchmarked token-efficiency defaults, browser-based app-market research skills, Palmier Pro MCP video-editing defaults, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
+Usable cross-tool scaffold with token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
 
 ## License
 
