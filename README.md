@@ -41,6 +41,7 @@ Then choose a path:
 | I want to... | Start here |
 |---|---|
 | Pick the right files quickly | [`docs/user-guide.md`](docs/user-guide.md) |
+| Select or challenge an automation platform architecture | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Use a local repo-aware coding CLI | [`docs/quickstarts/cli.md`](docs/quickstarts/cli.md) |
 | Use Claude-style repo instructions | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
 | Use Gemini-style repo instructions | [`docs/quickstarts/gemini.md`](docs/quickstarts/gemini.md) |
@@ -75,6 +76,43 @@ AgentDefaults separates **canonical reusable content** from **thin tool wrappers
 Rule: **update canonical content first, then keep wrappers thin and discoverable.**
 
 ## Recommended Stacks
+
+### Automation Platform Architecture and Selection Stack
+
+Use when deciding which automation capability and product should own a workload, reviewing an existing architecture, or comparing an incumbent Terraform, Ansible, and Jenkins stack with alternatives.
+
+The stack classifies work before comparing products across:
+
+```text
+infrastructure as code
+configuration management
+CI/CD
+GitOps continuous delivery
+runbook automation
+managed IaC execution
+durable workflow orchestration
+```
+
+It can recommend or compare products such as Terraform, OpenTofu, Pulumi, Ansible, Puppet, Chef Infra, Jenkins, GitHub Actions, Azure Pipelines, GitLab CI/CD, Argo CD, Flux, Rundeck, Temporal, and other justified candidates. It applies mandatory hosting, target, network, identity, governance, licensing, and support gates before scoring.
+
+```text
+AUTOMATION_PLATFORM_INDEX.md
+docs/quickstarts/automation-platform-selection.md
+agents/automation-platform-selection-advisor.md
+skills/automation-platform-capability-taxonomy.md
+skills/automation-platform-decision-framework.md
+skills/automation-platform-candidate-discovery.md
+skills/infrastructure-as-code-platform-alternatives-analysis.md
+skills/configuration-management-platform-alternatives-analysis.md
+skills/ci-cd-platform-alternatives-analysis.md
+skills/gitops-runbook-and-workflow-platform-analysis.md
+skills/automation-platform-composition-and-boundaries.md
+skills/automation-platform-selection-orchestrator.md
+prompts/planning/select-automation-platform.md
+prompts/review/challenge-automation-platform-choice.md
+schemas/automation-platform-decision-brief.schema.json
+examples/automation-platform-decision-brief.yaml
+```
 
 ### Palmier Pro MCP Video Editing Stack
 
@@ -245,6 +283,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 
 | Type | Name | Path |
 |---|---|---|
+| Agent | Automation Platform Selection Advisor | [`agents/automation-platform-selection-advisor.md`](agents/automation-platform-selection-advisor.md) |
 | Agent | Palmier Pro MCP Video Editor | [`agents/palmierpro-mcp-video-editor-agent.md`](agents/palmierpro-mcp-video-editor-agent.md) |
 | Agent | App Market Research Agent | [`agents/app-market-research-agent.md`](agents/app-market-research-agent.md) |
 | Agent | Community App Idea Validation Agent | [`agents/community-app-idea-validation-agent.md`](agents/community-app-idea-validation-agent.md) |
@@ -258,6 +297,12 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Agent | Wear OS App Developer | [`agents/wearos-app-developer.md`](agents/wearos-app-developer.md) |
 | Agent | Android Wear OS Release Engineer | [`agents/android-wearos-release-engineer.md`](agents/android-wearos-release-engineer.md) |
 | Agent | US to Europe Travel Advisor | [`agents/us-europe-travel-advisor.md`](agents/us-europe-travel-advisor.md) |
+| Skill | Automation Platform Capability Taxonomy | [`skills/automation-platform-capability-taxonomy.md`](skills/automation-platform-capability-taxonomy.md) |
+| Skill | Automation Platform Candidate Discovery | [`skills/automation-platform-candidate-discovery.md`](skills/automation-platform-candidate-discovery.md) |
+| Skill | CI/CD Platform Alternatives Analysis | [`skills/ci-cd-platform-alternatives-analysis.md`](skills/ci-cd-platform-alternatives-analysis.md) |
+| Skill | IaC Platform Alternatives Analysis | [`skills/infrastructure-as-code-platform-alternatives-analysis.md`](skills/infrastructure-as-code-platform-alternatives-analysis.md) |
+| Skill | Configuration Management Alternatives Analysis | [`skills/configuration-management-platform-alternatives-analysis.md`](skills/configuration-management-platform-alternatives-analysis.md) |
+| Skill | GitOps, Runbook, and Workflow Platform Analysis | [`skills/gitops-runbook-and-workflow-platform-analysis.md`](skills/gitops-runbook-and-workflow-platform-analysis.md) |
 | Skill | Browser Research Foundations | [`skills/browser-research-foundations.md`](skills/browser-research-foundations.md) |
 | Skill | Authenticated Browser Handoff | [`skills/authenticated-browser-handoff.md`](skills/authenticated-browser-handoff.md) |
 | Skill | Play Store Autocomplete Research | [`skills/play-store-autocomplete-research.md`](skills/play-store-autocomplete-research.md) |
@@ -293,6 +338,8 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Skill | Wear OS Play Store Readiness | [`skills/wearos-playstore-readiness.md`](skills/wearos-playstore-readiness.md) |
 | Skill | Wear OS Screen Edge Safety | [`skills/wearos-screen-edge-safety.md`](skills/wearos-screen-edge-safety.md) |
 | Skill | US-Europe Baggage and Packing Research | [`skills/us-europe-baggage-packing-research.md`](skills/us-europe-baggage-packing-research.md) |
+| Prompt | Select the Right Automation Platform | [`prompts/planning/select-automation-platform.md`](prompts/planning/select-automation-platform.md) |
+| Prompt | Challenge an Automation Platform Choice | [`prompts/review/challenge-automation-platform-choice.md`](prompts/review/challenge-automation-platform-choice.md) |
 | Prompt | Validate an App Idea in a Community | [`prompts/research/validate-app-idea-in-community.md`](prompts/research/validate-app-idea-in-community.md) |
 | Prompt | Palmier Pro Story Assembly From Project Media | [`prompts/palmierpro/story-assembly-from-project-media.md`](prompts/palmierpro/story-assembly-from-project-media.md) |
 | Prompt | Palmier Pro YouTube Short From Long-Form | [`prompts/palmierpro/youtube-short-from-long-form.md`](prompts/palmierpro/youtube-short-from-long-form.md) |
@@ -308,6 +355,7 @@ For the full list, use [`INDEX.md`](INDEX.md).
 
 | Recipe | Use |
 |---|---|
+| [`examples/automation-platform-decision-brief.yaml`](examples/automation-platform-decision-brief.yaml) | Category-aware automation selection brief with incumbents, alternatives, hosting, licensing, migration, and evidence controls. |
 | [`examples/app-market-research-brief.yaml`](examples/app-market-research-brief.yaml) | Ready-to-adapt Wear OS market-research brief. |
 | [`examples/palmierpro-mcp-workflow.md`](examples/palmierpro-mcp-workflow.md) | Copy-paste Palmier Pro MCP editing workflows. |
 | [`examples/copilot-token-efficiency.md`](examples/copilot-token-efficiency.md) | Drop-in `.github` files + habits to lower GitHub Copilot cost. |
@@ -337,9 +385,11 @@ python3 scripts/validate-agentdefaults.py
 
 It checks:
 
-- Required files exist.
+- Core and automation-stack files exist.
 - Markdown defaults include `## Purpose`.
-- JSON manifests and schemas parse.
+- Every JSON manifest and schema parses.
+- Manifest metadata and references are valid.
+- The expanded automation stack is fully registered and includes required product categories.
 - Local Markdown links resolve.
 
 ## Benchmark Evidence
@@ -358,30 +408,47 @@ agentdefaults/
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── GEMINI.md
+├── AUTOMATION_PLATFORM_INDEX.md
 ├── agentdefaults.manifest.json
 ├── scripts/
 │   └── validate-agentdefaults.py
 ├── schemas/
+│   ├── automation-platform-decision-brief.schema.json
 │   └── app-market-research-brief.schema.json
 ├── docs/
+│   ├── automation-platform-selection-acceptance-tests.md
 │   ├── user-guide.md
 │   ├── ux-roadmap.md
 │   ├── palmierpro-mcp-tool-map.md
 │   ├── app-market-research-acceptance-tests.md
 │   ├── quickstarts/
+│   │   ├── automation-platform-selection.md
 │   │   └── community-app-validation.md
 │   ├── patterns/
 │   └── benchmarks/
 ├── examples/
+│   └── automation-platform-decision-brief.yaml
 ├── agents/
+│   ├── automation-platform-selection-advisor.md
 │   └── community-app-idea-validation-agent.md
 ├── skills/
+│   ├── automation-platform-capability-taxonomy.md
+│   ├── automation-platform-candidate-discovery.md
+│   ├── ci-cd-platform-alternatives-analysis.md
+│   ├── infrastructure-as-code-platform-alternatives-analysis.md
+│   ├── configuration-management-platform-alternatives-analysis.md
+│   ├── gitops-runbook-and-workflow-platform-analysis.md
 │   └── subreddit-app-idea-validation.md
 ├── prompts/
+│   ├── planning/
+│   │   └── select-automation-platform.md
+│   ├── review/
+│   │   └── challenge-automation-platform-choice.md
 │   └── research/
 │       └── validate-app-idea-in-community.md
 ├── .github/
 │   └── agents/
+│       ├── automation-platform-selection-advisor.agent.md
 │       └── community-app-idea-validator.agent.md
 ├── .cursor/
 ├── .windsurfrules
@@ -415,7 +482,7 @@ Use [`docs/patterns/default.md`](docs/patterns/default.md) for new reusable cont
 
 ## Status
 
-Usable cross-tool scaffold with token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
+Usable cross-tool scaffold with category-aware automation platform architecture and selection, token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
 
 ## License
 
