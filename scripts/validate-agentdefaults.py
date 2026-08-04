@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Validate AgentDefaults repository structure, JSON, manifest references, and Markdown links."""
+"""Validate AgentDefaults structure, JSON, manifest references, stack integrity, and Markdown links."""
+
+from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, Iterable
 import json
 import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 
-REQUIRED_FILES = [
+CORE_REQUIRED_FILES = [
     "AGENTS.md",
     "CLAUDE.md",
     "GEMINI.md",
@@ -17,123 +20,47 @@ REQUIRED_FILES = [
     "TRAVEL_INDEX.md",
     "WEAROS_INDEX.md",
     "WEAROS_DEVELOPMENT_INDEX.md",
+    "AUTOMATION_PLATFORM_INDEX.md",
     "agentdefaults.manifest.json",
     ".gitignore",
     ".github/FUNDING.yml",
     ".github/copilot-instructions.md",
-    ".github/agents/token-economy-orchestrator.agent.md",
-    ".github/agents/terse-technical-coding.agent.md",
-    ".github/agents/token-efficiency-benchmark.agent.md",
-    ".github/agents/palmierpro-video-editor.agent.md",
-    ".github/agents/google-play-growth-optimizer.agent.md",
     ".cursor/rules/agentdefaults.mdc",
     ".windsurfrules",
     "docs/user-guide.md",
     "docs/ux-roadmap.md",
     "docs/tool-integration-guide.md",
-    "docs/palmierpro-mcp-tool-map.md",
-    "docs/app-market-research-acceptance-tests.md",
-    "docs/google-play-growth-acceptance-tests.md",
-    "docs/quickstarts/cli.md",
-    "docs/quickstarts/claude.md",
-    "docs/quickstarts/gemini.md",
-    "docs/quickstarts/editor.md",
-    "docs/quickstarts/repo-assistant.md",
-    "docs/quickstarts/palmierpro-mcp.md",
-    "docs/quickstarts/app-market-research.md",
-    "docs/quickstarts/google-play-growth.md",
-    "docs/benchmarks/token-efficiency-smoke-test.md",
-    "docs/benchmarks/token-efficiency-fresh-2026-06-25.md",
-    "docs/patterns/default.md",
-    "docs/patterns/skill.md",
-    "docs/patterns/prompt.md",
-    "docs/patterns/benchmark.md",
-    "examples/coding.md",
-    "examples/copilot-token-efficiency.md",
-    "examples/benchmark.md",
-    "examples/compression.md",
-    "examples/handoff.md",
-    "examples/local-model.md",
-    "examples/repository-profile.md",
-    "examples/palmierpro-mcp-workflow.md",
-    "examples/app-market-research-brief.yaml",
-    "examples/google-play-growth-brief.yaml",
-    "examples/stacks/us-europe-travel-prep.md",
-    "examples/stacks/wearos-playstore-release.md",
-    "examples/tool-configs/travel-CLAUDE.md",
-    "examples/tool-configs/travel-codex-AGENTS.md",
-    "examples/tool-configs/wearos-CLAUDE.md",
-    "examples/tool-configs/wearos-codex-AGENTS.md",
-    "schemas/app-market-research-brief.schema.json",
-    "schemas/google-play-growth-brief.schema.json",
-    "agents/token-efficient-response-agent.md",
-    "agents/token-economy-orchestrator.md",
-    "agents/terse-technical-coding-agent.md",
-    "agents/kubernetes-homelab-engineer.md",
-    "agents/comet-authenticated-research-agent.md",
-    "agents/seo-ai-search-optimization-agent.md",
-    "agents/palmierpro-mcp-video-editor-agent.md",
-    "agents/app-market-research-agent.md",
-    "agents/google-play-growth-optimizer-agent.md",
-    "agents/android-wearos-release-engineer.md",
-    "agents/wearos-app-developer.md",
-    "agents/us-europe-travel-advisor.md",
-    "skills/copilot-token-efficiency.md",
-    "skills/token-efficient-response-compression.md",
-    "skills/context-budgeting-and-pruning.md",
-    "skills/token-output-budgeting.md",
-    "skills/prompt-and-memory-compression.md",
-    "skills/token-efficiency-measurement.md",
-    "skills/kubernetes-gitops-change-management.md",
-    "skills/kubernetes-homelab-troubleshooting.md",
-    "skills/comet-authenticated-research.md",
-    "skills/comet-local-bridge-safety.md",
-    "skills/palmierpro-mcp-setup-and-safety.md",
-    "skills/palmierpro-timeline-editing.md",
-    "skills/palmierpro-transcript-cuts-and-captions.md",
-    "skills/palmierpro-ai-generation-workflow.md",
-    "skills/browser-research-foundations.md",
-    "skills/authenticated-browser-handoff.md",
-    "skills/play-store-autocomplete-research.md",
-    "skills/play-store-competitor-discovery.md",
-    "skills/play-store-listing-teardown.md",
-    "skills/forum-demand-mining.md",
-    "skills/play-console-search-term-analysis.md",
-    "skills/market-opportunity-clustering.md",
-    "skills/app-market-research-orchestrator.md",
-    "skills/google-play-aso-foundations.md",
-    "skills/google-play-keyword-and-metadata-optimization.md",
-    "skills/google-play-creative-conversion-optimization.md",
-    "skills/google-play-quality-and-retention-signals.md",
-    "skills/app-web-seo-and-entity-optimization.md",
-    "skills/ai-agent-recommendation-readiness.md",
-    "skills/app-growth-experimentation-and-measurement.md",
-    "skills/google-play-growth-orchestrator.md",
-    "skills/wearos-playstore-readiness.md",
-    "skills/wearos-screen-edge-safety.md",
-    "skills/us-europe-baggage-packing-research.md",
-    "prompts/token-efficiency/common-task-benchmark.md",
-    "prompts/token-efficiency/agent-retrofit.md",
-    "prompts/token-efficiency/compress-memory-file.md",
-    "prompts/token-efficiency/compare-models.md",
-    "prompts/palmierpro/full-edit-pass.md",
-    "prompts/palmierpro/story-assembly-from-project-media.md",
-    "prompts/palmierpro/youtube-short-from-long-form.md",
-    "prompts/palmierpro/transcript-cleanup-pass.md",
-    "prompts/palmierpro/short-form-social-cutdown.md",
-    "prompts/implementation/wearos-app-development.md",
-    "prompts/planning/us-europe-trip-prep.md",
-    "prompts/review/wearos-release-readiness-review.md",
+    "scripts/validate-agentdefaults.py",
+]
+
+AUTOMATION_PLATFORM_REQUIRED_FILES = [
+    "AUTOMATION_PLATFORM_INDEX.md",
+    "agents/automation-platform-selection-advisor.md",
+    "skills/automation-platform-capability-taxonomy.md",
+    "skills/automation-platform-decision-framework.md",
+    "skills/automation-platform-candidate-discovery.md",
+    "skills/terraform-workload-fit-analysis.md",
+    "skills/ansible-workload-fit-analysis.md",
+    "skills/jenkins-workload-fit-analysis.md",
+    "skills/infrastructure-as-code-platform-alternatives-analysis.md",
+    "skills/configuration-management-platform-alternatives-analysis.md",
+    "skills/ci-cd-platform-alternatives-analysis.md",
+    "skills/gitops-runbook-and-workflow-platform-analysis.md",
+    "skills/automation-platform-composition-and-boundaries.md",
+    "skills/automation-platform-selection-orchestrator.md",
+    "prompts/planning/select-automation-platform.md",
+    "prompts/review/challenge-automation-platform-choice.md",
+    "schemas/automation-platform-decision-brief.schema.json",
+    "examples/automation-platform-decision-brief.yaml",
+    "docs/quickstarts/automation-platform-selection.md",
+    "docs/automation-platform-selection-acceptance-tests.md",
+    ".github/agents/automation-platform-selection-advisor.agent.md",
 ]
 
 PURPOSE_GLOBS = [
     "agents/*.md",
     "skills/*.md",
-    "prompts/token-efficiency/*.md",
-    "prompts/palmierpro/*.md",
-    "prompts/implementation/*.md",
-    "prompts/planning/*.md",
-    "prompts/review/*.md",
+    "prompts/*/*.md",
     "docs/*.md",
     "docs/quickstarts/*.md",
     "docs/benchmarks/*.md",
@@ -143,10 +70,6 @@ PURPOSE_GLOBS = [
     ".github/agents/*.agent.md",
 ]
 
-# Root-level index files that follow the repo's ## Purpose convention.
-# `examples/tool-configs/*` are intentionally excluded: they are copy-in
-# CLAUDE.md / AGENTS.md templates for target repos and mirror those formats,
-# which do not use a ## Purpose section.
 PURPOSE_FILES = [
     "AGENTS.md",
     "CLAUDE.md",
@@ -155,13 +78,8 @@ PURPOSE_FILES = [
     "TRAVEL_INDEX.md",
     "WEAROS_INDEX.md",
     "WEAROS_DEVELOPMENT_INDEX.md",
+    "AUTOMATION_PLATFORM_INDEX.md",
     ".github/copilot-instructions.md",
-]
-
-JSON_FILES = [
-    "agentdefaults.manifest.json",
-    "schemas/app-market-research-brief.schema.json",
-    "schemas/google-play-growth-brief.schema.json",
 ]
 
 LINK_EXTENSIONS = (
@@ -175,30 +93,37 @@ LINK_EXTENSIONS = (
     ".yaml",
 )
 
+SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
-def print_fail(title, failures):
+
+def print_fail(title: str, failures: Iterable[str]) -> int:
     print(f"FAIL: {title}")
     for failure in failures:
         print(f"  - {failure}")
     return 1
 
 
-def check_required_files():
-    missing = [name for name in REQUIRED_FILES if not (ROOT / name).is_file()]
+def load_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def check_required_files() -> int:
+    required = CORE_REQUIRED_FILES + AUTOMATION_PLATFORM_REQUIRED_FILES
+    missing = sorted(name for name in set(required) if not (ROOT / name).is_file())
     if missing:
         return print_fail("required files", missing)
-    print(f"PASS: required files ({len(REQUIRED_FILES)} checked)")
+    print(f"PASS: required files ({len(set(required))} checked)")
     return 0
 
 
-def check_purpose_sections():
-    paths = []
+def check_purpose_sections() -> int:
+    paths: list[Path] = []
     for pattern in PURPOSE_GLOBS:
         paths.extend(ROOT.glob(pattern))
     paths.extend(ROOT / name for name in PURPOSE_FILES)
 
-    failures = []
-    seen = set()
+    failures: list[str] = []
+    seen: set[Path] = set()
     for path in paths:
         if path in seen or not path.is_file():
             continue
@@ -213,22 +138,28 @@ def check_purpose_sections():
     return 0
 
 
-def check_json_files():
-    failures = []
-    for name in JSON_FILES:
-        path = ROOT / name
+def json_files() -> list[Path]:
+    paths = [ROOT / "agentdefaults.manifest.json"]
+    paths.extend(sorted((ROOT / "schemas").glob("*.json")))
+    return paths
+
+
+def check_json_files() -> int:
+    failures: list[str] = []
+    paths = json_files()
+    for path in paths:
         try:
-            json.loads(path.read_text(encoding="utf-8"))
+            load_json(path)
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            failures.append(f"{name}: {exc}")
+            failures.append(f"{path.relative_to(ROOT)}: {exc}")
 
     if failures:
         return print_fail("JSON files", failures)
-    print(f"PASS: JSON files ({len(JSON_FILES)} checked)")
+    print(f"PASS: JSON files ({len(paths)} checked)")
     return 0
 
 
-def iter_manifest_paths(value):
+def iter_manifest_paths(value: Any) -> Iterable[str]:
     if isinstance(value, dict):
         for key, child in value.items():
             if key in {
@@ -252,32 +183,134 @@ def iter_manifest_paths(value):
             yield from iter_manifest_paths(child)
 
 
-def check_manifest_references():
+def check_manifest() -> int:
     path = ROOT / "agentdefaults.manifest.json"
     try:
-        manifest = json.loads(path.read_text(encoding="utf-8"))
+        manifest = load_json(path)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        return print_fail("manifest references", [str(exc)])
+        return print_fail("manifest", [str(exc)])
+
+    failures: list[str] = []
+
+    version = manifest.get("version")
+    if not isinstance(version, str) or not SEMVER_PATTERN.fullmatch(version):
+        failures.append(f"version is not semantic x.y.z: {version!r}")
+
+    stacks = manifest.get("featured_stacks")
+    if not isinstance(stacks, list) or not stacks:
+        failures.append("featured_stacks must be a non-empty list")
+        stacks = []
+
+    names: list[str] = []
+    for index, stack in enumerate(stacks):
+        if not isinstance(stack, dict):
+            failures.append(f"featured_stacks[{index}] is not an object")
+            continue
+        name = stack.get("name")
+        if not isinstance(name, str) or not name.strip():
+            failures.append(f"featured_stacks[{index}] has no valid name")
+        else:
+            names.append(name)
+        if not isinstance(stack.get("agent"), str):
+            failures.append(f"featured_stacks[{index}] has no agent")
+
+    duplicates = sorted({name for name in names if names.count(name) > 1})
+    failures.extend(f"duplicate featured stack name: {name}" for name in duplicates)
 
     missing = sorted({
         ref for ref in iter_manifest_paths(manifest)
         if not (ROOT / ref).is_file()
     })
-    if missing:
-        return print_fail("manifest references", missing)
-    print("PASS: manifest references")
+    failures.extend(f"missing manifest reference: {ref}" for ref in missing)
+
+    if failures:
+        return print_fail("manifest", failures)
+    print(f"PASS: manifest ({len(stacks)} featured stacks, references valid)")
     return 0
 
 
-def should_check_link(target):
+def check_automation_platform_stack() -> int:
+    failures: list[str] = []
+
+    manifest = load_json(ROOT / "agentdefaults.manifest.json")
+    stacks = manifest.get("featured_stacks", [])
+    stack = next(
+        (
+            item for item in stacks
+            if isinstance(item, dict)
+            and item.get("name") == "Automation Platform Architecture and Selection"
+        ),
+        None,
+    )
+    if stack is None:
+        failures.append("expanded automation platform stack is not registered")
+    else:
+        registered = set(stack.get("skills", []))
+        required_skills = {
+            path for path in AUTOMATION_PLATFORM_REQUIRED_FILES
+            if path.startswith("skills/")
+        }
+        missing_skills = sorted(required_skills - registered)
+        failures.extend(f"automation skill missing from manifest: {path}" for path in missing_skills)
+
+    schema_path = ROOT / "schemas/automation-platform-decision-brief.schema.json"
+    schema = load_json(schema_path)
+    properties = schema.get("properties", {})
+    required = set(schema.get("required", []))
+
+    if "platform_selection" not in properties:
+        failures.append("decision schema has no platform_selection property")
+    if "platform_selection" not in required:
+        failures.append("decision schema does not require platform_selection")
+
+    platform_selection = properties.get("platform_selection", {})
+    selection_properties = platform_selection.get("properties", {})
+    if "candidate_policy" not in selection_properties:
+        failures.append("decision schema has no candidate_policy")
+    if "allowed_hosting_models" not in selection_properties:
+        failures.append("decision schema has no allowed_hosting_models")
+
+    agent_text = (ROOT / "agents/automation-platform-selection-advisor.md").read_text(encoding="utf-8")
+    required_terms = [
+        "GitHub Actions",
+        "Azure Pipelines",
+        "Puppet",
+        "Chef Infra",
+        "OpenTofu",
+        "Pulumi",
+        "Argo CD",
+        "Flux",
+        "durable workflow",
+    ]
+    for term in required_terms:
+        if term not in agent_text:
+            failures.append(f"automation advisor missing product or capability coverage: {term}")
+
+    example_text = (ROOT / "examples/automation-platform-decision-brief.yaml").read_text(encoding="utf-8")
+    for marker in [
+        "platform_selection:",
+        "candidate_policy:",
+        "allowed_hosting_models:",
+        "evidence_cutoff:",
+    ]:
+        if marker not in example_text:
+            failures.append(f"automation example missing field: {marker}")
+
+    if failures:
+        return print_fail("automation platform stack", failures)
+    print("PASS: automation platform stack integrity")
+    return 0
+
+
+def should_check_link(target: str) -> bool:
     if target.startswith(("http://", "https://", "mailto:", "#")):
         return False
     path_part = target.split("#", 1)[0]
     return bool(path_part) and path_part.endswith(LINK_EXTENSIONS)
 
 
-def check_links():
-    failures = []
+def check_links() -> int:
+    failures: list[str] = []
     for md in ROOT.rglob("*.md"):
         if ".git" in md.parts:
             continue
@@ -296,14 +329,15 @@ def check_links():
     return 0
 
 
-def main():
+def main() -> int:
     print("AgentDefaults validation")
     print("========================")
     failures = (
         check_required_files()
         + check_purpose_sections()
         + check_json_files()
-        + check_manifest_references()
+        + check_manifest()
+        + check_automation_platform_stack()
         + check_links()
     )
     if failures:
