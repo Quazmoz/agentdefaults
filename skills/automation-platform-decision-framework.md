@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide a repeatable method for choosing between Terraform, Ansible, Jenkins, or a composed workflow without reducing the decision to team familiarity or file syntax.
+Provide a repeatable, category-aware method for selecting automation capabilities and products without reducing the decision to incumbent familiarity, vendor preference, or file syntax.
 
 ## When To Use
 
@@ -14,22 +14,23 @@ Use for new automation requests, architecture reviews, migrations, platform-cons
 - target systems
 - current and desired state
 - lifecycle actions
-- trigger and frequency
+- trigger, frequency, and control loop
 - source of truth
 - target count and inventory model
-- state, drift, and reconciliation needs
-- connectivity and privilege constraints
-- secrets and credentials
-- approvals and audit evidence
-- artifacts and promotion flow
-- rollback and recovery expectations
-- team ownership and support model
+- state, drift, reconciliation, artifact, and workflow-history needs
+- source-control, cloud, and deployment platforms
+- hosting, network, connectivity, and privilege constraints
+- secrets, identity, approvals, and audit evidence
+- rollback, retry, resume, compensation, and recovery expectations
+- existing products, editions, licenses, content, and support model
+- migration tolerance and budget
+- candidate policy
 
 ## Instructions
 
 ### 1. Normalize the request
 
-Rewrite the request as observable outcomes. Replace vague statements such as "automate the deployment" with units such as:
+Rewrite the request as observable outcomes. Replace vague statements such as `automate the deployment` with units such as:
 
 ```text
 create network resources
@@ -37,7 +38,9 @@ configure operating-system prerequisites
 build application artifact
 run tests
 approve production release
-deploy artifact to existing hosts
+publish immutable artifact
+update deployment declaration
+reconcile cluster state
 verify health
 record evidence
 ```
@@ -46,87 +49,146 @@ record evidence
 
 Create one automation unit for each independently owned lifecycle. A unit should have one authoritative source of truth and one primary platform owner.
 
-### 3. Classify each unit
+### 3. Classify the capability and control loop
 
-Use these classes:
+Use `automation-platform-capability-taxonomy.md`.
+
+Capability classes:
 
 ```text
-infrastructure_lifecycle
-configuration_convergence
-application_deployment
-day_two_operation
-build_and_test
-pipeline_orchestration
-approval_and_promotion
+infrastructure_as_code
+configuration_management
+ci_cd
+GitOps_continuous_delivery
+runbook_automation
+managed_iac_execution
+durable_workflow_orchestration
 verification_and_reporting
+adjacent_capability
 unsupported_capability
 ```
 
-### 4. Apply hard-fit rules
+Control loops:
 
-- Persistent provider-managed resource lifecycle defaults to Terraform.
-- Configuration or operation of existing targets defaults to Ansible.
-- Triggered build, test, approval, delivery, or coordination defaults to Jenkins.
-- Compound workflows are split and composed.
+```text
+one_shot
+event_driven
+scheduled
+continuous_reconciliation
+durable_workflow
+```
+
+### 4. Identify authoritative records
+
+For every unit, identify the durable home of:
+
+- desired state
+- resource identity or state
+- inventory and classification
+- source code and modules
+- artifacts and provenance
+- workflow or pipeline history
+- approvals and audit evidence
+- secrets and credentials
+
+### 5. Apply category hard-fit rules
+
+- Persistent provider-managed resource lifecycle defaults to the IaC category.
+- Configuration or operation of existing targets defaults to configuration management or runbook automation.
+- Triggered build, test, approval, artifact, promotion, or delivery sequencing defaults to CI/CD.
+- Continuous Kubernetes reconciliation from version-controlled desired state defaults to GitOps CD.
+- Operator-facing parameterized procedures default to runbook automation.
+- Long-running stateful workflows with durable timers, retries, signals, or compensation default to durable workflow orchestration.
+- Managed execution layers are evaluated separately from the underlying engine.
 - A platform can execute a command without being the correct authoritative owner.
 
-### 5. Identify disqualifiers
+### 6. Discover viable products
 
-Examples:
+Use `automation-platform-candidate-discovery.md`.
 
-- Terraform provider coverage is absent or dangerously incomplete.
-- Ansible cannot reach targets or obtain required privilege safely.
-- Jenkins is unavailable during the recovery scenario it is expected to execute.
-- The workload requires a durable event engine, queue, or long-running workflow model beyond the supported set.
-- State ownership would be duplicated across tools.
-- Required rollback cannot be expressed or tested.
+Choose a candidate policy:
 
-### 6. Score viable options
+```text
+current_stack_only
+current_stack_plus_alternatives
+open_market
+```
+
+Start with incumbents. Add alternatives only when a concrete requirement makes them relevant.
+
+### 7. Apply mandatory elimination gates
+
+Eliminate candidates that fail a non-negotiable requirement such as:
+
+- target, provider, operating-system, architecture, or resource coverage
+- SaaS, self-hosted, hybrid, or air-gapped deployment
+- source-control integration
+- private-network reachability
+- runner, agent, or controller topology
+- identity, audit, approval, policy, or separation of duties
+- data residency, evidence retention, or support lifecycle
+- open-source, licensing, procurement, or vendor constraints
+- state import, compatibility, or migration requirements
+- recovery when the control plane is unavailable
+
+Do not score disqualified products.
+
+### 8. Score viable products
 
 Score 0 to 5 and multiply by weight.
 
 | Criterion | Weight | Question |
 |---|---:|---|
-| Domain ownership | 5 | Is this platform naturally responsible for the unit? |
-| Desired-state fit | 4 | Can repeated execution converge safely? |
-| State and drift | 4 | Can it represent and reconcile the required state? |
-| Trigger and workflow | 3 | Does it fit the event, schedule, gate, or sequence? |
-| Inventory and scale | 3 | Does its target model fit the estate? |
-| Recovery | 3 | Can failures be retried, resumed, rolled back, or compensated? |
-| Security | 3 | Are credentials and privilege boundaries supportable? |
-| Auditability | 2 | Can it produce the required evidence and approvals? |
+| Capability ownership | 5 | Is this product naturally responsible for the unit? |
+| Control-loop fit | 5 | Does its execution or reconciliation model match? |
+| State and durable-history fit | 4 | Can it own the required state, inventory, artifacts, or workflow history? |
+| Target and ecosystem coverage | 5 | Does it support the required targets through maintained integrations? |
+| Hosting and execution topology | 4 | Does the control plane, runner, agent, or controller model fit? |
+| Recovery | 4 | Can failures be retried, resumed, compensated, rolled back, or reconciled? |
+| Security | 4 | Are identity, credentials, isolation, and privilege boundaries supportable? |
+| Audit and governance | 3 | Can it produce approvals, policies, and evidence? |
 | Maintainability | 3 | Can logic be tested, reviewed, reused, and owned? |
-| Operating model | 2 | Does the organization have a sustainable support model? |
+| Scale and concurrency | 3 | Does its target and execution model fit expected growth? |
+| Platform operations | 4 | Can the organization sustainably operate it? |
+| Existing operating model | 2 | Does it reuse valuable current investments? |
+| Migration complexity | 3 | Can adoption or migration be performed safely? |
+| Licensing and total cost | 3 | Are license, infrastructure, labor, and support sustainable? |
+| Portability and lock-in | 2 | Is the coupling acceptable? |
 
-Do not let a weighted score override a hard ownership mismatch.
+Do not let a weighted score override category mismatch or a mandatory gate.
 
-### 7. Define boundaries
+### 9. Define boundaries
 
 For each unit, record:
 
 ```text
-primary owner
+primary product and edition
+capability class
 caller or trigger
 repository artifact
-state or history store
+state, inventory, artifact, or history store
 credentials used
 approval point
 verification method
 recovery method
+operational owner
 ```
 
-### 8. Challenge the recommendation
+### 10. Challenge the recommendation
 
 Ask:
 
-- What breaks if this tool is unavailable?
-- What state is lost or duplicated?
+- What breaks if the control plane, runner, agent, or controller is unavailable?
+- What state, inventory, artifact, or evidence is lost or duplicated?
 - Can a second run safely converge?
-- Can a failed run resume without manual archaeology?
+- Can a partial failure resume without manual archaeology?
 - Does rollback restore the prior state or only stop further change?
-- Is business logic hidden in shell steps?
-- Could a maintained provider, module, collection, or plugin replace custom code?
-- Does the recommendation still hold at ten times the target count?
+- Is business logic hidden in shell steps or pipeline configuration?
+- Could a maintained provider, module, action, task, collection, cookbook, or controller remove custom code?
+- Does the recommendation still hold at ten times the scale?
+- Does stricter separation of duties change the architecture?
+- Is the compared feature available in the exact edition and hosting model?
+- Is migration value greater than migration and operating cost?
 
 ## Expected Output
 
@@ -134,20 +196,28 @@ Ask:
 ## Decision Summary
 
 ## Workload Units
-| Unit | Class | Source of Truth | Lifecycle | Trigger |
-|---|---|---|---|---|
+| Unit | Capability | Control Loop | Source of Truth | Lifecycle | Trigger |
+|---|---|---|---|---|---|
 
-## Hard-Fit Result
-| Unit | Default Owner | Disqualifiers | Final Owner |
+## Candidate Policy and Mandatory Gates
+
+## Longlist and Eliminations
+| Product | Capability | Gate Result | Reason |
 |---|---|---|---|
 
+## Shortlist
+| Unit | Product / Edition | Hosting | Strongest Fit | Main Gap | Evidence Date |
+|---|---|---|---|---|---|
+
 ## Weighted Matrix
-| Criterion | Weight | Terraform | Ansible | Jenkins | Evidence |
+| Criterion | Weight | Candidate 1 | Candidate 2 | Candidate 3 | Evidence |
 |---|---:|---:|---:|---:|---|
 
 ## Boundaries
-| Unit | Owner | Caller | Artifact | State or History | Recovery |
+| Unit | Owner | Caller | Artifact | Durable State or History | Recovery |
 |---|---|---|---|---|---|
+
+## Migration and Operations Impact
 
 ## Risks and Unknowns
 
@@ -156,9 +226,13 @@ Ask:
 
 ## Quality Checks
 
-- The request is decomposed before scoring.
+- The request is decomposed and classified before products are scored.
 - Every unit has exactly one authoritative owner.
+- Products from different capability classes are not directly compared without decomposition.
+- Mandatory gates are applied before weighting.
 - Execution capability is not confused with state ownership.
-- Rejected platforms receive evidence-based explanations.
-- Security, failure recovery, and operational support are included.
-- The result can recommend a composition or state that none of the supported tools fits.
+- Exact product edition and hosting assumptions are visible.
+- Rejected products receive evidence-based explanations.
+- Security, supply chain, failure recovery, platform operations, migration, and total cost are included.
+- Official product documentation and evidence dates support version-sensitive claims.
+- The result can recommend composition, retention of the incumbent, migration, or no suitable product.
