@@ -10,6 +10,7 @@
     "lifecycle",
     "execution",
     "governance",
+    "platform_selection",
     "outputs"
   ],
   "properties": {
@@ -24,10 +25,7 @@
         "current_platforms": {
           "type": "array",
           "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "enum": ["terraform", "ansible", "jenkins", "shell", "manual", "other", "none"]
-          }
+          "items": {"type": "string", "minLength": 1}
         },
         "repository_urls": {
           "type": "array",
@@ -54,12 +52,15 @@
               "network_devices",
               "virtual_machines",
               "bare_metal",
+              "endpoints",
               "containers",
               "kubernetes",
               "databases",
               "middleware",
               "applications",
               "artifacts",
+              "data_workflows",
+              "business_workflows",
               "other"
             ]
           }
@@ -72,7 +73,17 @@
         "estimated_count": {"type": "integer", "minimum": 0},
         "inventory_source": {"type": "string"},
         "connectivity": {"type": "string"},
-        "privilege_requirements": {"type": "string"}
+        "privilege_requirements": {"type": "string"},
+        "operating_systems": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "architectures": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
       }
     },
     "lifecycle": {
@@ -95,20 +106,26 @@
               "deploy",
               "patch",
               "operate",
+              "reconcile",
               "verify",
               "rollback",
+              "compensate",
               "destroy",
               "build",
               "test",
               "scan",
+              "package",
               "promote",
-              "report"
+              "report",
+              "wait"
             ]
           }
         },
         "source_of_truth": {"type": "string", "minLength": 1},
         "desired_state_required": {"type": "boolean"},
         "drift_detection_required": {"type": "boolean"},
+        "continuous_reconciliation_required": {"type": "boolean"},
+        "durable_workflow_state_required": {"type": "boolean"},
         "destroy_allowed": {"type": "boolean"},
         "rollback_expectation": {"type": "string"},
         "recovery_objective": {"type": "string"}
@@ -117,20 +134,26 @@
     "execution": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["trigger", "frequency"],
+      "required": ["trigger", "frequency", "control_loop"],
       "properties": {
         "trigger": {
           "type": "string",
-          "enum": ["source_control", "webhook", "schedule", "manual", "event", "api", "other"]
+          "enum": ["source_control", "webhook", "schedule", "manual", "event", "message", "api", "continuous", "other"]
         },
         "frequency": {"type": "string", "minLength": 1},
+        "control_loop": {
+          "type": "string",
+          "enum": ["one_shot", "event_driven", "scheduled", "continuous_reconciliation", "durable_workflow"]
+        },
         "build_required": {"type": "boolean"},
         "test_required": {"type": "boolean"},
         "artifact_required": {"type": "boolean"},
         "approval_required": {"type": "boolean"},
         "parallelism": {"type": "string"},
         "concurrency_controls": {"type": "string"},
-        "maintenance_window": {"type": "string"}
+        "maintenance_window": {"type": "string"},
+        "maximum_runtime": {"type": "string"},
+        "external_waits": {"type": "string"}
       }
     },
     "security": {
@@ -143,8 +166,10 @@
           "items": {"type": "string", "minLength": 1}
         },
         "secret_manager": {"type": "string"},
+        "identity_requirements": {"type": "string"},
         "separation_of_duties": {"type": "string"},
-        "network_restrictions": {"type": "string"}
+        "network_restrictions": {"type": "string"},
+        "supply_chain_requirements": {"type": "string"}
       }
     },
     "governance": {
@@ -158,15 +183,108 @@
           "enum": ["none", "low", "medium", "high", "critical"]
         },
         "approval_model": {"type": "string"},
+        "policy_requirements": {"type": "string"},
         "evidence_retention": {"type": "string"},
+        "data_residency": {"type": "string"},
         "change_management": {"type": "string"},
         "support_owner": {"type": "string"}
+      }
+    },
+    "platform_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_policy", "allowed_hosting_models"],
+      "properties": {
+        "candidate_policy": {
+          "type": "string",
+          "enum": ["current_stack_only", "current_stack_plus_alternatives", "open_market"]
+        },
+        "allowed_capability_classes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "infrastructure_as_code",
+              "configuration_management",
+              "ci_cd",
+              "gitops_continuous_delivery",
+              "runbook_automation",
+              "managed_iac_execution",
+              "durable_workflow_orchestration",
+              "verification_and_reporting",
+              "adjacent_capability",
+              "unsupported_capability"
+            ]
+          }
+        },
+        "allowed_products": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "excluded_products": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "allowed_hosting_models": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["saas", "self_hosted", "hybrid", "managed_private", "air_gapped"]
+          }
+        },
+        "self_hosted_required": {"type": "boolean"},
+        "air_gapped_required": {"type": "boolean"},
+        "open_source_required": {"type": "boolean"},
+        "commercial_support_required": {"type": "boolean"},
+        "existing_license_preferences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "source_control_platform": {"type": "string"},
+        "primary_cloud_platforms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "migration_tolerance": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high"]
+        },
+        "migration_deadline": {"type": "string"},
+        "budget_constraints": {"type": "string"},
+        "evidence_cutoff": {"type": "string", "format": "date"}
       }
     },
     "existing_capabilities": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "capability_class", "hosting_model", "maturity"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "edition": {"type": "string"},
+              "capability_class": {"type": "string", "minLength": 1},
+              "hosting_model": {"type": "string", "minLength": 1},
+              "maturity": {
+                "type": "string",
+                "enum": ["experimental", "limited", "established", "strategic", "legacy"]
+              },
+              "strengths": {"type": "array", "items": {"type": "string"}},
+              "constraints": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
         "terraform": {"type": "string"},
         "ansible": {"type": "string"},
         "jenkins": {"type": "string"},
@@ -183,13 +301,21 @@
         "enum": [
           "executive_decision",
           "workload_decomposition",
+          "capability_classification",
+          "candidate_longlist",
+          "mandatory_gate_analysis",
+          "product_shortlist",
           "hard_fit_analysis",
           "weighted_matrix",
           "ownership_map",
           "execution_flow",
           "handoff_contracts",
           "security_controls",
+          "supply_chain_controls",
           "recovery_plan",
+          "migration_analysis",
+          "total_cost_analysis",
+          "official_source_inventory",
           "pilot_plan",
           "implementation_backlog",
           "migration_plan",
