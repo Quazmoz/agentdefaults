@@ -2,108 +2,145 @@
 
 ## Purpose
 
-Design workflows that use Terraform, Ansible, and Jenkins together without duplicating ownership or hiding domain logic in the orchestration layer.
+Design workflows that combine infrastructure lifecycle, configuration management, CI/CD, GitOps, runbook automation, managed execution, and durable workflow products without duplicating ownership or hiding domain logic in the orchestration layer.
 
 ## When To Use
 
-Use when a request spans persistent infrastructure, target configuration, application delivery, and pipeline coordination.
+Use when a request spans more than one capability class or when one product must trigger, govern, or consume outputs from another.
 
 ## Boundary Model
 
+Every automation unit must have one authoritative owner.
+
 ```text
-Terraform
+IaC engine
   owns: provider-managed resource lifecycle and infrastructure desired state
-  stores: configuration and state
-  exposes: plan, apply outputs, resource identifiers
+  stores: configuration, resource identity, and state
+  exposes: plans or previews, outputs, resource identifiers, and change results
 
-Ansible
-  owns: target configuration, application deployment to existing targets, and day-2 operations
-  stores: inventories, variables, roles, playbooks, and execution dependencies
-  exposes: changed state, task results, verification outputs
+Configuration-management engine
+  owns: target configuration, deployment to existing targets, and day-2 state
+  stores: inventories or classification, variables or data, roles, modules, cookbooks, manifests, and policies
+  exposes: changed state, convergence reports, task results, and verification outputs
 
-Jenkins
-  owns: triggers, stage sequencing, builds, tests, approvals, artifact promotion, coordination, and run history
-  stores: Jenkinsfile or shared-library flow, logs, reports, and artifact references
-  exposes: pipeline status, approvals, evidence, notifications
+CI/CD platform
+  owns: triggers, build, test, scan, artifact, approval, promotion, stage coordination, and run history
+  stores: workflow or pipeline definitions, logs, reports, and artifact references
+  exposes: run status, approvals, evidence, and notifications
+
+GitOps controller
+  owns: continuous reconciliation of version-controlled deployment state
+  stores: cluster-side reconciliation state and health observations
+  consumes: Git revisions, manifests, packages, and immutable artifact references
+  exposes: sync, drift, health, and reconciliation status
+
+Runbook platform
+  owns: authorized operator entrypoints, parameters, schedules, target selection, and job evidence
+  stores: job definitions, execution logs, and operator history
+  invokes: versioned automation content or APIs
+
+Managed IaC execution platform
+  owns: controlled plan and apply execution, approvals, policies, run history, and possibly state
+  does not automatically own: the underlying IaC language or resource model
+
+Durable workflow engine
+  owns: long-running workflow state, retries, timers, signals, compensation, and execution history
+  stores: durable workflow history
+  invokes: activities, services, or automation platforms
 ```
 
 ## Composition Rules
 
 1. Assign one authoritative owner per automation unit.
-2. Jenkins may invoke Terraform and Ansible, but their configurations stay in their native repositories or directories.
-3. Terraform outputs may feed dynamic inventory or deployment inputs, but do not make Jenkins the durable inventory store.
-4. Ansible may verify infrastructure attributes, but must not duplicate Terraform-owned desired state.
-5. Build artifacts once, then promote the same immutable artifact through environments when possible.
-6. Use explicit handoff contracts between stages.
-7. Make every handoff typed, versioned, validated, and auditable.
-8. Keep credentials scoped to the stage and platform that needs them.
-9. Use approvals before high-impact applies or production deployments.
-10. Separate rollback from retry. A rerun is not automatically a rollback.
-11. Design recovery paths that do not depend exclusively on the component being recovered.
-12. Avoid circular ownership, such as Terraform creating Jenkins which is the only system able to recover Terraform state.
+2. Keep domain logic in the native engine or repository.
+3. Treat the caller, executor, reconciler, and source of truth as separate roles.
+4. Pass typed, versioned, validated outputs between platforms.
+5. Never use ephemeral workspaces as durable state, inventory, artifact truth, or workflow history.
+6. Build artifacts once, then promote the same immutable artifact when possible.
+7. Scope credentials to the platform, stage, environment, and target that require them.
+8. Put approvals before consequential resource changes or production releases.
+9. Separate retry, resume, reconciliation, compensation, and rollback.
+10. Design recovery paths that do not depend exclusively on the failed component.
+11. Avoid circular ownership and bootstrap traps.
+12. Record control-plane, runner, agent, controller, state, database, certificate, plugin, and upgrade ownership.
+13. Prefer the smallest composition that satisfies capability and governance requirements.
 
 ## Common Patterns
 
-### Infrastructure then configuration
+### CI/CD plus IaC plus configuration management
 
 ```text
-Jenkins trigger
--> Terraform fmt, validate, test, and plan
--> human or policy approval
--> Terraform apply
+CI/CD trigger
+-> validate and test IaC
+-> plan or preview
+-> policy and human approval
+-> IaC apply through an approved execution layer
 -> publish validated outputs
--> generate or refresh Ansible inventory
--> Ansible check or canary
--> Ansible converge
--> service verification
+-> refresh approved inventory or deployment inputs
+-> configuration-management canary or check
+-> converge targets
+-> verify service health
 -> archive evidence
 ```
 
-### Application delivery to existing infrastructure
+### CI/CD plus GitOps
 
 ```text
-Jenkins trigger
--> build and test
--> scan and package immutable artifact
--> approval
--> Ansible deploy to canary
--> verify
--> Ansible deploy in batches
--> verify
--> promote release record
+CI/CD trigger
+-> build, test, scan, sign, and publish immutable artifact
+-> update version-controlled deployment declaration
+-> review and merge desired-state change
+-> GitOps controller reconciles cluster state
+-> health and sync evidence feed release reporting
 ```
 
-### Scheduled day-2 operation
+The CI/CD platform owns artifact creation and change proposal. The GitOps controller owns cluster reconciliation.
+
+### Runbook platform plus configuration engine
 
 ```text
-Jenkins schedule
--> load approved inventory
--> Ansible prechecks
--> approval when required
--> Ansible serial operation
--> postchecks
--> report and notify
+operator or service-catalog request
+-> authorize user and validate parameters
+-> select approved targets and maintenance window
+-> invoke versioned configuration or remediation content
+-> execute in batches
+-> verify and archive evidence
 ```
 
-### Infrastructure-only change
+The runbook platform owns the operator surface and execution record. The configuration engine owns target changes.
+
+### Managed IaC execution
 
 ```text
-Jenkins trigger or approved operator invocation
--> Terraform validate and plan
--> approval
--> Terraform apply
--> verification
+source-control event
+-> managed IaC platform loads versioned configuration
+-> validate, test, and plan
+-> policy checks and approval
+-> apply with controlled credentials
+-> store state, logs, and evidence
+-> schedule drift detection
 ```
 
-Jenkins is optional if the organization has another controlled Terraform execution platform.
+The managed platform governs execution. The IaC engine still defines resource lifecycle.
+
+### CI/CD plus durable workflow
+
+```text
+CI/CD platform
+-> build and deploy workflow code and workers
+-> trigger workflow or publish event
+-> durable workflow engine owns timers, retries, signals, compensation, and runtime state
+-> outcome returns to release or operational reporting
+```
 
 ## Handoff Contract
 
 For each boundary, define:
 
 ```yaml
-producer: terraform | ansible | jenkins
-consumer: terraform | ansible | jenkins
+producer:
+consumer:
+capability_owner:
 artifact_or_output:
 format:
 version:
@@ -111,7 +148,9 @@ validation:
 classification:
 retention:
 secret_content: false
+integrity_or_provenance:
 failure_behavior:
+retry_or_resume_owner:
 owner:
 ```
 
@@ -119,54 +158,67 @@ owner:
 
 ```text
 automation/
-  terraform/
+  iac/
     environments/
-    modules/
+    modules-or-components/
     tests/
-  ansible/
-    inventories/
-    roles/
-    playbooks/
-    execution-environment.yml
-  jenkins/
-    Jenkinsfile
-    shared-library/
+  configuration/
+    inventories-or-classification/
+    roles-modules-cookbooks-or-manifests/
+    runbooks/
+    tests/
+  ci-cd/
+    workflows-or-pipelines/
+    reusable-components/
+  gitops/
+    applications/
+    environments/
+  workflow/
+    definitions/
+    workers/
   contracts/
+  policy/
   docs/
 ```
 
-Separate repositories are also valid when ownership, release cadence, or access controls differ.
+Separate repositories are valid when ownership, release cadence, access control, or platform boundaries differ.
 
 ## Anti-Patterns
 
-- Terraform configuration generated ad hoc inside a Jenkinsfile.
-- Ansible playbooks embedded as multiline pipeline strings.
-- Jenkins workspaces used as Terraform state or durable inventory.
-- Terraform and Ansible both managing the same resource attribute.
-- Jenkins environment variables becoming the undocumented system of record.
+- IaC configuration generated ad hoc inside a pipeline.
+- Configuration-management content embedded as multiline pipeline strings.
+- CI/CD workspaces used as IaC state, durable inventory, or workflow state.
+- Two engines managing the same resource or configuration attribute.
+- CI/CD variables becoming the undocumented system of record.
+- A pipeline applying Kubernetes manifests being described as GitOps without reconciliation.
+- GitOps controllers building artifacts.
+- Runbook UIs storing the only copy of operational logic.
+- Multi-day CI jobs substituting for a durable workflow engine.
 - Unversioned output parsing between tools.
 - Production credentials available to build stages.
-- Re-running a partially failed pipeline without understanding non-idempotent stages.
+- Re-running a partial workflow without understanding non-idempotent activities.
 - Deleting infrastructure as the default rollback for application failures.
 
 ## Expected Output
 
 ```markdown
 ## Platform Ownership Map
-| Concern | Owner | Caller | Artifact | Durable State or History |
-|---|---|---|---|---|
+| Concern | Capability | Product / Edition | Caller | Artifact | Durable State or History |
+|---|---|---|---|---|---|
 
-## Execution Flow
+## Execution and Reconciliation Flow
 
 ## Handoff Contracts
-| Producer | Consumer | Data | Validation | Failure Behavior |
-|---|---|---|---|---|
+| Producer | Consumer | Data | Validation | Failure Behavior | Recovery Owner |
+|---|---|---|---|---|---|
 
-## Credentials and Approvals
+## Credentials, Policy, and Approvals
 
-## Retry, Resume, and Rollback
+## Retry, Resume, Reconciliation, Compensation, and Rollback
 
 ## Repository Boundaries
+
+## Control-Plane Recovery
 
 ## Anti-Patterns Prevented
 ```
@@ -174,8 +226,9 @@ Separate repositories are also valid when ownership, release cadence, or access 
 ## Quality Bar
 
 - Each concern has one owner.
-- Cross-tool handoffs are explicit and validated.
-- Jenkins coordinates but does not absorb Terraform or Ansible logic.
-- State, inventory, artifacts, and run history have distinct durable homes.
-- Credentials and approvals follow least privilege.
-- Retry, resume, compensation, and rollback are not conflated.
+- Cross-platform handoffs are explicit, typed, versioned, and validated.
+- Orchestration coordinates but does not absorb domain logic.
+- State, inventory, artifacts, reconciliation status, and workflow history have distinct durable homes.
+- Credentials and approvals follow least privilege and separation of duties.
+- Retry, resume, reconciliation, compensation, and rollback are not conflated.
+- The architecture can recover when a control plane or runner is unavailable.
