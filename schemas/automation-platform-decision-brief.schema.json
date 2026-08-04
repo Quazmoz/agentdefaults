@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdefaults.local/schemas/automation-platform-decision-brief.schema.json",
+  "title": "Automation Platform Decision Brief",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request",
+    "targets",
+    "lifecycle",
+    "execution",
+    "governance",
+    "outputs"
+  ],
+  "properties": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "desired_outcome"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "desired_outcome": {"type": "string", "minLength": 1},
+        "current_process": {"type": "string"},
+        "current_platforms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["terraform", "ansible", "jenkins", "shell", "manual", "other", "none"]
+          }
+        },
+        "repository_urls": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "format": "uri"}
+        }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["types", "environments"],
+      "properties": {
+        "types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "cloud_resources",
+              "saas_resources",
+              "identity",
+              "network_devices",
+              "virtual_machines",
+              "bare_metal",
+              "containers",
+              "kubernetes",
+              "databases",
+              "middleware",
+              "applications",
+              "artifacts",
+              "other"
+            ]
+          }
+        },
+        "environments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "estimated_count": {"type": "integer", "minimum": 0},
+        "inventory_source": {"type": "string"},
+        "connectivity": {"type": "string"},
+        "privilege_requirements": {"type": "string"}
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actions", "source_of_truth"],
+      "properties": {
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "create",
+              "import",
+              "change",
+              "replace",
+              "configure",
+              "deploy",
+              "patch",
+              "operate",
+              "verify",
+              "rollback",
+              "destroy",
+              "build",
+              "test",
+              "scan",
+              "promote",
+              "report"
+            ]
+          }
+        },
+        "source_of_truth": {"type": "string", "minLength": 1},
+        "desired_state_required": {"type": "boolean"},
+        "drift_detection_required": {"type": "boolean"},
+        "destroy_allowed": {"type": "boolean"},
+        "rollback_expectation": {"type": "string"},
+        "recovery_objective": {"type": "string"}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger", "frequency"],
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "enum": ["source_control", "webhook", "schedule", "manual", "event", "api", "other"]
+        },
+        "frequency": {"type": "string", "minLength": 1},
+        "build_required": {"type": "boolean"},
+        "test_required": {"type": "boolean"},
+        "artifact_required": {"type": "boolean"},
+        "approval_required": {"type": "boolean"},
+        "parallelism": {"type": "string"},
+        "concurrency_controls": {"type": "string"},
+        "maintenance_window": {"type": "string"}
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "credential_sources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "secret_manager": {"type": "string"},
+        "separation_of_duties": {"type": "string"},
+        "network_restrictions": {"type": "string"}
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["audit_required", "production_impact"],
+      "properties": {
+        "audit_required": {"type": "boolean"},
+        "production_impact": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high", "critical"]
+        },
+        "approval_model": {"type": "string"},
+        "evidence_retention": {"type": "string"},
+        "change_management": {"type": "string"},
+        "support_owner": {"type": "string"}
+      }
+    },
+    "existing_capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "terraform": {"type": "string"},
+        "ansible": {"type": "string"},
+        "jenkins": {"type": "string"},
+        "team_skills": {"type": "string"},
+        "constraints": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "executive_decision",
+          "workload_decomposition",
+          "hard_fit_analysis",
+          "weighted_matrix",
+          "ownership_map",
+          "execution_flow",
+          "handoff_contracts",
+          "security_controls",
+          "recovery_plan",
+          "pilot_plan",
+          "implementation_backlog",
+          "migration_plan",
+          "architecture_decision_record",
+          "markdown",
+          "json"
+        ]
+      }
+    }
+  }
+}
