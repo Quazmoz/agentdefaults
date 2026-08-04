@@ -1,93 +1,192 @@
 request:
-  name: Provision and deploy an internal application
-  desired_outcome: Create the required cloud infrastructure, configure the hosts, build the application, and deploy it through controlled environments.
-  current_process: Manual cloud changes, shell scripts, and one Jenkins freestyle job.
+  name: Modernize infrastructure, configuration, and delivery automation
+  desired_outcome: Select the right products to provision cloud infrastructure, configure hosts, build and release an application, and deploy to Kubernetes and virtual machines through controlled environments.
+  current_process: Terraform and Ansible are triggered by a legacy Jenkins controller with large inline shell blocks and manually maintained credentials.
   current_platforms:
-    - jenkins
-    - shell
+    - Terraform
+    - Ansible
+    - Jenkins
+    - shell scripts
   repository_urls: []
 
 targets:
   types:
     - cloud_resources
     - virtual_machines
+    - kubernetes
     - applications
     - artifacts
   environments:
     - development
     - test
     - production
-  estimated_count: 24
-  inventory_source: Cloud tags and Terraform outputs
-  connectivity: Jenkins agents can reach cloud APIs and Ansible control nodes can reach targets over SSH.
-  privilege_requirements: Ansible requires controlled sudo for application and service configuration.
+  estimated_count: 80
+  inventory_source: Cloud tags, Terraform outputs, and Kubernetes API data
+  connectivity: Private workers can reach cloud APIs, virtual machines over SSH, and private Kubernetes clusters. SaaS control planes are allowed only when execution stays on approved private runners.
+  privilege_requirements: Configuration automation requires controlled sudo. Kubernetes deployment uses scoped service identities.
+  operating_systems:
+    - Linux
+    - Windows Server
+  architectures:
+    - x86_64
+    - arm64
 
 lifecycle:
   actions:
     - create
+    - import
     - change
+    - replace
     - configure
     - build
     - test
+    - scan
+    - package
+    - promote
     - deploy
+    - reconcile
     - verify
     - rollback
     - destroy
-  source_of_truth: Git repositories for Terraform, Ansible, application code, and Jenkins pipeline definitions
+  source_of_truth: GitHub repositories for application, infrastructure, configuration, pipeline, and Kubernetes desired-state code
   desired_state_required: true
   drift_detection_required: true
+  continuous_reconciliation_required: true
+  durable_workflow_state_required: false
   destroy_allowed: true
-  rollback_expectation: Application rollback must restore the previous immutable artifact. Infrastructure rollback is change-specific and must not default to destroy.
-  recovery_objective: A failed stage must be diagnosable and safely resumable or rerunnable without duplicating resources.
+  rollback_expectation: Application rollback must restore the previous immutable artifact or Git revision. Infrastructure rollback is change-specific and must not default to destroy.
+  recovery_objective: A failed stage or reconciliation must be diagnosable and safely resumable without duplicating resources or rebuilding artifacts differently per environment.
 
 execution:
   trigger: source_control
   frequency: Several development runs per day and controlled production releases
+  control_loop: event_driven
   build_required: true
   test_required: true
   artifact_required: true
   approval_required: true
   parallelism: Tests may run in parallel. Production infrastructure and deployment stages are serialized.
-  concurrency_controls: One production infrastructure change and one production deployment at a time.
-  maintenance_window: Production infrastructure replacement requires an approved window.
+  concurrency_controls: One production infrastructure change and one production deployment per service at a time.
+  maintenance_window: Production infrastructure replacement and broad host configuration require approved windows.
+  maximum_runtime: Most CI runs complete within 45 minutes. Infrastructure changes may take up to two hours.
+  external_waits: Production approvals may wait up to one business day.
 
 security:
   credential_sources:
-    - Jenkins credentials for short-lived execution identities
     - cloud workload identity
-    - Ansible Vault or approved enterprise secret manager
+    - short-lived OIDC federation
+    - enterprise secret manager
   secret_manager: Enterprise secret manager
-  separation_of_duties: Developers may generate plans. Production apply and deployment require an operations approval.
-  network_restrictions: Production targets are reachable only from approved automation workers.
+  identity_requirements: Prefer workload identity and short-lived credentials over static tokens.
+  separation_of_duties: Developers may generate plans and non-production deployments. Production apply and deployment require operations approval.
+  network_restrictions: Production targets are reachable only from approved private workers or in-cluster controllers.
+  supply_chain_requirements: Pin and review third-party actions, plugins, providers, modules, collections, and container images. Preserve artifact provenance.
 
 governance:
   audit_required: true
   production_impact: high
-  approval_model: Pull-request approval plus protected Jenkins production stage
-  evidence_retention: Retain plans, approvals, test reports, artifact identifiers, deployment results, and verification evidence for one year.
+  approval_model: Pull-request approval plus protected production environment approval
+  policy_requirements: Infrastructure policy checks, protected branches, least privilege, and immutable artifact promotion
+  evidence_retention: Retain plans, approvals, test reports, artifact identifiers, deployment results, reconciliation health, and verification evidence for one year.
+  data_residency: Execution logs and evidence must remain in approved US and EU regions.
   change_management: Link production runs to an approved change record.
   support_owner: Platform Automation team
 
+platform_selection:
+  candidate_policy: current_stack_plus_alternatives
+  allowed_capability_classes:
+    - infrastructure_as_code
+    - managed_iac_execution
+    - configuration_management
+    - ci_cd
+    - gitops_continuous_delivery
+  allowed_products: []
+  excluded_products: []
+  allowed_hosting_models:
+    - saas
+    - self_hosted
+    - hybrid
+    - managed_private
+  self_hosted_required: false
+  air_gapped_required: false
+  open_source_required: false
+  commercial_support_required: true
+  existing_license_preferences:
+    - GitHub Enterprise
+    - Azure DevOps
+    - Red Hat Ansible Automation Platform
+  source_control_platform: GitHub Enterprise Cloud
+  primary_cloud_platforms:
+    - Azure
+    - AWS
+  migration_tolerance: medium
+  migration_deadline: Complete any Jenkins migration within two quarters if the pilot proves value.
+  budget_constraints: Prefer existing enterprise licenses, but include platform operations and migration labor in total cost.
+  evidence_cutoff: 2026-08-05
+
 existing_capabilities:
+  platforms:
+    - name: Terraform
+      edition: CLI with remote backend
+      capability_class: infrastructure_as_code
+      hosting_model: self_hosted
+      maturity: strategic
+      strengths:
+        - Standard multi-cloud modules
+        - Existing imported state
+      constraints:
+        - Plan and apply governance is fragmented across Jenkins jobs
+    - name: Red Hat Ansible Automation Platform
+      edition: Enterprise subscription
+      capability_class: configuration_management
+      hosting_model: self_hosted
+      maturity: established
+      strengths:
+        - Execution environments
+        - Managed inventories and credentials
+        - Existing baseline roles
+      constraints:
+        - Application deployment workflows are not standardized
+    - name: Jenkins
+      edition: Self-managed LTS
+      capability_class: ci_cd
+      hosting_model: self_hosted
+      maturity: legacy
+      strengths:
+        - Existing shared libraries
+        - Private network reachability
+      constraints:
+        - High plugin and controller maintenance
+        - Large inline shell blocks
+        - Weak repository-level developer experience
   terraform: Remote state backend and standard cloud modules are available.
   ansible: Automation controller, execution environments, inventories, and baseline roles are available.
-  jenkins: Managed controller, ephemeral agents, shared libraries, artifact integration, and approval controls are available.
-  team_skills: Strong Terraform and Ansible skills with established Jenkins pipeline support.
+  jenkins: Managed controller, persistent agents, shared libraries, artifact integration, and approval controls are available but costly to maintain.
+  team_skills: Strong Terraform, Ansible, GitHub, Azure DevOps, and Kubernetes skills with moderate Jenkins expertise.
   constraints:
-    - Do not store Terraform state in Jenkins workspaces.
+    - Do not store IaC state in CI workspaces.
     - Build the application artifact once and promote it unchanged.
     - Do not place production secrets in repository variables.
+    - Do not call a push-based Kubernetes deployment GitOps.
 
 outputs:
   - executive_decision
   - workload_decomposition
+  - capability_classification
+  - candidate_longlist
+  - mandatory_gate_analysis
+  - product_shortlist
   - hard_fit_analysis
   - weighted_matrix
   - ownership_map
   - execution_flow
   - handoff_contracts
   - security_controls
+  - supply_chain_controls
   - recovery_plan
+  - migration_analysis
+  - total_cost_analysis
+  - official_source_inventory
   - pilot_plan
   - implementation_backlog
   - architecture_decision_record
