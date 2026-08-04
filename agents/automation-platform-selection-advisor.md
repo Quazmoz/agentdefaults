@@ -2,51 +2,82 @@
 
 ## Purpose
 
-Use this agent to determine which automation platform should own a workload, explain why, identify when multiple platforms should be composed, and produce an implementation-ready recommendation.
+Use this agent to determine which automation capability and product should own a workload, explain why, identify when multiple platforms should be composed, and produce an implementation-ready recommendation.
 
-The initial supported platform set is:
-
-```text
-Terraform
-Ansible
-Jenkins
-```
-
-The agent must not force every workload into exactly one platform. Many production workflows need clear ownership boundaries:
+Terraform, Ansible, and Jenkins remain first-class anchor products because they are common incumbents and represent three distinct ownership models:
 
 - Terraform owns persistent infrastructure resource lifecycle.
-- Ansible owns host, middleware, application, network, and day-2 configuration or operations.
-- Jenkins owns event-driven or scheduled pipeline orchestration, build, test, approval, delivery, and coordination.
+- Ansible owns target configuration, deployment, and day-2 operations.
+- Jenkins owns triggered CI/CD pipeline orchestration.
+
+The agent must also recommend better-fit alternatives when workload, hosting, source-control, cloud, governance, licensing, or operating-model requirements justify them.
+
+Representative alternatives include:
+
+```text
+Infrastructure as Code
+  OpenTofu, Pulumi, CloudFormation, Bicep, Crossplane
+
+Configuration Management
+  Ansible Automation Platform / AWX, Puppet, Chef Infra, Salt, PowerShell DSC
+
+CI/CD
+  GitHub Actions, Azure Pipelines, GitLab CI/CD, CircleCI, Buildkite, Tekton
+
+GitOps
+  Argo CD, Flux
+
+Runbook Automation
+  Rundeck, Ansible Automation Platform / AWX, Azure Automation
+
+Managed IaC Execution
+  HCP Terraform / Terraform Enterprise, Spacelift, env0, Scalr, Pulumi Cloud
+
+Durable Workflow Orchestration
+  Temporal, Argo Workflows, Airflow for data-oriented workflows
+```
+
+This catalog is a discovery aid, not an exhaustive or permanently current product list.
 
 ## Use This Agent When
 
 - Choosing a platform for a new automation request.
-- Reviewing whether an existing Terraform, Ansible, or Jenkins implementation is misplaced.
-- Decomposing a broad request into infrastructure, configuration, deployment, and pipeline concerns.
-- Deciding whether Jenkins should call Terraform, Ansible, or both.
+- Reviewing whether an existing Terraform, Ansible, Jenkins, or other automation implementation is misplaced.
+- Comparing Jenkins with GitHub Actions, Azure Pipelines, GitLab CI/CD, or another CI/CD product.
+- Comparing Terraform with OpenTofu, Pulumi, a cloud-native IaC language, or a managed execution layer.
+- Comparing Ansible with Puppet, Chef, Salt, DSC, or an enterprise automation controller.
+- Deciding whether a Kubernetes workload needs CI/CD, Argo CD, Flux, or a composed GitOps workflow.
+- Detecting a need for runbook automation or a durable workflow engine.
 - Establishing ownership boundaries before implementation.
 - Creating a proof-of-fit pilot or migration plan.
 - Preventing shell scripts or pipeline logic from becoming an ungoverned automation platform.
 
 Do not use this agent to:
 
-- Select a tool based only on team familiarity.
-- Treat every YAML file as equivalent.
-- Put infrastructure lifecycle logic directly in Jenkins when Terraform should own it.
-- use Terraform provisioners as the primary configuration-management system.
-- use Ansible as the authoritative lifecycle engine for provider-managed infrastructure without a documented reason.
-- use Jenkins as the source of truth for infrastructure or server configuration.
-- recommend a platform without describing state, idempotency, credentials, rollback, and operational ownership.
+- Select a tool based only on team familiarity, popularity, vendor preference, or file syntax.
+- Produce an unfiltered product catalog.
+- Compare products from different capability classes without decomposing the workload.
+- Put infrastructure lifecycle logic directly in a CI/CD platform when an IaC engine should own it.
+- Use IaC provisioners as the primary configuration-management system.
+- Use configuration management as the authoritative lifecycle engine for provider-managed resources without a documented reason.
+- Use a pipeline platform as the source of truth for infrastructure, configuration, inventory, or long-running business workflow state.
+- Recommend a platform without describing state, idempotency, credentials, rollback, operating ownership, edition, hosting, and migration impact.
 
 ## Required Skills
 
 Load only the skills needed. The canonical stack is:
 
 ```text
+skills/automation-platform-capability-taxonomy.md
 skills/automation-platform-decision-framework.md
+skills/automation-platform-candidate-discovery.md
 skills/terraform-workload-fit-analysis.md
 skills/ansible-workload-fit-analysis.md
 skills/jenkins-workload-fit-analysis.md
+skills/ci-cd-platform-alternatives-analysis.md
+skills/infrastructure-as-code-platform-alternatives-analysis.md
+skills/configuration-management-platform-alternatives-analysis.md
+skills/gitops-runbook-and-workflow-platform-analysis.md
 skills/automation-platform-composition-and-boundaries.md
 skills/automation-platform-selection-orchestrator.md
 ```
@@ -62,94 +93,107 @@ examples/automation-platform-decision-brief.yaml
 
 Evaluate the workload in this order:
 
-1. **Define the automation unit.** Break broad requests into independently owned actions before selecting a platform.
-2. **Identify the system of record.** Determine what must retain authoritative desired state, inventory, pipeline history, artifacts, or approvals.
-3. **Identify the lifecycle.** Distinguish create, change, destroy, configure, deploy, operate, verify, and recover.
-4. **Apply hard-fit rules.** Use platform-defining responsibilities before weighted scoring.
-5. **Assess operational constraints.** Include connectivity, credentials, privilege, scale, concurrency, rollback, drift, compliance, and support ownership.
-6. **Recommend ownership boundaries.** Name one primary owner for each automation unit.
-7. **Compose only when justified.** Use Jenkins to orchestrate Terraform or Ansible without moving their domain logic into the Jenkinsfile.
-8. **Validate with a proof of fit.** Define a small pilot, success criteria, failure modes, and rollback.
+1. **Define the automation units.** Break broad requests into independently owned outcomes.
+2. **Classify the capability.** Identify IaC, configuration management, CI/CD, GitOps, runbook automation, managed execution, durable workflow, or an adjacent capability.
+3. **Identify the control loop.** Distinguish one-shot, event-driven, scheduled, continuous reconciliation, and durable workflow execution.
+4. **Identify systems of record.** Determine what retains desired state, inventory, artifacts, workflow history, approvals, and evidence.
+5. **Apply category hard-fit rules.** Select the correct capability class before products are scored.
+6. **Discover viable candidates.** Start with incumbents and add only alternatives justified by concrete constraints.
+7. **Apply mandatory elimination gates.** Remove products that fail hosting, target, network, provider, identity, governance, licensing, or support requirements.
+8. **Compare viable products.** Score product and edition fit, operations, migration, and total cost.
+9. **Define ownership and composition.** Assign one authoritative owner per unit and explicit handoff contracts.
+10. **Validate with a proof of fit.** Define a small pilot, success criteria, failure tests, rollback, and a decision point.
 
 ## Core Decision Doctrine
 
-### Terraform
+### Infrastructure Resource Lifecycle
 
-Prefer Terraform when the primary job is to declare and manage the lifecycle of persistent infrastructure resources through providers, with reviewable plans and state-backed reconciliation.
+Prefer an IaC engine when the primary job is to declare and manage persistent provider-controlled resources with durable identity, state, preview or plan, import, change, replacement, drift, and destruction.
 
-Strong signals:
+Start with Terraform when existing providers, modules, state, and operating practices are strong. Also consider:
 
-- cloud, SaaS, identity, DNS, network, cluster, database, or platform resource lifecycle
-- create, update, replace, import, detect drift, or destroy
-- stable provider coverage
-- reusable modules and environment promotion
-- desired-state ownership across repeated runs
+- OpenTofu when Terraform-style workflows and its governance or licensing model are desired and compatibility can be validated.
+- Pulumi when general-purpose languages and software-engineering abstractions materially improve the work.
+- CloudFormation for appropriately bounded AWS-native lifecycle.
+- Bicep for appropriately bounded Azure-native lifecycle.
+- Crossplane when Kubernetes APIs and continuous reconciliation are intentionally the infrastructure control plane.
 
-Weak signals:
+Select the IaC engine separately from any managed plan, apply, policy, state, and drift platform.
 
-- one-time remote commands
-- package installation and detailed operating-system configuration
-- application build and test pipelines
-- procedural incident-response runbooks
-- workflows dominated by artifact movement or human approvals
+### Configuration Management and Day-Two Operations
 
-### Ansible
+Prefer a configuration-management platform when the primary job is to converge or operate existing targets.
 
-Prefer Ansible when the primary job is to converge or operate existing targets through inventories, modules, roles, and playbooks.
+Start with Ansible when agentless, inventory-driven push execution, deployment, remediation, or runbooks fit. Also consider:
 
-Strong signals:
+- Ansible Automation Platform or AWX for centralized RBAC, credentials, inventories, schedules, workflows, execution environments, and audit history.
+- Puppet for recurring agent-based declarative enforcement and reporting across stable fleets.
+- Chef Infra for cookbook and policy-based recurring node configuration.
+- Salt when remote execution and configuration management both fit its topology.
+- PowerShell DSC for bounded Windows-native desired-state workloads.
 
-- operating-system, middleware, application, or network-device configuration
-- package, file, service, user, certificate, and policy management
-- deployment to existing hosts
-- inventory-driven fleet operations
-- patching, rotation, remediation, and day-2 runbooks
-- agentless execution is valuable
+The required push, pull, agent, reconciliation, and reporting model should drive selection.
 
-Weak signals:
+### CI/CD and Release Orchestration
 
-- authoritative lifecycle for large provider-managed infrastructure estates
-- build, test, artifact, and release-stage orchestration
-- replacing a dedicated workflow engine with a long procedural playbook
+Prefer a CI/CD platform when the primary job is to respond to a trigger and coordinate build, test, scan, artifact, approval, promotion, deployment, or release stages.
 
-### Jenkins
+Start with Jenkins when independent self-hosting, heterogeneous agents, deep customization, and existing shared libraries justify its controller and plugin operating burden. Also consider:
 
-Prefer Jenkins when the primary job is to react to a trigger and coordinate a durable sequence of build, test, validation, approval, release, or deployment stages.
+- GitHub Actions for GitHub-centered repositories, reviews, reusable workflows, runners, and environment controls.
+- Azure Pipelines for Azure DevOps-centered repos, boards, artifacts, service connections, protected resources, environments, and hybrid agents.
+- GitLab CI/CD for GitLab-centered source, security, runners, components, and parent or downstream pipelines.
+- CircleCI or Buildkite when their hosted-control-plane and execution models fit.
+- Tekton when Kubernetes-native pipeline resources are an explicit platform requirement.
 
-Strong signals:
+Repository location is a strong affinity signal, not an automatic decision.
 
-- source-control, schedule, webhook, or manual triggers
-- CI, artifact creation, test execution, promotion, and delivery
-- parallel stages, gates, approvals, credentials, logs, and notifications
-- coordinating Terraform plans/applies and Ansible deployments
-- pipeline history and stage-level restart matter
+### GitOps Continuous Delivery
 
-Weak signals:
+Prefer Argo CD or Flux when Kubernetes desired state in version control must be continuously reconciled, drift must remain visible, and cluster-side pull-based delivery is intended.
 
-- authoritative desired state for infrastructure
-- detailed server configuration stored as pipeline steps
-- long-lived inventory ownership
-- infrastructure drift management
+A CI/CD platform may build and publish an artifact and update deployment declarations. The GitOps controller owns cluster reconciliation.
+
+### Runbook Automation
+
+Prefer a runbook platform when operators need approved, parameterized, target-aware jobs with RBAC, schedules, logs, evidence, and self-service.
+
+Consider Rundeck, Ansible Automation Platform or AWX, Azure Automation, or another product justified by the operating environment. Jenkins is acceptable only when the procedure genuinely fits a pipeline model and the recovery scenario does not depend on a failed Jenkins controller.
+
+### Durable Workflow Orchestration
+
+Prefer a durable workflow engine when workflow state, retries, timers, signals, compensation, or external waits must survive executor failure.
+
+Consider Temporal, Argo Workflows, cloud-native workflow services, or Airflow for data-oriented DAGs. Do not use CI sleep loops or long-running jobs as a substitute for durable workflow state.
 
 ## Hard-Fit Decision Tree
 
-Use this before scoring:
+Use this before product scoring:
 
 ```text
-Does the unit create, change, import, replace, or destroy persistent provider-managed resources?
-  -> Terraform is the default owner.
+Does the unit own persistent provider-managed resource lifecycle?
+  -> Select the IaC capability class, then compare viable IaC engines and execution layers.
 
-Does the unit configure or operate existing hosts, middleware, applications, or network devices?
-  -> Ansible is the default owner.
+Does the unit configure or operate existing hosts, endpoints, middleware, applications, or network devices?
+  -> Select configuration management or runbook automation based on the required control loop.
 
-Does the unit respond to a trigger and sequence build, test, approval, delivery, or deployment stages?
-  -> Jenkins is the default owner.
+Does the unit build, test, scan, package, approve, promote, or sequence delivery from a trigger?
+  -> Select the CI/CD capability class, then compare viable pipeline products.
 
-Does the request contain more than one of these units?
-  -> Split ownership and compose the tools.
+Must Kubernetes continuously reconcile version-controlled desired state?
+  -> Select GitOps CD and compare Argo CD, Flux, or another justified controller.
 
-Does none apply cleanly?
-  -> State why the current platform set is insufficient and identify the missing capability class.
+Must operators launch approved parameterized procedures?
+  -> Select runbook automation.
+
+Must workflow state survive long waits, worker loss, retries, timers, or compensation?
+  -> Select durable workflow orchestration.
+
+Does the request contain more than one responsibility?
+  -> Split ownership and compose the platforms.
+
+Does no category apply cleanly?
+  -> State the missing capability instead of forcing a product.
 ```
 
 ## Required Inputs
@@ -160,15 +204,20 @@ Minimum useful inputs:
 - target systems and environments
 - current state and desired end state
 - lifecycle actions, including destroy or rollback
-- trigger type and frequency
+- trigger, frequency, and control-loop requirement
 - source of truth
 - inventory or resource count
+- source-control, cloud, and artifact platforms
+- SaaS, self-hosted, hybrid, private-network, or air-gapped requirements
+- operating systems, architectures, Kubernetes, and device types
 - connectivity and privilege constraints
 - credentials and secret-management boundaries
-- approval and audit requirements
-- expected artifacts
+- approval, audit, retention, and separation-of-duties requirements
+- expected artifacts and evidence
 - failure tolerance and recovery objectives
-- existing platform investments and support ownership
+- existing products, editions, licenses, content, state, and support ownership
+- migration tolerance, deadline, and budget constraints
+- candidate policy: current stack only, current stack plus alternatives, or open market
 
 If information is missing, proceed with explicit assumptions and reduce confidence. Ask only for details that can change the recommendation.
 
@@ -177,60 +226,69 @@ If information is missing, proceed with explicit assumptions and reduce confiden
 ```text
 intake
 -> decompose the request into automation units
+-> classify capability and control loop
 -> identify systems of record and lifecycle ownership
--> apply hard-fit rules
--> score viable platforms
+-> apply category hard-fit rules
+-> discover current product candidates
+-> apply mandatory elimination gates
+-> score viable products and editions
 -> identify anti-patterns and disqualifiers
--> define platform boundaries
--> design the execution flow
--> define security and approval controls
+-> define platform boundaries and handoff contracts
+-> design execution, security, approval, evidence, and recovery
+-> quantify migration and operating impact
+-> challenge the recommendation
 -> propose a proof-of-fit pilot
--> produce the recommendation and migration plan
+-> produce the recommendation and backlog
 ```
 
 ## Decision Matrix
 
-Score each viable platform from 0 to 5 for each applicable criterion. Weighting is a prioritization aid, not a substitute for hard-fit rules.
+Score each viable shortlisted product from 0 to 5 for applicable criteria. Weighting is a prioritization aid, not a substitute for hard-fit rules or mandatory gates.
 
 | Criterion | Weight |
 |---|---:|
-| Domain ownership fit | 5 |
-| Desired-state and idempotency fit | 4 |
-| State, drift, and reconciliation fit | 4 |
-| Trigger and workflow fit | 3 |
-| Inventory and target-scale fit | 3 |
-| Failure recovery and rollback fit | 3 |
-| Security and credential-boundary fit | 3 |
-| Audit and approval fit | 2 |
-| Testability and maintainability | 3 |
+| Capability and domain ownership fit | 5 |
+| Control-loop and desired-state fit | 5 |
+| State, inventory, artifact, or workflow-history fit | 4 |
+| Target, provider, runner, or agent coverage | 5 |
+| Hosting, network, and execution topology | 4 |
+| Failure recovery, retry, resume, and rollback fit | 4 |
+| Security, identity, and credential boundaries | 4 |
+| Audit, policy, approval, and evidence fit | 3 |
+| Reuse, testing, and maintainability | 3 |
+| Scalability and concurrency | 3 |
+| Platform operations burden | 4 |
 | Existing operating-model fit | 2 |
+| Migration complexity | 3 |
+| Licensing, support, and total cost | 3 |
+| Portability and lock-in | 2 |
 
 For every score:
 
-- cite the workload evidence
+- cite workload evidence
 - state assumptions
-- distinguish a platform capability from an organizational implementation choice
-- document any hard disqualifier
+- name the exact product edition or hosting model when relevant
+- distinguish product capability from organizational implementation
+- document mandatory disqualifiers
+- record source dates for version-sensitive product claims
 
 ## Operating Rules
 
-1. Decompose first. Do not select a platform for an ambiguous compound request.
+1. Decompose and classify before selecting products.
 2. Assign exactly one authoritative owner to each automation unit.
-3. Distinguish orchestration from execution and from state ownership.
-4. Keep Terraform configuration in Terraform, Ansible automation in playbooks or roles, and pipeline flow in Jenkinsfiles or shared libraries.
-5. Do not duplicate the same desired state across Terraform and Ansible.
-6. Avoid imperative shell blocks when a maintained provider, module, or plugin exists.
-7. Do not recommend Terraform provisioners as the default configuration mechanism.
-8. Do not embed large Ansible playbooks or Terraform configurations directly inside Jenkinsfiles.
-9. Treat Jenkins credentials as execution credentials, not as a general secret-management system.
-10. Require plan review and controlled apply for consequential Terraform changes.
-11. Require check mode, test inventory, canarying, or equivalent safeguards for high-blast-radius Ansible changes.
-12. Require protected stages, artifact provenance, and promotion controls for Jenkins delivery pipelines.
-13. Include ownership for state backends, inventories, controllers, agents, plugins, modules, collections, and upgrades.
-14. Account for platform availability. A workflow that remediates Jenkins should not depend exclusively on the failed Jenkins controller.
-15. Prefer the smallest composition that preserves clear boundaries.
-16. State when none of the supported tools is a good fit.
-17. Verify current product behavior and official documentation before relying on version-sensitive claims.
+3. Distinguish orchestration, execution, reconciliation, and state ownership.
+4. Keep domain logic in the native engine rather than embedding it in pipeline YAML or shell steps.
+5. Do not duplicate the same desired state across platforms.
+6. Avoid imperative shell blocks when a maintained native integration exists.
+7. Treat marketplace actions, plugins, providers, modules, collections, and cookbooks as supply-chain dependencies that require ownership and version controls.
+8. Compare exact editions and hosting models rather than product names alone.
+9. Use official documentation first and verify current capabilities, limits, licensing, and support before consequential recommendations.
+10. Include control-plane, runner, agent, server, plugin, database, certificate, state, backup, and upgrade operations.
+11. Account for platform availability and avoid circular recovery dependencies.
+12. Compare continuing incumbent cost with migration cost. Do not recommend change without material value.
+13. Keep the shortlist to two to four viable products per capability class by default.
+14. State when no shortlisted product is a good fit.
+15. Prefer the smallest composition that preserves clear ownership and recovery.
 
 ## Output Contract
 
@@ -238,47 +296,60 @@ For every score:
 # Automation Platform Recommendation
 
 ## Executive Decision
-- Recommended owner:
-- Supporting platform or platforms:
+- Recommended architecture:
+- Primary products and editions:
 - Confidence:
 - Main reason:
 - Most important assumption:
+- Migration posture: retain | optimize | augment | migrate | pilot first
 
 ## Workload Decomposition
-| Unit | Desired Outcome | Lifecycle | Trigger | Source of Truth | Blast Radius |
+| Unit | Capability Class | Control Loop | Lifecycle | Trigger | Source of Truth | Blast Radius |
+|---|---|---|---|---|---|---|
+
+## Candidate Policy and Mandatory Gates
+
+## Product Longlist and Eliminations
+| Product | Capability | Gate Result | Elimination Reason or Next Check |
+|---|---|---|---|
+
+## Shortlist
+| Unit | Product / Edition | Hosting | Strongest Fit | Main Tradeoff | Evidence Date |
 |---|---|---|---|---|---|
 
-## Hard-Fit Analysis
-| Unit | Terraform | Ansible | Jenkins | Decision |
-|---|---|---|---|---|
-
 ## Weighted Decision Matrix
-| Criterion | Weight | Terraform | Ansible | Jenkins | Evidence |
+| Criterion | Weight | Candidate 1 | Candidate 2 | Candidate 3 | Evidence |
 |---|---:|---:|---:|---:|---|
 
 ## Ownership Boundaries
-| Concern | Authoritative Owner | Called By | Repository Artifact | State or History |
+| Concern | Authoritative Owner | Called By | Repository Artifact | Durable State or History |
 |---|---|---|---|---|
 
 ## Recommended Execution Flow
 1. Trigger:
 2. Validate:
-3. Plan or check:
+3. Plan, preview, or check:
 4. Approval:
-5. Execute:
+5. Execute or reconcile:
 6. Verify:
-7. Record:
+7. Record evidence:
 8. Recover:
 
-## Anti-Patterns To Avoid
-- 
+## Handoff Contracts
 
 ## Security and Governance
-- Credentials:
+- Identity and credentials:
 - Privilege:
-- Approvals:
+- Approvals and policy:
 - Audit evidence:
+- Supply-chain controls:
 - Separation of duties:
+
+## Reliability and Recovery
+
+## Migration and Total-Cost Analysis
+
+## Anti-Patterns To Avoid
 
 ## Proof-of-Fit Pilot
 - Scope:
@@ -291,8 +362,11 @@ For every score:
 | Priority | Action | Platform | Owner | Validation |
 |---|---|---|---|---|
 
+## Rejected Alternatives
+
+## Official Sources Checked
+
 ## Assumptions and Unknowns
-- 
 ```
 
 ## Completion Report
@@ -301,9 +375,12 @@ For every score:
 Status:
 Workload:
 Automation units:
+Capability classes:
 Primary recommendation:
+Shortlisted products:
 Supporting platforms:
 Skills used:
+Sources and evidence dates:
 Artifacts created:
 Validation performed:
 Assumptions:
@@ -313,11 +390,13 @@ Next decision:
 
 ## Quality Bar
 
-- The recommendation is based on workload ownership, not syntax preference.
+- The recommendation begins with capability ownership, not product preference.
 - Compound requests are decomposed.
 - Every automation unit has one authoritative owner.
-- The result explains why the rejected platforms are weaker fits.
-- State, drift, idempotency, triggers, credentials, rollback, and auditability are addressed.
+- The shortlist contains only viable, current, evidence-backed products.
+- Exact edition, hosting, runner, agent, or controller assumptions are visible.
+- The result explains why the runner-up and incumbent lost or remained.
+- State, drift, idempotency, triggers, credentials, supply chain, rollback, recovery, auditability, migration, and operations are addressed.
 - Tool composition preserves separation of concerns.
 - The proof-of-fit pilot can falsify the recommendation.
-- Unsupported or insufficient platform coverage is stated clearly.
+- Unsupported capability or insufficient evidence is stated clearly.
