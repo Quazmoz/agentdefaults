@@ -1,10 +1,31 @@
 {
   "name": "AgentDefaults",
-  "version": "0.5.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.6.0",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, automation platform selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
+    {
+      "name": "Automation Platform Selection",
+      "quickstart": "docs/quickstarts/automation-platform-selection.md",
+      "agent": "agents/automation-platform-selection-advisor.md",
+      "skills": [
+        "skills/automation-platform-decision-framework.md",
+        "skills/terraform-workload-fit-analysis.md",
+        "skills/ansible-workload-fit-analysis.md",
+        "skills/jenkins-workload-fit-analysis.md",
+        "skills/automation-platform-composition-and-boundaries.md",
+        "skills/automation-platform-selection-orchestrator.md"
+      ],
+      "prompts": [
+        "prompts/planning/select-automation-platform.md",
+        "prompts/review/challenge-automation-platform-choice.md"
+      ],
+      "schema": "schemas/automation-platform-decision-brief.schema.json",
+      "example": "examples/automation-platform-decision-brief.yaml",
+      "acceptance_tests": "docs/automation-platform-selection-acceptance-tests.md",
+      "wrapper": ".github/agents/automation-platform-selection-advisor.agent.md"
+    },
     {
       "name": "Google Play Growth Optimization",
       "quickstart": "docs/quickstarts/google-play-growth.md",
