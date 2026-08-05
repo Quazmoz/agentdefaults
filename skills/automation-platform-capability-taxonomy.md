@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Classify an automation workload by the control model and lifecycle it requires before comparing products. This prevents category errors such as comparing a configuration-management controller directly with a CI runner or using a pipeline engine as the source of truth for infrastructure.
+Classify an automation workload by its authoritative state, control loop, and lifecycle before comparing products. This prevents category errors such as comparing a configuration-management controller directly with a CI runner or using a pipeline engine as the source of truth for infrastructure.
 
 ## When To Use
 
@@ -17,12 +17,31 @@ Use at the start of every automation-platform selection, architecture review, co
 - trigger and frequency
 - source of truth
 - state, inventory, artifact, and history requirements
-- failure, retry, resume, rollback, and reconciliation expectations
+- failure, retry, resume, rollback, compensation, and reconciliation expectations
 - hosting, connectivity, security, and governance constraints
+
+## Canonical Identifiers
+
+Use these exact identifiers in schemas, briefs, reports, and validation:
+
+```text
+infrastructure_as_code
+configuration_management
+ci_cd
+gitops_continuous_delivery
+runbook_automation
+managed_iac_execution
+durable_workflow_orchestration
+verification_and_reporting
+adjacent_capability
+unsupported_capability
+```
+
+Do not change capitalization or invent near-duplicate identifiers. Product names and human-readable labels may use normal capitalization.
 
 ## Capability Classes
 
-### Infrastructure as Code and Resource Lifecycle
+### `infrastructure_as_code`
 
 Owns the declared lifecycle of persistent provider-managed resources.
 
@@ -45,7 +64,7 @@ Azure Bicep
 Crossplane
 ```
 
-### Configuration Management and Fleet Convergence
+### `configuration_management`
 
 Owns the desired configuration or operational state of existing machines, devices, middleware, applications, or endpoints.
 
@@ -67,7 +86,7 @@ Salt
 PowerShell Desired State Configuration
 ```
 
-### Continuous Integration and Delivery Orchestration
+### `ci_cd`
 
 Owns triggered build, test, scan, package, approval, promotion, and deployment-stage sequencing.
 
@@ -91,7 +110,7 @@ Buildkite
 Tekton Pipelines
 ```
 
-### GitOps Continuous Delivery and Reconciliation
+### `gitops_continuous_delivery`
 
 Owns continuous reconciliation of deployed state from version-controlled desired state, most commonly for Kubernetes.
 
@@ -112,7 +131,7 @@ Flux
 
 Do not classify ordinary CI pipelines as GitOps merely because they apply manifests from Git.
 
-### Runbook and Operational Job Automation
+### `runbook_automation`
 
 Owns controlled, repeatable, operator-facing execution of operational procedures.
 
@@ -130,12 +149,12 @@ Representative products:
 Rundeck
 Red Hat Ansible Automation Platform / AWX
 Azure Automation
-Jenkins, only when the workflow genuinely fits a pipeline model
+Jenkins only when the workflow genuinely fits a pipeline model
 ```
 
-### Managed IaC Execution and Governance
+### `managed_iac_execution`
 
-Provides controlled execution, policy, state, approvals, drift, and organizational workflows around infrastructure-as-code engines.
+Provides controlled execution, policy, state, approvals, drift, and organizational workflows around an infrastructure-as-code engine.
 
 Typical responsibilities:
 
@@ -157,7 +176,7 @@ Pulumi Cloud
 
 These platforms do not automatically replace the underlying IaC language or resource ownership model.
 
-### Durable Workflow and Event Orchestration
+### `durable_workflow_orchestration`
 
 Owns long-running, stateful, resumable workflows whose lifetime or failure semantics exceed a conventional CI/CD pipeline.
 
@@ -178,22 +197,44 @@ Apache Airflow for data-oriented workflows
 cloud-native workflow services
 ```
 
-Do not recommend a CI/CD platform merely because it can wait or retry if durable workflow state is the central requirement.
+Do not recommend a CI/CD platform merely because it can wait or retry when durable workflow state is the central requirement.
 
-### Policy, Secrets, Scheduling, and Service Management
+### `verification_and_reporting`
 
-These are adjacent capability classes that may be required but should not be mistaken for the primary automation owner.
+Owns a bounded verification, evidence-generation, or reporting unit when no other platform owns the underlying desired state.
+
+Typical responsibilities:
+
+- post-change validation
+- compliance evidence collection
+- test aggregation
+- report generation
+- status publication
+
+This class is usually supporting rather than authoritative. Keep the underlying state owner explicit.
+
+### `adjacent_capability`
+
+Represents a required supporting service that is not the primary automation owner.
 
 Examples:
 
 ```text
 policy as code
 secrets management
-enterprise schedulers
+enterprise scheduling
 IT service management
 artifact repositories
-observability and incident management
+observability
+incident management
+identity and access management
 ```
+
+### `unsupported_capability`
+
+Use when the workload cannot be responsibly classified into the supported capability set or no viable product is available under the mandatory constraints.
+
+State the missing capability and the evidence needed to continue. Do not force a nearby product category to absorb it.
 
 ## Classification Method
 
@@ -210,13 +251,27 @@ failure_semantics
 approval_model
 ```
 
-Use the control loop as a major discriminator:
+### Classification precedence
+
+Use this order when a unit appears to fit more than one class:
+
+1. Identify the authoritative desired state or durable workflow state.
+2. Identify the required control loop.
+3. Identify the lifecycle being owned.
+4. Separate callers, runners, governance layers, and adjacent services.
+5. Split the unit when two independent authoritative states remain.
+
+A product can participate in several classes, but one automation unit still needs one authoritative owner.
+
+### Control-loop guidance
 
 - `one_shot` favors direct execution or runbook tools.
 - `event_driven` favors CI/CD or workflow orchestration.
-- `scheduled` may fit CI/CD, runbook, or scheduler platforms.
+- `scheduled` may fit CI/CD, runbook, scheduler, or configuration platforms.
 - `continuous_reconciliation` favors IaC drift workflows, configuration agents, or GitOps controllers.
 - `durable_workflow` favors a workflow engine rather than a conventional pipeline.
+
+The control loop is a discriminator, not the only decision criterion.
 
 ## Category Error Checks
 
@@ -229,17 +284,21 @@ Reject or challenge recommendations that:
 - use a short-lived pipeline for a long-running business workflow without durable state
 - recommend a managed execution service without naming the underlying automation engine
 - compare products from different capability classes without first decomposing the workload
+- assign an adjacent service as the owner of state it does not control
+- combine two authoritative states into one automation unit to simplify scoring
 
 ## Expected Output
 
 ```markdown
 ## Capability Classification
-| Unit | Capability Class | Control Loop | Source of Truth | Durable State or History | Candidate Category |
+| Unit | Capability ID | Control Loop | Source of Truth | Durable State or History | Candidate Category |
 |---|---|---|---|---|---|
 
 ## Category Boundaries
 
 ## Adjacent Capabilities Required
+
+## Unsupported or Ambiguous Units
 
 ## Category Errors Avoided
 ```
@@ -247,7 +306,9 @@ Reject or challenge recommendations that:
 ## Quality Bar
 
 - Every unit is classified before products are scored.
+- Canonical identifiers are used consistently.
 - Product comparisons stay within the correct capability class unless composition is being designed.
 - The control loop and durable-state requirements are explicit.
 - Adjacent services are identified without being promoted to authoritative owners.
+- Ambiguous units are split or marked for further evidence.
 - The taxonomy can express that no current category or product is sufficient.
