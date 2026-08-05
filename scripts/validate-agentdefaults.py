@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate AgentDefaults structure, JSON, manifest references, stack integrity, and Markdown links."""
+"""Validate AgentDefaults structure, schemas, manifests, stack integrity, and local links."""
 
 from __future__ import annotations
 
@@ -39,6 +39,8 @@ AUTOMATION_PLATFORM_REQUIRED_FILES = [
     "skills/automation-platform-capability-taxonomy.md",
     "skills/automation-platform-decision-framework.md",
     "skills/automation-platform-candidate-discovery.md",
+    "skills/automation-platform-evidence-and-confidence.md",
+    "skills/automation-platform-migration-and-economics.md",
     "skills/terraform-workload-fit-analysis.md",
     "skills/ansible-workload-fit-analysis.md",
     "skills/jenkins-workload-fit-analysis.md",
@@ -55,6 +57,25 @@ AUTOMATION_PLATFORM_REQUIRED_FILES = [
     "docs/quickstarts/automation-platform-selection.md",
     "docs/automation-platform-selection-acceptance-tests.md",
     ".github/agents/automation-platform-selection-advisor.agent.md",
+]
+
+CANONICAL_CAPABILITY_CLASSES = [
+    "infrastructure_as_code",
+    "configuration_management",
+    "ci_cd",
+    "gitops_continuous_delivery",
+    "runbook_automation",
+    "managed_iac_execution",
+    "durable_workflow_orchestration",
+    "verification_and_reporting",
+    "adjacent_capability",
+    "unsupported_capability",
+]
+
+OUTPUT_DEPTHS = [
+    "quick_triage",
+    "standard",
+    "full_architecture_review",
 ]
 
 PURPOSE_GLOBS = [
@@ -94,6 +115,7 @@ LINK_EXTENSIONS = (
 )
 
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
+LOCAL_REF_PATTERN = re.compile(r"^#/$defs/([A-Za-z0-9_-]+)$")
 
 
 def print_fail(title: str, failures: Iterable[str]) -> int:
@@ -144,18 +166,40 @@ def json_files() -> list[Path]:
     return paths
 
 
+def iter_local_refs(value: Any) -> Iterable[str]:
+    if isinstance(value, dict):
+        ref = value.get("$ref")
+        if isinstance(ref, str):
+            yield ref
+        for child in value.values():
+            yield from iter_local_refs(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from iter_local_refs(child)
+
+
 def check_json_files() -> int:
     failures: list[str] = []
     paths = json_files()
     for path in paths:
         try:
-            load_json(path)
+            value = load_json(path)
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             failures.append(f"{path.relative_to(ROOT)}: {exc}")
+            continue
+
+        if path.parent.name == "schemas":
+            defs = value.get("$defs", {}) if isinstance(value, dict) else {}
+            for ref in iter_local_refs(value):
+                match = LOCAL_REF_PATTERN.fullmatch(ref)
+                if match and match.group(1) not in defs:
+                    failures.append(
+                        f"{path.relative_to(ROOT)}: unresolved local schema reference {ref}"
+                    )
 
     if failures:
         return print_fail("JSON files", failures)
-    print(f"PASS: JSON files ({len(paths)} checked)")
+    print(f"PASS: JSON files and local references ({len(paths)} checked)")
     return 0
 
 
@@ -229,6 +273,12 @@ def check_manifest() -> int:
     return 0
 
 
+def require_terms(text: str, terms: Iterable[str], label: str, failures: list[str]) -> None:
+    for term in terms:
+        if term not in text:
+            failures.append(f"{label} missing required term: {term}")
+
+
 def check_automation_platform_stack() -> int:
     failures: list[str] = []
 
@@ -243,7 +293,7 @@ def check_automation_platform_stack() -> int:
         None,
     )
     if stack is None:
-        failures.append("expanded automation platform stack is not registered")
+        failures.append("automation platform stack is not registered")
     else:
         registered = set(stack.get("skills", []))
         required_skills = {
@@ -253,48 +303,126 @@ def check_automation_platform_stack() -> int:
         missing_skills = sorted(required_skills - registered)
         failures.extend(f"automation skill missing from manifest: {path}" for path in missing_skills)
 
-    schema_path = ROOT / "schemas/automation-platform-decision-brief.schema.json"
-    schema = load_json(schema_path)
+    schema = load_json(ROOT / "schemas/automation-platform-decision-brief.schema.json")
     properties = schema.get("properties", {})
     required = set(schema.get("required", []))
+    defs = schema.get("$defs", {})
 
-    if "platform_selection" not in properties:
-        failures.append("decision schema has no platform_selection property")
-    if "platform_selection" not in required:
-        failures.append("decision schema does not require platform_selection")
+    if "platform_selection" not in properties or "platform_selection" not in required:
+        failures.append("decision schema must require platform_selection")
 
-    platform_selection = properties.get("platform_selection", {})
-    selection_properties = platform_selection.get("properties", {})
-    if "candidate_policy" not in selection_properties:
-        failures.append("decision schema has no candidate_policy")
-    if "allowed_hosting_models" not in selection_properties:
-        failures.append("decision schema has no allowed_hosting_models")
+    capability_enum = defs.get("capabilityClass", {}).get("enum", [])
+    if capability_enum != CANONICAL_CAPABILITY_CLASSES:
+        failures.append("decision schema capabilityClass enum is not canonical or ordered")
 
-    agent_text = (ROOT / "agents/automation-platform-selection-advisor.md").read_text(encoding="utf-8")
-    required_terms = [
-        "GitHub Actions",
-        "Azure Pipelines",
-        "Puppet",
-        "Chef Infra",
-        "OpenTofu",
-        "Pulumi",
-        "Argo CD",
-        "Flux",
-        "durable workflow",
-    ]
-    for term in required_terms:
-        if term not in agent_text:
-            failures.append(f"automation advisor missing product or capability coverage: {term}")
-
-    example_text = (ROOT / "examples/automation-platform-decision-brief.yaml").read_text(encoding="utf-8")
-    for marker in [
-        "platform_selection:",
-        "candidate_policy:",
-        "allowed_hosting_models:",
-        "evidence_cutoff:",
+    selection = properties.get("platform_selection", {})
+    selection_properties = selection.get("properties", {})
+    for name in [
+        "candidate_policy",
+        "output_depth",
+        "decision_horizon_months",
+        "risk_tolerance",
+        "shortlist_limit",
+        "allowed_hosting_models",
+        "minimum_evidence_coverage",
+        "custom_weights",
     ]:
-        if marker not in example_text:
-            failures.append(f"automation example missing field: {marker}")
+        if name not in selection_properties:
+            failures.append(f"decision schema has no platform_selection.{name}")
+
+    output_depth_enum = selection_properties.get("output_depth", {}).get("enum", [])
+    if output_depth_enum != OUTPUT_DEPTHS:
+        failures.append("decision schema output-depth enum is not canonical or ordered")
+
+    all_of = selection.get("allOf", [])
+    selection_text = json.dumps(selection, sort_keys=True)
+    if len(all_of) < 2 or "self_hosted_required" not in selection_text:
+        failures.append("decision schema lacks self-hosted consistency validation")
+    if "air_gapped_required" not in selection_text or '"const": "air_gapped"' not in selection_text:
+        failures.append("decision schema lacks air-gapped consistency validation")
+
+    taxonomy_text = (ROOT / "skills/automation-platform-capability-taxonomy.md").read_text(encoding="utf-8")
+    framework_text = (ROOT / "skills/automation-platform-decision-framework.md").read_text(encoding="utf-8")
+    agent_text = (ROOT / "agents/automation-platform-selection-advisor.md").read_text(encoding="utf-8")
+    orchestrator_text = (ROOT / "skills/automation-platform-selection-orchestrator.md").read_text(encoding="utf-8")
+    prompt_text = (ROOT / "prompts/planning/select-automation-platform.md").read_text(encoding="utf-8")
+    acceptance_text = (ROOT / "docs/automation-platform-selection-acceptance-tests.md").read_text(encoding="utf-8")
+    example_text = (ROOT / "examples/automation-platform-decision-brief.yaml").read_text(encoding="utf-8")
+
+    for token in CANONICAL_CAPABILITY_CLASSES:
+        require_terms(taxonomy_text, [token], "taxonomy", failures)
+        require_terms(framework_text, [token], "decision framework", failures)
+
+    forbidden_tokens = ["GitOps_continuous_delivery"]
+    for token in forbidden_tokens:
+        for label, text in [
+            ("taxonomy", taxonomy_text),
+            ("decision framework", framework_text),
+            ("agent", agent_text),
+            ("orchestrator", orchestrator_text),
+            ("planning prompt", prompt_text),
+        ]:
+            if token in text:
+                failures.append(f"{label} contains noncanonical capability token: {token}")
+
+    require_terms(
+        agent_text,
+        [
+            "GitHub Actions",
+            "Azure Pipelines",
+            "Puppet",
+            "Chef Infra",
+            "OpenTofu",
+            "Pulumi",
+            "Argo CD",
+            "Flux",
+            "evidence coverage",
+            "do-nothing baseline",
+            "quick_triage",
+            "full_architecture_review",
+        ],
+        "automation advisor",
+        failures,
+    )
+
+    for mode in OUTPUT_DEPTHS:
+        require_terms(orchestrator_text, [mode], "orchestrator", failures)
+        require_terms(prompt_text, [mode], "planning prompt", failures)
+
+    require_terms(
+        example_text,
+        [
+            "platform_selection:",
+            "output_depth:",
+            "decision_horizon_months:",
+            "risk_tolerance:",
+            "shortlist_limit:",
+            "minimum_evidence_coverage:",
+            "custom_weights:",
+            "evidence_ledger",
+            "migration_economics",
+            "reversibility_plan",
+        ],
+        "automation example",
+        failures,
+    )
+
+    for scenario in range(1, 26):
+        if f"### {scenario}." not in acceptance_text:
+            failures.append(f"acceptance tests missing scenario {scenario}")
+
+    require_terms(
+        acceptance_text,
+        [
+            "Unknown evidence is not failure",
+            "Effective scoring tie",
+            "Migration economics reverse the feature winner",
+            "Output-depth discipline",
+            "Contradictory hosting constraints",
+        ],
+        "acceptance tests",
+        failures,
+    )
 
     if failures:
         return print_fail("automation platform stack", failures)
