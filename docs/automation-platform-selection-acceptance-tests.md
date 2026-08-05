@@ -2,373 +2,337 @@
 
 ## Purpose
 
-Validate that the automation platform selection stack classifies workloads before comparing products, preserves ownership boundaries, evaluates current alternatives fairly, and does not force Terraform, Ansible, or Jenkins into responsibilities they should not own.
+Validate that the automation-platform stack classifies workloads before comparing products, preserves ownership boundaries, applies mandatory gates, distinguishes fit from evidence confidence, compares migration economics fairly, and does not force Terraform, Ansible, Jenkins, or a newer alternative into responsibilities they should not own.
 
 ## Test Method
 
 For each scenario:
 
-1. Run the canonical agent and orchestrator.
-2. Confirm workload decomposition and capability classification occur before product scoring.
-3. Confirm each automation unit has one authoritative owner.
-4. Confirm mandatory gates are applied before weighted scoring.
-5. Confirm the shortlist is limited to viable products in the correct capability class.
-6. Confirm product edition, hosting model, and evidence date are visible for version-sensitive claims.
-7. Confirm rejected alternatives and the runner-up are explained.
-8. Confirm state, inventory, artifacts, workflow history, credentials, supply chain, approvals, recovery, migration, and evidence are addressed where applicable.
-9. Confirm retain, optimize, augment, migrate, and pilot-first outcomes are considered.
-10. Confirm a falsifiable proof-of-fit pilot is included for uncertain cases.
+1. Run the canonical agent and orchestrator at the requested output depth.
+2. Confirm brief contradictions are surfaced before analysis.
+3. Confirm decomposition and canonical capability classification occur before product scoring.
+4. Confirm each automation unit has one authoritative owner.
+5. Confirm mandatory gates are applied before weighted scoring.
+6. Confirm the shortlist contains only viable products in the correct capability class.
+7. Confirm exact product edition, hosting model, evidence status, and evidence date are visible for version-sensitive claims.
+8. Confirm raw fit, evidence confidence, adjusted points, and unknowns are distinct.
+9. Confirm retain, optimize, augment, migrate, pilot-first, and the do-nothing baseline are considered where applicable.
+10. Confirm a falsifiable proof-of-fit pilot includes rollback and a stopping rule when material uncertainty remains.
 
 ## Required Scenarios
 
 ### 1. Multi-cloud persistent infrastructure
 
-Input:
-
-```text
-Create and manage networks, identity, managed databases, and SaaS resources across Azure and AWS. Existing Terraform modules and state are mature, but the organization wants OpenTofu and Pulumi evaluated.
-```
+Input: Manage Azure, AWS, SaaS, identity, networks, and databases with mature Terraform state while evaluating OpenTofu and Pulumi.
 
 Expected:
 
-- The capability is infrastructure as code.
-- Terraform, OpenTofu, and Pulumi are compared as IaC engines rather than against CI/CD products.
-- Existing state, provider coverage, import, modules, language model, licensing, migration, and execution-layer requirements are discussed.
-- Terraform may be retained when migration value is weak.
-- OpenTofu compatibility is tested rather than assumed.
-- Pulumi is not selected solely because developers prefer a general-purpose language.
+- Classify as `infrastructure_as_code`.
+- Compare Terraform, OpenTofu, and Pulumi as engines, not against CI/CD products.
+- Address provider coverage, state, import, modules, language, licensing, migration, and execution layers.
+- Retaining Terraform remains valid when migration value is weak.
 
 ### 2. Azure-native bounded infrastructure
 
-Input:
-
-```text
-Manage only Azure Resource Manager resources for one Azure-native product team. The enterprise standard elsewhere is Terraform. Compare Terraform and Bicep.
-```
+Input: Manage only Azure Resource Manager resources for one Azure-native team while Terraform remains the enterprise standard.
 
 Expected:
 
-- The unit is explicitly bounded before a cloud-native option is considered.
-- Bicep's Azure affinity and Terraform's enterprise consistency are compared.
-- The result addresses state or deployment history, testing, policy, modules, skill reuse, and cross-team operating cost.
-- The target being Azure does not automatically decide the result.
+- Bound the unit before comparing Terraform and Bicep.
+- Treat Azure affinity as a signal, not an automatic answer.
+- Include consistency, state or deployment history, testing, policy, modules, skill reuse, and operating cost.
 
 ### 3. Existing server configuration
 
-Input:
-
-```text
-Install packages, manage files, rotate certificates, restart services safely, and verify health across 500 existing Linux servers through operator-triggered maintenance windows.
-```
+Input: Install packages, manage files, rotate certificates, restart services, and verify 500 Linux servers during maintenance windows.
 
 Expected:
 
-- The capability is configuration management or runbook automation.
-- Ansible or Ansible Automation Platform is a strong candidate.
-- Inventory, privilege, modules, idempotency, canaries, batching, partial failure, and verification are discussed.
-- Puppet and Chef are not preferred unless continuous agent-based enforcement is required.
-- CI/CD may schedule or gate the run but does not own target configuration.
+- Classify as `configuration_management` or `runbook_automation`.
+- Ansible or AAP is a strong candidate.
+- Address inventory, privilege, idempotency, canaries, batching, partial failure, and verification.
+- CI/CD may call the work but does not own target configuration.
 
 ### 4. Continuous configuration enforcement
 
-Input:
-
-```text
-Continuously enforce baseline packages, services, security settings, and configuration across 5,000 stable Linux and Windows servers, with node reporting every 30 minutes.
-```
+Input: Continuously enforce baselines and report node state every 30 minutes across 5,000 Linux and Windows servers.
 
 Expected:
 
-- The required control loop is continuous reconciliation.
-- Puppet, Chef Infra, Salt, DSC, and Ansible-based scheduling are evaluated based on target coverage and topology.
-- Agent, server, certificate, classification, reporting, upgrade, and support operations are included.
-- Ansible is not selected automatically because it is the incumbent.
-- The final shortlist remains small.
+- Control loop is `continuous_reconciliation`.
+- Evaluate Puppet, Chef Infra, Salt, DSC, and Ansible-based approaches by topology and target coverage.
+- Include agent, server, certificate, reporting, upgrade, and support operations.
 
 ### 5. GitHub-centered CI/CD
 
-Input:
-
-```text
-All repositories, pull requests, CODEOWNERS, and developer permissions are in GitHub Enterprise Cloud. Builds need Linux and Windows runners inside private networks, protected production environments, immutable artifacts, and reusable workflows. Compare Jenkins and GitHub Actions.
-```
+Input: GitHub Enterprise Cloud owns repositories and governance; builds need private Linux and Windows runners, protected environments, immutable artifacts, and reusable workflows.
 
 Expected:
 
-- The capability is CI/CD.
-- GitHub Actions and Jenkins are compared with exact hosting and runner assumptions.
-- GitHub affinity is treated as a strong signal, not an automatic answer.
-- Self-hosted runner isolation, action pinning, environment controls, controller operations, migration, and total cost are included.
-- The result may recommend a pilot before migration.
+- Classify as `ci_cd`.
+- Compare Jenkins and GitHub Actions with exact runner and hosting assumptions.
+- Include action pinning, isolation, approvals, controller operations, migration, evidence, and total cost.
+- GitHub affinity is not an automatic decision.
 
 ### 6. Azure DevOps-centered CI/CD
 
-Input:
-
-```text
-The organization uses Azure Repos, Boards, Artifacts, service connections, environments, and private Windows agents. Jenkins currently performs builds and releases. Compare Jenkins and Azure Pipelines.
-```
+Input: Azure Repos, Boards, Artifacts, service connections, environments, and private Windows agents are established while Jenkins performs delivery.
 
 Expected:
 
-- Azure Pipelines is evaluated because the broader Azure DevOps operating model is relevant.
-- Environments, approvals or checks, protected resources, agent pools, traceability, permissions, and migration are discussed.
-- Azure as a deployment target alone is not used as the deciding reason.
-- Classic and YAML capability differences are not conflated.
+- Compare Jenkins and Azure Pipelines because the operating model is relevant.
+- Address protected resources, agent pools, permissions, traceability, YAML versus classic behavior, migration, and evidence.
+- Azure as a target alone does not decide the result.
 
 ### 7. GitLab integrated delivery
 
-Input:
-
-```text
-Source control, merge requests, container registry, security scanning, and issue tracking are in GitLab. Jenkins triggers scripts through GitLab webhooks. Compare Jenkins and GitLab CI/CD.
-```
+Input: GitLab owns source, merge requests, registry, security scanning, and issues while Jenkins is connected by webhooks.
 
 Expected:
 
-- GitLab CI/CD is shortlisted based on platform integration.
-- Runners, reusable components, parent or downstream pipelines, environments, approvals, edition limits, and migration are checked.
-- Existing Jenkins customization and operating cost are included.
-- The recommendation states why the runner-up lost.
+- Shortlist GitLab CI/CD based on verified platform integration.
+- Address runners, reusable components, downstream pipelines, environments, approvals, edition limits, and migration.
+- Explain why the runner-up lost.
 
 ### 8. Kubernetes GitOps
 
-Input:
-
-```text
-Build and deploy 40 services to six Kubernetes clusters. Teams require pull-based reconciliation, drift visibility, health status, and promotion through reviewed Git changes. Compare GitHub Actions, Azure Pipelines, Argo CD, and Flux.
-```
+Input: Build and deploy 40 services to six clusters using pull-based reconciliation, drift visibility, health, and Git-based promotion.
 
 Expected:
 
-- The request is decomposed into CI and GitOps units.
-- CI/CD products own build, test, signing, artifact publication, and desired-state change proposals.
-- Argo CD or Flux owns cluster reconciliation.
-- CI/CD and GitOps products are not scored as if they own the same unit.
-- Cluster credentials, multi-tenancy, health, drift, sync, recovery, and controller operations are discussed.
+- Split `ci_cd` from `gitops_continuous_delivery`.
+- CI owns build, test, signing, artifact publication, and desired-state change proposals.
+- Argo CD or Flux owns reconciliation.
+- Do not score CI/CD and GitOps products as direct substitutes.
 
 ### 9. Full-stack delivery
 
-Input:
-
-```text
-Create cloud infrastructure, configure hosts, build an application, and deploy it to Kubernetes and virtual machines.
-```
+Input: Create cloud infrastructure, configure hosts, build an application, and deploy to Kubernetes and virtual machines.
 
 Expected:
 
-- The request is decomposed into IaC, configuration management, CI/CD, and possibly GitOps units.
-- Incumbent and alternative candidates are generated per capability class.
-- Each unit receives one authoritative owner.
-- Handoff contracts are explicit.
-- The result does not force a single product.
+- Decompose into IaC, configuration, CI/CD, and possibly GitOps units.
+- Generate candidates per capability.
+- Assign one owner per unit and explicit handoffs.
+- Do not force one product.
 
 ### 10. Misplaced Jenkins shell automation
 
-Input:
-
-```text
-A 1,500-line Jenkinsfile uses shell commands to create cloud resources, edit server configuration, build artifacts, deploy manifests, and wait for a manual callback for three days.
-```
+Input: A 1,500-line Jenkinsfile creates cloud resources, edits server configuration, builds artifacts, deploys manifests, and waits three days for a callback.
 
 Expected:
 
-- The review identifies IaC, configuration, CI/CD, deployment, and durable workflow category errors.
-- The target design moves domain responsibilities to native engines.
-- Jenkins or an alternative CI/CD product retains only appropriate orchestration.
-- The multi-day callback is evaluated for a durable workflow engine.
-- The migration plan is phased and avoids an unnecessary big-bang rewrite.
+- Identify IaC, configuration, CI/CD, deployment, and durable-workflow category errors.
+- Move domain logic to native engines.
+- Evaluate a durable workflow engine for the callback.
+- Use a phased migration, not a big-bang rewrite.
 
 ### 11. Terraform provisioner misuse
 
-Input:
-
-```text
-Terraform creates virtual machines and uses remote-exec to install all middleware and deploy the application.
-```
+Input: Terraform creates VMs and uses remote-exec for all middleware and application deployment.
 
 Expected:
 
-- The IaC engine remains the infrastructure owner.
-- A configuration-management product is recommended for target convergence.
-- Provisioner risks, rerun behavior, secrets, and partial failure are explained.
-- Terraform, OpenTofu, and Pulumi are not compared unless engine migration is materially relevant.
+- IaC remains infrastructure owner.
+- Configuration management owns target convergence.
+- Explain rerun, secret, and partial-failure risks.
+- Do not introduce engine migration without material relevance.
 
 ### 12. Ansible cloud lifecycle overreach
 
-Input:
-
-```text
-Ansible playbooks create and delete a large cloud estate, but no durable infrastructure state or drift process exists.
-```
+Input: Ansible creates and deletes a large cloud estate without durable infrastructure state or drift management.
 
 Expected:
 
-- The capability is reclassified as IaC.
-- A viable IaC shortlist is produced based on provider, state, hosting, and migration requirements.
-- Ansible remains valid for configuration and day-2 operations.
-- Import, state adoption, migration risk, and pilot scope are addressed.
+- Reclassify resource lifecycle as `infrastructure_as_code`.
+- Produce an IaC shortlist based on provider, state, hosting, and migration requirements.
+- Keep Ansible for configuration and day-two operations.
 
 ### 13. Managed IaC governance
 
-Input:
-
-```text
-Terraform code is sound, but Jenkins stores plans, applies with shared credentials, has weak policy controls, and cannot schedule drift detection. Compare HCP Terraform, Terraform Enterprise, Spacelift, env0, Scalr, and retaining Jenkins.
-```
+Input: Terraform code is sound, but Jenkins holds plans, shared credentials, approvals, and drift scheduling.
 
 Expected:
 
-- The IaC engine decision is separated from the managed execution decision.
-- The shortlist is reduced using hosting, private execution, policy, state, approval, identity, support, and procurement gates.
-- Jenkins may be retained for CI while a managed platform owns Terraform execution.
-- Exact editions and official evidence dates are included.
+- Separate the IaC engine from `managed_iac_execution`.
+- Compare viable managed execution products using hosting, private execution, policy, state, identity, support, and procurement gates.
+- Jenkins may remain CI while another product owns Terraform execution.
 
 ### 14. Runbook automation
 
-Input:
-
-```text
-Operations needs a self-service catalog for approved service restarts, certificate rotation, database failover checks, and targeted remediation with forms, RBAC, schedules, logs, and maintenance windows.
-```
+Input: Operations needs a self-service catalog for restarts, certificate rotation, failover checks, and remediation with forms, RBAC, schedules, logs, and maintenance windows.
 
 Expected:
 
-- The capability is runbook automation, not generic CI/CD.
-- Rundeck, Ansible Automation Platform or AWX, Azure Automation, and the incumbent are considered only when environment fit justifies them.
-- The execution engine and operator surface are distinguished.
-- Recovery when the primary CI platform is unavailable is addressed.
+- Classify as `runbook_automation`.
+- Distinguish execution engine from operator surface.
+- Consider Rundeck, AAP/AWX, Azure Automation, or incumbents only when environment fit justifies them.
+- Address operation during CI-platform failure.
 
 ### 15. Durable business workflow
 
-Input:
-
-```text
-Run a months-long approval workflow with timers, external callbacks, compensation steps, signals, and durable business-process state.
-```
+Input: Run a months-long workflow with timers, callbacks, signals, compensation, and durable business state.
 
 Expected:
 
-- The capability is durable workflow orchestration.
-- Temporal, a cloud workflow service, or another justified durable engine may be considered.
-- Jenkins, GitHub Actions, and Azure Pipelines are not forced into the role.
-- Durable state, workflow versioning, retries, compensation, worker failure, and control-plane recovery are discussed.
+- Classify as `durable_workflow_orchestration`.
+- Do not force Jenkins, GitHub Actions, or Azure Pipelines into the role.
+- Address workflow state, versioning, retries, compensation, worker failure, and recovery.
 
 ### 16. Air-gapped environment
 
-Input:
-
-```text
-Automate infrastructure, configuration, and CI/CD in a disconnected environment with no SaaS control plane or public marketplace access.
-```
+Input: Automate infrastructure, configuration, and CI/CD with no SaaS control plane or public marketplace access.
 
 Expected:
 
-- SaaS-only candidates are eliminated before scoring.
-- Offline installation, dependency mirroring, update process, runner or agent topology, certificates, support, and supply-chain evidence are discussed.
-- Product recommendations use exact self-hosted editions.
+- Eliminate SaaS-only candidates before scoring.
+- Require exact self-hosted or air-gapped editions.
+- Address dependency mirroring, updates, certificates, supply-chain evidence, and support.
 
-### 17. Incumbent is still the best fit
+### 17. Incumbent remains best fit
 
-Input:
-
-```text
-Jenkins is well maintained, uses ephemeral isolated agents, approved plugins, tested shared libraries, reliable backups, and low operating cost. GitHub hosts only a minority of repositories. No material delivery problem exists.
-```
+Input: Jenkins is well maintained, uses isolated ephemeral agents, approved plugins, tested libraries, reliable backups, and low operating cost; GitHub hosts few repositories.
 
 Expected:
 
-- The advisor may recommend retaining or optimizing Jenkins.
-- It does not manufacture a migration case.
-- Future reevaluation triggers and measurable pilot criteria are provided.
+- Retain or optimize Jenkins may be correct.
+- Do not manufacture a migration case.
+- Provide reevaluation triggers and measurable pilot criteria.
 
 ### 18. Platform outage recovery
 
-Input:
-
-```text
-Design an automated recovery process for the primary CI/CD controller itself.
-```
+Input: Design automated recovery for the primary CI/CD controller.
 
 Expected:
 
-- The result identifies circular dependency risk.
-- IaC and configuration ownership are evaluated by recovery unit.
-- The recovery path is runnable independently of the failed controller.
-- Backup, state, credentials, runner bootstrap, and break-glass procedures are addressed.
+- Identify circular dependency risk.
+- Decompose IaC, configuration, backup, credential, and bootstrap units.
+- Recovery must run independently of the failed controller.
 
-### 19. Ambiguous request
+### 19. Ambiguous database deployment
 
-Input:
-
-```text
-Automate database deployment.
-```
+Input: Automate database deployment.
 
 Expected:
 
-- The result separates managed database resource creation, schema migration, configuration, data movement, application delivery, and pipeline coordination.
-- Assumptions and confidence are explicit.
-- Products are not selected based on the word `deployment` alone.
+- Separate managed database lifecycle, schema migration, configuration, data movement, application delivery, and pipeline coordination.
+- State assumptions and confidence.
+- Do not select based on the word `deployment`.
 
-### 20. Edition and evidence discipline
+### 20. Edition and pricing discipline
 
-Input:
-
-```text
-Recommend the cheapest product with approvals, private runners, audit logs, and one-year evidence retention.
-```
+Input: Recommend the cheapest product with approvals, private runners, audit logs, and one-year evidence retention.
 
 Expected:
 
-- The advisor refuses to rely on product-name memory or vague pricing claims.
-- Exact editions, hosting models, current limits, licensing, and official evidence dates are required.
-- Unknown pricing or procurement details are marked unknown.
-- License cost is not confused with total operational cost.
+- Require exact editions, hosting, limits, licensing, and official evidence dates.
+- Mark unresolved pricing or procurement as unknown.
+- Do not confuse license price with total cost.
+
+### 21. Contradictory hosting constraints
+
+Input: `self_hosted_required: true`, `air_gapped_required: true`, but `allowed_hosting_models` contains only `saas`.
+
+Expected:
+
+- Schema validation or intake consistency checks fail before product analysis.
+- The advisor does not silently reinterpret the brief.
+- The output identifies the exact contradiction and required correction.
+
+### 22. Unknown evidence is not failure
+
+Input: Two CI/CD products appear suitable, but private-runner limits and audit-retention behavior for one exact edition cannot be verified.
+
+Expected:
+
+- The missing facts are `unknown`, not score zero.
+- Evidence coverage and confidence decrease.
+- The result is `needs_more_evidence` or `pilot_first` when the unknown is material.
+- Verification actions are prioritized by decision impact.
+
+### 23. Effective scoring tie
+
+Input: Two candidates are within 3 percent of applicable weighted points and both pass mandatory gates; the incumbent has lower migration cost.
+
+Expected:
+
+- Treat the products as effectively tied.
+- Do not claim a decisive numeric winner.
+- Prefer retaining or piloting unless a strategic or operating-model advantage justifies migration.
+
+### 24. Migration economics reverse the feature winner
+
+Input: A new CI/CD product scores slightly higher on features, but migration requires rewriting 300 pipelines, dual running for a year, retraining, and recreating seven years of audit evidence.
+
+Expected:
+
+- Compare retain, optimize, augment, migrate, and pilot-first over the decision horizon.
+- Include one-time, recurring, dual-running, risk, and evidence-retention cost.
+- The recommendation may retain or optimize the incumbent despite the higher raw feature score.
+- Define reversibility and migration waves if a pilot proceeds.
+
+### 25. Output-depth discipline
+
+Input: A low-risk user asks only, “Should this scheduled certificate rotation be in Jenkins or Ansible?” and requests `quick_triage`.
+
+Expected:
+
+- Return a compact capability decision, blockers, strongest alternative, confidence, and next validation step.
+- Do not emit a full product catalog, economics model, or large matrix.
+- Preserve essential privilege, inventory, recovery, and audit caveats.
 
 ## Structural Checks
 
-The output must include:
+Standard and full-review outputs must include, as applicable:
 
-- executive decision and migration posture
-- workload decomposition
-- capability and control-loop classification
-- candidate policy
-- mandatory gates
-- product longlist and eliminations
-- small product shortlist with edition and hosting model
-- weighted product comparison
+- executive decision, output depth, decision owner, horizon, and migration posture
+- workload decomposition with canonical capability identifiers
+- control-loop classification and authoritative records
+- candidate policy and mandatory gates
+- small product shortlist with exact edition and hosting model
+- evidence quality summary and weighted evidence coverage
+- raw fit separated from confidence and adjusted points
 - ownership map and platform boundaries
 - execution or reconciliation flow
-- security, supply-chain, and governance controls
-- failure recovery, retry, resume, reconciliation, compensation, and rollback
-- migration and total-cost analysis
-- anti-patterns
-- proof-of-fit pilot
+- security, supply chain, governance, and recovery controls
+- migration economics, reversibility, and do-nothing baseline
+- proof-of-fit pilot with rollback and stopping rule
 - rejected alternatives and runner-up explanation
-- official sources and evidence dates
-- unknowns
+- evidence ledger, official sources, and unknowns
+
+Quick-triage output must include only:
+
+- capability
+- recommended posture and product
+- confidence
+- mandatory blockers
+- strongest alternative
+- next validation step
+- material assumptions
 
 ## Failure Conditions
 
 Fail the stack if it:
 
+- analyzes contradictory constraints without surfacing them
 - recommends a product for an undecomposed compound request
+- uses inconsistent capability identifiers
 - compares products from different capability classes as direct substitutes
 - assigns two authoritative owners to the same state
 - scores a candidate that failed a mandatory requirement
+- scores unknown evidence as zero
+- includes non-applicable criteria in the denominator
+- declares a decisive winner from an immaterial score difference
 - produces an unfiltered product catalog
-- selects a CI/CD product as infrastructure, configuration, or durable workflow source of truth
-- selects an IaC engine primarily for remote commands
-- selects configuration management for provider-managed lifecycle without addressing state and drift
+- selects CI/CD as infrastructure, configuration, or durable-workflow source of truth
 - labels push-based deployment as GitOps
 - equates idempotency, retry, rerun, or reconciliation with rollback
 - omits credentials, supply chain, approvals, or recovery for high-impact work
 - relies exclusively on the failed platform for its own recovery
 - assumes enterprise features exist in another edition or hosting model
-- recommends migration without comparing incumbent optimization and migration cost
-- uses stale or unofficial product claims when official documentation is available
-- provides weighted scores without evidence
+- recommends migration without comparing optimization, the do-nothing baseline, dual running, and reversibility
+- uses stale or unofficial claims when current official documentation is available
+- produces full-review volume for a requested quick triage
 
 ## Repository Validation
 
