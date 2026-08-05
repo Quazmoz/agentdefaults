@@ -1,10 +1,11 @@
 request:
   name: Modernize infrastructure, configuration, and delivery automation
   desired_outcome: Select the right products to provision cloud infrastructure, configure hosts, build and release an application, and deploy to Kubernetes and virtual machines through controlled environments.
+  decision_owner: Director of Platform Engineering
   current_process: Terraform and Ansible are triggered by a legacy Jenkins controller with large inline shell blocks and manually maintained credentials.
   current_platforms:
     - Terraform
-    - Ansible
+    - Red Hat Ansible Automation Platform
     - Jenkins
     - shell scripts
   repository_urls: []
@@ -94,6 +95,10 @@ governance:
 
 platform_selection:
   candidate_policy: current_stack_plus_alternatives
+  output_depth: full_architecture_review
+  decision_horizon_months: 36
+  risk_tolerance: low
+  shortlist_limit: 4
   allowed_capability_classes:
     - infrastructure_as_code
     - managed_iac_execution
@@ -121,8 +126,19 @@ platform_selection:
     - AWS
   migration_tolerance: medium
   migration_deadline: Complete any Jenkins migration within two quarters if the pilot proves value.
-  budget_constraints: Prefer existing enterprise licenses, but include platform operations and migration labor in total cost.
+  budget_constraints: Prefer existing enterprise licenses, but include platform operations, dual running, training, and migration labor in total cost.
   evidence_cutoff: 2026-08-05
+  minimum_evidence_coverage: 0.8
+  custom_weights:
+    capability_ownership: 5
+    control_loop_fit: 5
+    target_and_ecosystem_coverage: 5
+    hosting_and_execution_topology: 5
+    recovery: 5
+    security: 5
+    platform_operations: 5
+    migration_complexity: 4
+    licensing_and_total_cost: 4
 
 existing_capabilities:
   platforms:
@@ -136,6 +152,8 @@ existing_capabilities:
         - Existing imported state
       constraints:
         - Plan and apply governance is fragmented across Jenkins jobs
+      annual_operating_cost_notes: State backend cost is low. Most cost is review, module maintenance, and fragmented execution governance.
+      content_inventory: Approximately 40 modules, 18 environment roots, and established production state.
     - name: Red Hat Ansible Automation Platform
       edition: Enterprise subscription
       capability_class: configuration_management
@@ -147,6 +165,8 @@ existing_capabilities:
         - Existing baseline roles
       constraints:
         - Application deployment workflows are not standardized
+      annual_operating_cost_notes: Existing enterprise subscription and two platform-engineering owners.
+      content_inventory: Approximately 65 roles, 30 operational playbooks, and 12 managed inventories.
     - name: Jenkins
       edition: Self-managed LTS
       capability_class: ci_cd
@@ -159,6 +179,8 @@ existing_capabilities:
         - High plugin and controller maintenance
         - Large inline shell blocks
         - Weak repository-level developer experience
+      annual_operating_cost_notes: Significant controller, plugin, agent-image, backup, security-patching, and incident-response labor.
+      content_inventory: Approximately 140 pipelines, 25 shared-library steps, 60 plugins, and several freestyle jobs.
   terraform: Remote state backend and standard cloud modules are available.
   ansible: Automation controller, execution environments, inventories, and baseline roles are available.
   jenkins: Managed controller, persistent agents, shared libraries, artifact integration, and approval controls are available but costly to maintain.
@@ -168,6 +190,7 @@ existing_capabilities:
     - Build the application artifact once and promote it unchanged.
     - Do not place production secrets in repository variables.
     - Do not call a push-based Kubernetes deployment GitOps.
+    - Any migration must preserve one year of approval and deployment evidence.
 
 outputs:
   - executive_decision
@@ -178,6 +201,9 @@ outputs:
   - product_shortlist
   - hard_fit_analysis
   - weighted_matrix
+  - evidence_quality_summary
+  - evidence_ledger
+  - confidence_adjusted_matrix
   - ownership_map
   - execution_flow
   - handoff_contracts
@@ -185,9 +211,12 @@ outputs:
   - supply_chain_controls
   - recovery_plan
   - migration_analysis
+  - migration_economics
+  - reversibility_plan
   - total_cost_analysis
   - official_source_inventory
   - pilot_plan
   - implementation_backlog
+  - migration_plan
   - architecture_decision_record
   - markdown
