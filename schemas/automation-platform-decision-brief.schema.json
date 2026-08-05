@@ -4,6 +4,38 @@
   "title": "Automation Platform Decision Brief",
   "type": "object",
   "additionalProperties": false,
+  "$defs": {
+    "capabilityClass": {
+      "type": "string",
+      "enum": [
+        "infrastructure_as_code",
+        "configuration_management",
+        "ci_cd",
+        "gitops_continuous_delivery",
+        "runbook_automation",
+        "managed_iac_execution",
+        "durable_workflow_orchestration",
+        "verification_and_reporting",
+        "adjacent_capability",
+        "unsupported_capability"
+      ]
+    },
+    "hostingModel": {
+      "type": "string",
+      "enum": [
+        "saas",
+        "self_hosted",
+        "hybrid",
+        "managed_private",
+        "air_gapped"
+      ]
+    },
+    "scoringWeight": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    }
+  },
   "required": [
     "request",
     "targets",
@@ -17,27 +49,51 @@
     "request": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "desired_outcome"],
+      "required": [
+        "name",
+        "desired_outcome"
+      ],
       "properties": {
-        "name": {"type": "string", "minLength": 1},
-        "desired_outcome": {"type": "string", "minLength": 1},
-        "current_process": {"type": "string"},
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "desired_outcome": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision_owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "current_process": {
+          "type": "string"
+        },
         "current_platforms": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "repository_urls": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "format": "uri"}
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
         }
       }
     },
     "targets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["types", "environments"],
+      "required": [
+        "types",
+        "environments"
+      ],
       "properties": {
         "types": {
           "type": "array",
@@ -68,28 +124,50 @@
         "environments": {
           "type": "array",
           "minItems": 1,
-          "items": {"type": "string", "minLength": 1}
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
-        "estimated_count": {"type": "integer", "minimum": 0},
-        "inventory_source": {"type": "string"},
-        "connectivity": {"type": "string"},
-        "privilege_requirements": {"type": "string"},
+        "estimated_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inventory_source": {
+          "type": "string"
+        },
+        "connectivity": {
+          "type": "string"
+        },
+        "privilege_requirements": {
+          "type": "string"
+        },
         "operating_systems": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "architectures": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
     "lifecycle": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["actions", "source_of_truth"],
+      "required": [
+        "actions",
+        "source_of_truth"
+      ],
       "properties": {
         "actions": {
           "type": "array",
@@ -121,39 +199,97 @@
             ]
           }
         },
-        "source_of_truth": {"type": "string", "minLength": 1},
-        "desired_state_required": {"type": "boolean"},
-        "drift_detection_required": {"type": "boolean"},
-        "continuous_reconciliation_required": {"type": "boolean"},
-        "durable_workflow_state_required": {"type": "boolean"},
-        "destroy_allowed": {"type": "boolean"},
-        "rollback_expectation": {"type": "string"},
-        "recovery_objective": {"type": "string"}
+        "source_of_truth": {
+          "type": "string",
+          "minLength": 1
+        },
+        "desired_state_required": {
+          "type": "boolean"
+        },
+        "drift_detection_required": {
+          "type": "boolean"
+        },
+        "continuous_reconciliation_required": {
+          "type": "boolean"
+        },
+        "durable_workflow_state_required": {
+          "type": "boolean"
+        },
+        "destroy_allowed": {
+          "type": "boolean"
+        },
+        "rollback_expectation": {
+          "type": "string"
+        },
+        "recovery_objective": {
+          "type": "string"
+        }
       }
     },
     "execution": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["trigger", "frequency", "control_loop"],
+      "required": [
+        "trigger",
+        "frequency",
+        "control_loop"
+      ],
       "properties": {
         "trigger": {
           "type": "string",
-          "enum": ["source_control", "webhook", "schedule", "manual", "event", "message", "api", "continuous", "other"]
+          "enum": [
+            "source_control",
+            "webhook",
+            "schedule",
+            "manual",
+            "event",
+            "message",
+            "api",
+            "continuous",
+            "other"
+          ]
         },
-        "frequency": {"type": "string", "minLength": 1},
+        "frequency": {
+          "type": "string",
+          "minLength": 1
+        },
         "control_loop": {
           "type": "string",
-          "enum": ["one_shot", "event_driven", "scheduled", "continuous_reconciliation", "durable_workflow"]
+          "enum": [
+            "one_shot",
+            "event_driven",
+            "scheduled",
+            "continuous_reconciliation",
+            "durable_workflow"
+          ]
         },
-        "build_required": {"type": "boolean"},
-        "test_required": {"type": "boolean"},
-        "artifact_required": {"type": "boolean"},
-        "approval_required": {"type": "boolean"},
-        "parallelism": {"type": "string"},
-        "concurrency_controls": {"type": "string"},
-        "maintenance_window": {"type": "string"},
-        "maximum_runtime": {"type": "string"},
-        "external_waits": {"type": "string"}
+        "build_required": {
+          "type": "boolean"
+        },
+        "test_required": {
+          "type": "boolean"
+        },
+        "artifact_required": {
+          "type": "boolean"
+        },
+        "approval_required": {
+          "type": "boolean"
+        },
+        "parallelism": {
+          "type": "string"
+        },
+        "concurrency_controls": {
+          "type": "string"
+        },
+        "maintenance_window": {
+          "type": "string"
+        },
+        "maximum_runtime": {
+          "type": "string"
+        },
+        "external_waits": {
+          "type": "string"
+        }
       }
     },
     "security": {
@@ -163,103 +299,303 @@
         "credential_sources": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
-        "secret_manager": {"type": "string"},
-        "identity_requirements": {"type": "string"},
-        "separation_of_duties": {"type": "string"},
-        "network_restrictions": {"type": "string"},
-        "supply_chain_requirements": {"type": "string"}
+        "secret_manager": {
+          "type": "string"
+        },
+        "identity_requirements": {
+          "type": "string"
+        },
+        "separation_of_duties": {
+          "type": "string"
+        },
+        "network_restrictions": {
+          "type": "string"
+        },
+        "supply_chain_requirements": {
+          "type": "string"
+        }
       }
     },
     "governance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["audit_required", "production_impact"],
+      "required": [
+        "audit_required",
+        "production_impact"
+      ],
       "properties": {
-        "audit_required": {"type": "boolean"},
+        "audit_required": {
+          "type": "boolean"
+        },
         "production_impact": {
           "type": "string",
-          "enum": ["none", "low", "medium", "high", "critical"]
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
         },
-        "approval_model": {"type": "string"},
-        "policy_requirements": {"type": "string"},
-        "evidence_retention": {"type": "string"},
-        "data_residency": {"type": "string"},
-        "change_management": {"type": "string"},
-        "support_owner": {"type": "string"}
+        "approval_model": {
+          "type": "string"
+        },
+        "policy_requirements": {
+          "type": "string"
+        },
+        "evidence_retention": {
+          "type": "string"
+        },
+        "data_residency": {
+          "type": "string"
+        },
+        "change_management": {
+          "type": "string"
+        },
+        "support_owner": {
+          "type": "string"
+        }
       }
     },
     "platform_selection": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["candidate_policy", "allowed_hosting_models"],
+      "required": [
+        "candidate_policy",
+        "allowed_hosting_models"
+      ],
       "properties": {
         "candidate_policy": {
           "type": "string",
-          "enum": ["current_stack_only", "current_stack_plus_alternatives", "open_market"]
+          "enum": [
+            "current_stack_only",
+            "current_stack_plus_alternatives",
+            "open_market"
+          ]
+        },
+        "output_depth": {
+          "type": "string",
+          "enum": [
+            "quick_triage",
+            "standard",
+            "full_architecture_review"
+          ],
+          "default": "standard"
+        },
+        "decision_horizon_months": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120,
+          "default": 36
+        },
+        "risk_tolerance": {
+          "type": "string",
+          "enum": [
+            "low",
+            "moderate",
+            "high"
+          ],
+          "default": "moderate"
+        },
+        "shortlist_limit": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 5,
+          "default": 4
         },
         "allowed_capability_classes": {
           "type": "array",
           "uniqueItems": true,
           "items": {
-            "type": "string",
-            "enum": [
-              "infrastructure_as_code",
-              "configuration_management",
-              "ci_cd",
-              "gitops_continuous_delivery",
-              "runbook_automation",
-              "managed_iac_execution",
-              "durable_workflow_orchestration",
-              "verification_and_reporting",
-              "adjacent_capability",
-              "unsupported_capability"
-            ]
+            "$ref": "#/$defs/capabilityClass"
           }
         },
         "allowed_products": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "excluded_products": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "allowed_hosting_models": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
           "items": {
-            "type": "string",
-            "enum": ["saas", "self_hosted", "hybrid", "managed_private", "air_gapped"]
+            "$ref": "#/$defs/hostingModel"
           }
         },
-        "self_hosted_required": {"type": "boolean"},
-        "air_gapped_required": {"type": "boolean"},
-        "open_source_required": {"type": "boolean"},
-        "commercial_support_required": {"type": "boolean"},
+        "self_hosted_required": {
+          "type": "boolean"
+        },
+        "air_gapped_required": {
+          "type": "boolean"
+        },
+        "open_source_required": {
+          "type": "boolean"
+        },
+        "commercial_support_required": {
+          "type": "boolean"
+        },
         "existing_license_preferences": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
-        "source_control_platform": {"type": "string"},
+        "source_control_platform": {
+          "type": "string"
+        },
         "primary_cloud_platforms": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "migration_tolerance": {
           "type": "string",
-          "enum": ["none", "low", "medium", "high"]
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high"
+          ]
         },
-        "migration_deadline": {"type": "string"},
-        "budget_constraints": {"type": "string"},
-        "evidence_cutoff": {"type": "string", "format": "date"}
-      }
+        "migration_deadline": {
+          "type": "string"
+        },
+        "budget_constraints": {
+          "type": "string"
+        },
+        "evidence_cutoff": {
+          "type": "string",
+          "format": "date"
+        },
+        "minimum_evidence_coverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8
+        },
+        "custom_weights": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "capability_ownership": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "control_loop_fit": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "state_and_history_fit": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "target_and_ecosystem_coverage": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "hosting_and_execution_topology": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "recovery": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "security": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "audit_and_governance": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "maintainability": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "scale_and_concurrency": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "platform_operations": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "existing_operating_model": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "migration_complexity": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "licensing_and_total_cost": {
+              "$ref": "#/$defs/scoringWeight"
+            },
+            "portability_and_lock_in": {
+              "$ref": "#/$defs/scoringWeight"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "self_hosted_required": {
+                "const": true
+              }
+            },
+            "required": [
+              "self_hosted_required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "allowed_hosting_models": {
+                "contains": {
+                  "enum": [
+                    "self_hosted",
+                    "hybrid",
+                    "managed_private",
+                    "air_gapped"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "air_gapped_required": {
+                "const": true
+              }
+            },
+            "required": [
+              "air_gapped_required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "allowed_hosting_models": {
+                "contains": {
+                  "const": "air_gapped"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "existing_capabilities": {
       "type": "object",
@@ -267,29 +603,85 @@
       "properties": {
         "platforms": {
           "type": "array",
+          "uniqueItems": true,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "capability_class", "hosting_model", "maturity"],
+            "required": [
+              "name",
+              "capability_class",
+              "hosting_model",
+              "maturity"
+            ],
             "properties": {
-              "name": {"type": "string", "minLength": 1},
-              "edition": {"type": "string"},
-              "capability_class": {"type": "string", "minLength": 1},
-              "hosting_model": {"type": "string", "minLength": 1},
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "edition": {
+                "type": "string"
+              },
+              "capability_class": {
+                "$ref": "#/$defs/capabilityClass"
+              },
+              "hosting_model": {
+                "$ref": "#/$defs/hostingModel"
+              },
               "maturity": {
                 "type": "string",
-                "enum": ["experimental", "limited", "established", "strategic", "legacy"]
+                "enum": [
+                  "experimental",
+                  "limited",
+                  "established",
+                  "strategic",
+                  "legacy"
+                ]
               },
-              "strengths": {"type": "array", "items": {"type": "string"}},
-              "constraints": {"type": "array", "items": {"type": "string"}}
+              "strengths": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "constraints": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "annual_operating_cost_notes": {
+                "type": "string"
+              },
+              "content_inventory": {
+                "type": "string"
+              }
             }
           }
         },
-        "terraform": {"type": "string"},
-        "ansible": {"type": "string"},
-        "jenkins": {"type": "string"},
-        "team_skills": {"type": "string"},
-        "constraints": {"type": "array", "items": {"type": "string"}}
+        "terraform": {
+          "type": "string"
+        },
+        "ansible": {
+          "type": "string"
+        },
+        "jenkins": {
+          "type": "string"
+        },
+        "team_skills": {
+          "type": "string"
+        },
+        "constraints": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     },
     "outputs": {
@@ -307,6 +699,9 @@
           "product_shortlist",
           "hard_fit_analysis",
           "weighted_matrix",
+          "evidence_quality_summary",
+          "evidence_ledger",
+          "confidence_adjusted_matrix",
           "ownership_map",
           "execution_flow",
           "handoff_contracts",
@@ -314,6 +709,8 @@
           "supply_chain_controls",
           "recovery_plan",
           "migration_analysis",
+          "migration_economics",
+          "reversibility_plan",
           "total_cost_analysis",
           "official_source_inventory",
           "pilot_plan",
