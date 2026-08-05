@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.7.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, category-aware automation platform architecture and selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.8.0",
+  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, evidence-aware automation platform architecture and selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -13,6 +13,8 @@
         "skills/automation-platform-capability-taxonomy.md",
         "skills/automation-platform-decision-framework.md",
         "skills/automation-platform-candidate-discovery.md",
+        "skills/automation-platform-evidence-and-confidence.md",
+        "skills/automation-platform-migration-and-economics.md",
         "skills/terraform-workload-fit-analysis.md",
         "skills/ansible-workload-fit-analysis.md",
         "skills/jenkins-workload-fit-analysis.md",
