@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Help users choose the right AgentDefaults entrypoint, stack, and validation path.
+Help users choose the right AgentDefaults entrypoint, stack, output depth, and validation path.
 
 ## Entrypoints
 
@@ -24,10 +24,14 @@ Help users choose the right AgentDefaults entrypoint, stack, and validation path
 ## Goals
 
 - Select the right automation category and product: `agents/automation-platform-selection-advisor.md`
+- Produce a compact platform recommendation: use `quick_triage` output depth
+- Produce a full architecture, evidence, and economics review: use `full_architecture_review`
 - Compare Jenkins with GitHub Actions, Azure Pipelines, GitLab CI/CD, or another CI/CD product: `skills/ci-cd-platform-alternatives-analysis.md`
 - Compare Terraform with OpenTofu, Pulumi, Bicep, CloudFormation, Crossplane, or managed execution: `skills/infrastructure-as-code-platform-alternatives-analysis.md`
 - Compare Ansible with AAP/AWX, Puppet, Chef Infra, Salt, or DSC: `skills/configuration-management-platform-alternatives-analysis.md`
 - Decide whether Kubernetes delivery needs Argo CD, Flux, or conventional CI/CD: `skills/gitops-runbook-and-workflow-platform-analysis.md`
+- Build an evidence ledger and confidence-aware comparison: `skills/automation-platform-evidence-and-confidence.md`
+- Compare retain, optimize, augment, migrate, and pilot-first economics: `skills/automation-platform-migration-and-economics.md`
 - Challenge an existing automation architecture: `prompts/review/challenge-automation-platform-choice.md`
 - Edit videos through Palmier Pro MCP: `docs/quickstarts/palmierpro-mcp.md`
 - Analyze Palmier project media and assemble a YouTube story: `prompts/palmierpro/story-assembly-from-project-media.md`
@@ -58,6 +62,8 @@ skills/automation-platform-selection-orchestrator.md
 skills/automation-platform-capability-taxonomy.md
 skills/automation-platform-decision-framework.md
 skills/automation-platform-candidate-discovery.md
+skills/automation-platform-evidence-and-confidence.md
+skills/automation-platform-migration-and-economics.md
 ```
 
 Add only the fit-analysis skills needed:
@@ -81,7 +87,9 @@ examples/automation-platform-decision-brief.yaml
 docs/automation-platform-selection-acceptance-tests.md
 ```
 
-Use `current_stack_plus_alternatives` as the default candidate policy. Classify the capability before comparing products, apply mandatory gates before scoring, and keep each final shortlist small.
+Use `current_stack_plus_alternatives` as the default candidate policy and `standard` as the default output depth. Classify capability before comparing products, surface contradictory constraints, apply mandatory gates before scoring, keep fit separate from evidence confidence, and keep each final shortlist small.
+
+Use `quick_triage` for a narrow low-risk decision. Use `full_architecture_review` when the decision requires a complete evidence ledger, economics, reversibility, migration waves, recovery design, or ADR-ready output.
 
 ## Recommended Palmier Pro MCP Stack
 
@@ -115,4 +123,4 @@ skills/token-efficiency-measurement.md
 python3 scripts/validate-agentdefaults.py
 ```
 
-The validator checks the manifest, all JSON schemas, the full automation-platform stack, Markdown purpose sections, and local links.
+The validator checks the manifest, every JSON schema and local schema reference, the complete automation-platform stack, canonical capability identifiers, output modes, evidence and economics coverage, all 25 acceptance scenarios, Markdown purpose sections, and local links.
