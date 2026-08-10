@@ -217,7 +217,7 @@ Add domain-specific tests for security, money, identity, production changes, hea
 
 Use as a starting point, then remove irrelevant sections:
 
-```markdown
+````markdown
 # <Agent Name>
 
 ## Purpose
@@ -272,7 +272,7 @@ Status:
 ## Quality Bar
 
 - ...
-```
+````
 
 ## Skill Design Rules
 
