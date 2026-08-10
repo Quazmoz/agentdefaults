@@ -6,6 +6,7 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 
 ## Entrypoints
 
+- Design, build, or audit an AI agent: `docs/quickstarts/agent-builder.md`
 - Automation platform architecture and product selection: `AUTOMATION_PLATFORM_INDEX.md`
 - Generic repo-aware coding agent: `AGENTS.md`
 - Claude: `CLAUDE.md`
@@ -23,6 +24,11 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 
 ## Goals
 
+- Design or harden another AI agent: `agents/agent-architect-builder.md`
+- Apply the reusable agent-design method: `skills/agent-design-and-build.md`
+- Start from a structured agent brief: `schemas/agent-build-brief.schema.json`
+- Use the canonical reusable agent layout: `docs/patterns/agent.md`
+- Run the agent-builder failure and adversarial test matrix: `docs/agent-builder-acceptance-tests.md`
 - Select the right automation category and product: `agents/automation-platform-selection-advisor.md`
 - Produce a compact platform recommendation: use `quick_triage` output depth
 - Produce a full architecture, evidence, and economics review: use `full_architecture_review`
@@ -51,6 +57,44 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 - Compare models: `prompts/token-efficiency/compare-models.md`
 - Compress prompts or memory files: `skills/prompt-and-memory-compression.md`
 - Add a reusable default: `docs/patterns/`
+
+## Recommended Agent Builder Stack
+
+Minimum stack:
+
+```text
+agents/agent-architect-builder.md
+skills/agent-design-and-build.md
+```
+
+Structured input, invocation, and validation:
+
+```text
+schemas/agent-build-brief.schema.json
+examples/agent-build-brief.yaml
+prompts/planning/build-ai-agent.md
+docs/agent-builder-acceptance-tests.md
+docs/patterns/agent.md
+```
+
+Runtime-specific entrypoint:
+
+```text
+.github/agents/agent-architect-builder.agent.md
+```
+
+Use `single_agent_with_skills` as the default architecture when behavior is reusable. Use `single_agent` when one compact control loop is sufficient. Use `multi_agent` only when permission isolation, independent specialist context, parallelizable work with reconciliation, independent verification, separate durable control loops, or fault isolation creates a concrete benefit.
+
+Use the canonical permission classes exactly:
+
+```text
+observe
+propose
+mutate_reversible
+mutate_irreversible
+```
+
+Before building, verify real runtime capabilities, authority consistency, authoritative data sources, trust boundaries, retry/idempotency compatibility, and objective completion. A skill, retrieved document, tool output, or sub-agent cannot broaden the parent agent's authority. Report checks that did not actually run as unverified.
 
 ## Recommended Automation Platform Stack
 
@@ -123,4 +167,4 @@ skills/token-efficiency-measurement.md
 python3 scripts/validate-agentdefaults.py
 ```
 
-The validator checks the manifest, every JSON schema and local schema reference, the complete automation-platform stack, canonical capability identifiers, output modes, evidence and economics coverage, all 25 acceptance scenarios, Markdown purpose sections, and local links.
+The validator checks the manifest, every JSON schema and local schema reference, the complete Agent Architect and Builder stack, the complete automation-platform stack, canonical permission and capability identifiers, build/output modes, required acceptance scenarios, Markdown purpose sections, and local links.
