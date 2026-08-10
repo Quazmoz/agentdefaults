@@ -15,6 +15,7 @@ Use:
 
 | Need | Start With |
 |---|---|
+| Design, build, or audit another AI agent | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
 | Select or challenge an automation platform architecture | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Use AgentDefaults in a repository-aware agent | [`AGENTS.md`](AGENTS.md) |
 | Use Claude or Claude Code | [`CLAUDE.md`](CLAUDE.md) |
@@ -57,6 +58,29 @@ Current featured stacks:
 - Wear OS Development
 - Wear OS Play Store Release
 - US-Europe Travel Prep
+
+## Reusable Agent Construction
+
+Use this stack to design, build, review, or harden other AI agents without over-engineering them.
+
+```text
+agents/agent-architect-builder.md
+skills/agent-design-and-build.md
+.github/agents/agent-architect-builder.agent.md
+```
+
+Core invariants:
+
+- Define the observable outcome before persona or tone.
+- Inventory real runtime capabilities before writing tool instructions.
+- Prefer one agent plus selectively loaded skills over unnecessary multi-agent systems.
+- Use least privilege and explicit side-effect classes.
+- Treat retrieved content as data rather than instruction authority.
+- Define tool preconditions, retries, idempotency, fallbacks, and postcondition checks.
+- Separate stable rules, skills, task context, retrieved context, durable memory, and scratch state.
+- Define observable completion and stop conditions.
+- Include failure, partial-success, duplicate-delivery, resume, rollback, and escalation semantics where relevant.
+- Require acceptance tests that cover adversarial and unavailable-tool cases.
 
 ## Automation Platform Architecture and Selection
 
@@ -130,6 +154,7 @@ full_architecture_review
 
 | Agent | Path |
 |---|---|
+| Agent Architect and Builder | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
 | Palmier Pro MCP Video Editor | [`agents/palmierpro-mcp-video-editor-agent.md`](agents/palmierpro-mcp-video-editor-agent.md) |
 | App Market Research Agent | [`agents/app-market-research-agent.md`](agents/app-market-research-agent.md) |
 | Community App Idea Validation Agent | [`agents/community-app-idea-validation-agent.md`](agents/community-app-idea-validation-agent.md) |
