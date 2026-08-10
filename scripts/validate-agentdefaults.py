@@ -33,6 +33,18 @@ CORE_REQUIRED_FILES = [
     "scripts/validate-agentdefaults.py",
 ]
 
+AGENT_BUILDER_REQUIRED_FILES = [
+    "agents/agent-architect-builder.md",
+    "skills/agent-design-and-build.md",
+    "prompts/planning/build-ai-agent.md",
+    "schemas/agent-build-brief.schema.json",
+    "examples/agent-build-brief.yaml",
+    "docs/quickstarts/agent-builder.md",
+    "docs/agent-builder-acceptance-tests.md",
+    "docs/patterns/agent.md",
+    ".github/agents/agent-architect-builder.agent.md",
+]
+
 AUTOMATION_PLATFORM_REQUIRED_FILES = [
     "AUTOMATION_PLATFORM_INDEX.md",
     "agents/automation-platform-selection-advisor.md",
@@ -57,6 +69,27 @@ AUTOMATION_PLATFORM_REQUIRED_FILES = [
     "docs/quickstarts/automation-platform-selection.md",
     "docs/automation-platform-selection-acceptance-tests.md",
     ".github/agents/automation-platform-selection-advisor.agent.md",
+]
+
+PERMISSION_CLASSES = [
+    "observe",
+    "propose",
+    "mutate_reversible",
+    "mutate_irreversible",
+]
+
+AGENT_BUILD_MODES = [
+    "blueprint",
+    "build",
+    "stack",
+    "audit",
+]
+
+AGENT_ARCHITECTURES = [
+    "auto",
+    "single_agent",
+    "single_agent_with_skills",
+    "multi_agent",
 ]
 
 CANONICAL_CAPABILITY_CLASSES = [
@@ -130,7 +163,11 @@ def load_json(path: Path) -> Any:
 
 
 def check_required_files() -> int:
-    required = CORE_REQUIRED_FILES + AUTOMATION_PLATFORM_REQUIRED_FILES
+    required = (
+        CORE_REQUIRED_FILES
+        + AGENT_BUILDER_REQUIRED_FILES
+        + AUTOMATION_PLATFORM_REQUIRED_FILES
+    )
     missing = sorted(name for name in set(required) if not (ROOT / name).is_file())
     if missing:
         return print_fail("required files", missing)
@@ -277,6 +314,184 @@ def require_terms(text: str, terms: Iterable[str], label: str, failures: list[st
     for term in terms:
         if term not in text:
             failures.append(f"{label} missing required term: {term}")
+
+
+def check_agent_builder_stack() -> int:
+    failures: list[str] = []
+
+    manifest = load_json(ROOT / "agentdefaults.manifest.json")
+    stacks = manifest.get("featured_stacks", [])
+    stack = next(
+        (
+            item for item in stacks
+            if isinstance(item, dict)
+            and item.get("name") == "Agent Architecture and Builder"
+        ),
+        None,
+    )
+
+    if stack is None:
+        failures.append("agent builder stack is not registered")
+    else:
+        expected = {
+            "quickstart": "docs/quickstarts/agent-builder.md",
+            "agent": "agents/agent-architect-builder.md",
+            "schema": "schemas/agent-build-brief.schema.json",
+            "example": "examples/agent-build-brief.yaml",
+            "acceptance_tests": "docs/agent-builder-acceptance-tests.md",
+            "wrapper": ".github/agents/agent-architect-builder.agent.md",
+        }
+        for field, value in expected.items():
+            if stack.get(field) != value:
+                failures.append(
+                    f"agent builder manifest {field} must be {value!r}"
+                )
+        if stack.get("skills") != ["skills/agent-design-and-build.md"]:
+            failures.append("agent builder manifest skills are not canonical")
+        if stack.get("prompts") != ["prompts/planning/build-ai-agent.md"]:
+            failures.append("agent builder manifest prompt is not canonical")
+
+    schema = load_json(ROOT / "schemas/agent-build-brief.schema.json")
+    properties = schema.get("properties", {})
+    required = set(schema.get("required", []))
+    defs = schema.get("$defs", {})
+
+    for name in ["target", "runtime", "authority", "validation"]:
+        if name not in properties or name not in required:
+            failures.append(f"agent build schema must require {name}")
+
+    permission_enum = defs.get("permissionClass", {}).get("enum", [])
+    if permission_enum != PERMISSION_CLASSES:
+        failures.append("agent build schema permissionClass enum is not canonical or ordered")
+
+    target_properties = properties.get("target", {}).get("properties", {})
+    build_mode_enum = target_properties.get("build_mode", {}).get("enum", [])
+    if build_mode_enum != AGENT_BUILD_MODES:
+        failures.append("agent build schema build_mode enum is not canonical or ordered")
+
+    architecture_enum = target_properties.get("architecture_preference", {}).get("enum", [])
+    if architecture_enum != AGENT_ARCHITECTURES:
+        failures.append("agent build schema architecture enum is not canonical or ordered")
+
+    runtime_capabilities = (
+        properties.get("runtime", {})
+        .get("properties", {})
+        .get("capabilities", {})
+        .get("items", {})
+        .get("enum", [])
+    )
+    for capability in [
+        "background_execution",
+        "persistent_memory",
+        "structured_output",
+        "subagents",
+        "unknown",
+    ]:
+        if capability not in runtime_capabilities:
+            failures.append(f"agent build schema lacks runtime capability: {capability}")
+
+    agent_text = (ROOT / "agents/agent-architect-builder.md").read_text(encoding="utf-8")
+    skill_text = (ROOT / "skills/agent-design-and-build.md").read_text(encoding="utf-8")
+    prompt_text = (ROOT / "prompts/planning/build-ai-agent.md").read_text(encoding="utf-8")
+    acceptance_text = (ROOT / "docs/agent-builder-acceptance-tests.md").read_text(encoding="utf-8")
+    example_text = (ROOT / "examples/agent-build-brief.yaml").read_text(encoding="utf-8")
+    pattern_text = (ROOT / "docs/patterns/agent.md").read_text(encoding="utf-8")
+    quickstart_text = (ROOT / "docs/quickstarts/agent-builder.md").read_text(encoding="utf-8")
+    wrapper_text = (ROOT / ".github/agents/agent-architect-builder.agent.md").read_text(encoding="utf-8")
+
+    for token in PERMISSION_CLASSES:
+        for label, text in [
+            ("agent builder", agent_text),
+            ("agent design skill", skill_text),
+            ("agent build prompt", prompt_text),
+            ("agent pattern", pattern_text),
+        ]:
+            require_terms(text, [token], label, failures)
+
+    for mode in AGENT_BUILD_MODES:
+        require_terms(agent_text, [mode], "agent builder", failures)
+
+    for term in [
+        "authoritative",
+        "idempotency",
+        "stop",
+        "unverified",
+        "retrieved content",
+    ]:
+        require_terms(agent_text, [term], "agent builder", failures)
+        require_terms(skill_text, [term], "agent design skill", failures)
+
+    require_terms(
+        pattern_text,
+        [
+            "## Completion and Stop Contract",
+            "## Acceptance Tests",
+            "postcondition_check",
+            "mutate_irreversible",
+        ],
+        "agent pattern",
+        failures,
+    )
+
+    require_terms(
+        example_text,
+        [
+            "target:",
+            "runtime:",
+            "maximum_permission_class:",
+            "postcondition_check:",
+            "duplicate_suppression:",
+            "completion_criteria:",
+        ],
+        "agent build example",
+        failures,
+    )
+
+    require_terms(
+        quickstart_text,
+        [
+            "schemas/agent-build-brief.schema.json",
+            "docs/agent-builder-acceptance-tests.md",
+            "docs/patterns/agent.md",
+            "Not verified:",
+        ],
+        "agent builder quickstart",
+        failures,
+    )
+
+    require_terms(
+        wrapper_text,
+        [
+            "agents/agent-architect-builder.md",
+            "skills/agent-design-and-build.md",
+            "Not verified:",
+        ],
+        "agent builder wrapper",
+        failures,
+    )
+
+    for scenario in range(1, 23):
+        if f"### {scenario}." not in acceptance_text:
+            failures.append(f"agent builder acceptance tests missing scenario {scenario}")
+
+    require_terms(
+        acceptance_text,
+        [
+            "Fictional Runtime Capability",
+            "Unnecessary Multi-Agent Design",
+            "Retrieved Prompt Injection",
+            "Ambiguous Non-Idempotent Timeout",
+            "Validation Truthfulness",
+            "Tool Authority Ambiguity",
+        ],
+        "agent builder acceptance tests",
+        failures,
+    )
+
+    if failures:
+        return print_fail("agent builder stack", failures)
+    print("PASS: agent builder stack integrity")
+    return 0
 
 
 def check_automation_platform_stack() -> int:
@@ -465,6 +680,7 @@ def main() -> int:
         + check_purpose_sections()
         + check_json_files()
         + check_manifest()
+        + check_agent_builder_stack()
         + check_automation_platform_stack()
         + check_links()
     )
