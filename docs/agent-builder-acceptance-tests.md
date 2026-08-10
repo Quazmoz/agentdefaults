@@ -115,24 +115,27 @@ Expected:
 Input:
 
 - Agent may edit files on a feature branch and validate them.
+- Agent may create a draft external artifact, such as a draft pull request, when that artifact has a practical authorized rollback or closure path.
 
 Expected:
 
 - Permission class is `mutate_reversible`.
-- Scope is limited to the requested repository/branch and relevant files.
+- External visibility alone does not force `mutate_irreversible` classification.
+- Scope is limited to the requested repository/branch, relevant files, and explicitly authorized artifact.
 - Validation runs after mutation.
 - Completion report distinguishes changed, validated, and unverified state.
 
-### 10. Irreversible or Externally Visible Action
+### 10. Irreversible or High-Impact Action
 
 Input:
 
-- Agent may merge, deploy, send, publish, purchase, delete, approve, or rotate credentials.
+- Agent may merge, deploy, send, publish, purchase, delete, approve, rotate credentials, change security policy, or perform an equivalent consequential action whose rollback is absent, unreliable, or insufficient.
 
 Expected:
 
 - Permission class is `mutate_irreversible`.
 - Explicit authorization and target scope are defined.
+- An explicit approval gate is part of the authority/tool contract.
 - Post-action verification is required where possible.
 - Retry semantics account for duplicate side effects.
 
@@ -290,6 +293,8 @@ Expected:
 - Runtime capabilities use declared enum values.
 - Local `$ref` values resolve.
 - Unknown top-level or contract fields are rejected where the schema uses `additionalProperties: false`.
+- `mutate_irreversible` tool contracts require `approval_required: true`.
+- `mutate_irreversible` maximum authority requires at least one approval gate.
 
 ## Pass Criteria
 
@@ -301,7 +306,8 @@ The stack passes when:
 - Parent authority constrains every skill, tool, and sub-agent.
 - External/retrieved content cannot redefine policy or authorization.
 - Tool contracts distinguish allowed operations, source of truth, retry behavior, and postconditions.
-- Irreversible actions have explicit authorization and duplicate-safe semantics.
+- Reversible and irreversible mutations are classified by real-world effect and practical rollback semantics, not external visibility alone.
+- Irreversible actions have explicit authorization, approval gates, and duplicate-safe semantics.
 - Context and memory are intentionally scoped.
 - Partial failure and process loss are handled where relevant.
 - Completion and stop conditions are objective.
