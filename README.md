@@ -41,6 +41,7 @@ Then choose a path:
 | I want to... | Start here |
 |---|---|
 | Pick the right files quickly | [`docs/user-guide.md`](docs/user-guide.md) |
+| Design, build, or audit another AI agent | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
 | Select or challenge an automation platform architecture | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Use a local repo-aware coding CLI | [`docs/quickstarts/cli.md`](docs/quickstarts/cli.md) |
 | Use Claude-style repo instructions | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
@@ -76,6 +77,18 @@ AgentDefaults separates **canonical reusable content** from **thin tool wrappers
 Rule: **update canonical content first, then keep wrappers thin and discoverable.**
 
 ## Recommended Stacks
+
+### Agent Architect and Builder Stack
+
+Use when turning a goal, prompt, or existing agent into a reusable production-quality agent with explicit scope, real runtime capabilities, least-privilege tools, modular skills, context strategy, recovery semantics, completion contracts, and acceptance tests.
+
+```text
+agents/agent-architect-builder.md
+skills/agent-design-and-build.md
+.github/agents/agent-architect-builder.agent.md
+```
+
+The stack defaults to one agent plus selectively loaded skills. It introduces multiple agents only when specialization, permission isolation, parallel execution, independent verification, separate durable control loops, or fault isolation provides a concrete benefit.
 
 ### Automation Platform Architecture and Selection Stack
 
@@ -283,6 +296,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 
 | Type | Name | Path |
 |---|---|---|
+| Agent | Agent Architect and Builder | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
 | Agent | Automation Platform Selection Advisor | [`agents/automation-platform-selection-advisor.md`](agents/automation-platform-selection-advisor.md) |
 | Agent | Palmier Pro MCP Video Editor | [`agents/palmierpro-mcp-video-editor-agent.md`](agents/palmierpro-mcp-video-editor-agent.md) |
 | Agent | App Market Research Agent | [`agents/app-market-research-agent.md`](agents/app-market-research-agent.md) |
@@ -297,6 +311,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Agent | Wear OS App Developer | [`agents/wearos-app-developer.md`](agents/wearos-app-developer.md) |
 | Agent | Android Wear OS Release Engineer | [`agents/android-wearos-release-engineer.md`](agents/android-wearos-release-engineer.md) |
 | Agent | US to Europe Travel Advisor | [`agents/us-europe-travel-advisor.md`](agents/us-europe-travel-advisor.md) |
+| Skill | Agent Design and Build | [`skills/agent-design-and-build.md`](skills/agent-design-and-build.md) |
 | Skill | Automation Platform Capability Taxonomy | [`skills/automation-platform-capability-taxonomy.md`](skills/automation-platform-capability-taxonomy.md) |
 | Skill | Automation Platform Candidate Discovery | [`skills/automation-platform-candidate-discovery.md`](skills/automation-platform-candidate-discovery.md) |
 | Skill | CI/CD Platform Alternatives Analysis | [`skills/ci-cd-platform-alternatives-analysis.md`](skills/ci-cd-platform-alternatives-analysis.md) |
@@ -429,9 +444,11 @@ agentdefaults/
 ├── examples/
 │   └── automation-platform-decision-brief.yaml
 ├── agents/
+│   ├── agent-architect-builder.md
 │   ├── automation-platform-selection-advisor.md
 │   └── community-app-idea-validation-agent.md
 ├── skills/
+│   ├── agent-design-and-build.md
 │   ├── automation-platform-capability-taxonomy.md
 │   ├── automation-platform-candidate-discovery.md
 │   ├── ci-cd-platform-alternatives-analysis.md
@@ -448,6 +465,7 @@ agentdefaults/
 │       └── validate-app-idea-in-community.md
 ├── .github/
 │   └── agents/
+│       ├── agent-architect-builder.agent.md
 │       ├── automation-platform-selection-advisor.agent.md
 │       └── community-app-idea-validator.agent.md
 ├── .cursor/
@@ -482,7 +500,7 @@ Use [`docs/patterns/default.md`](docs/patterns/default.md) for new reusable cont
 
 ## Status
 
-Usable cross-tool scaffold with category-aware automation platform architecture and selection, token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
+Usable cross-tool scaffold with reusable agent-construction defaults, category-aware automation platform architecture and selection, token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
 
 ## License
 
