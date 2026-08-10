@@ -225,15 +225,15 @@ propose
   Produce suggestions, drafts, plans, or patches without mutating external state.
 
 mutate_reversible
-  Mutate state with a defined and practical rollback or compensation path.
+  Mutate state with a defined and practical rollback, closure, or compensation path.
 
 mutate_irreversible
-  Perform high-impact, externally visible, destructive, financial, identity, security, publication, approval, deployment, send, or similarly consequential actions.
+  Perform irreversible or high-impact consequential actions such as destructive changes, sends, publication, deployments, purchases, approvals, credential or security changes, or equivalent operations where rollback is absent, unreliable, or insufficient.
 ```
 
-Classify by the real-world effect, not by whether the implementation happens to use a write API.
+Classify by the real-world effect and practical rollback semantics, not by whether the implementation uses a write API or whether the result is externally visible. A draft external artifact can remain `mutate_reversible` when it has a practical authorized rollback or closure path.
 
-For `mutate_irreversible`, define explicit authorization, target resolution, duplicate-safety semantics, validation, and post-action reporting.
+For `mutate_irreversible`, define explicit authorization, target resolution, an approval gate, duplicate-safety semantics, validation, and post-action reporting.
 
 A skill, retrieved document, tool output, or sub-agent may never broaden the parent agent's authority ceiling.
 
