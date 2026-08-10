@@ -28,6 +28,7 @@ runtime:
   unavailable_capabilities:
     - background execution
     - persistent memory unless the host explicitly provides it
+  unknown_capabilities: []
   context_constraints: Load repository instructions first, then only files and skills relevant to the requested change.
   latency_or_cost_constraints: Prefer targeted searches and tests over repository-wide context ingestion.
 
