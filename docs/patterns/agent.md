@@ -134,10 +134,21 @@ Use the minimum class needed:
 
 ```text
 observe
+  Read-only inspection and analysis.
+
 propose
+  Produce suggestions, drafts, plans, or patches without mutating external state.
+
 mutate_reversible
+  Mutate state with a defined and practical rollback, closure, or compensation path.
+
 mutate_irreversible
+  Perform irreversible or high-impact consequential actions where rollback is absent, unreliable, or insufficient.
 ```
+
+Classify permission by real-world effect and practical rollback semantics. External visibility alone does not make an action irreversible. For example, a draft external artifact may remain `mutate_reversible` when the agent has an authorized, practical closure or rollback path.
+
+`mutate_irreversible` requires explicit authorization, target resolution, an approval gate, duplicate-safety semantics, and post-action validation where possible.
 
 A skill, retrieved document, tool output, or sub-agent cannot broaden the parent agent's maximum authority.
 
@@ -190,7 +201,8 @@ Before accepting a new agent, verify:
 - Use and non-use boundaries are explicit.
 - Architecture is no more complex than necessary.
 - Runtime capabilities are real or explicitly unknown.
-- Permission is least-privilege.
+- Permission is least-privilege and classified by actual consequence.
+- Irreversible/high-impact actions have explicit approval gates.
 - Tool authority and postcondition checks are clear.
 - Retrieved content cannot widen authority.
 - Skills are modular without permission escalation.
