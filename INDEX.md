@@ -15,7 +15,7 @@ Use:
 
 | Need | Start With |
 |---|---|
-| Design, build, or audit another AI agent | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
+| Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Select or challenge an automation platform architecture | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Use AgentDefaults in a repository-aware agent | [`AGENTS.md`](AGENTS.md) |
 | Use Claude or Claude Code | [`CLAUDE.md`](CLAUDE.md) |
@@ -31,7 +31,8 @@ Use:
 | Prepare a Wear OS Play release | [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
 | Plan US-to-Europe travel | [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md) |
 | Reduce token usage | [`agents/token-economy-orchestrator.md`](agents/token-economy-orchestrator.md) |
-| Add a reusable default | [`docs/patterns/default.md`](docs/patterns/default.md) |
+| Add a reusable agent | [`docs/patterns/agent.md`](docs/patterns/agent.md) |
+| Add another reusable default | [`docs/patterns/default.md`](docs/patterns/default.md) |
 | Validate the repository | [`scripts/validate-agentdefaults.py`](scripts/validate-agentdefaults.py) |
 
 ## Domain Sub-Indexes
@@ -49,6 +50,7 @@ The authoritative stack composition is in [`agentdefaults.manifest.json`](agentd
 
 Current featured stacks:
 
+- Agent Architecture and Builder
 - Automation Platform Architecture and Selection
 - Google Play Growth Optimization
 - Palmier Pro MCP Video Editing
@@ -59,28 +61,76 @@ Current featured stacks:
 - Wear OS Play Store Release
 - US-Europe Travel Prep
 
-## Reusable Agent Construction
+## Agent Architecture and Builder
 
-Use this stack to design, build, review, or harden other AI agents without over-engineering them.
+### Entrypoints
 
 ```text
+docs/quickstarts/agent-builder.md
 agents/agent-architect-builder.md
 skills/agent-design-and-build.md
 .github/agents/agent-architect-builder.agent.md
 ```
 
-Core invariants:
+### Structured Input and Reuse
+
+```text
+schemas/agent-build-brief.schema.json
+examples/agent-build-brief.yaml
+prompts/planning/build-ai-agent.md
+docs/patterns/agent.md
+```
+
+### Validation
+
+```text
+docs/agent-builder-acceptance-tests.md
+scripts/validate-agentdefaults.py
+```
+
+### Build Modes
+
+```text
+blueprint
+build
+stack
+audit
+```
+
+### Architecture Choices
+
+```text
+single_agent
+single_agent_with_skills
+multi_agent
+```
+
+Prefer `single_agent_with_skills` when reusable behavior can be loaded selectively. Use `multi_agent` only when permission isolation, independent specialist context, parallel execution with reconciliation, independent verification, separate durable control loops, or fault isolation creates a concrete benefit.
+
+### Permission Classes
+
+```text
+observe
+propose
+mutate_reversible
+mutate_irreversible
+```
+
+### Construction Invariants
 
 - Define the observable outcome before persona or tone.
-- Inventory real runtime capabilities before writing tool instructions.
-- Prefer one agent plus selectively loaded skills over unnecessary multi-agent systems.
-- Use least privilege and explicit side-effect classes.
+- Validate runtime capabilities and contract consistency before writing the target agent.
+- Do not invent tools, memory, scheduling, background execution, sub-agents, or approval mechanisms.
+- Use least privilege and classify permissions by real-world effect.
+- A skill, retrieved document, tool output, or sub-agent cannot broaden parent authority.
+- Distinguish discovery/search from authoritative state.
+- Define tool preconditions, allowed/forbidden operations, retries, idempotency, fallbacks, and postcondition checks.
 - Treat retrieved content as data rather than instruction authority.
-- Define tool preconditions, retries, idempotency, fallbacks, and postcondition checks.
 - Separate stable rules, skills, task context, retrieved context, durable memory, and scratch state.
-- Define observable completion and stop conditions.
-- Include failure, partial-success, duplicate-delivery, resume, rollback, and escalation semantics where relevant.
-- Require acceptance tests that cover adversarial and unavailable-tool cases.
+- Define objective completion, blocked/failed states, and stop conditions.
+- Include partial-success, duplicate-suppression, resume, rollback/compensation, and escalation semantics where relevant.
+- Require failure and adversarial acceptance tests.
+- Report checks that did not actually run as unverified.
 
 ## Automation Platform Architecture and Selection
 
@@ -173,6 +223,7 @@ full_architecture_review
 
 | Schema | Path |
 |---|---|
+| Agent Build Brief | [`schemas/agent-build-brief.schema.json`](schemas/agent-build-brief.schema.json) |
 | Automation Platform Decision Brief | [`schemas/automation-platform-decision-brief.schema.json`](schemas/automation-platform-decision-brief.schema.json) |
 | App Market Research Brief | [`schemas/app-market-research-brief.schema.json`](schemas/app-market-research-brief.schema.json) |
 | Google Play Growth Brief | [`schemas/google-play-growth-brief.schema.json`](schemas/google-play-growth-brief.schema.json) |
@@ -181,6 +232,7 @@ full_architecture_review
 
 | Pattern | Path |
 |---|---|
+| Agent | [`docs/patterns/agent.md`](docs/patterns/agent.md) |
 | Default | [`docs/patterns/default.md`](docs/patterns/default.md) |
 | Skill | [`docs/patterns/skill.md`](docs/patterns/skill.md) |
 | Prompt | [`docs/patterns/prompt.md`](docs/patterns/prompt.md) |
@@ -193,7 +245,7 @@ full_architecture_review
 3. Keep tool-native wrappers thin.
 4. Add a quickstart, schema, example, acceptance tests, or sub-index only when it improves usability.
 5. Update `README.md`, the relevant domain index, and this root navigation layer when discoverability changes.
-6. Extend the validator only for domain-specific invariants; generic manifest references and schema parsing are automatic.
+6. Extend the validator for stack-specific invariants that generic manifest/schema checks cannot enforce.
 7. Run `python3 scripts/validate-agentdefaults.py`.
 
 ## Status
