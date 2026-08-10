@@ -41,7 +41,7 @@ Then choose a path:
 | I want to... | Start here |
 |---|---|
 | Pick the right files quickly | [`docs/user-guide.md`](docs/user-guide.md) |
-| Design, build, or audit another AI agent | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
+| Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Select or challenge an automation platform architecture | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Use a local repo-aware coding CLI | [`docs/quickstarts/cli.md`](docs/quickstarts/cli.md) |
 | Use Claude-style repo instructions | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
@@ -54,7 +54,8 @@ Then choose a path:
 | Optimize Google Play growth / ASO | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
 | Build or release a Wear OS app | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) |
 | Plan a US-to-Europe trip | [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md) |
-| Add a new reusable default | [`docs/patterns/default.md`](docs/patterns/default.md) |
+| Add a reusable agent | [`docs/patterns/agent.md`](docs/patterns/agent.md) |
+| Add another reusable default | [`docs/patterns/default.md`](docs/patterns/default.md) |
 | Copy a ready-made example | [`examples/`](examples/) |
 
 ## The Core Model
@@ -80,15 +81,21 @@ Rule: **update canonical content first, then keep wrappers thin and discoverable
 
 ### Agent Architect and Builder Stack
 
-Use when turning a goal, prompt, or existing agent into a reusable production-quality agent with explicit scope, real runtime capabilities, least-privilege tools, modular skills, context strategy, recovery semantics, completion contracts, and acceptance tests.
+Use when turning a goal, prompt, or existing agent into a reusable production-quality agent with explicit scope, verified runtime capabilities, least-privilege tools, trust boundaries, modular skills, context strategy, recovery semantics, objective completion, stop conditions, and adversarial acceptance tests.
 
 ```text
+docs/quickstarts/agent-builder.md
 agents/agent-architect-builder.md
 skills/agent-design-and-build.md
+schemas/agent-build-brief.schema.json
+examples/agent-build-brief.yaml
+prompts/planning/build-ai-agent.md
+docs/agent-builder-acceptance-tests.md
+docs/patterns/agent.md
 .github/agents/agent-architect-builder.agent.md
 ```
 
-The stack defaults to one agent plus selectively loaded skills. It introduces multiple agents only when specialization, permission isolation, parallel execution, independent verification, separate durable control loops, or fault isolation provides a concrete benefit.
+The stack defaults to one agent plus selectively loaded skills. It introduces multiple agents only when permission isolation, independent specialist context, parallel execution with reconciliation, independent verification, separate durable control loops, or fault isolation provides a concrete benefit. A skill, retrieved document, tool output, or sub-agent cannot broaden the parent agent's authority.
 
 ### Automation Platform Architecture and Selection Stack
 
@@ -353,6 +360,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Skill | Wear OS Play Store Readiness | [`skills/wearos-playstore-readiness.md`](skills/wearos-playstore-readiness.md) |
 | Skill | Wear OS Screen Edge Safety | [`skills/wearos-screen-edge-safety.md`](skills/wearos-screen-edge-safety.md) |
 | Skill | US-Europe Baggage and Packing Research | [`skills/us-europe-baggage-packing-research.md`](skills/us-europe-baggage-packing-research.md) |
+| Prompt | Build a Production-Quality AI Agent | [`prompts/planning/build-ai-agent.md`](prompts/planning/build-ai-agent.md) |
 | Prompt | Select the Right Automation Platform | [`prompts/planning/select-automation-platform.md`](prompts/planning/select-automation-platform.md) |
 | Prompt | Challenge an Automation Platform Choice | [`prompts/review/challenge-automation-platform-choice.md`](prompts/review/challenge-automation-platform-choice.md) |
 | Prompt | Validate an App Idea in a Community | [`prompts/research/validate-app-idea-in-community.md`](prompts/research/validate-app-idea-in-community.md) |
@@ -370,6 +378,7 @@ For the full list, use [`INDEX.md`](INDEX.md).
 
 | Recipe | Use |
 |---|---|
+| [`examples/agent-build-brief.yaml`](examples/agent-build-brief.yaml) | Ready-to-adapt structured brief for building a repository maintenance agent with explicit runtime and authority boundaries. |
 | [`examples/automation-platform-decision-brief.yaml`](examples/automation-platform-decision-brief.yaml) | Category-aware automation selection brief with incumbents, alternatives, hosting, licensing, migration, and evidence controls. |
 | [`examples/app-market-research-brief.yaml`](examples/app-market-research-brief.yaml) | Ready-to-adapt Wear OS market-research brief. |
 | [`examples/palmierpro-mcp-workflow.md`](examples/palmierpro-mcp-workflow.md) | Copy-paste Palmier Pro MCP editing workflows. |
@@ -385,6 +394,7 @@ For the full list, use [`INDEX.md`](INDEX.md).
 
 | Pattern | Use |
 |---|---|
+| [`docs/patterns/agent.md`](docs/patterns/agent.md) | New canonical agent profile structure. |
 | [`docs/patterns/default.md`](docs/patterns/default.md) | Generic reusable default structure. |
 | [`docs/patterns/skill.md`](docs/patterns/skill.md) | New skill structure. |
 | [`docs/patterns/prompt.md`](docs/patterns/prompt.md) | New prompt structure. |
@@ -400,11 +410,12 @@ python3 scripts/validate-agentdefaults.py
 
 It checks:
 
-- Core and automation-stack files exist.
+- Core, Agent Architect and Builder, and automation-platform required files exist.
 - Markdown defaults include `## Purpose`.
-- Every JSON manifest and schema parses.
-- Manifest metadata and references are valid.
-- The expanded automation stack is fully registered and includes required product categories.
+- Every JSON manifest and schema parses and local schema references resolve.
+- Manifest metadata and featured-stack references are valid.
+- The Agent Architect and Builder stack preserves canonical build modes, architecture choices, permission classes, runtime-capability fields, required contract terms, and all 22 acceptance scenarios.
+- The automation platform stack preserves its canonical capability, evidence, economics, and acceptance-test invariants.
 - Local Markdown links resolve.
 
 ## Benchmark Evidence
@@ -428,20 +439,25 @@ agentdefaults/
 ├── scripts/
 │   └── validate-agentdefaults.py
 ├── schemas/
+│   ├── agent-build-brief.schema.json
 │   ├── automation-platform-decision-brief.schema.json
 │   └── app-market-research-brief.schema.json
 ├── docs/
+│   ├── agent-builder-acceptance-tests.md
 │   ├── automation-platform-selection-acceptance-tests.md
 │   ├── user-guide.md
 │   ├── ux-roadmap.md
 │   ├── palmierpro-mcp-tool-map.md
 │   ├── app-market-research-acceptance-tests.md
 │   ├── quickstarts/
+│   │   ├── agent-builder.md
 │   │   ├── automation-platform-selection.md
 │   │   └── community-app-validation.md
 │   ├── patterns/
+│   │   └── agent.md
 │   └── benchmarks/
 ├── examples/
+│   ├── agent-build-brief.yaml
 │   └── automation-platform-decision-brief.yaml
 ├── agents/
 │   ├── agent-architect-builder.md
@@ -458,6 +474,7 @@ agentdefaults/
 │   └── subreddit-app-idea-validation.md
 ├── prompts/
 │   ├── planning/
+│   │   ├── build-ai-agent.md
 │   │   └── select-automation-platform.md
 │   ├── review/
 │   │   └── challenge-automation-platform-choice.md
@@ -496,7 +513,7 @@ Before adding a new default, ask:
 5. Can another engineer quickly adapt it?
 6. Can token-efficiency claims be measured or honestly estimated?
 
-Use [`docs/patterns/default.md`](docs/patterns/default.md) for new reusable content.
+Use [`docs/patterns/agent.md`](docs/patterns/agent.md) for new agent profiles and [`docs/patterns/default.md`](docs/patterns/default.md) for other reusable content.
 
 ## Status
 
