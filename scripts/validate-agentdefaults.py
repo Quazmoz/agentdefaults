@@ -325,7 +325,7 @@ def check_agent_builder_stack() -> int:
         (
             item for item in stacks
             if isinstance(item, dict)
-            and item.get("name") == "Agent Architecture and Builder"
+            and item.get("name") == "Agent Architect and Builder"
         ),
         None,
     )
@@ -373,13 +373,14 @@ def check_agent_builder_stack() -> int:
     if architecture_enum != AGENT_ARCHITECTURES:
         failures.append("agent build schema architecture enum is not canonical or ordered")
 
-    runtime_capabilities = (
+    runtime_capability_schema = (
         properties.get("runtime", {})
         .get("properties", {})
         .get("capabilities", {})
-        .get("items", {})
-        .get("enum", [])
     )
+    runtime_capabilities = runtime_capability_schema.get("items", {}).get("enum", [])
+    if runtime_capability_schema.get("minItems") != 1:
+        failures.append("agent build schema runtime.capabilities must require at least one value")
     for capability in [
         "background_execution",
         "persistent_memory",
@@ -389,6 +390,15 @@ def check_agent_builder_stack() -> int:
     ]:
         if capability not in runtime_capabilities:
             failures.append(f"agent build schema lacks runtime capability: {capability}")
+
+    schema_text = json.dumps(schema, sort_keys=True)
+    if '"const": "mutate_irreversible"' not in schema_text:
+        failures.append("agent build schema lacks irreversible-action conditional validation")
+    if '"const": true' not in schema_text or "approval_required" not in schema_text:
+        failures.append("agent build schema does not require approval for irreversible tools")
+    authority_text = json.dumps(properties.get("authority", {}), sort_keys=True)
+    if "approval_gates" not in authority_text or '"minItems": 1' not in authority_text:
+        failures.append("agent build schema does not require an approval gate for irreversible authority")
 
     agent_text = (ROOT / "agents/agent-architect-builder.md").read_text(encoding="utf-8")
     skill_text = (ROOT / "skills/agent-design-and-build.md").read_text(encoding="utf-8")
