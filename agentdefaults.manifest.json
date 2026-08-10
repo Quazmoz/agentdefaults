@@ -6,7 +6,7 @@
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
     {
-      "name": "Agent Architecture and Builder",
+      "name": "Agent Architect and Builder",
       "quickstart": "docs/quickstarts/agent-builder.md",
       "agent": "agents/agent-architect-builder.md",
       "skills": [
