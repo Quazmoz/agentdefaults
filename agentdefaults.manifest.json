@@ -1,10 +1,25 @@
 {
   "name": "AgentDefaults",
-  "version": "0.8.0",
-  "description": "Reusable defaults for AI agents, skills, prompts, wrappers, examples, evidence-aware automation platform architecture and selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.9.0",
+  "description": "Reusable defaults for AI agent architecture and construction, skills, prompts, wrappers, examples, evidence-aware automation platform selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
+    {
+      "name": "Agent Architecture and Builder",
+      "quickstart": "docs/quickstarts/agent-builder.md",
+      "agent": "agents/agent-architect-builder.md",
+      "skills": [
+        "skills/agent-design-and-build.md"
+      ],
+      "prompts": [
+        "prompts/planning/build-ai-agent.md"
+      ],
+      "schema": "schemas/agent-build-brief.schema.json",
+      "example": "examples/agent-build-brief.yaml",
+      "acceptance_tests": "docs/agent-builder-acceptance-tests.md",
+      "wrapper": ".github/agents/agent-architect-builder.agent.md"
+    },
     {
       "name": "Automation Platform Architecture and Selection",
       "quickstart": "docs/quickstarts/automation-platform-selection.md",
