@@ -88,27 +88,18 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": {
-            "type": "string",
-            "enum": [
-              "read_search",
-              "structured_retrieval",
-              "code_execution",
-              "shell_execution",
-              "file_write",
-              "external_mutation",
-              "browser",
-              "connectors",
-              "scheduling",
-              "background_execution",
-              "persistent_memory",
-              "human_approval_ui",
-              "structured_output",
-              "subagents",
-              "unknown"
-            ]
+            "$ref": "#/$defs/runtimeCapability"
           }
         },
         "unavailable_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unknown_capabilities": {
           "type": "array",
           "uniqueItems": true,
           "items": {
@@ -127,87 +118,7 @@
     "tools": {
       "type": "array",
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "name",
-          "purpose",
-          "permission_class"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1
-          },
-          "purpose": {
-            "type": "string",
-            "minLength": 1
-          },
-          "permission_class": {
-            "$ref": "#/$defs/permissionClass"
-          },
-          "allowed_operations": {
-            "type": "array",
-            "uniqueItems": true,
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "forbidden_operations": {
-            "type": "array",
-            "uniqueItems": true,
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "authoritative_for": {
-            "type": "array",
-            "uniqueItems": true,
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "approval_required": {
-            "type": "boolean",
-            "default": false
-          },
-          "idempotency_notes": {
-            "type": "string"
-          },
-          "retry_notes": {
-            "type": "string"
-          },
-          "postcondition_check": {
-            "type": "string"
-          }
-        },
-        "allOf": [
-          {
-            "if": {
-              "properties": {
-                "permission_class": {
-                  "const": "mutate_irreversible"
-                }
-              },
-              "required": [
-                "permission_class"
-              ]
-            },
-            "then": {
-              "required": [
-                "approval_required"
-              ],
-              "properties": {
-                "approval_required": {
-                  "const": true
-                }
-              }
-            }
-          }
-        ]
+        "$ref": "#/$defs/toolContract"
       }
     },
     "context": {
@@ -410,6 +321,152 @@
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "target": {
+            "properties": {
+              "architecture_preference": {
+                "const": "multi_agent"
+              }
+            },
+            "required": [
+              "architecture_preference"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "runtime": {
+            "properties": {
+              "capabilities": {
+                "contains": {
+                  "const": "subagents"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "maximum_permission_class": {
+                "const": "observe"
+              }
+            },
+            "required": [
+              "maximum_permission_class"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "tools": {
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/toolContract"
+                },
+                {
+                  "properties": {
+                    "permission_class": {
+                      "const": "observe"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "maximum_permission_class": {
+                "const": "propose"
+              }
+            },
+            "required": [
+              "maximum_permission_class"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "tools": {
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/toolContract"
+                },
+                {
+                  "properties": {
+                    "permission_class": {
+                      "enum": [
+                        "observe",
+                        "propose"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "maximum_permission_class": {
+                "const": "mutate_reversible"
+              }
+            },
+            "required": [
+              "maximum_permission_class"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "tools": {
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/toolContract"
+                },
+                {
+                  "properties": {
+                    "permission_class": {
+                      "enum": [
+                        "observe",
+                        "propose",
+                        "mutate_reversible"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "permissionClass": {
       "type": "string",
@@ -418,6 +475,108 @@
         "propose",
         "mutate_reversible",
         "mutate_irreversible"
+      ]
+    },
+    "runtimeCapability": {
+      "type": "string",
+      "enum": [
+        "read_search",
+        "structured_retrieval",
+        "code_execution",
+        "shell_execution",
+        "file_write",
+        "external_mutation",
+        "browser",
+        "connectors",
+        "scheduling",
+        "background_execution",
+        "persistent_memory",
+        "human_approval_ui",
+        "structured_output",
+        "subagents"
+      ]
+    },
+    "toolContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "purpose",
+        "permission_class"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "permission_class": {
+          "$ref": "#/$defs/permissionClass"
+        },
+        "allowed_operations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbidden_operations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "authoritative_for": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "approval_required": {
+          "type": "boolean",
+          "default": false
+        },
+        "idempotency_notes": {
+          "type": "string"
+        },
+        "retry_notes": {
+          "type": "string"
+        },
+        "postcondition_check": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "permission_class": {
+                "const": "mutate_irreversible"
+              }
+            },
+            "required": [
+              "permission_class"
+            ]
+          },
+          "then": {
+            "required": [
+              "approval_required"
+            ],
+            "properties": {
+              "approval_required": {
+                "const": true
+              }
+            }
+          }
+        }
       ]
     }
   }
