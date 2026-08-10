@@ -50,7 +50,7 @@ The authoritative stack composition is in [`agentdefaults.manifest.json`](agentd
 
 Current featured stacks:
 
-- Agent Architecture and Builder
+- Agent Architect and Builder
 - Automation Platform Architecture and Selection
 - Google Play Growth Optimization
 - Palmier Pro MCP Video Editing
@@ -61,7 +61,7 @@ Current featured stacks:
 - Wear OS Play Store Release
 - US-Europe Travel Prep
 
-## Agent Architecture and Builder
+## Agent Architect and Builder
 
 ### Entrypoints
 
@@ -121,7 +121,7 @@ mutate_irreversible
 - Define the observable outcome before persona or tone.
 - Validate runtime capabilities and contract consistency before writing the target agent.
 - Do not invent tools, memory, scheduling, background execution, sub-agents, or approval mechanisms.
-- Use least privilege and classify permissions by real-world effect.
+- Use least privilege and classify permissions by real-world effect and practical rollback semantics.
 - A skill, retrieved document, tool output, or sub-agent cannot broaden parent authority.
 - Distinguish discovery/search from authoritative state.
 - Define tool preconditions, allowed/forbidden operations, retries, idempotency, fallbacks, and postcondition checks.
