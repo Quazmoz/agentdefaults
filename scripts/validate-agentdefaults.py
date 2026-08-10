@@ -373,20 +373,26 @@ def check_agent_builder_stack() -> int:
     if architecture_enum != AGENT_ARCHITECTURES:
         failures.append("agent build schema architecture enum is not canonical or ordered")
 
-    runtime_capability_schema = (
-        properties.get("runtime", {})
-        .get("properties", {})
-        .get("capabilities", {})
-    )
-    runtime_capabilities = runtime_capability_schema.get("items", {}).get("enum", [])
+    runtime_properties = properties.get("runtime", {}).get("properties", {})
+    runtime_capability_schema = runtime_properties.get("capabilities", {})
+    runtime_items = runtime_capability_schema.get("items", {})
+    runtime_capabilities: list[str] = []
+    if runtime_items.get("$ref") == "#/$defs/runtimeCapability":
+        runtime_capabilities = defs.get("runtimeCapability", {}).get("enum", [])
+    elif isinstance(runtime_items.get("enum"), list):
+        runtime_capabilities = runtime_items.get("enum", [])
+    else:
+        failures.append("agent build schema runtime.capabilities has no canonical enum or $ref")
+
     if runtime_capability_schema.get("minItems") != 1:
         failures.append("agent build schema runtime.capabilities must require at least one value")
+    if "unknown_capabilities" not in runtime_properties:
+        failures.append("agent build schema must identify unknown_capabilities explicitly")
     for capability in [
         "background_execution",
         "persistent_memory",
         "structured_output",
         "subagents",
-        "unknown",
     ]:
         if capability not in runtime_capabilities:
             failures.append(f"agent build schema lacks runtime capability: {capability}")
@@ -399,6 +405,23 @@ def check_agent_builder_stack() -> int:
     authority_text = json.dumps(properties.get("authority", {}), sort_keys=True)
     if "approval_gates" not in authority_text or '"minItems": 1' not in authority_text:
         failures.append("agent build schema does not require an approval gate for irreversible authority")
+
+    root_consistency = schema.get("allOf", [])
+    root_consistency_text = json.dumps(root_consistency, sort_keys=True)
+    if len(root_consistency) < 4:
+        failures.append("agent build schema lacks required cross-field consistency checks")
+    for term in [
+        "architecture_preference",
+        "multi_agent",
+        "subagents",
+        "maximum_permission_class",
+        "observe",
+        "propose",
+        "mutate_reversible",
+        "tools",
+    ]:
+        if term not in root_consistency_text:
+            failures.append(f"agent build schema cross-field checks missing: {term}")
 
     agent_text = (ROOT / "agents/agent-architect-builder.md").read_text(encoding="utf-8")
     skill_text = (ROOT / "skills/agent-design-and-build.md").read_text(encoding="utf-8")
@@ -438,6 +461,8 @@ def check_agent_builder_stack() -> int:
             "## Acceptance Tests",
             "postcondition_check",
             "mutate_irreversible",
+            "External visibility alone",
+            "approval gate",
         ],
         "agent pattern",
         failures,
@@ -491,6 +516,8 @@ def check_agent_builder_stack() -> int:
             "Unnecessary Multi-Agent Design",
             "Retrieved Prompt Injection",
             "Ambiguous Non-Idempotent Timeout",
+            "Irreversible or High-Impact Action",
+            "External visibility alone",
             "Validation Truthfulness",
             "Tool Authority Ambiguity",
         ],
