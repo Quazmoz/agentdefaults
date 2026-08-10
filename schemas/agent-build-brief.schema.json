@@ -1,0 +1,375 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdefaults.local/schemas/agent-build-brief.schema.json",
+  "title": "Agent Build Brief",
+  "description": "Structured input for designing, building, or auditing an AI agent without inventing runtime capabilities or permissions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "target",
+    "runtime",
+    "authority",
+    "validation"
+  ],
+  "properties": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "outcome",
+        "users_or_callers"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "type": "string",
+          "minLength": 1
+        },
+        "users_or_callers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "non_goals": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "build_mode": {
+          "type": "string",
+          "enum": [
+            "blueprint",
+            "build",
+            "stack",
+            "audit"
+          ],
+          "default": "build"
+        },
+        "architecture_preference": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "single_agent",
+            "single_agent_with_skills",
+            "multi_agent"
+          ],
+          "default": "auto"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "capabilities"
+      ],
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_notes": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "read_search",
+              "structured_retrieval",
+              "code_execution",
+              "shell_execution",
+              "file_write",
+              "external_mutation",
+              "browser",
+              "connectors",
+              "scheduling",
+              "background_execution",
+              "persistent_memory",
+              "human_approval_ui",
+              "structured_output",
+              "subagents",
+              "unknown"
+            ]
+          }
+        },
+        "unavailable_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "context_constraints": {
+          "type": "string"
+        },
+        "latency_or_cost_constraints": {
+          "type": "string"
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "purpose",
+          "permission_class"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "permission_class": {
+            "$ref": "#/$defs/permissionClass"
+          },
+          "allowed_operations": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "forbidden_operations": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "authoritative_for": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "approval_required": {
+            "type": "boolean",
+            "default": false
+          },
+          "idempotency_notes": {
+            "type": "string"
+          },
+          "retry_notes": {
+            "type": "string"
+          },
+          "postcondition_check": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stable_instructions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "task_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "retrieval_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "persistent_memory": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "must_not_persist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum_permission_class"
+      ],
+      "properties": {
+        "maximum_permission_class": {
+          "$ref": "#/$defs/permissionClass"
+        },
+        "approval_gates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "prohibited_actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "security_or_privacy_constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "state_and_recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "durable_state_needed": {
+          "type": "boolean",
+          "default": false
+        },
+        "durable_state": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "retry_policy": {
+          "type": "string"
+        },
+        "duplicate_suppression": {
+          "type": "string"
+        },
+        "partial_success_behavior": {
+          "type": "string"
+        },
+        "rollback_or_compensation": {
+          "type": "string"
+        },
+        "escalation_conditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_artifacts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "skills",
+              "prompt",
+              "schema",
+              "example",
+              "quickstart",
+              "acceptance_tests",
+              "wrapper",
+              "audit_report"
+            ]
+          }
+        },
+        "output_schema_or_format": {
+          "type": "string"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completion_criteria"
+      ],
+      "properties": {
+        "completion_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "commands_or_checks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required_test_cases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "permissionClass": {
+      "type": "string",
+      "enum": [
+        "observe",
+        "propose",
+        "mutate_reversible",
+        "mutate_irreversible"
+      ]
+    }
+  }
+}
