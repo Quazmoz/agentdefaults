@@ -131,9 +131,9 @@ mutate_irreversible
 
 Grant only the minimum class required.
 
-Interpret the classes by effect, not implementation detail. A write is not automatically reversible merely because it uses an API, and a repository edit is not automatically irreversible merely because it mutates state.
+Interpret the classes by effect, not implementation detail. A write is not automatically reversible merely because it uses an API, and a repository edit is not automatically irreversible merely because it mutates state. External visibility alone also does not make a mutation irreversible when a practical, authorized rollback or closure path exists.
 
-For high-impact or externally visible actions define explicit authorization, target scope, duplicate-safety semantics, and post-action verification.
+For irreversible or high-impact consequential actions define explicit authorization, target scope, approval gates, duplicate-safety semantics, and post-action verification.
 
 ### 7. Define tools as contracts
 
