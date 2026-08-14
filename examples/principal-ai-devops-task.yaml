@@ -1,0 +1,66 @@
+# Example structured task for schemas/principal-ai-devops-task.schema.json
+
+task_id: ai-devops-example-001
+goal: >-
+  Fix a duplicate external side-effect race in a repository-backed service and prove
+  that exactly one caller can own the side effect.
+mode: implement
+
+target:
+  kind: repository
+  identifier: owner/example-service
+  environment: development
+  branch_or_version: main
+  authoritative_state: PostgreSQL operation record
+
+authority:
+  maximum_permission_class: mutate_reversible
+  authorized_mutations:
+    - Modify repository code and tests on the requested working branch.
+    - Run local validation and test commands.
+  approval_required: false
+  approval_gates: []
+
+constraints:
+  non_goals:
+    - Do not redesign unrelated service architecture.
+    - Do not change public API behavior outside duplicate suppression.
+  compatibility:
+    - Preserve the current database and deployment model.
+  security:
+    - Do not expose credentials or production data.
+  availability:
+    - The fix must remain safe across concurrent workers and process restarts.
+  cost:
+    - Do not add a new managed service solely to solve this race.
+
+context:
+  known_facts:
+    - Two workers can observe the same operation as eligible before either records ownership.
+    - The downstream side effect is not inherently idempotent.
+  suspected_failure_modes:
+    - Concurrent admission allows duplicate execution.
+    - A timeout after downstream success can cause a blind retry.
+  required_sources:
+    - Repository implementation and tests.
+    - Database schema and transaction behavior.
+    - Current official database documentation if isolation or locking semantics are material.
+
+acceptance:
+  - Exactly one concurrent caller can acquire durable side-effect ownership.
+  - Losing callers become safe no-ops or reconcile authoritative state.
+  - Timeout-after-success does not blindly replay the external side effect.
+  - A regression test demonstrates the previous race and passes with the fix.
+
+verification:
+  required_checks:
+    - Build or type check the affected project.
+    - Run unit and integration tests covering the changed path.
+    - Run the concurrency regression test repeatedly or deterministically synchronize it.
+  adversarial_cases:
+    - Two concurrent callers for the same operation.
+    - Timeout after remote success before local acknowledgement.
+    - Process restart after durable ownership but before response.
+  postconditions:
+    - Authoritative state proves a single winner for each operation ID.
+    - No known material regression remains in the requested scope.
