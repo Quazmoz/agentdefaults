@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Quazmoz/agentdefaults/schemas/principal-devops-task.schema.json",
+  "title": "Principal DevOps Engineering Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["goal", "mode", "domain", "target", "authority", "acceptance"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "mode": {"type": "string", "enum": ["investigate", "review", "design", "implement", "incident", "release"]},
+    "domain": {"type": "string", "enum": ["infrastructure_as_code", "configuration_management", "ci_cd", "gitops", "containers_kubernetes", "cloud_identity_network", "observability_sre", "incident_response", "release_engineering", "platform_automation"]},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identifier"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["repository", "service", "system", "environment", "platform", "incident", "release", "other"]},
+        "identifier": {"type": "string", "minLength": 1},
+        "environment": {"type": "string", "minLength": 1},
+        "branch_or_version": {"type": "string", "minLength": 1},
+        "authoritative_state": {"type": "string", "minLength": 1}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_permission_class"],
+      "properties": {
+        "maximum_permission_class": {"type": "string", "enum": ["observe", "propose", "mutate_reversible", "mutate_irreversible"]},
+        "authorized_mutations": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+        "approval_required": {"type": "boolean", "default": false},
+        "approval_gates": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []}
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "non_goals": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "compatibility": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "security": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "availability": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "cost": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "known_facts": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "suspected_failure_modes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "required_sources": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "acceptance": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_checks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "adversarial_cases": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "postconditions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "implement"}}, "required": ["mode"]},
+      "then": {"properties": {"authority": {"properties": {"maximum_permission_class": {"enum": ["mutate_reversible", "mutate_irreversible"]}}}}}
+    },
+    {
+      "if": {"properties": {"authority": {"properties": {"maximum_permission_class": {"const": "mutate_irreversible"}}, "required": ["maximum_permission_class"]}}},
+      "then": {"properties": {"authority": {"required": ["approval_required", "approval_gates", "authorized_mutations"], "properties": {"approval_required": {"const": true}, "approval_gates": {"minItems": 1}, "authorized_mutations": {"minItems": 1}}}}}
+    },
+    {
+      "if": {"properties": {"mode": {"const": "release"}}, "required": ["mode"]},
+      "then": {"required": ["verification"], "properties": {"verification": {"required": ["required_checks", "postconditions"]}}}
+    },
+    {
+      "if": {"properties": {"mode": {"const": "incident"}}, "required": ["mode"]},
+      "then": {"properties": {"domain": {"enum": ["incident_response", "observability_sre", "cloud_identity_network", "containers_kubernetes", "ci_cd", "platform_automation"]}}}
+    }
+  ]
+}

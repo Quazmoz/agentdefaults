@@ -1,0 +1,46 @@
+task_id: ai-rag-grounding-001
+goal: Prevent cross-tenant RAG retrieval and improve grounded answers without weakening recall for authorized documents.
+mode: implement
+domain: rag_knowledge
+target:
+  kind: rag_system
+  identifier: support-assistant
+  environment: production
+  branch_or_version: main
+  authoritative_state: Source ACL metadata plus indexed document metadata and application authorization service
+  model_or_provider: configured production generation model
+authority:
+  maximum_permission_class: mutate_reversible
+  authorized_mutations:
+    - Update retrieval filtering, tests, and evaluation cases in the repository
+  approval_required: false
+constraints:
+  non_goals:
+    - Do not change unrelated application UX
+  quality:
+    - Preserve authorized-document recall within the accepted regression threshold
+  security_privacy:
+    - Never use vector similarity as an authorization decision
+  latency:
+    - Avoid material p95 regression without measured justification
+context:
+  suspected_failure_modes:
+    - Tenant metadata filter is applied after semantic retrieval instead of at the authorization boundary
+  eval_dataset: evals/rag-security-regression.jsonl
+acceptance:
+  - Unauthorized tenant documents are never returned to the generator
+  - Authorized retrieval quality remains within the defined regression threshold
+  - Groundedness and citation checks pass on the regression set
+verification:
+  required_checks:
+    - Unit and integration tests
+    - Retrieval authorization tests
+    - Retrieval quality eval
+    - Groundedness and citation eval
+  adversarial_cases:
+    - Prompt injection inside retrieved document
+    - Cross-tenant semantically similar document
+    - Stale document after deletion
+  postconditions:
+    - Retrieval results contain only authorized source IDs
+    - Required eval thresholds pass

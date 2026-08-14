@@ -1,0 +1,41 @@
+task_id: devops-ci-release-001
+goal: Stop unqualified container artifacts from being deployed to production and verify promotion preserves the tested digest.
+mode: implement
+domain: ci_cd
+target:
+  kind: repository
+  identifier: owner/service-repo
+  environment: production
+  branch_or_version: main
+  authoritative_state: Git repository plus artifact registry digest and deployment controller state
+authority:
+  maximum_permission_class: mutate_reversible
+  authorized_mutations:
+    - Update repository CI/CD configuration and regression tests
+  approval_required: false
+constraints:
+  non_goals:
+    - Do not redesign the application runtime
+    - Do not change user-visible application behavior
+  security:
+    - Do not expose registry credentials
+  availability:
+    - Preserve existing rollback path
+context:
+  suspected_failure_modes:
+    - Production deployment rebuilds from source instead of promoting the qualified digest
+acceptance:
+  - Production deployment consumes the exact qualified artifact digest
+  - CI rejects or blocks a mismatched artifact identity
+  - Regression coverage proves the previous path cannot silently rebuild production
+verification:
+  required_checks:
+    - CI workflow validation
+    - Container build and artifact identity check
+    - Regression test
+  adversarial_cases:
+    - Retry after deployment API timeout
+    - Concurrent release attempt
+  postconditions:
+    - Qualified digest equals deployed digest
+    - Rollback reference remains valid

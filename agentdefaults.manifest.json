@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.10.0",
-  "description": "Reusable defaults for AI agent architecture and construction, production AI/DevOps engineering, skills, prompts, wrappers, examples, evidence-aware automation platform selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.11.0",
+  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, skills, prompts, wrappers, examples, evidence-aware automation platform selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -34,6 +34,36 @@
       "example": "examples/principal-ai-devops-task.yaml",
       "acceptance_tests": "docs/principal-ai-devops-engineer-acceptance-tests.md",
       "wrapper": ".github/agents/principal-ai-devops-engineer.agent.md"
+    },
+    {
+      "name": "Principal DevOps Engineering",
+      "quickstart": "docs/quickstarts/principal-devops-engineer.md",
+      "agent": "agents/principal-devops-engineer.md",
+      "skills": [
+        "skills/production-devops-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/principal-devops-task.md"
+      ],
+      "schema": "schemas/principal-devops-task.schema.json",
+      "example": "examples/principal-devops-task.yaml",
+      "acceptance_tests": "docs/principal-devops-engineer-acceptance-tests.md",
+      "wrapper": ".github/agents/principal-devops-engineer.agent.md"
+    },
+    {
+      "name": "Principal AI Engineering",
+      "quickstart": "docs/quickstarts/principal-ai-engineer.md",
+      "agent": "agents/principal-ai-engineer.md",
+      "skills": [
+        "skills/production-ai-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/principal-ai-engineer-task.md"
+      ],
+      "schema": "schemas/principal-ai-engineer-task.schema.json",
+      "example": "examples/principal-ai-engineer-task.yaml",
+      "acceptance_tests": "docs/principal-ai-engineer-acceptance-tests.md",
+      "wrapper": ".github/agents/principal-ai-engineer.agent.md"
     },
     {
       "name": "Automation Platform Architecture and Selection",

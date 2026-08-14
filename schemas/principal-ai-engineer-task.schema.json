@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Quazmoz/agentdefaults/schemas/principal-ai-engineer-task.schema.json",
+  "title": "Principal AI Engineering Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["goal", "mode", "domain", "target", "authority", "acceptance"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "mode": {"type": "string", "enum": ["investigate", "review", "design", "implement", "incident", "release"]},
+    "domain": {"type": "string", "enum": ["llm_application", "agent_orchestration", "mcp_tools", "rag_knowledge", "prompt_context", "evaluations", "inference_model_integration", "ai_observability", "ai_security", "ai_data_pipeline", "model_prompt_release"]},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identifier"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["repository", "application", "agent", "rag_system", "inference_service", "eval_system", "incident", "release", "other"]},
+        "identifier": {"type": "string", "minLength": 1},
+        "environment": {"type": "string", "minLength": 1},
+        "branch_or_version": {"type": "string", "minLength": 1},
+        "authoritative_state": {"type": "string", "minLength": 1},
+        "model_or_provider": {"type": "string", "minLength": 1}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_permission_class"],
+      "properties": {
+        "maximum_permission_class": {"type": "string", "enum": ["observe", "propose", "mutate_reversible", "mutate_irreversible"]},
+        "authorized_mutations": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+        "approval_required": {"type": "boolean", "default": false},
+        "approval_gates": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []}
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "non_goals": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "quality": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "security_privacy": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "latency": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "cost": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "known_facts": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "suspected_failure_modes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "required_sources": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "eval_dataset": {"type": "string", "minLength": 1}
+      }
+    },
+    "acceptance": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_checks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "adversarial_cases": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "postconditions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "implement"}}, "required": ["mode"]},
+      "then": {"properties": {"authority": {"properties": {"maximum_permission_class": {"enum": ["mutate_reversible", "mutate_irreversible"]}}}}}
+    },
+    {
+      "if": {"properties": {"authority": {"properties": {"maximum_permission_class": {"const": "mutate_irreversible"}}, "required": ["maximum_permission_class"]}}},
+      "then": {"properties": {"authority": {"required": ["approval_required", "approval_gates", "authorized_mutations"], "properties": {"approval_required": {"const": true}, "approval_gates": {"minItems": 1}, "authorized_mutations": {"minItems": 1}}}}}
+    },
+    {
+      "if": {"properties": {"mode": {"const": "release"}}, "required": ["mode"]},
+      "then": {"required": ["verification"], "properties": {"verification": {"required": ["required_checks", "postconditions"]}}}
+    }
+  ]
+}
