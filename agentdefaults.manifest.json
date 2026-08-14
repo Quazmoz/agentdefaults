@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.9.0",
-  "description": "Reusable defaults for AI agent architecture and construction, skills, prompts, wrappers, examples, evidence-aware automation platform selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.10.0",
+  "description": "Reusable defaults for AI agent architecture and construction, production AI/DevOps engineering, skills, prompts, wrappers, examples, evidence-aware automation platform selection, browser research, community app-idea validation, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -19,6 +19,21 @@
       "example": "examples/agent-build-brief.yaml",
       "acceptance_tests": "docs/agent-builder-acceptance-tests.md",
       "wrapper": ".github/agents/agent-architect-builder.agent.md"
+    },
+    {
+      "name": "Principal AI and DevOps Engineering",
+      "quickstart": "docs/quickstarts/principal-ai-devops-engineer.md",
+      "agent": "agents/principal-ai-devops-engineer.md",
+      "skills": [
+        "skills/production-ai-devops-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/principal-ai-devops-task.md"
+      ],
+      "schema": "schemas/principal-ai-devops-task.schema.json",
+      "example": "examples/principal-ai-devops-task.yaml",
+      "acceptance_tests": "docs/principal-ai-devops-engineer-acceptance-tests.md",
+      "wrapper": ".github/agents/principal-ai-devops-engineer.agent.md"
     },
     {
       "name": "Automation Platform Architecture and Selection",
