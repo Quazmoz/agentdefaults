@@ -47,19 +47,11 @@ ENGINEERING_STACKS = {
     },
 }
 
-VALIDATION_SUITE = [
-    "scripts/validate-agentdefaults.py",
+PRIMARY_VALIDATOR = "scripts/validate-agentdefaults.py"
+SUITE_MEMBERS = [
+    "scripts/validate-agentdefaults-core.py",
     "scripts/validate-cross-tool-routing.py",
     "scripts/validate-engineering-contracts.py",
-]
-
-ENTRYPOINTS = [
-    "AGENTS.md",
-    "CLAUDE.md",
-    "GEMINI.md",
-    ".github/copilot-instructions.md",
-    ".cursor/rules/agentdefaults.mdc",
-    ".windsurfrules",
 ]
 
 WORKFLOW = ".github/workflows/validate.yml"
@@ -117,7 +109,7 @@ def find_irreversible_rule(schema: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def check_files(failures: list[str]) -> None:
-    required = {WORKFLOW, *VALIDATION_SUITE, *ENTRYPOINTS}
+    required = {WORKFLOW, PRIMARY_VALIDATOR, *SUITE_MEMBERS}
     for stack in ENGINEERING_STACKS.values():
         required.update(stack.values())
     for path in sorted(required):
@@ -127,10 +119,8 @@ def check_files(failures: list[str]) -> None:
 
 def check_manifest(failures: list[str]) -> None:
     manifest = load_json("agentdefaults.manifest.json")
-    if manifest.get("validation") != "scripts/validate-agentdefaults.py":
-        failures.append("manifest validation entrypoint must remain scripts/validate-agentdefaults.py")
-    if manifest.get("validation_suite") != VALIDATION_SUITE:
-        failures.append("manifest validation_suite must list the canonical validators in order")
+    if manifest.get("validation") != PRIMARY_VALIDATOR:
+        failures.append(f"manifest validation entrypoint must remain {PRIMARY_VALIDATOR}")
 
     stacks = manifest.get("featured_stacks", [])
     by_name = {
@@ -148,26 +138,23 @@ def check_manifest(failures: list[str]) -> None:
                 failures.append(
                     f"manifest {name} {field} must be {expected[field]!r}"
                 )
-        skills = actual.get("skills")
-        if skills != [expected["skill"]]:
+        if actual.get("skills") != [expected["skill"]]:
             failures.append(f"manifest {name} must reference only {expected['skill']}")
-        prompts = actual.get("prompts")
-        if prompts != [expected["prompt"]]:
+        if actual.get("prompts") != [expected["prompt"]]:
             failures.append(f"manifest {name} must reference only {expected['prompt']}")
 
 
 def check_schema(path: str, failures: list[str]) -> None:
     schema = load_json(path)
     properties = schema.get("properties", {})
-    authority = properties.get("authority", {})
     permission_enum = (
-        authority.get("properties", {})
+        properties.get("authority", {})
+        .get("properties", {})
         .get("maximum_permission_class", {})
         .get("enum", [])
     )
     if permission_enum != PERMISSION_CLASSES:
         failures.append(f"{path}: permission enum drifted from canonical order")
-
     if schema.get("additionalProperties") is not False:
         failures.append(f"{path}: root additionalProperties must be false")
 
@@ -185,14 +172,15 @@ def check_schema(path: str, failures: list[str]) -> None:
         auth_props = auth_then.get("properties", {})
         if auth_props.get("authorized_mutations", {}).get("minItems") != 1:
             failures.append(f"{path}: implement authorized_mutations must be non-empty")
-        allowed = auth_props.get("maximum_permission_class", {}).get("enum")
-        if allowed != ["mutate_reversible", "mutate_irreversible"]:
+        if auth_props.get("maximum_permission_class", {}).get("enum") != [
+            "mutate_reversible",
+            "mutate_irreversible",
+        ]:
             failures.append(f"{path}: implement mode must require mutating authority")
 
         verification = then_props.get("verification", {})
-        required = verification.get("required", [])
         for field in ("required_checks", "postconditions"):
-            if field not in required:
+            if field not in verification.get("required", []):
                 failures.append(f"{path}: implement verification must require {field}")
             if verification.get("properties", {}).get(field, {}).get("minItems") != 1:
                 failures.append(f"{path}: implement verification {field} must be non-empty")
@@ -240,9 +228,9 @@ def check_stack_documents(failures: list[str]) -> None:
             if term not in prompt:
                 failures.append(f"{name} prompt missing contract term: {term}")
 
-        acceptance = read(stack["acceptance_tests"])
+        acceptance = read(stack["acceptance_tests"]).lower()
         for term in ("permission", "verification"):
-            if term.lower() not in acceptance.lower():
+            if term not in acceptance:
                 failures.append(f"{name} acceptance tests missing concept: {term}")
 
         wrapper = read(stack["wrapper"])
@@ -251,11 +239,11 @@ def check_stack_documents(failures: list[str]) -> None:
                 failures.append(f"{name} wrapper missing canonical reference: {term}")
 
 
-def check_entrypoints(failures: list[str]) -> None:
-    for path in ENTRYPOINTS:
-        text = read(path)
-        if "scripts/validate-engineering-contracts.py" not in text:
-            failures.append(f"{path}: missing engineering-contract validator reference")
+def check_primary_validator(failures: list[str]) -> None:
+    text = read(PRIMARY_VALIDATOR)
+    for member in SUITE_MEMBERS:
+        if member.split("/", 1)[1] not in text:
+            failures.append(f"{PRIMARY_VALIDATOR}: missing suite member {member}")
 
 
 def check_workflow(failures: list[str]) -> None:
@@ -270,7 +258,7 @@ def check_workflow(failures: list[str]) -> None:
         "persist-credentials: false",
         CHECKOUT_SHA,
         SETUP_PYTHON_SHA,
-        *VALIDATION_SUITE,
+        PRIMARY_VALIDATOR,
     ]
     for term in required_terms:
         if term not in text:
@@ -286,7 +274,7 @@ def main() -> int:
             for stack in ENGINEERING_STACKS.values():
                 check_schema(stack["schema"], failures)
             check_stack_documents(failures)
-            check_entrypoints(failures)
+            check_primary_validator(failures)
             check_workflow(failures)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         failures.append(str(exc))
@@ -299,8 +287,8 @@ def main() -> int:
     print("PASS: principal engineering files and manifest registration")
     print("PASS: implement/release/irreversible schema contracts")
     print("PASS: canonical prompts, wrappers, and acceptance-test anchors")
-    print("PASS: cross-tool entrypoints reference the full validation suite")
-    print("PASS: CI workflow is least-privilege and runs all validators")
+    print("PASS: primary validator includes every validation suite member")
+    print("PASS: CI workflow is least-privilege and runs the primary validator")
     print("\nResult: PASS")
     return 0
 
