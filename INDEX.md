@@ -8,14 +8,14 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 
 | Need | Start with |
 |---|---|
-| Choose among the principal engineering agents | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
+| Choose among the principal and specialist engineering agents | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
 | Use OpenAI Codex | [`docs/quickstarts/codex.md`](docs/quickstarts/codex.md) |
 | Use Claude Code | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
 | Use GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) |
 | Use Gemini / Gemini CLI | [`GEMINI.md`](GEMINI.md) |
 | Use a generic repository-aware agent | [`AGENTS.md`](AGENTS.md) |
 | See all tool mappings | [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) |
-| Validate the repository | [`scripts/validate-agentdefaults.py`](scripts/validate-agentdefaults.py) + [`scripts/validate-cross-tool-routing.py`](scripts/validate-cross-tool-routing.py) |
+| Validate the repository | [`scripts/validate-agentdefaults.py`](scripts/validate-agentdefaults.py) |
 
 ## Principal Engineering Routing
 
@@ -31,6 +31,7 @@ Use the smallest correct owner. Infrastructure hosting an AI workload is still D
 
 | Need | Start with |
 |---|---|
+| Create, audit, or reconcile DevOps docs-as-code, runbooks, Markdown, Mermaid, and documentation diagrams | [`docs/quickstarts/devops-documentation-engineer.md`](docs/quickstarts/devops-documentation-engineer.md) · [`agents/devops-documentation-engineer.md`](agents/devops-documentation-engineer.md) |
 | Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 
@@ -54,6 +55,7 @@ The authoritative stack composition is [`agentdefaults.manifest.json`](agentdefa
 - Agent Architect and Builder
 - Principal AI and DevOps Engineering
 - Principal DevOps Engineering
+- DevOps Documentation Engineering
 - Principal AI Engineering
 - Automation Platform Architecture and Selection
 - Google Play Growth Optimization
@@ -94,9 +96,8 @@ Run:
 
 ```bash
 python3 scripts/validate-agentdefaults.py
-python3 scripts/validate-cross-tool-routing.py
 ```
 
-The first covers existing structure, schemas, manifest integrity, stack invariants, and Markdown links. The second covers cross-tool entrypoints, engineering routing, Claude import wiring, quickstarts, manifest engineering-stack registration, and principal Copilot wrapper mappings.
+The canonical suite covers structure, schemas, manifest integrity, stack invariants, Markdown links, cross-tool entrypoints, principal engineering contracts, and specialist DevOps documentation contracts.
 
-Do not report either validator as passed unless it actually ran successfully.
+Do not report a validator as passed unless it actually ran successfully.

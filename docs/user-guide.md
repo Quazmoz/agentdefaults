@@ -7,6 +7,7 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 ## Entrypoints
 
 - Design, build, or audit an AI agent: `docs/quickstarts/agent-builder.md`
+- DevOps documentation-as-code, Markdown, Mermaid, runbooks, and diagrams: `docs/quickstarts/devops-documentation-engineer.md`
 - Automation platform architecture and product selection: `AUTOMATION_PLATFORM_INDEX.md`
 - Generic repo-aware coding agent: `AGENTS.md`
 - Claude: `CLAUDE.md`
@@ -29,6 +30,10 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 - Start from a structured agent brief: `schemas/agent-build-brief.schema.json`
 - Use the canonical reusable agent layout: `docs/patterns/agent.md`
 - Run the agent-builder failure and adversarial test matrix: `docs/agent-builder-acceptance-tests.md`
+- Create or reconcile DevOps documentation from implementation evidence: `agents/devops-documentation-engineer.md`
+- Document Jenkins and Ansible/AAP GitOps flows with evidence-backed Mermaid: `skills/devops-documentation-engineering.md`
+- Start from a structured documentation task: `schemas/devops-documentation-task.schema.json`
+- Run documentation drift, diagram, source, and authority tests: `docs/devops-documentation-engineer-acceptance-tests.md`
 - Select the right automation category and product: `agents/automation-platform-selection-advisor.md`
 - Produce a compact platform recommendation: use `quick_triage` output depth
 - Produce a full architecture, evidence, and economics review: use `full_architecture_review`
@@ -95,6 +100,37 @@ mutate_irreversible
 ```
 
 Before building, verify real runtime capabilities, authority consistency, authoritative data sources, trust boundaries, retry/idempotency compatibility, and objective completion. A skill, retrieved document, tool output, or sub-agent cannot broaden the parent agent's authority. Report checks that did not actually run as unverified.
+
+## Recommended DevOps Documentation Stack
+
+Minimum stack:
+
+```text
+agents/devops-documentation-engineer.md
+skills/devops-documentation-engineering.md
+```
+
+Structured input, invocation, and validation:
+
+```text
+prompts/implementation/devops-documentation-task.md
+schemas/devops-documentation-task.schema.json
+examples/devops-documentation-task.yaml
+docs/devops-documentation-engineer-acceptance-tests.md
+docs/quickstarts/devops-documentation-engineer.md
+```
+
+GitHub Copilot entrypoint:
+
+```text
+.github/agents/devops-documentation-engineer.agent.md
+```
+
+Use this stack when documentation is the primary output. It can inspect Terraform, Ansible/AAP, Jenkins, Azure, GitHub, and GitOps evidence, but normal mutation authority is limited to documentation files and documentation-owned assets. Existing prose is not the source of truth when current implementation or runtime evidence contradicts it.
+
+For Mermaid, treat every material edge as a technical assertion. For PNG/JPG or other opaque image diagrams without editable source, preserve the asset and report the limitation instead of overwriting it with an inferred reconstruction.
+
+If documentation work exposes an implementation defect, report it and hand the actual platform change to `agents/principal-devops-engineer.md`.
 
 ## Recommended Automation Platform Stack
 
@@ -167,4 +203,4 @@ skills/token-efficiency-measurement.md
 python3 scripts/validate-agentdefaults.py
 ```
 
-The validator checks the manifest, every JSON schema and local schema reference, the complete Agent Architect and Builder stack, the complete automation-platform stack, canonical permission and capability identifiers, build/output modes, required acceptance scenarios, Markdown purpose sections, and local links.
+The validator checks the manifest, every JSON schema and local schema reference, the Agent Architect and Builder stack, automation-platform stack, principal engineering contracts, the DevOps documentation stack, cross-tool routing, Markdown purpose sections, and local links.

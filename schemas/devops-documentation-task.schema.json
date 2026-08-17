@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Quazmoz/agentdefaults/schemas/devops-documentation-task.schema.json",
+  "title": "DevOps Documentation Engineering Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal",
+    "mode",
+    "domain",
+    "target",
+    "state_intent",
+    "authority",
+    "acceptance"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "mode": {"type": "string", "enum": ["investigate", "review", "design", "implement", "release"]},
+    "domain": {"type": "string", "enum": ["architecture_docs", "gitops_docs", "runbook", "operational_reference", "onboarding", "troubleshooting", "diagram", "docs_repo_maintenance"]},
+    "state_intent": {"type": "string", "enum": ["current_state", "target_state", "both_explicitly_separated"]},
+    "audience": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["operators", "platform_engineers", "developers", "architects", "security", "management", "mixed", "other"]},
+      "uniqueItems": true
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identifier"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["documentation_repository", "document_set", "document", "diagram_set", "runbook", "architecture_area", "other"]},
+        "identifier": {"type": "string", "minLength": 1},
+        "branch_or_version": {"type": "string", "minLength": 1},
+        "paths": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repositories": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "systems": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "architecture_decisions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "vendor_sources": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "required_sources": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "diagram_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {"type": "boolean", "default": false},
+        "formats": {"type": "array", "items": {"type": "string", "enum": ["mermaid", "editable_image_source", "rendered_image", "existing_opaque_image", "none"]}, "uniqueItems": true},
+        "asset_roots": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "editable_source_paths": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_permission_class"],
+      "properties": {
+        "maximum_permission_class": {"type": "string", "enum": ["observe", "propose", "mutate_reversible", "mutate_irreversible"]},
+        "authorized_mutations": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+        "approval_required": {"type": "boolean", "default": false},
+        "approval_gates": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []}
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "non_goals": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "preserve_conventions": {"type": "boolean", "default": true},
+        "security_privacy": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "style": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "known_facts": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "suspected_drift": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "repository_conventions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "acceptance": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_checks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "source_reconciliation": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "postconditions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "implement"}}, "required": ["mode"]},
+      "then": {
+        "required": ["verification"],
+        "properties": {
+          "authority": {
+            "required": ["authorized_mutations"],
+            "properties": {
+              "maximum_permission_class": {"enum": ["mutate_reversible", "mutate_irreversible"]},
+              "authorized_mutations": {"minItems": 1}
+            }
+          },
+          "verification": {
+            "required": ["required_checks", "source_reconciliation", "postconditions"],
+            "properties": {
+              "required_checks": {"minItems": 1},
+              "source_reconciliation": {"minItems": 1},
+              "postconditions": {"minItems": 1}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "release"}}, "required": ["mode"]},
+      "then": {
+        "required": ["verification"],
+        "properties": {
+          "verification": {
+            "required": ["required_checks", "source_reconciliation", "postconditions"],
+            "properties": {
+              "required_checks": {"minItems": 1},
+              "source_reconciliation": {"minItems": 1},
+              "postconditions": {"minItems": 1}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"authority": {"properties": {"maximum_permission_class": {"const": "mutate_irreversible"}}, "required": ["maximum_permission_class"]}}},
+      "then": {
+        "properties": {
+          "authority": {
+            "required": ["approval_required", "approval_gates", "authorized_mutations"],
+            "properties": {
+              "approval_required": {"const": true},
+              "approval_gates": {"minItems": 1},
+              "authorized_mutations": {"minItems": 1}
+            }
+          }
+        }
+      }
+    }
+  ]
+}
