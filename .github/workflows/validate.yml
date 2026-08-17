@@ -32,11 +32,5 @@ jobs:
           python-version: "3.13"
           check-latest: false
 
-      - name: Validate repository structure
+      - name: Run complete validation suite
         run: python3 scripts/validate-agentdefaults.py
-
-      - name: Validate cross-tool routing
-        run: python3 scripts/validate-cross-tool-routing.py
-
-      - name: Validate principal engineering contracts
-        run: python3 scripts/validate-engineering-contracts.py
