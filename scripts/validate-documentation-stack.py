@@ -223,15 +223,15 @@ def check_canonical_content(failures: list[str]) -> None:
         if term not in agent:
             failures.append(f"{STACK['agent']}: missing required concept {term!r}")
 
-    skill_terms = [
-        "source_reconciliation",
+    skill_lower = skill.lower()
+    for term in (
+        "source-to-document reconciliation",
         "desired-state source",
         "editable_source_present",
         "opaque_image_only",
-        "Every node and edge",
-    ]
-    for term in skill_terms:
-        if term not in skill:
+        "every node and edge",
+    ):
+        if term not in skill_lower:
             failures.append(f"{STACK['skill']}: missing required concept {term!r}")
 
     for term in ("AUTHORITY", "Authorized mutations:", "VERIFICATION", "DONE WHEN", "DIAGRAM REQUIREMENTS"):
