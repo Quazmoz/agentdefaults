@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VALIDATORS = [
     ROOT / "scripts/validate-agentdefaults-core.py",
     ROOT / "scripts/validate-cross-tool-routing.py",
+    ROOT / "scripts/validate-engineering-contracts.py",
 ]
 
 
