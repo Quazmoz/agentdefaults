@@ -63,7 +63,7 @@ IMPLEMENTATION RULES
 - validate untrusted/model-generated structured output before use
 - make external side effects duplicate-safe where practical
 
-TEST
+VERIFICATION
 Run all applicable checks, including build/type/lint, unit/integration/e2e, security, migration, concurrency, IaC validation/plan, container/runtime checks, AI evals, schema validation, and postcondition verification.
 
 For every material defect, add a regression test when practical.
