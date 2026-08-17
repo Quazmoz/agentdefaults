@@ -67,7 +67,25 @@
   "allOf": [
     {
       "if": {"properties": {"mode": {"const": "implement"}}, "required": ["mode"]},
-      "then": {"properties": {"authority": {"properties": {"maximum_permission_class": {"enum": ["mutate_reversible", "mutate_irreversible"]}}}}}
+      "then": {
+        "required": ["verification"],
+        "properties": {
+          "authority": {
+            "required": ["authorized_mutations"],
+            "properties": {
+              "maximum_permission_class": {"enum": ["mutate_reversible", "mutate_irreversible"]},
+              "authorized_mutations": {"minItems": 1}
+            }
+          },
+          "verification": {
+            "required": ["required_checks", "postconditions"],
+            "properties": {
+              "required_checks": {"minItems": 1},
+              "postconditions": {"minItems": 1}
+            }
+          }
+        }
+      }
     },
     {
       "if": {"properties": {"authority": {"properties": {"maximum_permission_class": {"const": "mutate_irreversible"}}, "required": ["maximum_permission_class"]}}},
@@ -75,7 +93,7 @@
     },
     {
       "if": {"properties": {"mode": {"const": "release"}}, "required": ["mode"]},
-      "then": {"required": ["verification"], "properties": {"verification": {"required": ["required_checks", "postconditions"]}}}
+      "then": {"required": ["verification"], "properties": {"verification": {"required": ["required_checks", "postconditions"], "properties": {"required_checks": {"minItems": 1}, "postconditions": {"minItems": 1}}}}}
     },
     {
       "if": {"properties": {"mode": {"const": "incident"}}, "required": ["mode"]},

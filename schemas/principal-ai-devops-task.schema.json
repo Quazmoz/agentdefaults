@@ -197,12 +197,12 @@
     },
     "acceptance": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "string",
         "minLength": 1
       },
-      "uniqueItems": true
+      "uniqueItems": true,
+      "minItems": 1
     },
     "verification": {
       "type": "object",
@@ -248,14 +248,37 @@
         ]
       },
       "then": {
+        "required": [
+          "verification"
+        ],
         "properties": {
           "authority": {
+            "required": [
+              "authorized_mutations"
+            ],
             "properties": {
               "maximum_permission_class": {
                 "enum": [
                   "mutate_reversible",
                   "mutate_irreversible"
                 ]
+              },
+              "authorized_mutations": {
+                "minItems": 1
+              }
+            }
+          },
+          "verification": {
+            "required": [
+              "required_checks",
+              "postconditions"
+            ],
+            "properties": {
+              "required_checks": {
+                "minItems": 1
+              },
+              "postconditions": {
+                "minItems": 1
               }
             }
           }
@@ -320,7 +343,15 @@
             "required": [
               "required_checks",
               "postconditions"
-            ]
+            ],
+            "properties": {
+              "required_checks": {
+                "minItems": 1
+              },
+              "postconditions": {
+                "minItems": 1
+              }
+            }
           }
         }
       }

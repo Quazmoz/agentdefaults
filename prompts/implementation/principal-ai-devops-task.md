@@ -25,7 +25,7 @@ NON-GOALS
 
 AUTHORITY
 Maximum permission class: <observe | propose | mutate_reversible | mutate_irreversible>
-Explicitly authorized mutations:
+Authorized mutations:
 - <authorized mutation or none>
 
 ACCEPTANCE CRITERIA
@@ -63,13 +63,20 @@ IMPLEMENTATION RULES
 - validate untrusted/model-generated structured output before use
 - make external side effects duplicate-safe where practical
 
-TEST
+VERIFICATION
 Run all applicable checks, including build/type/lint, unit/integration/e2e, security, migration, concurrency, IaC validation/plan, container/runtime checks, AI evals, schema validation, and postcondition verification.
 
 For every material defect, add a regression test when practical.
 
 ADVERSARIAL REVIEW
 Test relevant stale/duplicate/out-of-order state, concurrent mutation, timeout after remote success, cancellation, restart, partial failure, rate limiting/provider outage, malformed input, permission denial, prompt injection/tool poisoning, secret leakage, rollback failure, and cost amplification.
+
+DONE WHEN
+- acceptance criteria are satisfied
+- authoritative postconditions match the target
+- required tests and evals have actually run
+- no known material defect remains in scope
+- every check that did not run is listed as UNVERIFIED
 
 DELIVER
 Return exactly these sections when applicable:
