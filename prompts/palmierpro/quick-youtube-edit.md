@@ -23,7 +23,7 @@ DEFAULT VIDEO STYLE
 - Balanced pacing: remove waste, but leave enough time to read code, terminal output, UI, dashboards, diagrams, and results.
 - No burned-in captions for long-form unless I explicitly ask.
 - Sparse, useful callouts only.
-- Clean cuts by default; transitions only at meaningful section boundaries.
+- Clean cuts by default; transitions only when they solve a specific continuity or presentation need.
 
 START WITH REAL STATE
 1. Confirm Palmier MCP is reachable.
@@ -63,6 +63,14 @@ CLEANUP
 - Preserve commands, model names, repo names, versions, prices, compatibility details, warnings, limitations, caveats, and uncertainty language.
 - Do not make speech misleading through omission.
 
+START / END TRANSITIONS
+- Add a short, subtle fade-in from black at the very beginning of the edited timeline.
+- Add a short, subtle fade-out to black at the very end of the edited timeline.
+- If audio begins or ends at those boundaries, apply matching short audio fades so there is no abrupt pop or cutoff.
+- Target roughly 8-15 frames at the project frame rate unless the existing pacing clearly calls for something slightly different.
+- Use only transition, effect, opacity, gain, or keyframe controls that are actually exposed by the live Palmier MCP schema; do not invent unsupported transition APIs.
+- Do not add decorative transitions between normal cuts unless they solve a specific continuity problem.
+
 VISUALS
 - Keep code, terminal, app UI, dashboards, Play Console/GitHub screens, and other proof visuals readable.
 - Make screenshare the primary visual when the narration is explaining the screen.
@@ -90,10 +98,12 @@ PAID / DESTRUCTIVE ACTIONS
 VERIFY
 Before finishing:
 - re-check the edited transcript for meaning/dangling fragments
-- inspect the opening/hook
+- inspect the opening/hook and verify the fade-in is subtle and clean
 - inspect at least one representative demo/technical section
 - inspect every important text/layout change
-- inspect the ending if modified
+- inspect the ending and verify the fade-out is subtle and clean
+- verify matching audio fades at the boundaries when applicable
+- confirm A/V sync remains intact
 - confirm the original timeline still exists
 - confirm no unintended long-form captions were added
 
@@ -104,6 +114,7 @@ FINAL RESPONSE
 Keep it concise. Tell me:
 - what you changed
 - the resulting story angle
+- whether the opening/ending fades were applied and verified
 - any review markers/manual checks
 - promising Short(s) moments if obvious
 - whether generation or export was run
@@ -116,7 +127,7 @@ Do not claim the video is visually perfect unless that was actually verified.
 Once the agent already knows this stack, the user can simply say:
 
 ```text
-Use the Palmier quick YouTube edit profile on the open project. Make a safe first-pass cut and leave the original timeline intact.
+Use the Palmier quick YouTube edit profile on the open project. Make a safe first-pass cut, leave the original timeline intact, and add subtle fade-in/fade-out transitions at the beginning and end with matching audio fades when applicable.
 ```
 
 ## Quality Bar
