@@ -2,70 +2,133 @@
 
 ## Purpose
 
-Use this prompt to ask an MCP-connected agent to perform a full first-pass edit in an open Palmier Pro project.
+Use this prompt for a deeper first-pass edit of a technical YouTube video in an existing Palmier Pro project.
 
-This prompt is designed for Quinn-style YouTube videos: AI/DevOps demos, app builds, local AI tests, MCP workflows, coding-agent experiments, Wear OS app walkthroughs, Play Store submission results, product walkthroughs, and technical creator videos where the project media is already imported into Palmier Pro.
+For the fastest normal workflow, prefer:
+
+```text
+prompts/palmierpro/quick-youtube-edit.md
+```
+
+This full pass spends more effort on story structure and supporting visuals while preserving the same safety boundaries.
 
 ## Prompt
 
 ```text
-You are connected to Palmier Pro through MCP. The Palmier project is already open and contains the media for this edit.
+Use the canonical AgentDefaults Palmier Pro MCP stack.
 
-Act as an expert YouTube editor for Quinn Favo, an AI/DevOps engineer and automation builder. Edit for a technical audience that wants real workflows, real constraints, and proof that the thing worked. Do not turn the video into generic AI hype.
+You are connected to Palmier Pro through external MCP from Claude Code, OpenAI Codex, or another MCP client. The same editing contract applies regardless of provider.
 
-Goal: produce a polished first-pass edit that I can review in the Palmier timeline.
+PRIMARY GOAL
+Produce a polished, reviewable first-pass long-form YouTube edit from the media already in the Palmier project.
 
-Use only Palmier MCP tools for project inspection and editing. Do not assume media content from filenames. Start by calling get_timeline and get_media. Inspect the primary source media and transcript before making cuts.
+STYLE
+This is technical creator content: AI/DevOps workflows, coding agents, MCP demos, local AI, Android/Wear OS apps, Google Play, terminals, code, product walkthroughs, automation, or similar hands-on engineering material.
 
-Creator/channel defaults:
-- Favor proof-first openings: working app, working agent, approval/result, before/after, terminal output, repo state, timeline change, or concrete demo.
-- Preserve exact technical terms, commands, model names, repo names, product names, platform names, pricing/usage caveats, compatibility constraints, and review outcomes.
-- Keep Quinn's builder credibility: the video should feel like a real AI DevOps Systems Engineer / Automation Architect showing the process.
-- Avoid misleading claims. Do not imply free/unlimited/hack/guaranteed results unless the source footage explicitly supports that wording.
-- Keep high-retention pacing, but leave enough room for technical viewers to read code, terminal output, dashboards, app UIs, Play Console screens, GitHub screens, and editor timelines.
+Favor real proof, real constraints, and reproducibility. Do not turn the edit into generic AI hype.
 
-Edit priorities:
-1. Tighten the opening hook without removing important context.
-2. Move a strong result/proof/demo moment earlier if the raw recording starts too slowly.
-3. Trim the capture-software intro from the start of every source recording: each separately-recorded clip usually opens on the OBS Studio / screen-recorder window for ~0.5–1s before it cuts to the screenshare or app. Remove that pre-roll (and any throwaway sentence-opener spoken over it) so the clip starts on real content. Inspect each recording's first second to find the exact cutover.
-4. Remove obvious filler words, false starts, duplicate takes, long dead air, repeated explanations, loading pauses, and low-value setup.
-5. Preserve exact technical terms, commands, model names, caveats, pricing, compatibility, platform review details, and implementation constraints.
-6. Keep screen recordings and UI demos on screen long enough to understand.
-7. Add transitions where relevant: a fade in from black at the open, a fade out at the close, and a quick dip-to-black at major scene changes (slides↔code, between distinct demos). Keep clean cuts within a continuous scene — do not transition every cut.
-8. Add concise title/lower-third/callout text where it improves comprehension. Make overlays legible and not bland: use a bold accent color (not flat white/gray that blends into the footage) and give text a drop shadow / contrasting outline so it stays readable over both light and dark scenes.
-9. Use b-roll or supporting clips from the existing media library when it clearly improves pacing.
-10. When facecam and screenshare both exist, keep the screenshare/app/code as the primary visual during technical explanation and use facecam only where it improves trust, reaction, or narration.
-11. Verify important visual overlays or layout changes with inspect_timeline.
+SOURCE OF TRUTH
+- Start with `get_timeline` and `get_media`.
+- Use live MCP tool schemas for exact arguments/enums.
+- Do not infer media contents from filenames.
+- Preserve exact technical terms, commands, model names, repo names, product/platform names, prices/usage details, compatibility constraints, caveats, uncertainty, and review outcomes.
 
-Rules:
-- Treat all timing as project frames.
-- Use get_transcript and remove_words for word-aligned speech cleanup.
-- Re-read get_transcript after each remove_words call before cutting more words.
-- Use ripple_delete_ranges only for non-word-aligned dead air or visual-only gaps. This is also the tool for trimming the OBS/recording-software pre-roll from the start of each clip.
-- Build transitions with opacity keyframes (set_keyframes): for a dip-to-black, fade the outgoing clip's last ~7 frames to 0 and the incoming clip's first ~7 frames up from 0, and keep narration continuous under the dip. Palmier has no dedicated transition tool — use opacity keyframes, or overlap two clips on separate tracks for a true crossfade.
-- Do not add captions or subtitles. This is a long-form video — captions/subtitles are burned in for Shorts only. Use add_texts for titles, lower-thirds, and callouts, but never add a caption track.
-- Do not call generate_image, generate_video, generate_audio, or upscale_media unless I explicitly approve the paid generation/upscale proposal.
+PRESERVE THE ORIGINAL
+This is a broad edit. Duplicate the active timeline with `create_timeline from=<active timelineId>` and edit the copy. Use a clear name such as `YouTube Full Cut`. Re-read `get_timeline` immediately because copied clip/track IDs are new.
+
+INSPECT EFFICIENTLY
+- Read the timeline transcript at segment granularity first for story structure when supported.
+- Drill into word-level transcript only around actual cut candidates.
+- Inspect source overviews and targeted windows for visual boundaries.
+- Use semantic media search for proof/demo/result moments.
+
+STORY TARGET
+Shape truthful existing footage toward:
+1. strong proof/result/hook
+2. why the viewer should care
+3. only the setup needed
+4. implementation/build/demo
+5. concrete result
+6. limitations/cost/compatibility/caveats
+7. natural close if recorded
+
+Move material earlier only when the existing footage remains coherent and truthful. Do not fabricate narration or claims.
+
+EDIT PRIORITIES
+1. Tighten the opening.
+2. Bring an existing strong proof/result moment forward when it materially improves the hook.
+3. Inspect each source recording's start and remove verified OBS/QuickTime/capture pre-roll at the real boundary. Do not apply one hard-coded trim duration to every clip.
+4. Remove obvious filler, false starts, duplicate takes, abandoned fragments, redundant explanations, and low-value dead air.
+5. Use `remove_silence` for appropriate bulk quiet/speech-free gaps; keep pauses needed to read code/UI/terminal/results.
+6. Use `get_transcript` + `remove_words` for word-aligned cleanup, and re-read transcript after every word mutation before reusing indices.
+7. Default long-form speech cleanup to balanced aggressiveness.
+8. Keep screenshare/code/app UI/proof visuals readable long enough to understand.
+9. Use facecam selectively; during technical explanation, screenshare is usually primary.
+10. Use `apply_layout` for facecam/screenshare arrangements and verify important layouts.
+11. Add only useful titles/lower thirds/callouts. Check the live text schema; use supported outline/shadow/background styling directly when helpful.
+12. Prefer clean cuts. Add fades/dips only at real section boundaries and verify keyframed transitions with `inspect_timeline`.
+13. Use existing media as b-roll when it clearly helps. Do not generate paid b-roll without approval.
+14. If a decision is subjective or brand-sensitive, add an open Palmier review marker instead of guessing.
+
+LONG-FORM CAPTION RULE
+Do not add a burned automatic caption track to this 16:9 long-form edit unless I explicitly ask for captions. Use `add_texts` for sparse titles/callouts instead.
+
+AUDIO
+- Preserve A/V link state and sync.
+- Do not casually unlink clips.
+- Denoise only if noise is actually present or I request it.
+- Do not over-process audio in the first pass.
+
+PAID / DESTRUCTIVE BOUNDARIES
+- Do not call `generate_image`, `generate_video`, `generate_audio`, or `upscale_media` without my explicit approval for the exact proposed action.
 - Do not delete source media or folders.
-- Do not export unless I ask for export.
+- Do not export unless I ask.
+- Do not overwrite an existing named export unless I explicitly approve it.
 
-Output style:
-Keep status concise. When done, tell me the story angle, the categories of edits you made, any promising Shorts moments, and anything I should review manually.
+VERIFY
+Before finishing:
+- re-read the edited transcript or relevant windows
+- inspect the opening/hook
+- inspect at least one representative technical/demo section
+- inspect every important title/layout/transition change
+- inspect the ending if modified
+- confirm the original timeline still exists
+- confirm no long-form caption track was added unless requested
+
+BOUND EXECUTION
+Do one full edit pass and one targeted verification/fix pass. Do not continue micro-polishing indefinitely. Leave unresolved subjective decisions as review markers.
+
+FINAL RESPONSE
+Keep it concise and report:
+- resulting story angle
+- categories of edits actually made
+- review markers/manual checks
+- obvious promising Shorts moments
+- whether any paid generation ran
+- whether export ran
+
+Do not claim frame-perfect visual quality beyond the sections actually inspected.
 ```
 
 ## Expected Output
 
-The agent should leave the Palmier timeline edited and respond with a concise completion summary, for example:
+Example:
 
 ```text
-Done — rebuilt the intro around the working demo, removed repeated setup takes and filler, and placed two callouts for the repo/model section. Strong Shorts candidate: the 18-second proof moment where the agent updates the timeline. Review the callout placement around the terminal segment before export.
+Done — created `YouTube Full Cut`, rebuilt the opening around the working demo, removed repeated setup/retakes and verified dead air, kept the terminal/app sections readable, and added two restrained callouts. I left one open review marker on the choice between two intro takes. Strong Short candidate: the proof moment where the agent changes the timeline. No paid generation or export was run.
 ```
 
 ## Quality Bar
 
-- Starts from `get_timeline` and `get_media`.
-- Inspects media/transcript before cutting.
-- Uses Palmier frame semantics correctly.
-- Preserves Quinn's technical credibility and exact claims.
-- Improves story structure, not just speech cleanup.
-- Avoids paid generation unless approved.
-- Produces a reviewable timeline, not just a written plan.
+- Uses live project state and schemas.
+- Preserves the original timeline.
+- Inspects before cutting.
+- Refreshes transcript indices after word edits.
+- Preserves technical truth/caveats.
+- Keeps proof/code/UI readable.
+- Avoids default long-form burned captions.
+- Uses current text-style capabilities.
+- Marks subjective uncertainty.
+- Avoids unapproved paid/destructive actions.
+- Produces an edited reviewable timeline, not merely a plan.
+- Stops after a bounded edit/verification cycle.
