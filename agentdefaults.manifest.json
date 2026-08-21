@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.13.0",
-  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.14.0",
+  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -37,6 +37,17 @@
       "example": "examples/principal-devops-task.yaml",
       "acceptance_tests": "docs/principal-devops-engineer-acceptance-tests.md",
       "wrapper": ".github/agents/principal-devops-engineer.agent.md"
+    },
+    {
+      "name": "DevSecOps Security Engineering",
+      "quickstart": "docs/quickstarts/devsecops-security-engineer.md",
+      "agent": "agents/devsecops-security-engineer.md",
+      "skills": ["skills/devsecops-security-engineering.md"],
+      "prompts": ["prompts/implementation/devsecops-security-task.md"],
+      "schema": "schemas/devsecops-security-task.schema.json",
+      "example": "examples/devsecops-security-task.yaml",
+      "acceptance_tests": "docs/devsecops-security-engineer-acceptance-tests.md",
+      "wrapper": ".github/agents/devsecops-security-engineer.agent.md"
     },
     {
       "name": "DevOps Documentation Engineering",

@@ -1,0 +1,116 @@
+task_id: devsecops-core-platform-001
+goal: >-
+  Review and harden the privileged automation path spanning Terraform,
+  Automation Platform, and Jenkins so untrusted source changes cannot reach
+  production credentials or infrastructure without enforced review and
+  least-privilege controls.
+mode: implement
+platforms:
+  - terraform
+  - ansible
+  - automation_platform
+  - jenkins
+  - ci_cd
+  - cloud_iam
+
+target:
+  kind: mixed
+  identifier: org/platform-automation
+  branch_or_version: main
+  environment: production and non-production automation control planes
+  paths:
+    - terraform/
+    - ansible/
+    - jenkins/
+    - ci/
+
+threat_model:
+  assets:
+    - Terraform state and cloud infrastructure authority
+    - Automation Platform credentials and privileged inventories
+    - Jenkins deployment credentials and release artifacts
+  trust_boundaries:
+    - Pull request code to privileged CI execution
+    - Jenkins controller to build agents
+    - Automation Platform controller to execution environments and managed hosts
+    - Terraform runner to cloud provider APIs and state backend
+  attacker_controlled_inputs:
+    - Pull request source code
+    - Jenkins build parameters
+    - Repository-managed Ansible variables and Terraform inputs
+  privileged_identities:
+    - Terraform deployment workload identity
+    - Automation Platform machine/cloud credentials
+    - Jenkins deployment credential bindings
+  sensitive_data:
+    - Cloud credentials and tokens
+    - Terraform state and saved plans
+    - Jenkins/AAP credential material
+  realistic_threats:
+    - Untrusted pull request obtains production credentials
+    - Pipeline or playbook logs expose a secret
+    - Mutable provider/module/collection/plugin dependency is substituted
+    - Over-scoped automation identity changes production outside intended scope
+
+sources:
+  repositories:
+    - org/platform-terraform
+    - org/platform-ansible
+    - org/platform-jenkins
+  systems:
+    - Terraform remote backend and runner configuration
+    - Automation Platform controller configuration
+    - Jenkins controller and agent configuration
+    - Cloud IAM configuration
+  audit_logs:
+    - Jenkins security and build audit evidence where available
+    - Automation Platform job/audit history where available
+    - Cloud identity and infrastructure audit logs where available
+  required_sources:
+    - Active Terraform providers, modules, backend, plans, and runner identity configuration
+    - Active Ansible/AAP inventories, projects, execution environments, credentials, templates, and workflows
+    - Active Jenkins JCasC, jobs, shared libraries, agents, credentials scope, and plugin inventory
+
+constraints:
+  non_goals:
+    - Do not redesign unrelated delivery workflows.
+    - Do not perform offensive exploitation or persistence.
+  availability_requirements:
+    - Security changes must preserve the approved production deployment path.
+  forbidden_actions:
+    - Do not rotate or revoke credentials without explicit approval.
+    - Do not mutate Terraform state directly unless separately authorized.
+    - Do not disable TLS verification, SSH host-key checking, Jenkins CSRF protection, or approval gates to make tests pass.
+
+authority:
+  maximum_permission_class: mutate_reversible
+  authorized_mutations:
+    - Update repository-managed Terraform, Ansible, Jenkins, and CI security configuration required by the accepted remediation.
+  approval_required: false
+
+acceptance:
+  - Untrusted pull request code cannot access production deployment credentials before an enforced trusted approval boundary.
+  - Terraform state, plans, and provider/module dependencies follow the documented security controls.
+  - Ansible/AAP secrets and privilege escalation are narrowly scoped and secret-bearing output is protected.
+  - Jenkins controller and trusted credentials are isolated from untrusted builds.
+  - No known P0/P1 finding remains in the authorized scope.
+
+verification:
+  required_checks:
+    - Run available secret, static, dependency, and IaC security checks.
+    - Run Terraform format, validate, plan, and policy/security checks where tooling exists.
+    - Run Ansible syntax/lint/check-mode or equivalent safe checks where meaningful.
+    - Validate Jenkins/JCasC/Pipeline configuration with available tooling and inspect credential/agent trust boundaries.
+    - Review the final diff for unrelated changes and secret leakage.
+  security_postconditions:
+    - A representative untrusted source path cannot obtain production credentials.
+    - Privileged deployment identities are limited to required environments/resources.
+    - State, plans, logs, artifacts, and job output do not expose newly introduced secret values.
+  adversarial_cases:
+    - Malicious pull request attempts to print or transmit privileged credentials.
+    - Attacker-controlled build parameter attempts command or path injection.
+    - Mutable dependency reference changes without approved lock/version update.
+    - A failed privileged mutation is retried only after authoritative state reconciliation.
+  rollback_checks:
+    - Repository changes have a known revert path.
+    - Security configuration changes do not remove the last viable deployment/recovery path.
