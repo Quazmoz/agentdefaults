@@ -24,6 +24,7 @@ Do not use this index as a substitute for the selected canonical agent. Tool wra
 | Primary need | Use | Required skill |
 |---|---|---|
 | Infrastructure, automation, CI/CD, GitOps, Kubernetes, cloud/IAM/network, SRE, incidents, releases | [`agents/principal-devops-engineer.md`](agents/principal-devops-engineer.md) | `skills/production-devops-engineering.md` |
+| Cybersecurity-focused DevOps review, hardening, incident analysis, or security-sensitive release work across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, or supply chain | [`agents/devsecops-security-engineer.md`](agents/devsecops-security-engineer.md) | `skills/devsecops-security-engineering.md` |
 | DevOps/platform documentation, docs-as-code, runbooks, architecture docs, Markdown, Mermaid, documentation diagrams | [`agents/devops-documentation-engineer.md`](agents/devops-documentation-engineer.md) | `skills/devops-documentation-engineering.md` |
 | LLM apps, agents, MCP, RAG, inference, prompts/context, evals, AI security/observability | [`agents/principal-ai-engineer.md`](agents/principal-ai-engineer.md) | `skills/production-ai-engineering.md` |
 | One task materially spans both AI application behavior and DevOps/platform behavior | [`agents/principal-ai-devops-engineer.md`](agents/principal-ai-devops-engineer.md) | `skills/production-ai-devops-engineering.md` |
@@ -32,9 +33,11 @@ Do not use this index as a substitute for the selected canonical agent. Tool wra
 
 ### Boundary examples
 
-- Kubernetes deployment, Terraform state, AAP, networking, IAM, or CI failure with no AI behavior change -> Principal DevOps Engineer.
+- Kubernetes deployment, Terraform state, AAP, networking, IAM, or CI failure with no primary security objective -> Principal DevOps Engineer.
+- An untrusted Jenkins PR path can reach production credentials, Terraform state is exposed, AAP privilege is over-broad, or automation supply-chain integrity is the primary outcome -> DevSecOps Security Engineer.
+- A security review uncovers broad platform refactoring that is not required to close the security defect -> keep the security remediation with the DevSecOps specialist and hand broad refactoring to the Principal DevOps Engineer.
 - Reconcile Jenkins/Ansible GitOps Markdown and Mermaid against implementation without changing the platform -> DevOps Documentation Engineer.
-- A documentation audit proves the Jenkins/AAP implementation itself is defective -> document the discrepancy with the DevOps Documentation Engineer, then route the implementation fix to the Principal DevOps Engineer.
+- A documentation audit proves the Jenkins/AAP implementation itself is defective -> document the discrepancy with the DevOps Documentation Engineer, then route the implementation fix to the Principal DevOps Engineer or DevSecOps Security Engineer when the defect is primarily security-related.
 - Prompt, RAG, tool-calling, model integration, MCP, agent loop, or eval defect with no platform ownership change -> Principal AI Engineer.
 - Model-serving code and Kubernetes/GPU runtime both require coordinated fixes -> Principal AI and DevOps Engineer.
 - Infrastructure merely hosting an AI application does **not** automatically require the combined agent.
@@ -53,6 +56,25 @@ docs/principal-devops-engineer-acceptance-tests.md
 ```
 
 Owns lifecycle/state boundaries for infrastructure, configuration, delivery, runtime platforms, cloud/IAM/networking, observability, incident response, recovery, and releases. It may operate infrastructure used by AI systems but does not own model/prompt/RAG/eval correctness.
+
+## DevSecOps Security Engineering
+
+Use this specialist when the primary outcome is cybersecurity risk reduction or evidence-backed security qualification of DevOps/platform systems.
+
+```text
+docs/quickstarts/devsecops-security-engineer.md
+agents/devsecops-security-engineer.md
+skills/devsecops-security-engineering.md
+prompts/implementation/devsecops-security-task.md
+schemas/devsecops-security-task.schema.json
+examples/devsecops-security-task.yaml
+docs/devsecops-security-engineer-acceptance-tests.md
+.github/agents/devsecops-security-engineer.agent.md
+```
+
+Owns security-focused trust-boundary analysis and hardening for Terraform/OpenTofu, Ansible/Automation Platform, Jenkins, CI/CD, GitOps, Kubernetes, containers, cloud/IAM, secrets, state, runners/agents, plugins/providers/modules/collections, artifact provenance, and privileged automation identities.
+
+Its core question is whether attacker-controlled input can cross a trust boundary into privileged credentials, state, control planes, artifacts, or deployment authority. It uses scanners as supporting evidence, not as a substitute for end-to-end control-path analysis.
 
 ## DevOps Documentation Engineering
 
@@ -118,8 +140,9 @@ Examples:
 4. Load additional specialist skills only when they materially contribute.
 5. Do not preload both scoped engineering agents when one owns the task.
 6. Do not preload the combined agent as a generic superset.
-7. Documentation tasks may load platform implementation evidence without inheriting platform mutation authority.
-8. Task evidence outranks generic guidance; current official documentation outranks stale platform assumptions.
+7. Security-focused DevOps tasks may inspect broad platform evidence without turning the specialist into the default owner for non-security refactoring.
+8. Documentation tasks may load platform implementation evidence without inheriting platform mutation authority.
+9. Task evidence outranks generic guidance; current official documentation outranks stale platform assumptions.
 
 ## Shared Invariants
 
@@ -132,6 +155,6 @@ All engineering stacks:
 - preserve authoritative state ownership and scope boundaries
 - verify changing external behavior from authoritative sources
 - report executed evidence under `VERIFIED` and unexecuted checks under `UNVERIFIED`
-- never claim production readiness or factual correctness without actual qualification evidence
+- never claim production readiness, security, or factual correctness without actual qualification evidence
 
 Mutation-owning engineering stacks additionally design for stale, duplicate, concurrent, partial, restart, and timeout-after-success execution where relevant and bound retries, loops, concurrency, tokens, and spend.
