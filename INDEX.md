@@ -31,6 +31,7 @@ Use the smallest correct owner. Infrastructure hosting an AI workload is still D
 
 | Need | Start with |
 |---|---|
+| Audit or harden DevOps cybersecurity across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, secrets, runners/agents, state, or software supply chain | [`docs/quickstarts/devsecops-security-engineer.md`](docs/quickstarts/devsecops-security-engineer.md) · [`agents/devsecops-security-engineer.md`](agents/devsecops-security-engineer.md) |
 | Create, audit, or reconcile DevOps docs-as-code, runbooks, Markdown, Mermaid, and documentation diagrams | [`docs/quickstarts/devops-documentation-engineer.md`](docs/quickstarts/devops-documentation-engineer.md) · [`agents/devops-documentation-engineer.md`](agents/devops-documentation-engineer.md) |
 | Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
@@ -55,6 +56,7 @@ The authoritative stack composition is [`agentdefaults.manifest.json`](agentdefa
 - Agent Architect and Builder
 - Principal AI and DevOps Engineering
 - Principal DevOps Engineering
+- DevSecOps Security Engineering
 - DevOps Documentation Engineering
 - Principal AI Engineering
 - Automation Platform Architecture and Selection
@@ -98,6 +100,6 @@ Run:
 python3 scripts/validate-agentdefaults.py
 ```
 
-The canonical suite covers structure, schemas, manifest integrity, stack invariants, Markdown links, cross-tool entrypoints, principal engineering contracts, and specialist DevOps documentation contracts.
+The canonical suite covers structure, schemas, manifest integrity, stack invariants, Markdown links, cross-tool entrypoints, principal engineering contracts, specialist DevOps documentation contracts, and DevSecOps security contracts.
 
 Do not report a validator as passed unless it actually ran successfully.
