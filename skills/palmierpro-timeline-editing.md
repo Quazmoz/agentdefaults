@@ -2,47 +2,67 @@
 
 ## Purpose
 
-Provide reusable rules for timeline-native editing in Palmier Pro through MCP.
+Provide reusable, provider-neutral rules for safe timeline-native editing in Palmier Pro through external MCP.
 
-Use this skill to make safe, coherent, frame-accurate edits: placing clips, trimming, splitting, rippling, layering overlays, syncing audio, applying properties, and verifying the visible result.
+Use this skill for clip placement, trims, cuts, versioning, track/layout changes, linked A/V handling, text overlays, keyframes, sync, review markers, and viewer-facing verification.
 
-## When To Use
+For a fast long-form creator workflow, combine with:
 
-Use this skill when the user asks to:
+```text
+skills/palmierpro-youtube-fast-edit.md
+```
 
-- Build a first cut.
-- Tighten a demo or tutorial.
-- Add or reorder b-roll.
-- Move clips between tracks.
-- Trim beginnings/endings.
-- Split clips at specific moments.
-- Add overlays, lower thirds, title cards, or callouts.
-- Sync external audio or multicam clips.
-- Adjust opacity, volume, scale, position, crop, rotation, fades, or keyframes.
+For spoken cleanup, combine with:
 
-For spoken-word cleanup, combine with `skills/palmierpro-transcript-cuts-and-captions.md`.
+```text
+skills/palmierpro-transcript-cuts-and-captions.md
+```
+
+## Runtime Truth
+
+Use Palmier's live MCP schema for exact arguments and enum values.
+
+Do not assume a tool is available because it appears in an old example. Do not invent compatibility aliases when the schema changes.
 
 ## Inputs Needed
 
-Minimum state:
+Start with:
 
 ```text
-get_timeline -> fps, totalFrames, tracks, clips, canGenerate
-get_media -> mediaRef, media type, generation/import status
+get_timeline
+get_media
 ```
 
-For visual verification:
+Use returned exact IDs for all mutations.
+
+For visual understanding:
 
 ```text
-inspect_timeline -> composited project preview frames
+inspect_media
+search_media
+inspect_timeline
 ```
 
-For source understanding:
+For spoken content:
 
 ```text
-inspect_media -> source frames/transcript
-search_media -> source moments by visual/spoken content
+get_transcript
 ```
+
+## Versioning Before Broad Edits
+
+Palmier timelines are the preferred versioning primitive for broad edits.
+
+For a first-pass rewrite, alternate cut, or aspect-ratio derivative:
+
+```text
+create_timeline from=<active timelineId> name=<clear variant name>
+get_timeline
+```
+
+The copy receives new clip/track IDs. Never keep using IDs from the source timeline after duplication.
+
+For a tiny targeted edit, mutate in place unless the user requested a version copy or the risk justifies one.
 
 ## Timeline Model
 
@@ -53,238 +73,297 @@ frame = seconds * fps
 seconds = frame / fps
 ```
 
-Definitions:
+Treat exact range semantics as defined by the live tool schema. Current timeline state commonly uses half-open ranges:
 
-- `startFrame`: project/timeline frame where a clip begins.
-- `durationFrames`: project/timeline length of a clip.
-- `trimStartFrame`: source-media offset skipped from the start.
-- `trimEndFrame`: source-media offset removed from the end.
-- `speed`: `1.0` normal, `<1.0` longer/slower, `>1.0` shorter/faster.
-- `trackIndex`: 0-based order from `get_timeline`.
+```text
+[start, end)
+```
 
-Rules:
+Key concepts:
 
-- Video, image, text, captions, and overlays belong on video tracks.
-- Audio belongs on audio tracks.
-- Track order controls visual layering.
-- On the same track, clips are sequential; overlapping placements overwrite/trim/split existing material.
-- Linked A/V clips should remain aligned unless the user explicitly wants detachment or offset.
+- timeline start/end/duration are project-frame values
+- source trims are source-media offsets expressed according to Palmier's current schema
+- track IDs are stable selectors when supported; indexes reflect current order
+- video/audio tracks occupy separate zones
+- linked A/V should remain linked unless independent treatment is intentional
 
-## Editing Decision Tree
+## Tool Selection
 
-### Add Existing Media
+### Project / Timeline
+
+| Intent | Tool |
+|---|---|
+| Read current timeline | `get_timeline` |
+| Inspect composited viewer output | `inspect_timeline` |
+| Create/copy a timeline | `create_timeline` |
+| Switch active timeline | `set_active_timeline` |
+| Change fps/aspect/resolution | `set_project_settings` |
+| Add/update review notes | `manage_markers` |
+
+### Tracks / Clips
+
+| Intent | Tool |
+|---|---|
+| Add existing media | `add_clips` |
+| Insert and ripple existing content | `insert_clips` |
+| Move clips | `move_clips` |
+| Remove timeline clips | `remove_clips` |
+| Split clips | `split_clips` |
+| Delete known ranges and ripple | `ripple_delete_ranges` |
+| Trim/speed/volume/opacity/transform | `set_clip_properties` |
+| Arrange multi-clip layouts | `apply_layout` |
+| Animate supported properties | `set_keyframes` |
+| Configure/reorder tracks | `manage_tracks` |
+| Link/unlink A/V deliberately | `manage_clip_links` |
+| Reuse clip settings | `copy_clip_settings` when exposed |
+| Replace a clip's source while preserving edit intent | `swap_clip_media` when exposed |
+| Sync by waveform | `sync_clips` |
+| Revert latest known action | `undo` |
+
+Prefer the highest-level purpose-built tool that exactly represents the intent.
+
+## Add vs Insert
 
 Use `add_clips` when:
 
-- Placing footage into empty space.
-- Deliberately replacing material in the landing range.
-- Auto-creating tracks is acceptable.
+- placing media in clear space
+- deliberate replacement/overlap behavior is intended
+- the live tool semantics match the desired edit
 
 Use `insert_clips` when:
 
-- The edit should open a gap.
-- Existing clips must shift right.
-- No existing content should be overwritten.
+- existing content must shift to make room
+- overwriting the landing range would be wrong
 
-Before adding:
+Before either:
 
-```text
-1. call get_media
-2. ensure the asset is ready
-3. ensure asset type matches target track
-4. calculate frame position and duration
-5. choose add_clips or insert_clips
-```
+1. call/refresh `get_media`
+2. confirm asset readiness
+3. confirm media/track compatibility
+4. calculate required project-frame placement
+5. choose add vs insert intentionally
 
-### Move or Reorder Clips
+## Move / Reorder
 
-Use `move_clips` for:
+Use `move_clips` for direct repositioning.
 
-- Repositioning clips.
-- Moving a clip to another compatible track.
-- Reordering sequence blocks.
+Do not split/remove/re-add just to move a clip.
 
-Avoid manual split/remove/re-add loops when a move tool expresses the intent.
+After major track reordering, refresh state if subsequent operations depend on indexes.
 
-### Trim or Adjust Clip Properties
+## Link Discipline
 
-Use `set_clip_properties` for:
-
-- `durationFrames`
-- `trimStartFrame`
-- `trimEndFrame`
-- `speed`
-- `volume`
-- `opacity`
-- `transform`
-- text-style fields on a text clip (to change an existing text clip's content or style, prefer `update_text`)
-
-Use separate calls when different clips need different property values.
-
-To arrange facecam-plus-screenshare, picture-in-picture, or stacked multi-clip layouts, prefer `apply_layout`, then fine-tune with `set_clip_properties` transform and `set_keyframes`.
-
-### Split a Clip
-
-Use `split_clips` only when:
-
-- `atFrame` is strictly inside the clip's visible timeline range.
-- A split is necessary for independent movement, styling, or removal.
-
-Prefer higher-level tools when available:
-
-- `remove_words` for transcript-aligned cuts.
-- `ripple_delete_ranges` for range cuts with gap closure.
-- `set_clip_properties` for simple trims.
-
-### Ripple Delete
-
-Use `ripple_delete_ranges` for:
-
-- removing non-word-aligned spans
-- visual dead air
-- pauses without speech
-- mistakes that span multiple clips on one track
-
-Prefer batching all ranges in one call when the ranges are known.
-
-For bulk removal of silent, speech-free spans, prefer `remove_silence` (purpose-built for dead-air cleanup) and reserve `ripple_delete_ranges` for specific known frame ranges and visual-only gaps.
-
-### Sync Clips
-
-Use `sync_clips` when:
-
-- camera audio and external audio need alignment
-- two clips share waveform content and must line up
-- the user says audio is out of sync
-
-For true multicam (multiple angles cut against one reference), use `manage_multicam`, `change_cam`, and `get_multicam` instead of waveform sync alone.
-
-Workflow:
-
-```text
-1. identify the reference clip that should stay fixed
-2. identify target clip(s) to move
-3. call sync_clips
-4. verify confidence and timeline alignment
-```
-
-If confidence is weak, report it and avoid forcing the sync.
-
-## Overlay Rules
-
-Use `add_texts` for:
-
-- large title text
-- section headers
-- lower thirds
-- feature labels
-- arrows/callouts when represented as text
-- manual caption snippets
-
-Use one overlay track per simultaneous text layer. If two text clips overlap on the same track, they can overwrite/trim each other.
-
-Recommended normalized placement:
-
-```text
-center title:       centerX=0.5 centerY=0.5
-upper label:        centerX=0.5 centerY=0.14
-lower third:        centerX=0.5 centerY=0.82
-caption-like text:  centerX=0.5 centerY=0.9
-left callout:       centerX=0.24 centerY=0.5
-right callout:      centerX=0.76 centerY=0.5
-```
-
-Keep overlays short and verify important overlays with `inspect_timeline`.
-
-## Color, Effects, and Keyframes
-
-Use `inspect_color` when evaluating current color state before applying corrections.
-
-Use `apply_color` for broad correction or look adjustments only after inspecting or understanding the footage.
-
-Use `apply_effect` for deliberate effects, not as a default polish step.
-
-Use `set_keyframes` for:
-
-- opacity fades
-- scale/position motion
-- picture-in-picture movement
-- volume automation
-- crop/rotation changes
+Current Palmier can expose linked A/V groups.
 
 Rules:
 
-- Keyframe frames are clip-relative.
-- Setting a scalar property such as volume/opacity through `set_clip_properties` can clear existing keyframes for that property.
-- Do not add motion unless it improves clarity or pacing.
+- preserve links for ordinary cuts and moves
+- do not assume an audio partner is independent merely because it appears nested/folded in returned state
+- use `manage_clip_links` before a true J-cut/L-cut or another edit that requires independent A/V treatment
+- relink when the clips should move as one unit again
+
+Never solve sync problems by casually unlinking media.
+
+## Trim / Split / Ripple
+
+Use `set_clip_properties` for simple trims/property changes when supported.
+
+Use `split_clips` when independent treatment of the resulting sections is actually needed.
+
+Use transcript-aware tools for speech cuts.
+
+Use `ripple_delete_ranges` for specific non-word-aligned spans such as:
+
+- visual-only pre-roll
+- loading/waiting time with no useful speech
+- a known gap between sections
+- a visual mistake not aligned to transcript words
+
+Use `remove_silence` for bulk quiet/speech-free cleanup rather than manually manufacturing many silence ranges.
+
+## Recording Pre-Roll
+
+Do not apply a fixed trim to all recordings.
+
+For each source that may begin on OBS/QuickTime/capture software:
+
+1. inspect the source start
+2. locate the real intended visual/speech boundary
+3. remove only verified pre-roll
+
+If speech is part of the unwanted range, use transcript-aware cutting when possible.
+
+## Layouts
+
+Use `apply_layout` for:
+
+- facecam + screenshare
+- side-by-side comparison
+- stacked media
+- picture-in-picture
+
+Then use property/keyframe tools only for necessary fine-tuning.
+
+Technical creator default:
+
+- screen/code/app UI dominates during explanation
+- facecam does not block important interface areas
+- avoid constant visual motion
+
+Always verify important layouts with `inspect_timeline`.
+
+## Text Overlays
+
+Use `add_texts` for:
+
+- titles
+- section headers
+- lower thirds
+- app/repo/model names
+- concise commands
+- callouts
+- CTAs when source/user intent supports them
+
+Use `update_text` for existing text/caption style or content changes when supported.
+
+Do not assume text styling is limited to plain color/font. Check the live schema. Current Palmier versions can expose richer style fields such as outline, shadow, and background; use them directly when supported instead of fake duplicate-text shadows.
+
+Keep overlay copy short and mobile-readable.
+
+## Captions
+
+Do not add automatic captions merely because a transcript exists.
+
+- Long-form 16:9: no burned captions by default.
+- Short-form/vertical: captions are often appropriate when requested or part of the chosen format.
+- Explicit user caption request overrides these defaults.
+
+Verify caption placement with `inspect_timeline` when important UI or platform controls may collide.
+
+## Transitions
+
+Clean cuts are the default for technical YouTube.
+
+Use fades/dips only at meaningful section boundaries or when requested.
+
+If no dedicated transition tool is exposed, use supported keyframed opacity/overlap techniques and verify the actual composited result.
+
+Do not add a transition to every cut.
+
+## Color, Effects, Audio
+
+Use:
+
+- `inspect_color` before meaningful correction/grade
+- `apply_color` only when the visual problem or requested look justifies it
+- `apply_effect` sparingly
+- `denoise_audio` only when noise is actually present or explicitly requested
+
+Do not make broad aesthetic changes in a fast editing pass without evidence they improve the result.
+
+## Sync / Multicam
+
+Use `sync_clips` when clips share waveform content and need alignment.
+
+For true multicam, use the dedicated multicam tool set exposed by the live schema.
+
+If sync confidence is weak or returned alignment is ambiguous, report/mark the problem rather than forcing an edit.
+
+## Review Markers
+
+Use `manage_markers` to persist unresolved or ready-for-review edit notes in the timeline.
+
+Good marker cases:
+
+- subjective take choice
+- uncertain factual removal
+- visual needing user brand preference
+- sponsor/legal-sensitive section
+- missing asset
+
+Status discipline:
+
+```text
+open     -> unresolved
+review   -> edit applied and verified, waiting for user
+resolved -> user approved/instructed resolution
+```
 
 ## Verification
 
 Use `inspect_timeline` after:
 
-- important overlays
-- picture-in-picture placement
-- scale/position/crop adjustments
-- complex layering
-- title cards
+- important layout/PIP changes
+- title/lower-third/callout placement
+- transitions/keyframes
+- crop/scale/position changes
 - color/effect changes
-- transitions or fast sequences
+- complex layering
 
 Use `get_transcript` after transcript edits.
 
 Use `get_timeline` after:
 
+- timeline copy/switch
 - undo
-- edit failure
-- suspected manual user changes
-- stale ID/frame errors
+- stale ID/frame error
+- manual user change
+- any operation documented to invalidate IDs
+
+## Undo
+
+`undo` reverses the latest shared editor action, which may have been made by the user.
+
+Call it only when the latest action is known to be the one that should be reverted.
+
+Refresh state after undo before more mutation.
 
 ## First-Cut Workflow
 
 ```text
 1. get_timeline + get_media
-2. inspect primary footage or get_transcript
-3. identify intro, body, demo, proof, CTA, and dead areas
-4. remove obvious bad takes/dead air
-5. add or insert supporting clips/b-roll
-6. add titles/lower thirds/callouts
-7. add captions if requested or likely needed
-8. inspect_timeline key moments
-9. report concise completion
+2. duplicate timeline for a broad edit
+3. re-read timeline state
+4. inspect transcript/media efficiently
+5. remove verified pre-roll/dead air/retakes
+6. structure existing clips around hook -> value -> demo -> proof -> caveats -> close
+7. arrange supporting visuals and sparse text
+8. inspect key viewer-visible sections
+9. mark subjective choices
+10. stop for user review
 ```
 
-## YouTube/Tutorial Defaults
+## YouTube Technical Defaults
 
-For a technical creator video:
+- Hook/proof should arrive quickly when source footage supports it.
+- Do not cut technical prerequisites needed for reproducibility.
+- Preserve caveats and negative results.
+- Leave enough dwell time for code/UI/terminal reading.
+- Do not add a long-form caption track by default.
+- Use clean cuts more than decorative transitions.
+- Do not fabricate a CTA that was never recorded/requested.
 
-- Keep the first 5-15 seconds tight.
-- Remove long setup rambling before the hook.
-- Preserve exact technical terms, model names, commands, and caveats.
-- Keep screen recordings visible long enough to understand.
-- Use callouts for important commands, repo names, or results.
-- Avoid over-cutting sections where the viewer needs context.
-- End with a clear CTA only if the source includes one or the user asks for it.
+## Failure Handling
 
-## Expected Output
+On mutation failure:
 
-After edits:
+1. read the exact error
+2. verify live schema
+3. refresh state if IDs/indexes may be stale
+4. retry only with an obvious safe correction
+5. stop after repeated identical failures
 
-```text
-Done — built a tighter first cut, added the product-name lower third, synced the external audio, and verified the title frame.
-```
-
-If blocked:
-
-```text
-I found the clip, but the target range overlaps an audio-only track. I need to place the visual on a video track or use insert_clips to ripple the existing edit.
-```
+Do not use delays as a correctness mechanism.
 
 ## Quality Bar
 
-- All timing is frame-correct.
-- Track types are respected.
-- Existing clips are not overwritten accidentally.
-- Linked A/V remains aligned.
-- Overlays are readable and placed intentionally.
-- Complex visible edits are verified with `inspect_timeline`.
-- Final status is concise and outcome-focused.
+- Broad edits preserve the original timeline.
+- Exact current IDs are used.
+- Frame/range semantics follow live schema.
+- A/V links and sync are preserved.
+- Tool choice matches editing intent.
+- Important screen content remains readable.
+- Text/caption policy matches the target format.
+- Complex viewer-visible edits are verified.
+- Subjective uncertainty is marked rather than guessed.
+- Execution remains bounded and reviewable.
