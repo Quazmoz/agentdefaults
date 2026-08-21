@@ -13,6 +13,7 @@ VALIDATORS = [
     ROOT / "scripts/validate-cross-tool-routing.py",
     ROOT / "scripts/validate-engineering-contracts.py",
     ROOT / "scripts/validate-documentation-stack.py",
+    ROOT / "scripts/validate-devsecops-security-stack.py",
 ]
 
 
