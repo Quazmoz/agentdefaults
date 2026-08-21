@@ -2,102 +2,84 @@
 
 ## Purpose
 
-Help users connect an AI agent to Palmier Pro through MCP and choose the right AgentDefaults stack for video-editing work.
+Connect Claude Code or OpenAI Codex to Palmier Pro and route video-editing work into the canonical AgentDefaults Palmier stack.
+
+The default use case is fast technical YouTube editing while preserving the original timeline and avoiding unapproved paid generation or export.
 
 ## Requirements
 
-- Palmier Pro installed on a Mac running macOS 26 (Tahoe) or later (see palmier.io for current requirements).
-- Palmier Pro open with a project loaded.
-- MCP enabled in Palmier Pro.
-- An MCP-capable client such as Claude Code, Codex, Cursor, or Claude Desktop.
+Current Palmier requirements should be checked against Palmier's own release/docs. At the time this quickstart was hardened, Palmier's official repository documented:
 
-Palmier's current local MCP endpoint is:
+- macOS 26 (Tahoe)
+- Apple Silicon
+- Palmier Pro running locally
+- external MCP at `http://127.0.0.1:19789/mcp`
 
-```text
-http://127.0.0.1:19789/mcp
-```
-
-The authoritative setup path is inside the app:
+The authoritative product setup path is:
 
 ```text
 Palmier Pro -> Help -> MCP Instructions
 ```
 
-## Connect
-
-Claude Code:
+## Connect Claude Code
 
 ```bash
 claude mcp add --transport http palmier-pro http://127.0.0.1:19789/mcp
 ```
 
-Codex:
+Then use the canonical stack:
+
+```text
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-mcp-setup-and-safety.md
+skills/palmierpro-youtube-fast-edit.md
+```
+
+## Connect OpenAI Codex
 
 ```bash
 codex mcp add palmier-pro --url http://127.0.0.1:19789/mcp
 ```
 
-Cursor manual config:
+Use the same canonical stack. Do not maintain a separate Codex editing policy.
 
-```json
-{
-  "mcpServers": {
-    "palmier-pro": {
-      "type": "http",
-      "url": "http://127.0.0.1:19789/mcp"
-    }
-  }
-}
-```
+## External MCP Boundary
 
-Claude Desktop:
+Palmier's external MCP and its in-app agent are not identical surfaces.
+
+The external Claude/Codex workflow must not depend on Palmier in-app-only:
 
 ```text
-Use Palmier Pro -> Help -> MCP Instructions -> Install in Claude Desktop.
+read_skill
+manage_skills
 ```
+
+AgentDefaults supplies the canonical external agent/skills instead.
 
 ## Recommended Stack
 
-Copy the smallest stack that matches the task.
-
-### General Palmier Editing
+### Fast YouTube First Cut — Default
 
 ```text
 agents/palmierpro-mcp-video-editor-agent.md
 skills/palmierpro-mcp-setup-and-safety.md
 skills/palmierpro-timeline-editing.md
 skills/palmierpro-transcript-cuts-and-captions.md
+skills/palmierpro-youtube-fast-edit.md
+prompts/palmierpro/quick-youtube-edit.md
 ```
 
-### Story Assembly From Project Media
+Use for:
 
-```text
-agents/palmierpro-mcp-video-editor-agent.md
-skills/palmierpro-mcp-setup-and-safety.md
-skills/palmierpro-timeline-editing.md
-skills/palmierpro-transcript-cuts-and-captions.md
-prompts/palmierpro/story-assembly-from-project-media.md
-```
+- AI/DevOps demos
+- coding/terminal walkthroughs
+- MCP tutorials
+- Android/Wear OS app demos
+- Play Console/GitHub/product videos
+- talking head + screenshare
+- one-shot creator recordings that need quick cleanup
 
-### YouTube Short From Long-Form
-
-```text
-agents/palmierpro-mcp-video-editor-agent.md
-skills/palmierpro-mcp-setup-and-safety.md
-skills/palmierpro-timeline-editing.md
-skills/palmierpro-transcript-cuts-and-captions.md
-prompts/palmierpro/youtube-short-from-long-form.md
-```
-
-### Paid AI Generation Inside Palmier
-
-```text
-agents/palmierpro-mcp-video-editor-agent.md
-skills/palmierpro-mcp-setup-and-safety.md
-skills/palmierpro-ai-generation-workflow.md
-```
-
-### Full First-Pass Edit
+### Full Story/Edit Pass
 
 ```text
 agents/palmierpro-mcp-video-editor-agent.md
@@ -106,149 +88,174 @@ skills/palmierpro-timeline-editing.md
 skills/palmierpro-transcript-cuts-and-captions.md
 prompts/palmierpro/full-edit-pass.md
 ```
-
-### Short-Form Cutdown
-
-```text
-agents/palmierpro-mcp-video-editor-agent.md
-skills/palmierpro-timeline-editing.md
-skills/palmierpro-transcript-cuts-and-captions.md
-prompts/palmierpro/short-form-social-cutdown.md
-```
-
-## First Command To The Agent
-
-Use this once Palmier Pro is open and connected:
-
-```text
-Use the Palmier Pro MCP stack from AgentDefaults. Start by calling get_timeline and get_media. Tell me briefly what project state you can see before making edits.
-```
-
-## Common Workflows
-
-### Story Assembly From Project Media
-
-Use:
-
-```text
-prompts/palmierpro/story-assembly-from-project-media.md
-```
-
-Best for:
-
-- understanding all raw video files in the current Palmier project
-- extracting the main points from scattered footage
-- identifying the intended YouTube angle
-- assembling a proof-first AI-engineering story arc
-- deciding which clips to promote, cut, or demote before a full edit
-
-### YouTube Short From Long-Form
-
-Use:
-
-```text
-prompts/palmierpro/youtube-short-from-long-form.md
-```
-
-Best for:
-
-- creating a 9:16 YouTube Short from a long-form Palmier project
-- choosing one proof/demo moment instead of summarizing the whole video
-- keeping screen recordings, code, terminal output, app UI, and Play Console screens readable on mobile
-- placing Quinn's facecam safely around the screenshare without blocking captions or important UI
-- creating a fast hook, proof, and clean ending from longer technical footage
-
-### Full Edit Pass
-
-Use:
-
-```text
-prompts/palmierpro/full-edit-pass.md
-```
-
-Best for:
-
-- YouTube tutorial
-- app demo
-- product walkthrough
-- technical creator video
-- talking-head plus screen recording
 
 ### Transcript Cleanup Only
 
-Use:
-
 ```text
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-transcript-cuts-and-captions.md
 prompts/palmierpro/transcript-cleanup-pass.md
 ```
 
-Best for:
-
-- filler removal
-- repeated take cleanup
-- pacing improvements
-- preserving the existing edit layout
-
-### Social Cutdown
-
-Use:
+### Story Assembly From Existing Media
 
 ```text
-prompts/palmierpro/short-form-social-cutdown.md
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+prompts/palmierpro/story-assembly-from-project-media.md
 ```
 
-Best for:
+### YouTube Short From Long-Form
 
-- TikTok
-- Instagram Reels
-- X/LinkedIn clips
-- non-Shorts social variants
-- extracting a proof/demo moment from a longer video
+```text
+agents/palmierpro-mcp-video-editor-agent.md
+skills/palmierpro-timeline-editing.md
+skills/palmierpro-transcript-cuts-and-captions.md
+prompts/palmierpro/youtube-short-from-long-form.md
+```
 
-## Safety Rules To Keep
+### Paid AI Generation
 
-- The agent should call `get_timeline` and `get_media` before edits.
-- The agent should inspect media before describing it.
-- Timeline timing is in frames.
-- Paid generation/upscale requires explicit user approval.
-- Source media deletion requires explicit user approval.
-- The agent should not export unless asked.
-- The user should review the timeline before publishing.
+Add only when generation is actually requested:
+
+```text
+skills/palmierpro-ai-generation-workflow.md
+```
+
+Generation/upscale still requires explicit approval for the exact paid action.
+
+## Fastest First Command
+
+After connecting and opening/importing the media:
+
+```text
+Use `agents/palmierpro-mcp-video-editor-agent.md` and the Palmier YouTube fast-edit skill. Make a safe first-pass YouTube cut of the current project. Preserve the original timeline, use live MCP schemas, do not add long-form burned captions, do not use paid generation, and do not export unless I ask.
+```
+
+Or use the reusable prompt:
+
+```text
+prompts/palmierpro/quick-youtube-edit.md
+```
+
+## Expected Default Behavior
+
+For a broad YouTube edit, the agent should:
+
+1. call `get_timeline`
+2. call `get_media`
+3. duplicate the active timeline using `create_timeline from=<active timelineId>`
+4. re-read `get_timeline` because copied IDs changed
+5. inspect transcript/media efficiently
+6. remove verified pre-roll/dead air/retakes/filler without changing technical meaning
+7. keep code/UI/demo visuals readable
+8. add only useful sparse titles/callouts
+9. use review markers for genuinely subjective choices
+10. inspect the hook + representative demo + important overlays
+11. stop after one edit pass and one verification/fix pass
+12. leave export/generation alone unless requested/approved
+
+## Caption Defaults
+
+Long-form 16:9:
+
+```text
+No burned automatic captions unless explicitly requested.
+```
+
+Short-form/vertical:
+
+```text
+Captions are usually appropriate when requested/part of the format.
+```
+
+Use live text/caption styling. Current Palmier versions may expose outline, shadow, and background fields; do not assume text requires fake duplicate layers for contrast.
+
+## Export Defaults
+
+When the user explicitly asks for a normal YouTube render and provides no conflicting settings, use the live schema. Current guidance is:
+
+```text
+mode: video
+codec: H.264
+resolution: Match Timeline
+overwrite: false
+```
+
+Omit `outputPath` unless supplied.
+
+After queueing, use:
+
+```text
+manage_exports action=list
+```
+
+to observe actual status.
+
+## Project Selection
+
+If MCP is reachable but no project is active and `manage_project` is available:
+
+```text
+manage_project action=list
+```
+
+Open a project only when the intended target is unambiguous.
 
 ## Troubleshooting
 
 ### MCP Not Reachable
 
+Verify:
+
+```text
+1. Palmier Pro is running.
+2. MCP is enabled/configured.
+3. Client points to http://127.0.0.1:19789/mcp.
+4. Re-check Palmier Pro -> Help -> MCP Instructions.
+```
+
+### Agent Sees Stale IDs
+
+Refresh state after:
+
+- timeline copy
+- timeline switch
+- undo
+- manual user edit
+- stale-ID/frame error
+
+Do not reuse old copied-timeline IDs.
+
+### Generation Unavailable
+
 Check:
 
 ```text
-1. Palmier Pro is open.
-2. A project is open.
-3. MCP is enabled in Help -> MCP Instructions.
-4. The MCP client points to http://127.0.0.1:19789/mcp.
+get_timeline.canGenerate
+list_models
 ```
 
-### Agent Sees Tools But Cannot Generate
-
-Check `get_timeline.canGenerate`.
-
-If false, sign in or subscribe in Palmier Pro before using generation/upscale tools.
-
-### Captions Look Wrong
-
-Ask the agent to:
-
-```text
-inspect_timeline around the captioned section and adjust caption placement so it does not cover important UI or lower thirds.
-```
+If generation is unavailable, do not repeatedly call paid tools.
 
 ### Cuts Feel Too Aggressive
 
-Ask the agent to:
+If the latest edit is known to be the unwanted one, use `undo`, refresh transcript/timeline state, and retry with less aggressive current settings.
+
+### Captions Cover UI
+
+For short-form captions, inspect the actual composited timeline and move/restyle them so they do not obscure important controls/code/UI.
+
+## Acceptance Tests
+
+Use:
 
 ```text
-undo the last cleanup pass and retry remove_words with cutAggressiveness=loose, preserving more breath between points.
+docs/palmierpro-mcp-acceptance-tests.md
 ```
+
+This includes provider parity, original-timeline preservation, transcript-index invalidation, technical-truth preservation, caption policy, paid-action gating, current export enum examples, and bounded termination.
 
 ## Related Files
 
@@ -257,13 +264,17 @@ agents/palmierpro-mcp-video-editor-agent.md
 skills/palmierpro-mcp-setup-and-safety.md
 skills/palmierpro-timeline-editing.md
 skills/palmierpro-transcript-cuts-and-captions.md
+skills/palmierpro-youtube-fast-edit.md
 skills/palmierpro-ai-generation-workflow.md
-prompts/palmierpro/story-assembly-from-project-media.md
+prompts/palmierpro/quick-youtube-edit.md
+prompts/palmierpro/full-edit-pass.md
+prompts/palmierpro/transcript-cleanup-pass.md
 prompts/palmierpro/youtube-short-from-long-form.md
 docs/palmierpro-mcp-tool-map.md
+docs/palmierpro-mcp-acceptance-tests.md
 examples/palmierpro-mcp-workflow.md
 ```
 
 ## Quality Bar
 
-A successful setup lets the agent read the project state, make safe timeline edits, and report a concise outcome without guessing media content or spending generation credits unexpectedly.
+A successful setup gives Claude or Codex the same canonical Palmier behavior, reads live project state before edits, preserves the original for broad changes, uses current schemas, makes a bounded reviewable YouTube cut, and avoids unapproved paid/destructive actions.
