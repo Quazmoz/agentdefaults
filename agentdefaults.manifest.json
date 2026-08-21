@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.12.0",
-  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.13.0",
+  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -116,14 +116,17 @@
         "skills/palmierpro-mcp-setup-and-safety.md",
         "skills/palmierpro-timeline-editing.md",
         "skills/palmierpro-transcript-cuts-and-captions.md",
+        "skills/palmierpro-youtube-fast-edit.md",
         "skills/palmierpro-ai-generation-workflow.md"
       ],
       "prompts": [
+        "prompts/palmierpro/quick-youtube-edit.md",
         "prompts/palmierpro/full-edit-pass.md",
         "prompts/palmierpro/transcript-cleanup-pass.md",
         "prompts/palmierpro/short-form-social-cutdown.md"
       ],
-      "example": "examples/palmierpro-mcp-workflow.md"
+      "example": "examples/palmierpro-mcp-workflow.md",
+      "acceptance_tests": "docs/palmierpro-mcp-acceptance-tests.md"
     },
     {
       "name": "App Market Browser Research",

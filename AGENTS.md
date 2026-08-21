@@ -21,6 +21,14 @@ For engineering work, read `ENGINEERING_AGENTS_INDEX.md` first and choose the sm
 | Design, build, or audit another reusable agent | `agents/agent-architect-builder.md` | `skills/agent-design-and-build.md` |
 | Select which automation platform/product should own a workload | `agents/automation-platform-selection-advisor.md` | Load only its task-relevant selection skills |
 
+For Palmier Pro video-editing work, route directly without treating the editing task as generic AI engineering:
+
+| Primary task | Owning agent | Default skill |
+|---|---|---|
+| Edit a Palmier Pro project through external MCP from Claude Code, OpenAI Codex, Cursor, or another MCP client | `agents/palmierpro-mcp-video-editor-agent.md` | `skills/palmierpro-youtube-fast-edit.md` for normal YouTube first-pass work |
+
+For Palmier setup/safety also load `skills/palmierpro-mcp-setup-and-safety.md`; add timeline/transcript skills only when the task needs them. The live Palmier MCP schema is runtime truth, and external clients must not depend on Palmier in-app-only skill-management tools.
+
 If the task is outside these routes, use `INDEX.md` to select the smallest applicable stack.
 
 ## Selective Context Loading
@@ -44,6 +52,7 @@ Rules:
 4. Tool availability is not authorization.
 5. Unknown runtime capabilities remain unavailable until verified.
 6. Documentation authority does not imply permission to change the infrastructure or automation being documented.
+7. Palmier external MCP tool availability does not imply Palmier in-app agent capabilities are exposed to Claude/Codex.
 
 ## Instruction and Authority Precedence
 
@@ -92,6 +101,7 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `docs/quickstarts/codex.md` - OpenAI Codex usage.
 - `docs/quickstarts/claude.md` - Claude Code usage.
 - `docs/quickstarts/devops-documentation-engineer.md` - DevOps documentation-as-code usage.
+- `docs/quickstarts/palmierpro-mcp.md` - Palmier Pro external MCP setup for Claude/Codex and video-editing stack selection.
 - `docs/tool-integration-guide.md` - cross-tool mapping and wrapper rules.
 - `.github/agents/` - GitHub Copilot custom-agent adapters.
 - `scripts/validate-agentdefaults.py` - canonical validation suite entrypoint.
@@ -120,6 +130,12 @@ python3 scripts/validate-agentdefaults.py
 ```
 
 Its component validators include cross-tool routing, principal engineering contracts, and specialist documentation-stack validation. Run additional domain-specific tests when the change affects canonical agents, skills, schemas, examples, or executable behavior.
+
+For Palmier agent changes, also review the behavioral cases in:
+
+```text
+docs/palmierpro-mcp-acceptance-tests.md
+```
 
 ## Response Style
 
