@@ -2,157 +2,208 @@
 
 ## Purpose
 
-Provide a compact map of Palmier Pro MCP tools and the editing workflows they support.
+Provide a compact, current routing map for Palmier Pro's external MCP tools as used by Claude Code, OpenAI Codex, Cursor, or another MCP client.
 
-Use this guide when an agent needs to choose the correct Palmier tool without re-reading every tool description.
+Use the live MCP schemas as runtime truth. This map is a selection aid, not a substitute for current tool definitions.
 
-## Source Notes
+## External MCP Boundary
 
-This guide is based on Palmier Pro's public documentation and open-source MCP tool names available at the time this file was added.
+Palmier Pro's external MCP server currently includes the editing tool set plus `manage_project`.
 
-Palmier's own app instructions remain the source of truth when newer versions change behavior:
+Palmier's in-app agent can expose additional skill-management capabilities. External Claude/Codex workflows must not depend on:
 
 ```text
-Palmier Pro -> Help -> MCP Instructions
+read_skill
+manage_skills
 ```
 
-## Setup and Project State
+## Project / Timeline State
 
 | Need | Tool | Notes |
 |---|---|---|
-| Read timeline state | `get_timeline` | Call at session start. Returns fps, resolution, tracks, clips, totalFrames, and canGenerate. |
-| Read media library | `get_media` | Call before referencing assets. Watch generation/import status. |
-| Change project settings | `set_project_settings` | Use deliberately; affects project-level output. |
-| Recover last edit | `undo` | Reverts the most recent action from the shared editor undo history (may be a user action, not only an assistant edit). Re-read state after undo. |
+| List/open/create/close session project | `manage_project` | External MCP project management. Do not guess among ambiguous projects. |
+| Read timeline | `get_timeline` | Call at session start and after state-invalidating operations. |
+| Inspect composited viewer output | `inspect_timeline` | Use for actual visible result, not raw source. |
+| Create/copy a timeline | `create_timeline` | Preferred versioning primitive for broad edits; re-read state after copy. |
+| Switch active timeline | `set_active_timeline` | Re-read timeline after switching. |
+| Add/update/delete review marker | `manage_markers` | Use open/review/resolved status deliberately. |
+| Change fps/aspect/resolution | `set_project_settings` | Project-level mutation; use intentionally. |
+| Export | `export_project` | Queue render/interchange/package. |
+| Inspect/cancel export jobs | `manage_exports` | Observe real status; do not infer completion/stall from time alone. |
 
-## Media Understanding
-
-| Need | Tool | Notes |
-|---|---|---|
-| Inspect a source asset | `inspect_media` | Use before describing or editing user-supplied media. Supports frames and transcript. |
-| Inspect final preview | `inspect_timeline` | Use for composited visuals, overlay placement, layer order, and transformations. |
-| Search library by content | `search_media` | Use for visual or spoken semantic search across media. |
-| Import media | `import_media` | Supports HTTPS URL, absolute local path, or small base64 bytes. |
-
-## Timeline Editing
+## Media Library
 
 | Need | Tool | Notes |
 |---|---|---|
-| Place media | `add_clips` | Places existing assets; same-track overlap overwrites/clears landing range. |
-| Insert media | `insert_clips` | Ripples existing timeline material to open a gap. |
-| Remove clips | `remove_clips` | Timeline removal, safer than deleting source media. |
-| Manage tracks (reorder/configure/remove) | `manage_tracks` | Use only when track cleanup or reordering is intentional. |
-| Move/reorder clips | `move_clips` | Move in time and/or to compatible tracks. |
-| Change clip properties | `set_clip_properties` | Trim, duration, speed, volume, opacity, transform, text properties. |
-| Arrange picture-in-picture / stacked layouts | `apply_layout` | Purpose-built for facecam+screenshare and multi-clip layouts; fall back to `set_clip_properties` transform + `set_keyframes` for fine control. |
-| Set animation/automation | `set_keyframes` | Keyframes for volume, opacity, rotation, position, scale, or crop. |
-| Split clips | `split_clips` | Split at a frame strictly inside the clip range. |
-| Delete ranges and close gaps | `ripple_delete_ranges` | Use for specific non-word-aligned spans or visual-only dead air. |
-| Remove silent spans | `remove_silence` | Bulk dead-air / speech-free cleanup; prefer over manual `ripple_delete_ranges` for silence. |
-| Sync clips | `sync_clips` | Align target clips to a fixed reference clip by waveform. For multicam, use `manage_multicam` / `change_cam` / `get_multicam`. |
+| List assets/folders/timelines | `get_media` | Source of exact `mediaRef` values/readiness. |
+| Inspect source media | `inspect_media` | Raw source frames/transcript; overview is useful for long video. |
+| Semantic search across media | `search_media` | Find spoken/visual proof moments without filename guessing. |
+| Import media | `import_media` | Prefer approved local/user sources; respect privacy boundary. |
+| Capture a frame | `capture_frame` | Use when current schema supports the needed still-frame workflow. |
+| Organize/delete media/folders | `organize_media` | Deletion is destructive; confirm exact target first. |
 
-## Transcript and Captions
+## Tracks / Clips
 
 | Need | Tool | Notes |
 |---|---|---|
-| Read current timeline speech | `get_transcript` | Source of truth for edited timeline speech in project frames. |
-| Cut by word | `remove_words` | Primary tool for filler, retakes, and speech cleanup. Re-read transcript after use. |
-| Add automatic captions | `add_captions` | Preferred captioning path. Transcribes and creates styled caption clips. |
-| Add manual text | `add_texts` | Titles, lower thirds, callouts, hook text, manual emphasis. |
-| Edit existing text | `update_text` | Change content or style of an existing text clip; use `add_texts` only to create new overlays. |
-| Clean up noisy audio | `denoise_audio` | Reduce background noise on captured audio before finalizing. |
+| Reorder/name/configure tracks | `manage_tracks` | Prefer stable `trackId` when supported. |
+| Link/unlink A/V | `manage_clip_links` | Use deliberately for independent audio/video editing. |
+| Add existing media | `add_clips` | Same-track overlap semantics may replace/trim content. |
+| Insert and ripple | `insert_clips` | Use when existing content must shift rather than be overwritten. |
+| Move clips | `move_clips` | Reposition in time/track. |
+| Remove timeline clips | `remove_clips` | Safer than deleting source media. |
+| Split clips | `split_clips` | Use when resulting sections need independent treatment. |
+| Delete/ripple exact ranges | `ripple_delete_ranges` | Non-word-aligned ranges/visual-only gaps. |
+| Swap clip source | `swap_clip_media` | Preserve edit intent while replacing underlying source when exposed. |
+| Trim/speed/volume/transform | `set_clip_properties` | Use live schema for exact fields. |
+| Copy clip settings | `copy_clip_settings` | Reuse styling/settings when exposed. |
+| Animate supported properties | `set_keyframes` | Fades/motion/automation; verify visible result. |
+| Apply PIP/stacked layout | `apply_layout` | Preferred for facecam + screenshare arrangements. |
+| Waveform sync | `sync_clips` | Align related recordings; avoid forcing weak/ambiguous sync. |
+| Undo latest shared action | `undo` | Only if latest editor action is known to be the one to revert; refresh state afterward. |
 
-## AI Generation and Upscaling
+## Multicam
 
-| Need | Tool | Notes |
-|---|---|---|
-| List model capabilities | `list_models` | Required before generation/upscale. Check type, duration, references, voices, assets. |
-| Generate video | `generate_video` | Async, returns placeholder asset. Costs credits; confirm first. |
-| Generate image | `generate_image` | Async, returns placeholder asset. Costs credits; confirm first. |
-| Generate audio | `generate_audio` | TTS, music, SFX, or video-to-audio depending on model. Confirm first. |
-| Upscale media | `upscale_media` | Async. Costs credits; confirm first. |
+| Need | Tool |
+|---|---|
+| Create/manage multicam | `manage_multicam` |
+| Switch camera/angle | `change_cam` |
+| Inspect multicam state | `get_multicam` |
 
-## Color and Effects
-
-| Need | Tool | Notes |
-|---|---|---|
-| Inspect color state | `inspect_color` | Use before correction or look changes. |
-| Apply color changes | `apply_color` | Use for intentional correction or grade. Verify with `inspect_timeline`. |
-| Apply effect | `apply_effect` | Use sparingly and deliberately. Verify visible result. |
-
-## Library Organization
-
-| Need | Tool | Notes |
-|---|---|---|
-| Organize media and folders (create/move/rename/delete) | `organize_media` | Single tool for folder and media organization. Deletion is destructive; confirm first, and prefer timeline `remove_clips` over deleting source media. |
-
-## Export and Feedback
+## Transcript / Pacing
 
 | Need | Tool | Notes |
 |---|---|---|
-| Export deliverable | `export_project` | Modes: `video`, `xml` (Premiere/Resolve), `fcpxml` (Final Cut; set `fcpxmlTarget`), and `palmier` package. Video renders in background. |
-| Check/manage export jobs | `manage_exports` | Inspect or manage background export jobs. |
-| Report tool issue | `send_feedback` | Use for concrete Palmier limitation, bug, or product suggestion. |
+| Read edited timeline speech | `get_transcript` | Use segments for comprehension, words for cuts. |
+| Cut by word | `remove_words` | Primary text-based editing; re-read transcript after mutation. |
+| Remove quiet/speech-free pauses | `remove_silence` | Purpose-built bulk dead-air cleanup. |
+| Detect beats | `detect_beats` | Music/rhythm workflows when relevant. |
+
+## Text / Captions
+
+| Need | Tool | Notes |
+|---|---|---|
+| Add titles/callouts | `add_texts` | Check current style fields; modern schemas may support outline/shadow/background. |
+| Update existing text/captions | `update_text` | Content/style updates. |
+| Add automatic captions | `add_captions` | Short-form or explicit caption request; not default for long-form 16:9. |
+
+## Color / Effects / Audio
+
+| Need | Tool | Notes |
+|---|---|---|
+| Inspect color | `inspect_color` | Read before correction/grade. |
+| Apply color | `apply_color` | Intentional correction/look only. |
+| Apply effect | `apply_effect` | Use sparingly; verify. |
+| Denoise audio | `denoise_audio` | Use only when noise is present/requested. |
+
+## Generation / Upscaling
+
+| Need | Tool | Notes |
+|---|---|---|
+| List current model capabilities | `list_models` | Required before generation/upscale proposal. |
+| Generate video | `generate_video` | Paid/credit action; explicit approval required. |
+| Generate image | `generate_image` | Paid/credit action; explicit approval required. |
+| Generate audio | `generate_audio` | Paid/credit action; explicit approval required. |
+| Upscale | `upscale_media` | Paid/credit action; explicit approval required. |
+
+## Feedback
+
+| Need | Tool |
+|---|---|
+| Report concrete Palmier tool limitation/bug | `send_feedback` |
 
 ## High-Leverage Workflows
 
-### First-Pass YouTube Edit
+### Fast Long-Form YouTube Edit
 
 ```text
 get_timeline
 get_media
-inspect_media primary footage
-get_transcript
-remove_words / ripple_delete_ranges
-add_captions
-add_texts for title/callouts
-inspect_timeline key sections
+create_timeline from=<active timelineId>   # broad edit copy
+get_timeline                               # IDs changed
+get_transcript granularity=segments
+inspect_media/search_media as needed
+remove_silence / remove_words / ripple_delete_ranges
+apply_layout / add_texts only where useful
+manage_markers for subjective decisions
+inspect_timeline hook + representative demo + overlays
+get_transcript verification
+stop for user review
 ```
 
-### Short-Form Cutdown
+Do not add a long-form caption track by default.
+
+### Transcript Cleanup Only
 
 ```text
 get_timeline
 get_transcript
-search_media for proof/demo/hook moment
-insert_clips or move_clips to assemble segment
-remove_words with tight/balanced pacing
-add_captions
-inspect_timeline
+remove_words
+get_transcript
+remove_silence if appropriate
+get_transcript verification
 ```
 
-### AI B-Roll Generation
+### YouTube Short From Long-Form
+
+```text
+get_timeline
+get_media
+create_timeline from=<active timelineId>
+get_timeline
+search_media / get_transcript to find one strong proof moment
+set_project_settings aspectRatio=9:16 only when requested/appropriate
+assemble/tighten segment
+add_captions
+inspect_timeline for safe mobile framing/caption placement
+```
+
+### AI B-Roll
 
 ```text
 get_timeline
 get_media
 list_models
-inspect reference media
-ask approval with model + prompt + duration/aspect
-organize_media if a folder is useful
-generate_image or generate_video
-get_media later for readiness
-add_clips or insert_clips
+inspect references
+present exact generation proposal
+WAIT FOR APPROVAL
+generate_*
+get_media to observe readiness
+place asset
 inspect_timeline
 ```
 
-### Export Review File
+### Normal YouTube Export
+
+Current guidance, subject to live schema:
 
 ```text
-inspect_timeline important moments
-export_project mode=video codec=h.264 resolution=matchtimeline
+export_project
+  mode=video
+  codec=H.264
+  resolution=Match Timeline
+  overwrite=false
+manage_exports action=list
 ```
+
+Omit `outputPath` unless the user supplies one.
 
 ## Decision Rules
 
-- Use `remove_words` before manual frame cuts for speech.
-- Use `add_captions` before manual caption text creation.
-- Use `inspect_timeline` for what the viewer sees.
-- Use `inspect_media` for raw source assets.
-- Use `insert_clips` when preserving existing timeline content matters.
-- Use `add_clips` when replacing/placing on a track is intentional.
-- Confirm before generation, upscaling, source deletion, or overwrite exports.
+- Live MCP schema overrides this document if they differ.
+- Broad edits should preserve the source timeline with `create_timeline`.
+- Re-read state after timeline copy/switch/undo or stale-state errors.
+- `remove_words` is primary for speech; re-read indices after mutation.
+- `remove_silence` is primary for bulk dead air.
+- `inspect_timeline` answers what the viewer sees.
+- `inspect_media` answers what raw source contains.
+- `insert_clips` preserves existing content by rippling; `add_clips` may intentionally replace/overlap.
+- Preserve A/V links unless independent editing is intentional.
+- Long-form does not get burned captions by default.
+- Use review markers for unresolved subjective choices.
+- Confirm before paid generation/upscale or source-media deletion.
+- Export only when requested, with overwrite protection by default.
 
 ## Quality Bar
 
-A tool choice is correct when it matches the user's editing intent, respects Palmier's frame-based timeline model, avoids unnecessary destructive actions, and leaves a reviewable timeline state.
+Correct tool routing must preserve current state, use exact IDs, match the user's edit intent, avoid accidental overwrite/destruction, preserve technical truth, keep important visuals readable, and produce a bounded reviewable timeline.
