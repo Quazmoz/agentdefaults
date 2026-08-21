@@ -2,255 +2,302 @@
 
 ## Purpose
 
-Provide a reusable workflow for transcript-driven editing, filler-word removal, retake cleanup, dead-air reduction, and caption creation in Palmier Pro through MCP.
+Provide a reusable, provider-neutral workflow for transcript-driven editing, filler/retake cleanup, dead-air reduction, and caption creation in Palmier Pro through external MCP.
 
-Use this skill when the user wants a talking-head video, tutorial, demo, podcast segment, interview, or screen recording tightened without manually calculating every frame.
+Use this skill from Claude Code or OpenAI Codex when tightening talking-head, tutorial, demo, podcast/interview, or screen-recording footage.
 
-**Caption scope:** the transcript-cleanup steps apply to any video, but burned-in captions are for vertical Shorts / short-form clips only. Do not add a caption track to long-form (16:9) videos unless the user explicitly asks — long-form uses callouts and lower-thirds via add_texts instead.
+## Core Principle
 
-## When To Use
+Use transcript editing to remove low-value speech while preserving meaning.
 
-Use this skill for:
+Do not optimize for the maximum number of cuts. Optimize for a natural, accurate, watchable result.
 
-- removing filler words
-- removing false starts
-- removing repeated phrases
-- removing duplicate takes
-- cleaning stumbles
-- tightening long pauses
-- finding a quote or topic in spoken media
-- creating captions (Shorts / short-form only)
-- verifying what remains audible after edits
-- converting long-form footage into clean spoken segments
+## Runtime Truth
 
-Do not use this skill to delete words that change meaning, remove important caveats, or create misleading speech.
+Use the live Palmier MCP schema for exact arguments and limits.
 
-## Inputs Needed
+Do not assume transcript shape, index limits, caption styling fields, or tool availability from stale examples.
 
-Minimum:
+## Source Transcript vs Timeline Transcript
 
-```text
-get_timeline
-get_transcript
-```
-
-Optional:
-
-```text
-inspect_media with wordTimestamps=true
-search_media with scope=spoken
-inspect_timeline for caption placement
-```
-
-## Core Distinction
-
-Palmier has two transcript surfaces:
+Palmier exposes two different concepts:
 
 | Surface | Use |
 |---|---|
-| `inspect_media` | Understand one source asset in source seconds. Useful before placement or for media-library analysis. |
-| `get_transcript` | Understand the current edited timeline in project frames. Required for timeline speech cleanup. |
+| `inspect_media` | Understand one raw source asset in source-time context. |
+| `get_transcript` | Understand what is currently audible on the edited timeline in project frames. |
 
-For timeline cleanup, default to `get_transcript`.
+For timeline speech cleanup, default to `get_transcript`.
+
+For long-form comprehension, use segment-level transcript granularity first when supported. Use word-level data only where cuts are needed.
 
 ## Safe Transcript Workflow
 
 ```text
-1. call get_timeline
-2. call get_transcript
-3. read transcript as prose, not just isolated tokens
-4. identify obvious removal candidates
-5. call remove_words with current indices
-6. call get_transcript again before the next remove_words call
-7. verify pacing and meaning
+1. get_timeline
+2. get_transcript granularity=segments   # structure/comprehension when useful
+3. identify candidate ranges
+4. get_transcript in word mode for the target window
+5. remove_words using current exact indices
+6. get_transcript again
+7. repeat only where needed
+8. verify meaning/pacing
 ```
 
-Important: after `remove_words`, indices shift. Re-read `get_transcript` before another removal.
+Critical invariant: every successful `remove_words` mutation can shift later word indices. Re-read before another index-based word cut.
 
 ## What To Remove By Default
 
-When the user asks for a cleanup pass, remove only clearly low-value material:
+For a normal cleanup pass, remove only clearly low-value material:
 
-- ums, uhs, ahs, ers
+- obvious `um`, `uh`, `er`, `ah` fillers
 - duplicated single words
 - immediate false starts
 - abandoned fragments
-- repeated retakes where the later version is clearer
-- long dead-air pauses that do not support pacing
-- accidental mouth sounds or tiny verbal resets when represented in the transcript
+- verbal resets
+- repeated takes when one version is clearly better
+- redundant explanations that add no new information
+- long dead air that carries no visual/readability value
 
-Keep:
+Do not globally remove ambiguous conversational words such as:
 
-- technical caveats
-- product names
-- model names
+```text
+like
+so
+well
+right
+just
+```
+
+unless the user explicitly requests it and the resulting speech is reviewed.
+
+## Preserve Technical Truth
+
+Always preserve information needed for accurate understanding:
+
 - commands
+- model/product/repo names
 - version numbers
-- pricing details
-- safety warnings
-- jokes or personality beats unless they hurt pacing
-- pauses that make a complex point understandable
+- prices/usage terms
+- compatibility requirements
+- prerequisites
+- caveats and warnings
+- uncertainty language
+- negative results or failed attempts that materially qualify the conclusion
 
-## Cut Aggressiveness
+Never cut a statement so that it becomes stronger, safer, cheaper, more compatible, or more successful than the speaker actually claimed.
 
-Use `cutAggressiveness` intentionally:
-
-| Mode | Use |
-|---|---|
-| `tight` | Shorts, ads, high-energy intros, obvious filler removal. |
-| `balanced` | Default for YouTube/tutorial talking-head edits. |
-| `loose` | Interviews, demos with complex points, reflective or natural pacing. |
-
-Default to `balanced` unless the user asks for a punchy short-form style.
-
-## Remove Words vs Ripple Ranges
-
-Use `remove_words` for anything word-aligned.
-
-Examples:
-
-```text
-remove filler words
-cut the repeated intro take
-remove the sentence where I restart
-trim the verbal stumble before the demo
-```
-
-Use `ripple_delete_ranges` only for non-word-aligned spans.
-
-Examples:
-
-```text
-remove 2 seconds of silence before the screen recording starts
-cut the dead air while the page loads
-remove a visual-only mistake between two spoken sections
-```
-
-For bulk removal of silent, speech-free spans across a clip, prefer `remove_silence` (purpose-built for dead-air cleanup) and reserve `ripple_delete_ranges` for specific known ranges and visual-only mistakes.
-
-## Retake Cleanup
+## Retake Selection
 
 When multiple takes exist:
 
-1. Read the transcript surrounding all takes.
-2. Preserve the clearest, most complete take.
-3. Remove earlier false starts and repeated attempts.
-4. Keep lead-in/out words that make the surviving take sound natural.
-5. Re-read `get_transcript` after removal.
+1. read enough surrounding transcript to compare complete meaning
+2. prefer the clearest complete take
+3. preserve natural lead-in/out words
+4. remove abandoned/repeated attempts
+5. re-read the edited transcript
 
-Do not remove a retake solely because wording is similar; compare meaning and clarity.
+If two takes are both plausible and the choice is subjective, prefer a Palmier review marker over silently deleting one as if the decision were objective.
 
-## Dead-Air Cleanup
+## Cut Aggressiveness
 
-For speech-adjacent pauses:
+Use current live options. Where Palmier exposes `tight`, `balanced`, and `loose`:
 
-- Prefer `remove_words` if the pause belongs to removed filler or a false start.
-- Use `remove_silence` for bulk silent spans, or `ripple_delete_ranges` for a specific known silent range.
-- Avoid cutting every breath; overly tight tutorial edits can sound unnatural.
+| Mode | Default use |
+|---|---|
+| `tight` | Shorts, ads, high-energy opening, explicit punchy style |
+| `balanced` | Default long-form YouTube/tutorial cleanup |
+| `loose` | Interviews, reflective delivery, sections needing breathing room |
 
-For technical demos:
+Do not use `tight` across a full technical tutorial by default.
 
-- Keep enough pause for viewers to read code, settings, command output, or UI changes.
-- Remove waiting time where nothing changes visually or verbally.
+## Remove Words vs Silence vs Range Deletion
 
-## Caption Workflow
+Use `remove_words` for word-aligned speech cleanup.
 
-When the user asks to caption the video:
+Use `remove_silence` for broad quiet/speech-free dead air when the selected clips/links satisfy Palmier's current constraints.
+
+Use `ripple_delete_ranges` for known non-word-aligned spans such as:
+
+- visual-only capture pre-roll
+- loading/waiting gaps
+- a visual mistake between spoken sections
+- silence that needs a precisely controlled frame range
+
+Do not manufacture many manual range cuts when a purpose-built transcript/silence tool can express the edit.
+
+## Dead-Air Policy For Technical Videos
+
+Keep pauses that viewers need to:
+
+- read code
+- inspect terminal output
+- see a UI transition
+- understand a command result
+- absorb a caveat
+- watch an async operation complete when the result matters
+
+Remove waiting time where nothing useful changes visually or verbally.
+
+Do not cut every breath.
+
+## Capture Pre-Roll
+
+Do not hard-code a fixed duration.
+
+Inspect each source start. If the recording begins on OBS/QuickTime/capture software before the intended content:
+
+- use transcript-aware removal if unwanted speech is part of the pre-roll
+- use a range cut for visual-only/non-word-aligned pre-roll
+
+## Caption Policy
+
+### Long-form YouTube / 16:9
+
+Do not add burned-in automatic captions by default.
+
+Add captions only when the user explicitly requests them.
+
+For normal long-form technical videos, use `add_texts` for sparse titles, commands, labels, and callouts instead.
+
+### Short-form / vertical
+
+Automatic captions are often appropriate for Shorts/Reels/TikTok-style output when requested or part of the chosen format.
+
+Use:
 
 ```text
-call add_captions
+add_captions
 ```
 
-Prefer `add_captions` over manually converting transcript words into text clips.
+rather than manually rebuilding every spoken word as text clips.
 
-Set language explicitly when the speech is not the system default language.
+## Caption Styling
 
-Useful parameters (confirm exact keys against the live tool):
+Use the live text/caption schema.
+
+Do not assume Palmier lacks outline, shadow, or background styling. Current versions may expose these directly.
+
+When styling captions:
+
+- keep lines short enough for mobile
+- avoid platform UI regions
+- avoid covering app/code/UI proof
+- use adequate contrast
+- preserve brand restraint
+
+After important caption changes:
 
 ```text
-language:        set when speech is not the system default
-maxWords:        words per caption line (keep short for mobile)
-transform:       { centerX: 0.5, centerY: 0.9 }   # normalized placement
-censorProfanity: user preference
-highlightColor / animation: optional karaoke-style emphasis
-fontSize / fontFamily / fontWeight / color: caption styling
+inspect_timeline
 ```
 
-For short-form social clips, consider larger captions and higher placement (lower `centerY`) if platform UI would cover the bottom.
+Verify actual composited placement.
 
 ## Manual Text vs Captions
 
-Use `add_texts` instead of `add_captions` for:
+Use `add_texts` for:
 
 - title cards
 - hooks
-- lower thirds
 - section labels
-- manual emphasis words
-- non-speech text
-- app/repo/product labels
+- lower thirds
+- app/repo/product names
+- commands
+- non-speech emphasis
 - CTAs
 
-Do not use generated video models to render captions or title cards. Add text in the editor.
+Use `add_captions` for speech-following caption tracks.
+
+Do not render text into generated video merely to create captions or title cards.
+
+## Long Transcript Efficiency
+
+For long projects:
+
+- use `granularity=segments` for story comprehension where available
+- narrow `startFrame`/`endFrame` windows for detailed edits
+- page results when the live schema reports a continuation boundary/limit
+- avoid repeatedly loading the entire word-level transcript after every small edit when only one local window changed
+
+Correctness still wins over token savings: refresh any indices/state that became invalid.
+
+## Speaker / Multi-Track Caution
+
+If Palmier refuses a word-removal request spanning incompatible/unlinked tracks:
+
+- do not force the call
+- edit one compatible track/link unit at a time
+- preserve sync/link semantics
+- use `manage_clip_links` only when link changes are actually required
 
 ## Verification
 
-After transcript cleanup:
+After speech cleanup:
 
 ```text
-call get_transcript
+get_transcript
 ```
 
 Check:
 
-- no obvious dangling fragments remain
-- meaning is preserved
-- technical claims still include their caveats
-- cuts do not remove necessary context
+- no dangling fragments
+- no accidental repeated seams
+- meaning remains accurate
+- technical caveats remain
+- no stale-index assumptions
 
-After captioning:
+After captions/text changes:
 
 ```text
-call inspect_timeline
+inspect_timeline
 ```
 
 Check:
 
-- captions are visible
-- captions do not collide with lower thirds or app UI
-- captions are not too low for platform controls
-- text is readable on mobile
+- legibility
+- safe placement
+- no collision with UI/lower thirds
+- no unintended long-form caption track
 
-## YouTube Technical Video Defaults
+## Failure Handling
 
-For developer/tutorial videos:
+If transcription is unavailable/incomplete:
 
-- Preserve command syntax exactly.
-- Preserve tool names and model names exactly.
-- Do not cut caveats like "experimental", "not production-ready", or "driver-dependent".
-- Do not remove explanations needed for viewers to reproduce the workflow.
-- Tighten rambling setup before the practical demo.
-- Add captions when the video includes code, commands, or acronyms that benefit from text reinforcement.
+1. inspect the tool error/status
+2. inspect source media if that can unblock understanding
+3. retry only when the stated condition is likely transient and no paid side effect is involved
+4. do not invent transcript text
+
+If a word-removal mutation produces an obviously bad seam:
+
+- use `undo` only if the latest shared editor action is known to be that cut
+- refresh transcript/timeline state
+- retry with corrected current indices/aggressiveness
 
 ## Expected Output
 
-After a cleanup pass:
+Long-form cleanup:
 
 ```text
-Done — removed obvious filler, one repeated take, and the long silence before the demo while preserving the technical caveats.
+Done — removed the obvious fillers, one false start, and two repeated takes while keeping the technical caveats and readable demo pauses. No caption track was added.
 ```
 
-When blocked:
+Short-form caption pass:
 
 ```text
-The transcript is not ready for the target clip yet. I can inspect the source media first, then retry transcript cleanup once Palmier has indexed it.
+Done — tightened the selected Short, added mobile-readable captions, and verified they do not cover the key UI.
 ```
 
 ## Quality Bar
 
-- Uses `get_transcript` for timeline speech edits.
-- Re-reads transcript after each `remove_words` call.
-- Preserves meaning, caveats, and technical accuracy.
-- Uses `ripple_delete_ranges` only when word removal is not appropriate.
-- Uses `add_captions` for automatic captions.
-- Verifies caption visibility when placement matters.
+- Uses edited-timeline transcript for timeline speech cuts.
+- Uses segment-level reading where it improves long-context efficiency.
+- Refreshes indices after each word mutation.
+- Preserves technical meaning and qualifying language.
+- Uses silence/range tools for the correct class of cut.
+- Does not over-tighten technical reading pauses.
+- Does not add long-form burned captions by default.
+- Uses current live styling capabilities.
+- Verifies caption placement when relevant.
+- Marks subjective retake decisions rather than pretending certainty.
