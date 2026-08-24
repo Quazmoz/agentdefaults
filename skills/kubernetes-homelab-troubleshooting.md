@@ -2,262 +2,189 @@
 
 ## Purpose
 
-Use this skill when an agent needs to diagnose and resolve Kubernetes homelab issues in a practical, low-blast-radius way.
+Diagnose `Quazmoz/K8SHomelab` failures from authoritative desired state, Flux controller state, and live Kubernetes evidence while minimizing blast radius and converting temporary runtime workarounds into durable GitOps fixes.
 
-This skill supports `agents/kubernetes-homelab-engineer.md`, especially for Flux, DNS, Calico, MetalLB, WireGuard, ingress, local PV, and node scheduling problems.
+## Trigger Conditions
 
-## When To Use
+Use for:
 
-Use this skill for:
+- Flux Kustomization/HelmRelease/source errors
+- Pending, CrashLoopBackOff, ImagePullBackOff, OOMKilled, probe, or scheduling failures
+- PVC/PV/mount problems
+- Service/Ingress/MetalLB/DNS/Calico failures
+- node readiness or capacity problems
+- Prometheus/Grafana/Loki/Alloy failures
+- MCP/OpenWebUI/n8n/OpenClaw/Hermes/Phoenix runtime issues
 
-- Flux reconciliation failures
-- Pods stuck in Pending, CrashLoopBackOff, ImagePullBackOff, or Init states
-- DNS failures
-- Ingress routing failures
-- MetalLB LoadBalancer issues
-- Calico CNI/VXLAN problems
-- Oracle/WireGuard node connectivity issues
-- Local PV/PVC binding issues
-- Metrics-server, CoreDNS, Prometheus, Grafana, or app health issues
+Pair with `skills/kubernetes-gitops-change-management.md` when remediation requires a repo patch.
 
-## Inputs Needed
+## Preconditions
 
-Ask for targeted command output only when repo inspection is not enough.
+1. read `K8SHomelab/AGENTS.md`
+2. use Graft-first discovery when local Graft is available
+3. inspect the relevant current manifests and repo-local troubleshooting skill
+4. identify the exact Git branch/revision under investigation
+5. identify the exact Kubernetes context before running live commands
 
-Useful inputs:
+A remote GitHub-only agent can diagnose source-level issues but must mark live state as `UNVERIFIED` if it cannot query the cluster.
 
-```bash
-flux get all -A
-kubectl get nodes -o wide
-kubectl get pods -A -o wide
-kubectl get events -A --sort-by=.lastTimestamp | tail -50
-kubectl describe pod -n <namespace> <pod>
-kubectl logs -n <namespace> <pod-or-deploy> --tail=100
-```
+## Evidence Precedence
 
-For homelab network issues:
+Use:
 
-```bash
-kubectl get svc -A
-kubectl get ingress -A
-kubectl get pods -n kube-system -o wide
-kubectl get pods -n metallb-system -o wide
-kubectl get pods -n ingress-nginx -o wide
-sudo wg show
-```
+1. current manifests and exact Git revision
+2. live Flux/Kubernetes state from the verified context
+3. repo-local skill/current app docs
+4. general README/AGENT_CONTEXT/docs
+5. historical homelab assumptions
 
-## Instructions
+Current docs conflict on whether Oracle/WireGuard workers are active. Do not start an Oracle/WireGuard diagnosis unless current node/runtime/source evidence establishes those components.
 
-### 1. Start With Scope
+## Cluster Context Safety
 
-Classify the failure:
-
-| Area | Symptoms |
-|------|----------|
-| Flux | Kustomization/HelmRelease not ready, source errors, apply errors |
-| Scheduling | Pending pods, node affinity mismatch, taints, unavailable nodes |
-| Image | ImagePullBackOff, wrong tag, private registry auth |
-| Storage | PVC Pending, PV node affinity conflict, mount failures |
-| Network | Service unreachable, ingress 404/502, MetalLB IP missing |
-| DNS | `nslookup` fails, services unreachable by name, CoreDNS errors |
-| CNI | Pods cannot communicate, Calico pods unhealthy, VXLAN/MTU issues |
-| Node | NotReady, WireGuard down, kubelet issues, disk pressure |
-
-### 2. Use Least-Destructive Diagnostics First
-
-Prefer read-only diagnostics before restarts or deletes.
-
-Good first checks:
+Before any mutation—and preferably before diagnostics when multiple clusters are configured—verify:
 
 ```bash
-flux get all -A
-kubectl get pods -A -o wide
-kubectl get events -A --sort-by=.lastTimestamp | tail -50
-kubectl describe <resource> -n <namespace> <name>
+kubectl config get-contexts
+kubectl config current-context
+kubectl --context <homelab-context> cluster-info
+kubectl --context <homelab-context> get nodes -o wide
 ```
 
-Avoid jumping directly to:
+Do not replace the operator's kubeconfig or silently switch an unrelated cluster context.
 
-- Deleting pods
-- Deleting PVCs/PVs
-- Reinstalling CNI
-- Rebooting nodes
-- Restarting kubelet
-- Rebuilding Flux
-- Changing MetalLB pools
+## Diagnostic Workflow
 
-### 3. Map Symptom to Likely Cause
+1. **Define symptom and postcondition.** What is failing, and what observable state would count as recovered?
+2. **Inspect expected state.** Use Graft/current manifests to understand what Flux is meant to create.
+3. **Check controller state.** Determine source revision, Kustomization/HelmRelease Ready status, and reconciliation errors.
+4. **Check runtime state.** Nodes, pods, events, endpoints, PVC/PV, ingress, DNS, metrics, or logs as relevant.
+5. **Correlate timelines.** Compare recent Git change/reconciliation generation with events/restarts.
+6. **Rank hypotheses.** Give the evidence-backed most likely cause first; avoid shotgun lists.
+7. **Use least-destructive test.** Prefer describe/log/get/render/connectivity checks before restart/delete.
+8. **Remediate narrowly.** Patch desired state when configuration is causal. Runtime restarts are temporary diagnostics unless the desired state is already correct.
+9. **Verify recovery.** Controller Ready + affected runtime/user postcondition + no new critical adjacent errors.
+10. **Capture regression prevention.** Update manifests/docs/tests/monitoring when the defect can recur.
 
-Use these heuristics, but verify before acting:
+## Failure Classification
 
-- `Pending` + PVC: check PV/PVC binding, storage class, local PV node affinity.
-- `Pending` + node affinity: check node labels and Oracle node exclusion rules.
-- `ImagePullBackOff`: check image name, tag, registry auth, architecture support.
-- Flux Kustomization error: run local `kubectl kustomize` or inspect missing resources.
-- HelmRelease not ready: inspect HelmRelease events and chart values.
-- Ingress 404: check host, path, ingress class, service name, service port.
-- Ingress 502/504: check endpoints and pod readiness.
-- LoadBalancer pending/missing IP: check MetalLB pool and speaker health.
-- DNS failure: check CoreDNS placement, logs, and Oracle node scheduling.
-- Calico failure: check node IP autodetection, VXLAN interface, MTU, and node readiness.
-- Oracle node NotReady: check WireGuard and node reachability first.
+| Area | Typical evidence |
+|---|---|
+| Flux/source | source revision, reconciliation status, apply/health-check errors |
+| Scheduling | FailedScheduling events, taints, affinity, resources, architecture |
+| Image/runtime | pull errors, exit code, OOMKilled, command/args, architecture mismatch |
+| Storage | PVC Pending, PV affinity, mount errors, RWO rollout conflict, disk capacity |
+| Service | selectors, EndpointSlice/endpoints, readiness, targetPort |
+| Ingress | host/path/class, backend endpoints, controller logs, 404/502/504 |
+| MetalLB | pool/advertisement/speaker status, assigned IP, L2 reachability |
+| DNS | CoreDNS readiness/logs, service lookup, upstream resolver behavior |
+| CNI | Calico status/logs, node addressing, VXLAN/MTU/interface evidence |
+| Node | Ready conditions, kubelet/container runtime/disk/memory/network |
+| App dependency | Secret/config/database/cache/MCP/external API connection evidence |
 
-### 4. Preserve Homelab Constraints
+## Read-Only Diagnostic Library
 
-When diagnosing this repo, remember:
-
-- Oracle nodes are scheduling-sensitive due to WireGuard reliability.
-- Local PV workloads should stay on the correct local node.
-- CoreDNS, metrics-server, and MetalLB speaker should avoid Oracle nodes unless explicitly supported.
-- MetalLB IPs must not conflict.
-- `.k8s.local` hosts usually require local DNS or `/etc/hosts` entries.
-- GitOps drift should be fixed in git, not only in the live cluster.
-
-### 5. Produce a Ranked Diagnosis
-
-Do not list every theoretical cause. Give the most likely cause first.
-
-Use this format:
-
-````markdown
-Likely cause: <cause>.
-
-Evidence:
-- <evidence from logs/files/output>
-
-Fix:
-- <repo change or command>
-
-Validate:
-```bash
-<command>
-```
-````
-
-### 6. Escalate Carefully
-
-Only suggest higher-risk actions after safer checks fail.
-
-Escalation order:
-
-1. Inspect resources/logs/events.
-2. Reconcile Flux.
-3. Restart only the affected deployment/pod if safe.
-4. Patch repo manifests and reconcile.
-5. Restart node-level services only if evidence points there.
-6. Change CNI, MetalLB, CoreDNS, or storage only with explicit rollback notes.
-
-### 7. Convert Runtime Fixes Back to Git
-
-If a temporary runtime command fixes the issue, identify the declarative change needed to make it permanent.
-
-Example:
-
-```markdown
-The runtime restart may clear the current failure, but the durable fix is to update `<file>` so Flux reconciles the correct state.
-```
-
-## Validation Commands By Area
-
-### Flux
+Use only relevant commands with an explicit context:
 
 ```bash
-flux get all -A
-flux logs --all-namespaces --level=error --tail=100
-kubectl describe kustomization -n flux-system apps
-kubectl kustomize apps/base
-```
+flux --context <homelab-context> get all -A
+kubectl --context <homelab-context> get nodes -o wide
+kubectl --context <homelab-context> get pods -A -o wide
+kubectl --context <homelab-context> get events -A --sort-by=.lastTimestamp
 
-### Scheduling
-
-```bash
-kubectl get nodes --show-labels
-kubectl describe pod -n <namespace> <pod>
-kubectl get events -A --field-selector reason=FailedScheduling
-```
-
-### Storage
-
-```bash
-kubectl get pv,pvc -A
-kubectl describe pvc -n <namespace> <pvc>
-kubectl describe pv <pv>
+kubectl --context <homelab-context> describe pod -n <namespace> <pod>
+kubectl --context <homelab-context> logs -n <namespace> <pod> --tail=100
+kubectl --context <homelab-context> get svc,endpoints,endpointslices -n <namespace>
+kubectl --context <homelab-context> get ingress -A
+kubectl --context <homelab-context> get pv
+kubectl --context <homelab-context> get pvc -A
 ```
 
 ### DNS
 
 ```bash
-kubectl get pods -n kube-system -l k8s-app=kube-dns -o wide
-kubectl logs -n kube-system deploy/coredns --tail=100
-kubectl run -it --rm dns-test --image=busybox --restart=Never -- nslookup kubernetes.default.svc.cluster.local
+kubectl --context <homelab-context> get pods -n kube-system -l k8s-app=kube-dns -o wide
+kubectl --context <homelab-context> logs -n kube-system deploy/coredns --tail=100
 ```
 
-### Ingress
-
-```bash
-kubectl get ingress -A
-kubectl describe ingress -n <namespace> <ingress>
-kubectl get svc,endpoints -n <namespace>
-```
+Create a temporary DNS test pod only if runtime mutation authority permits it; remove it afterward and do not confuse it with desired GitOps state.
 
 ### MetalLB
 
 ```bash
-kubectl get ipaddresspools -A
-kubectl get l2advertisements -A
-kubectl get pods -n metallb-system -o wide
-kubectl get svc -A | grep LoadBalancer
+kubectl --context <homelab-context> get ipaddresspools -A
+kubectl --context <homelab-context> get l2advertisements -A
+kubectl --context <homelab-context> get pods -n metallb-system -o wide
+kubectl --context <homelab-context> get svc -A
 ```
 
 ### Calico
 
 ```bash
-kubectl get pods -n kube-system -l k8s-app=calico-node -o wide
-kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
-kubectl get nodes -o wide
+kubectl --context <homelab-context> get pods -n kube-system -l k8s-app=calico-node -o wide
+kubectl --context <homelab-context> logs -n kube-system -l k8s-app=calico-node --tail=100
 ```
 
-### WireGuard / Oracle Nodes
+## Escalation Order
 
-```bash
-kubectl get nodes -o wide
-sudo wg show
-ping <wireguard-ip>
+1. current Git/Graft evidence
+2. read-only controller/runtime status
+3. targeted logs/events/describe
+4. local render/diff/manifest correction
+5. reconcile the corrected desired state
+6. restart only the affected workload when evidence supports it
+7. node service restart only when node-level evidence supports it
+8. CNI/DNS/MetalLB/storage/control-plane change only with explicit approval and rollback/recovery plan
+
+Never delete PVC/PV, reset kubeadm, reinstall CNI, rotate SOPS keys, or wipe storage as an early troubleshooting step.
+
+## Timeout and Retry Rules
+
+- Retry transient read failures only with a small bound.
+- After an uncertain mutation result, inspect authoritative state before repeating it.
+- A Flux reconcile timeout may still have succeeded; check observed revision/conditions before retrying.
+- A timed-out external side effect from an automation workload may have succeeded; inspect idempotency/state before retry.
+- Stop if repeated evidence contradicts the current hypothesis rather than escalating blindly.
+
+## AI / MCP / Automation Failure Rules
+
+For OpenClaw, Hermes Agent, MCP, n8n, OpenWebUI tools, or similar systems, distinguish:
+
+- Kubernetes transport/runtime failure
+- service configuration or credential reference failure
+- MCP/tool contract failure
+- model/agent reasoning failure
+- external API side-effect failure
+
+Do not fix an agent/tool semantic defect by repeatedly restarting Kubernetes. For external mutations, investigate duplicate/idempotency semantics and approval boundaries before retrying.
+
+## Remediation Requirements
+
+A proposed fix must include:
+
+- evidence tying it to the failure
+- exact target file/resource or runtime operation
+- blast radius
+- rollback/recovery path when non-trivial
+- validation commands and expected postconditions
+
+If a temporary runtime action fixes the symptom, identify whether a Git change, alert, runbook, probe, resource setting, or dependency fix is needed to prevent recurrence.
+
+## Output Contract
+
+```text
+STATUS
+SYMPTOM
+EVIDENCE
+LIKELY CAUSE
+IMPLEMENTED
+VERIFIED
+UNVERIFIED
+RISKS
+ROLLBACK
+USER ACTION
 ```
 
-## Expected Output
+## Completion Criteria
 
-````markdown
-Likely cause: <specific cause>.
-
-Evidence:
-- <evidence>
-- <evidence>
-
-Fix:
-- <specific action or file change>
-
-Validate:
-```bash
-<commands>
-```
-
-Rollback:
-- <only if risky>
-````
-
-## Quality Bar
-
-A good troubleshooting response:
-
-- Starts with the most likely cause
-- Uses evidence from repo files or command output
-- Avoids generic Kubernetes advice
-- Avoids destructive fixes until necessary
-- Preserves GitOps as the long-term fix
-- Includes focused validation commands
-- Notes rollback when blast radius is non-trivial
-
-## Notes
-
-Pair this skill with `skills/kubernetes-gitops-change-management.md` when a diagnosis requires a repo patch.
+Do not call an incident resolved until the affected postcondition is observed and the controller/runtime state is consistent with desired state. If cluster access is unavailable, provide the evidence-backed diagnosis and targeted checks but mark resolution `UNVERIFIED`.
