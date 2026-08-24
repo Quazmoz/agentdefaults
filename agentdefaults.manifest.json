@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.14.0",
-  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.15.0",
+  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -37,6 +37,17 @@
       "example": "examples/principal-devops-task.yaml",
       "acceptance_tests": "docs/principal-devops-engineer-acceptance-tests.md",
       "wrapper": ".github/agents/principal-devops-engineer.agent.md"
+    },
+    {
+      "name": "Kubernetes Homelab Engineering",
+      "quickstart": "docs/quickstarts/kubernetes-homelab-engineer.md",
+      "agent": "agents/kubernetes-homelab-engineer.md",
+      "skills": [
+        "skills/kubernetes-gitops-change-management.md",
+        "skills/kubernetes-homelab-troubleshooting.md"
+      ],
+      "acceptance_tests": "docs/kubernetes-homelab-engineer-acceptance-tests.md",
+      "wrapper": ".github/agents/kubernetes-homelab-engineer.agent.md"
     },
     {
       "name": "DevSecOps Security Engineering",
