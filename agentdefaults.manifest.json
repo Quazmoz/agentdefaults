@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.16.0",
-  "description": "Reusable defaults for AI agent architecture and construction, codebase maintenance and de-slop refactoring, combined and scoped production AI/DevOps engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.17.0",
+  "description": "Reusable defaults for AI agent architecture and construction, bounded two-agent completion, codebase maintenance and de-slop refactoring, combined and scoped production AI/DevOps engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -9,8 +9,12 @@
       "name": "Agent Architect and Builder",
       "quickstart": "docs/quickstarts/agent-builder.md",
       "agent": "agents/agent-architect-builder.md",
-      "skills": ["skills/agent-design-and-build.md"],
-      "prompts": ["prompts/planning/build-ai-agent.md"],
+      "skills": [
+        "skills/agent-design-and-build.md"
+      ],
+      "prompts": [
+        "prompts/planning/build-ai-agent.md"
+      ],
       "schema": "schemas/agent-build-brief.schema.json",
       "example": "examples/agent-build-brief.yaml",
       "acceptance_tests": "docs/agent-builder-acceptance-tests.md",
@@ -20,19 +24,46 @@
       "name": "Codebase Maintenance and De-Slop Engineering",
       "quickstart": "docs/quickstarts/codebase-maintenance-engineer.md",
       "agent": "agents/codebase-maintenance-engineer.md",
-      "skills": ["skills/codebase-de-slop-and-refactoring.md"],
-      "prompts": ["prompts/implementation/codebase-de-slop-task.md"],
+      "skills": [
+        "skills/codebase-de-slop-and-refactoring.md"
+      ],
+      "prompts": [
+        "prompts/implementation/codebase-de-slop-task.md"
+      ],
       "schema": "schemas/codebase-maintenance-task.schema.json",
       "example": "examples/codebase-maintenance-task.yaml",
       "acceptance_tests": "docs/codebase-maintenance-engineer-acceptance-tests.md",
       "wrapper": ".github/agents/codebase-maintenance-engineer.agent.md"
     },
     {
+      "name": "Bounded Two-Agent Completion",
+      "quickstart": "docs/quickstarts/bounded-completion.md",
+      "agent": "agents/bounded-completion-lead.md",
+      "skills": [
+        "skills/bounded-completion-orchestration.md"
+      ],
+      "prompts": [
+        "prompts/orchestration/start-bounded-completion.md",
+        "prompts/orchestration/resume-bounded-completion.md",
+        "prompts/orchestration/reset-bounded-completion.md",
+        "prompts/orchestration/escalate-bounded-completion.md",
+        "prompts/review/bounded-completion-review.md"
+      ],
+      "schema": "schemas/bounded-completion-task.schema.json",
+      "example": "examples/bounded-completion-task.json",
+      "acceptance_tests": "docs/bounded-completion-acceptance-tests.md",
+      "wrapper": ".github/agents/bounded-completion-lead.agent.md"
+    },
+    {
       "name": "Principal AI and DevOps Engineering",
       "quickstart": "docs/quickstarts/principal-ai-devops-engineer.md",
       "agent": "agents/principal-ai-devops-engineer.md",
-      "skills": ["skills/production-ai-devops-engineering.md"],
-      "prompts": ["prompts/implementation/principal-ai-devops-task.md"],
+      "skills": [
+        "skills/production-ai-devops-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/principal-ai-devops-task.md"
+      ],
       "schema": "schemas/principal-ai-devops-task.schema.json",
       "example": "examples/principal-ai-devops-task.yaml",
       "acceptance_tests": "docs/principal-ai-devops-engineer-acceptance-tests.md",
@@ -42,8 +73,12 @@
       "name": "Principal DevOps Engineering",
       "quickstart": "docs/quickstarts/principal-devops-engineer.md",
       "agent": "agents/principal-devops-engineer.md",
-      "skills": ["skills/production-devops-engineering.md"],
-      "prompts": ["prompts/implementation/principal-devops-task.md"],
+      "skills": [
+        "skills/production-devops-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/principal-devops-task.md"
+      ],
       "schema": "schemas/principal-devops-task.schema.json",
       "example": "examples/principal-devops-task.yaml",
       "acceptance_tests": "docs/principal-devops-engineer-acceptance-tests.md",
@@ -64,8 +99,12 @@
       "name": "DevSecOps Security Engineering",
       "quickstart": "docs/quickstarts/devsecops-security-engineer.md",
       "agent": "agents/devsecops-security-engineer.md",
-      "skills": ["skills/devsecops-security-engineering.md"],
-      "prompts": ["prompts/implementation/devsecops-security-task.md"],
+      "skills": [
+        "skills/devsecops-security-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/devsecops-security-task.md"
+      ],
       "schema": "schemas/devsecops-security-task.schema.json",
       "example": "examples/devsecops-security-task.yaml",
       "acceptance_tests": "docs/devsecops-security-engineer-acceptance-tests.md",
@@ -75,8 +114,12 @@
       "name": "DevOps Documentation Engineering",
       "quickstart": "docs/quickstarts/devops-documentation-engineer.md",
       "agent": "agents/devops-documentation-engineer.md",
-      "skills": ["skills/devops-documentation-engineering.md"],
-      "prompts": ["prompts/implementation/devops-documentation-task.md"],
+      "skills": [
+        "skills/devops-documentation-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/devops-documentation-task.md"
+      ],
       "schema": "schemas/devops-documentation-task.schema.json",
       "example": "examples/devops-documentation-task.yaml",
       "acceptance_tests": "docs/devops-documentation-engineer-acceptance-tests.md",
@@ -86,8 +129,12 @@
       "name": "Principal AI Engineering",
       "quickstart": "docs/quickstarts/principal-ai-engineer.md",
       "agent": "agents/principal-ai-engineer.md",
-      "skills": ["skills/production-ai-engineering.md"],
-      "prompts": ["prompts/implementation/principal-ai-engineer-task.md"],
+      "skills": [
+        "skills/production-ai-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/principal-ai-engineer-task.md"
+      ],
       "schema": "schemas/principal-ai-engineer-task.schema.json",
       "example": "examples/principal-ai-engineer-task.yaml",
       "acceptance_tests": "docs/principal-ai-engineer-acceptance-tests.md",
@@ -189,7 +236,9 @@
         "skills/forum-demand-mining.md",
         "skills/subreddit-app-idea-validation.md"
       ],
-      "prompts": ["prompts/research/validate-app-idea-in-community.md"],
+      "prompts": [
+        "prompts/research/validate-app-idea-in-community.md"
+      ],
       "wrapper": ".github/agents/community-app-idea-validator.agent.md"
     },
     {
@@ -210,7 +259,9 @@
         "skills/wearos-screen-edge-safety.md",
         "skills/token-efficient-response-compression.md"
       ],
-      "prompts": ["prompts/implementation/wearos-app-development.md"]
+      "prompts": [
+        "prompts/implementation/wearos-app-development.md"
+      ]
     },
     {
       "name": "Wear OS Play Store Release",
@@ -220,7 +271,9 @@
         "skills/wearos-playstore-readiness.md",
         "skills/wearos-screen-edge-safety.md"
       ],
-      "prompts": ["prompts/review/wearos-release-readiness-review.md"],
+      "prompts": [
+        "prompts/review/wearos-release-readiness-review.md"
+      ],
       "example": "examples/stacks/wearos-playstore-release.md"
     },
     {
@@ -231,7 +284,9 @@
         "skills/us-europe-baggage-packing-research.md",
         "skills/token-efficient-response-compression.md"
       ],
-      "prompts": ["prompts/planning/us-europe-trip-prep.md"],
+      "prompts": [
+        "prompts/planning/us-europe-trip-prep.md"
+      ],
       "example": "examples/stacks/us-europe-travel-prep.md"
     }
   ]

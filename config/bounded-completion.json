@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "require_distinct_reviewer_model": true,
+  "limits": {
+    "max_full_loop_iterations": 12,
+    "max_unchanged_failure_attempts": 2,
+    "max_plan_review_rounds": 2,
+    "max_final_review_rounds": 3,
+    "verification_timeout_seconds": 600,
+    "subagent_timeout_seconds": 600,
+    "max_retained_verification_logs": 10,
+    "max_unchanged_state_iterations": 2,
+    "max_stop_hook_continuations": 1
+  },
+  "preferred_model_labels": {
+    "lead": "Qwen3 Coder Next Q6",
+    "reviewer": "Qwen 3.6 35B Vision"
+  }
+}

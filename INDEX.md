@@ -8,6 +8,7 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 
 | Need | Start with |
 |---|---|
+| Run a bounded lead/reviewer completion loop in VS Code Copilot | [`docs/quickstarts/bounded-completion.md`](docs/quickstarts/bounded-completion.md) |
 | Choose among the principal and specialist engineering agents | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
 | Use OpenAI Codex | [`docs/quickstarts/codex.md`](docs/quickstarts/codex.md) |
 | Use Claude Code | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
@@ -16,6 +17,23 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 | Use a generic repository-aware agent | [`AGENTS.md`](AGENTS.md) |
 | See all tool mappings | [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) |
 | Validate the repository | [`scripts/validate-agentdefaults.py`](scripts/validate-agentdefaults.py) |
+
+## Bounded Completion Workflow
+
+Use [`docs/quickstarts/bounded-completion.md`](docs/quickstarts/bounded-completion.md) when implementation/qualification work needs a single Integration Owner, independent adversarial review, durable loop state, deterministic verification, bounded continuation, visual-artifact evidence, and an objective completion gate.
+
+```text
+agents/bounded-completion-lead.md
+agents/bounded-completion-reviewer.md
+skills/bounded-completion-orchestration.md
+schemas/bounded-completion-task.schema.json
+config/bounded-completion.json
+scripts/bounded-completion.py
+.github/agents/bounded-completion-lead.agent.md
+.github/agents/bounded-completion-reviewer.agent.md
+```
+
+The custom agents intentionally omit `model:` bindings until exact qualified local model identifiers are repository-discoverable. The operator guide documents manual VS Code model-picker selection for the intended Qwen lead/reviewer roles.
 
 ## Principal Engineering Routing
 
@@ -57,6 +75,7 @@ The authoritative stack composition is [`agentdefaults.manifest.json`](agentdefa
 
 - Agent Architect and Builder
 - Codebase Maintenance and De-Slop Engineering
+- Bounded Two-Agent Completion
 - Principal AI and DevOps Engineering
 - Principal DevOps Engineering
 - Kubernetes Homelab Engineering
@@ -79,7 +98,7 @@ The authoritative stack composition is [`agentdefaults.manifest.json`](agentdefa
 agents/   complete reusable agent profiles
 skills/   composable behavior/task modules
 prompts/  reusable task and benchmark prompts
-schemas/  machine-readable workflow contracts
+schemas/  machine-readable contracts for structured workflows
 ```
 
 Tool-specific entrypoints and wrappers route to these files; they are not separate canonical implementations.
@@ -104,6 +123,6 @@ Run:
 python3 scripts/validate-agentdefaults.py
 ```
 
-The canonical suite covers structure, schemas, manifest integrity, stack invariants, Markdown links, cross-tool entrypoints, principal engineering contracts, specialist DevOps documentation contracts, DevSecOps security contracts, and codebase-maintenance/de-slop contracts. K8SHomelab-specific behavior is additionally covered by [`docs/kubernetes-homelab-engineer-acceptance-tests.md`](docs/kubernetes-homelab-engineer-acceptance-tests.md), while maintenance behavior is covered by [`docs/codebase-maintenance-engineer-acceptance-tests.md`](docs/codebase-maintenance-engineer-acceptance-tests.md).
+The canonical suite covers structure, schemas, manifest integrity, stack invariants, Markdown links, cross-tool entrypoints, principal engineering contracts, specialist DevOps documentation contracts, DevSecOps security contracts, codebase-maintenance/de-slop contracts, and bounded-completion control-plane regressions. K8SHomelab-specific behavior is additionally covered by [`docs/kubernetes-homelab-engineer-acceptance-tests.md`](docs/kubernetes-homelab-engineer-acceptance-tests.md), while maintenance behavior is covered by [`docs/codebase-maintenance-engineer-acceptance-tests.md`](docs/codebase-maintenance-engineer-acceptance-tests.md).
 
 Do not report a validator as passed unless it actually ran successfully.
