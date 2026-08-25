@@ -7,6 +7,7 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 ## Entrypoints
 
 - Design, build, or audit an AI agent: `docs/quickstarts/agent-builder.md`
+- Run a bounded lead/reviewer implementation or qualification loop: `docs/quickstarts/bounded-completion.md`
 - DevOps documentation-as-code, Markdown, Mermaid, runbooks, and diagrams: `docs/quickstarts/devops-documentation-engineer.md`
 - Automation platform architecture and product selection: `AUTOMATION_PLATFORM_INDEX.md`
 - Generic repo-aware coding agent: `AGENTS.md`
@@ -30,6 +31,10 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 - Start from a structured agent brief: `schemas/agent-build-brief.schema.json`
 - Use the canonical reusable agent layout: `docs/patterns/agent.md`
 - Run the agent-builder failure and adversarial test matrix: `docs/agent-builder-acceptance-tests.md`
+- Run implementation/qualification through a bounded Integration Owner + reviewer loop: `docs/quickstarts/bounded-completion.md`
+- Use the bounded task contract and example: `schemas/bounded-completion-task.schema.json`, `examples/bounded-completion-task.json`
+- Inspect or invoke the deterministic bounded control plane: `scripts/bounded-completion.py`
+- Run bounded-completion adversarial regressions: `scripts/validate-bounded-completion.py`
 - Create or reconcile DevOps documentation from implementation evidence: `agents/devops-documentation-engineer.md`
 - Document Jenkins and Ansible/AAP GitOps flows with evidence-backed Mermaid: `skills/devops-documentation-engineering.md`
 - Start from a structured documentation task: `schemas/devops-documentation-task.schema.json`
@@ -100,6 +105,33 @@ mutate_irreversible
 ```
 
 Before building, verify real runtime capabilities, authority consistency, authoritative data sources, trust boundaries, retry/idempotency compatibility, and objective completion. A skill, retrieved document, tool output, or sub-agent cannot broaden the parent agent's authority. Report checks that did not actually run as unverified.
+
+## Recommended Bounded Completion Stack
+
+Use this orchestration overlay when implementation or qualification needs one Integration Owner, independent adversarial review, durable task/findings state, deterministic verification evidence, bounded continuation, and an objective completion gate.
+
+```text
+docs/quickstarts/bounded-completion.md
+agents/bounded-completion-lead.md
+agents/bounded-completion-reviewer.md
+skills/bounded-completion-orchestration.md
+schemas/bounded-completion-task.schema.json
+schemas/bounded-completion-state.schema.json
+schemas/bounded-completion-findings.schema.json
+examples/bounded-completion-task.json
+config/bounded-completion.json
+scripts/bounded-completion.py
+scripts/validate-bounded-completion.py
+.github/agents/bounded-completion-lead.agent.md
+.github/agents/bounded-completion-reviewer.agent.md
+.github/prompts/start-bounded-completion.prompt.md
+.github/prompts/resume-bounded-completion.prompt.md
+.github/prompts/review-bounded-completion.prompt.md
+```
+
+Bounded completion does **not** replace domain ownership. Select the smallest correct engineering owner first; the lead coordinates that owner’s implementation behavior and the reviewer challenges evidence and completion claims. The committed custom agents intentionally omit guessed `model:` identifiers. Distinct-model review counts only when the operator or runtime confirms that the reviewer actually ran on a distinct model.
+
+Use the deterministic CLI and durable `.agent-loop/` state to resume work without relying on conversation memory. The gate should pass only after required criteria, verification, diff/integrity evidence, approvals, visual artifacts when applicable, and final review are current for the active workspace state.
 
 ## Recommended DevOps Documentation Stack
 
@@ -203,4 +235,4 @@ skills/token-efficiency-measurement.md
 python3 scripts/validate-agentdefaults.py
 ```
 
-The validator checks the manifest, every JSON schema and local schema reference, the Agent Architect and Builder stack, automation-platform stack, principal engineering contracts, the DevOps documentation stack, cross-tool routing, Markdown purpose sections, and local links.
+The canonical suite checks the manifest and local schemas/references, Markdown structure and links, Agent Architect and Builder, principal engineering contracts, DevOps documentation, DevSecOps security, codebase maintenance/de-slop, cross-tool routing, and bounded-completion control-plane regressions.
