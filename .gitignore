@@ -11,6 +11,9 @@ exports/private/
 *.private.json
 *.private.zip
 
+# Bounded completion runtime state and evidence
+.agent-loop/
+
 # Common local artifacts
 __pycache__/
 *.pyc

@@ -45,6 +45,21 @@ For `Quazmoz/K8SHomelab`, also read that target repo's current `AGENTS.md`, obey
 
 For codebase-maintenance work, fingerprint the target repository's actual language/framework/build/test/static-analysis toolchain before editing. Preserve behavior and external contracts by default, require evidence for risky dead-code/dependency removal, reconcile stale comments in touched code, and perform a final second-pass review for fresh agent-generated slop.
 
+## Bounded Completion Workflow
+
+For implementation or qualification work that explicitly needs a bounded lead/reviewer completion loop, use:
+
+```text
+.github/agents/bounded-completion-lead.agent.md
+.github/agents/bounded-completion-reviewer.agent.md
+skills/bounded-completion-orchestration.md
+docs/quickstarts/bounded-completion.md
+```
+
+This is an orchestration workflow, not a replacement for the smallest correct domain owner. The lead owns integration and may load the relevant canonical engineering agent/skill for domain behavior.
+
+The bounded custom agents intentionally omit `model:` bindings until exact qualified local model identifiers are repository-discoverable. Follow the quickstart's manual model-picker instructions; never invent provider/model identifiers. Native reviewer subagent use is allowed, but only operator/runtime-confirmed distinct-model execution counts as distinct-model evidence.
+
 ## Canonical vs Adapter Boundary
 
 Canonical reusable behavior:
@@ -61,6 +76,7 @@ Copilot adapters:
 ```text
 .github/copilot-instructions.md
 .github/agents/*.agent.md
+.github/prompts/*.prompt.md
 ```
 
 Other tool adapters include `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/agentdefaults.mdc`, and `.windsurfrules`.
@@ -101,6 +117,13 @@ Do not copy full canonical agent behavior into Copilot wrappers. A wrapper may s
 .github/agents/codebase-maintenance-engineer.agent.md
 ```
 
+## Bounded Completion Custom Agents
+
+```text
+.github/agents/bounded-completion-lead.agent.md
+.github/agents/bounded-completion-reviewer.agent.md
+```
+
 These are thin profiles pointing to canonical stacks. Change the canonical source first when reusable behavior changes.
 
 ## Validation
@@ -111,16 +134,22 @@ After AgentDefaults changes run:
 python3 scripts/validate-agentdefaults.py
 ```
 
-For Kubernetes Homelab Agent changes, also review:
+For bounded-completion changes, the canonical suite also runs:
 
 ```text
-docs/kubernetes-homelab-engineer-acceptance-tests.md
+scripts/validate-bounded-completion.py
 ```
 
 For Codebase Maintenance Agent changes, also review:
 
 ```text
 docs/codebase-maintenance-engineer-acceptance-tests.md
+```
+
+For Kubernetes Homelab Agent changes, also review:
+
+```text
+docs/kubernetes-homelab-engineer-acceptance-tests.md
 ```
 
 Mark any check that did not actually run as unverified.

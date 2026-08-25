@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Quazmoz/agentdefaults/schemas/bounded-completion-task.schema.json",
+  "title": "Bounded Completion Task Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "title", "description", "required_outcome", "acceptance_criteria", "verification"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "required_outcome": {"type": "string", "minLength": 1},
+    "constraints": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "in_scope": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "out_of_scope": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "explicit_exclusions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "security_boundaries": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "required_approvals": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "relevant_artifacts": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "user_references": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []},
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "expected_evidence", "status", "verification_method"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$"},
+          "description": {"type": "string", "minLength": 1},
+          "expected_evidence": {"type": "string", "minLength": 1},
+          "status": {"const": "PENDING", "description": "Initial mutable status. Runtime status transitions are stored in durable state, not by rewriting the active contract."},
+          "verification_method": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean", "default": true},
+          "visual": {"type": "boolean", "default": false}
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical_command"],
+      "properties": {
+        "canonical_command": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "required_checks": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "required"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$"},
+              "command": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+              "required": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "iteration_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_full_loop_iterations": {"type": "integer", "minimum": 1},
+        "max_unchanged_failure_attempts": {"type": "integer", "minimum": 1},
+        "max_plan_review_rounds": {"type": "integer", "minimum": 1},
+        "max_final_review_rounds": {"type": "integer", "minimum": 1},
+        "verification_timeout_seconds": {"type": "integer", "minimum": 1},
+        "subagent_timeout_seconds": {"type": "integer", "minimum": 1},
+        "max_retained_verification_logs": {"type": "integer", "minimum": 1},
+        "max_unchanged_state_iterations": {"type": "integer", "minimum": 1},
+        "max_stop_hook_continuations": {"type": "integer", "minimum": 1}
+      }
+    },
+    "completion_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "default": []}
+  },
+  "description": "Validation may not be weakened, removed, skipped, mocked, or bypassed solely to obtain success. Existing tests may change only when task requirements or concrete evidence justify the change. Production operations require explicit approval. Absence of test failures does not automatically prove every acceptance criterion."
+}

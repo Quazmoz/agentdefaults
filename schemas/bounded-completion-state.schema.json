@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Quazmoz/agentdefaults/schemas/bounded-completion-state.schema.json",
+  "title": "Bounded Completion Durable State",
+  "type": "object",
+  "required": ["task_id", "task_contract_hash", "status", "phase", "integration_owner", "reviewer", "current_iteration", "limits", "criteria", "completion_gate"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "task_contract_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["NOT_STARTED", "PLANNING", "IMPLEMENTING", "VERIFYING", "REVIEWING", "FIXING", "BLOCKED", "ESCALATED", "COMPLETE"]},
+    "phase": {"enum": ["NOT_STARTED", "PLANNING", "IMPLEMENTING", "VERIFYING", "REVIEWING", "FIXING", "BLOCKED", "ESCALATED", "COMPLETE"]},
+    "integration_owner": {"type": "string"},
+    "reviewer": {"type": "string"},
+    "current_iteration": {"type": "integer", "minimum": 0},
+    "limits": {"type": "object"},
+    "criteria": {"type": "object"},
+    "completion_gate": {"type": "object"},
+    "approvals": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "approval_evidence": {"type": "object"}
+  }
+}
