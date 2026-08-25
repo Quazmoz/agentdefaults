@@ -223,8 +223,9 @@ def check_schema(failures: list[str]) -> None:
 
 
 def require_terms(text: str, terms: list[str], label: str, failures: list[str]) -> None:
+    text_lower = text.lower()
     for term in terms:
-        if term not in text:
+        if term.lower() not in text_lower:
             failures.append(f"{label}: missing required concept {term!r}")
 
 
