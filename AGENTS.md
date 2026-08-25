@@ -28,6 +28,8 @@ For `Quazmoz/K8SHomelab`, the specialist must re-read that target repository's c
 
 For codebase maintenance work, the specialist must fingerprint the target repository's actual language/framework/build/test/static-analysis toolchain before editing. It preserves behavior and external contracts by default, requires evidence for risky dead-code/dependency removal, reconciles stale comments in touched code, and performs a second-pass review for fresh agent-generated slop.
 
+For implementation or qualification work that explicitly needs a bounded Integration Owner + independent reviewer loop, use `docs/quickstarts/bounded-completion.md` and `skills/bounded-completion-orchestration.md` after selecting the smallest correct domain owner. Bounded completion is an orchestration overlay, not a replacement owning agent; it cannot widen the selected owner's authority. Distinct-model review counts only when the operator or runtime confirms a genuinely distinct reviewer model.
+
 For Palmier Pro video-editing work, route directly without treating the editing task as generic AI engineering:
 
 | Primary task | Owning agent | Default skill |
@@ -61,8 +63,9 @@ Rules:
 6. Security-focused DevOps routing does not authorize credential, IAM, state, network, controller, or production mutation without explicit task authority.
 7. Documentation authority does not imply permission to change the infrastructure or automation being documented.
 8. Codebase-maintenance authority does not imply permission to change product semantics, external contracts, production data, deployments, or security controls; those require explicit task authority and the appropriate owning specialist when primary.
-9. The K8SHomelab specialist does not infer live-cluster mutation authority from GitHub write access; watched-branch writes can themselves be deployment actions under Flux.
-10. Palmier external MCP tool availability does not imply Palmier in-app agent capabilities are exposed to Claude/Codex.
+9. Bounded-completion orchestration does not create new mutation authority, approvals, or tool permissions; the selected owner and active task remain authoritative.
+10. The K8SHomelab specialist does not infer live-cluster mutation authority from GitHub write access; watched-branch writes can themselves be deployment actions under Flux.
+11. Palmier external MCP tool availability does not imply Palmier in-app agent capabilities are exposed to Claude/Codex.
 
 ## Instruction and Authority Precedence
 
@@ -110,6 +113,7 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `README.md` - project overview and usage.
 - `docs/quickstarts/codex.md` - OpenAI Codex usage.
 - `docs/quickstarts/claude.md` - Claude Code usage.
+- `docs/quickstarts/bounded-completion.md` - bounded Integration Owner/reviewer orchestration, durable evidence, and completion-gate usage.
 - `docs/quickstarts/kubernetes-homelab-engineer.md` - repository-specific K8SHomelab usage.
 - `docs/quickstarts/devsecops-security-engineer.md` - DevSecOps security usage for Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, IAM, and supply chain.
 - `docs/quickstarts/devops-documentation-engineer.md` - DevOps documentation-as-code usage.
@@ -122,6 +126,7 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `scripts/validate-documentation-stack.py` - DevOps documentation stack contract validation.
 - `scripts/validate-devsecops-security-stack.py` - DevSecOps security stack contract validation.
 - `scripts/validate-codebase-maintenance-stack.py` - codebase-maintenance/de-slop stack contract and routing validation.
+- `scripts/validate-bounded-completion.py` - bounded-completion control-plane and adversarial regression validation.
 
 ## Working Rules
 
@@ -144,7 +149,13 @@ After AgentDefaults changes, run the canonical validation suite:
 python3 scripts/validate-agentdefaults.py
 ```
 
-Its component validators include cross-tool routing, principal engineering contracts, specialist documentation-stack validation, DevSecOps security-stack validation, and codebase-maintenance/de-slop stack validation. Run additional domain-specific tests when the change affects canonical agents, skills, schemas, examples, or executable behavior.
+Its component validators include cross-tool routing, principal engineering contracts, specialist documentation-stack validation, DevSecOps security-stack validation, codebase-maintenance/de-slop validation, and bounded-completion control-plane regressions. Run additional domain-specific tests when the change affects canonical agents, skills, schemas, examples, or executable behavior.
+
+For bounded-completion changes, also review the behavioral cases in:
+
+```text
+docs/bounded-completion-acceptance-tests.md
+```
 
 For K8SHomelab agent changes, also review the behavioral cases in:
 
