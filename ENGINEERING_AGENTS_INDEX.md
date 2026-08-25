@@ -33,6 +33,20 @@ Do not use this index as a substitute for the selected canonical agent. Tool wra
 | Design, build, or audit another reusable agent | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) | `skills/agent-design-and-build.md` |
 | Select which automation platform/product should own a workload | [`agents/automation-platform-selection-advisor.md`](agents/automation-platform-selection-advisor.md) | Load only task-relevant platform-selection skills |
 
+## Optional Bounded Completion Orchestration
+
+After selecting the smallest correct owner, implementation or qualification work may add the bounded completion overlay when it needs a single Integration Owner, independent adversarial review, durable evidence, bounded retries/continuation, and an objective completion gate.
+
+```text
+docs/quickstarts/bounded-completion.md
+agents/bounded-completion-lead.md
+agents/bounded-completion-reviewer.md
+skills/bounded-completion-orchestration.md
+scripts/bounded-completion.py
+```
+
+This overlay does **not** become the domain owner and does not widen authority, approvals, or tool permissions. The selected engineering owner remains responsible for domain behavior and safety boundaries. The lead coordinates implementation and evidence; the reviewer challenges plans, findings, visual artifacts when applicable, and final completion claims. Distinct-model evidence is valid only when the operator or runtime confirms that the reviewer actually ran on a different model.
+
 ### Boundary examples
 
 - Work whose target repository is `Quazmoz/K8SHomelab` and whose primary concern is its Kubernetes/Flux/runtime platform -> Kubernetes Homelab Engineer.
@@ -194,7 +208,8 @@ Examples:
 9. Security-focused DevOps tasks may inspect broad platform evidence without turning the specialist into the default owner for non-security refactoring.
 10. Documentation tasks may load platform implementation evidence without inheriting platform mutation authority.
 11. Codebase-maintenance tasks may inspect broad source/tooling evidence but must hand off primary domain/security/platform defects when the required remediation exceeds behavior-preserving maintenance scope.
-12. Task evidence outranks generic guidance; current official documentation outranks stale platform assumptions.
+12. Add bounded completion only after owner selection, and treat it as orchestration/evidence control rather than a new ownership route.
+13. Task evidence outranks generic guidance; current official documentation outranks stale platform assumptions.
 
 ## Shared Invariants
 

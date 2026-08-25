@@ -51,6 +51,8 @@ Preserve specialist routing to `agents/agent-architect-builder.md` and `agents/a
 
 Use the smallest correct owner. Do not preload all three engineering stacks.
 
+Bounded completion is an optional orchestration overlay **after** owner selection. It adds deterministic evidence, independent review, bounded continuation, durable state, and a completion gate; it does not become the domain owner or widen permissions. See `docs/quickstarts/bounded-completion.md`.
+
 ## OpenAI Codex
 
 Primary entrypoint:
@@ -109,6 +111,18 @@ Principal engineering custom-agent adapters:
 .github/agents/principal-ai-devops-engineer.agent.md
 ```
 
+Bounded completion adapters and prompt entrypoints:
+
+```text
+.github/agents/bounded-completion-lead.agent.md
+.github/agents/bounded-completion-reviewer.agent.md
+.github/prompts/start-bounded-completion.prompt.md
+.github/prompts/resume-bounded-completion.prompt.md
+.github/prompts/review-bounded-completion.prompt.md
+```
+
+The bounded adapters intentionally omit guessed `model:` bindings. Use the VS Code model picker as described in `docs/quickstarts/bounded-completion.md`; native reviewer invocation may inherit the lead model, so only operator/runtime-confirmed distinct-model execution counts as distinct-model review evidence.
+
 Each custom agent must reference its matching canonical agent and required skill. Keep detailed reusable behavior in `agents/` and `skills/`; the Copilot profile is an invocation/summary layer only.
 
 Other existing `.github/agents/*.agent.md` wrappers remain available for their specialist stacks.
@@ -158,6 +172,7 @@ entrypoint
 -> routing index
 -> one owning agent
 -> required skill
+-> optional bounded-completion overlay when justified
 -> task-specific context/evidence
 ```
 
@@ -172,7 +187,7 @@ python3 scripts/validate-agentdefaults.py
 python3 scripts/validate-cross-tool-routing.py
 ```
 
-The first preserves structural, manifest, schema, stack, and Markdown checks. The second checks the cross-tool entrypoints, engineering routing references, Claude shared-rule import, quickstarts, and principal Copilot wrapper-to-canonical mappings.
+The canonical suite preserves structural, manifest, schema, stack, Markdown, specialist, maintenance, and bounded-completion control-plane checks. The cross-tool validator checks the shared entrypoints, engineering routing references, Claude shared-rule import, quickstarts, and principal Copilot wrapper-to-canonical mappings.
 
 ## Maintenance Rules
 
@@ -180,6 +195,7 @@ The first preserves structural, manifest, schema, stack, and Markdown checks. Th
 - Keep tool wrappers thin and discoverable.
 - Do not create Codex- or Claude-specific copies of canonical engineering agents.
 - Do not let a wrapper widen permissions or silently override safety/verification requirements.
+- Treat bounded completion as orchestration over the selected owner, never as implicit authority escalation.
 - Verify current official tool behavior before changing platform-specific assumptions.
 - Update `INDEX.md` when routing/discoverability changes.
 - Report missing capabilities rather than fabricating tool behavior.
