@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Quazmoz/agentdefaults/schemas/codebase-maintenance-task.schema.json",
   "title": "Codebase Maintenance Task",
-  "description": "Structured contract for behavior-preserving codebase de-slop, refactoring, comment reconciliation, and efficiency work.",
+  "description": "Structured contract for behavior-preserving codebase de-slop, refactoring, comment reconciliation, generated-artifact discipline, and efficiency work.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,6 +10,8 @@
     "mode",
     "goal",
     "behavior_policy",
+    "evidence_policy",
+    "churn_policy",
     "authority"
   ],
   "properties": {
@@ -20,7 +22,12 @@
       "properties": {
         "repository": {"type": "string", "minLength": 1},
         "ref": {"type": "string", "minLength": 1},
-        "scope": {"type": "string", "minLength": 1}
+        "scope": {"type": "string", "minLength": 1},
+        "exclusions": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
       }
     },
     "mode": {
@@ -36,7 +43,12 @@
     "behavior_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["allow_behavior_changes", "reconcile_touched_comments"],
+      "required": [
+        "allow_behavior_changes",
+        "reconcile_touched_comments",
+        "generated_artifact_policy",
+        "require_history_for_ambiguous_intent"
+      ],
       "properties": {
         "allow_behavior_changes": {"type": "boolean", "default": false},
         "preserved_contracts": {
@@ -51,7 +63,45 @@
         },
         "reconcile_touched_comments": {"type": "boolean"},
         "allow_repository_wide_formatting": {"type": "boolean", "default": false},
-        "allow_new_dependencies": {"type": "boolean", "default": false}
+        "allow_new_dependencies": {"type": "boolean", "default": false},
+        "generated_artifact_policy": {
+          "type": "string",
+          "enum": ["source_and_regenerate", "preserve", "direct_edit_authorized"]
+        },
+        "direct_generated_edit_justification": {"type": "string", "minLength": 1},
+        "require_history_for_ambiguous_intent": {"type": "boolean"},
+        "characterization_policy": {
+          "type": "string",
+          "enum": ["contract_only", "review_incidental_before_locking"],
+          "default": "review_incidental_before_locking"
+        }
+      }
+    },
+    "evidence_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum_removal_confidence",
+        "distinguish_contractual_from_incidental_behavior",
+        "require_independent_evidence_for_high_blast_radius"
+      ],
+      "properties": {
+        "minimum_removal_confidence": {
+          "type": "string",
+          "enum": ["medium", "high", "very_high"]
+        },
+        "distinguish_contractual_from_incidental_behavior": {"type": "boolean"},
+        "require_independent_evidence_for_high_blast_radius": {"type": "boolean"}
+      }
+    },
+    "churn_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow_unrelated_formatting", "require_independent_slice_verification"],
+      "properties": {
+        "allow_unrelated_formatting": {"type": "boolean"},
+        "require_independent_slice_verification": {"type": "boolean"},
+        "max_files_per_slice": {"type": "integer", "minimum": 1}
       }
     },
     "focus": {
@@ -67,9 +117,11 @@
           "test_quality",
           "dependencies",
           "configuration",
+          "generated_artifacts",
           "performance",
           "concurrency_lifecycle",
           "naming_contracts",
+          "discoverability_context",
           "all_relevant"
         ]
       },
@@ -106,12 +158,22 @@
           "items": {"type": "string", "minLength": 1},
           "uniqueItems": true
         },
+        "compatibility_checks": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
         "targeted_regressions": {
           "type": "array",
           "items": {"type": "string", "minLength": 1},
           "uniqueItems": true
         },
         "performance_evidence": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "reproducibility_checks": {
           "type": "array",
           "items": {"type": "string", "minLength": 1},
           "uniqueItems": true
@@ -171,9 +233,10 @@
             }
           },
           "verification": {
-            "required": ["required_checks", "postconditions"],
+            "required": ["required_checks", "compatibility_checks", "postconditions"],
             "properties": {
               "required_checks": {"minItems": 1},
+              "compatibility_checks": {"minItems": 1},
               "postconditions": {"minItems": 1}
             }
           }
@@ -196,6 +259,23 @@
             "properties": {
               "authorized_behavior_changes": {"minItems": 1}
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "behavior_policy": {
+            "properties": {"generated_artifact_policy": {"const": "direct_edit_authorized"}},
+            "required": ["generated_artifact_policy"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "behavior_policy": {
+            "required": ["direct_generated_edit_justification"]
           }
         }
       }

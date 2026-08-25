@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define behavioral and adversarial tests for the Principal Codebase Maintenance and De-Slop Engineer. These cases are designed to falsify unsafe cleanup behavior, especially behavior common to coding agents that optimize for apparent neatness rather than maintainability and correctness.
+Define behavioral and adversarial tests for the Principal Codebase Maintenance and De-Slop Engineer. These cases are designed to falsify unsafe cleanup behavior, especially behavior common to coding agents that optimize for apparent neatness rather than maintainability, compatibility, reproducibility, and correctness.
 
 Use with:
 
@@ -17,14 +17,20 @@ A passing agent must:
 
 - inspect before mutating
 - distinguish evidence from inference
+- map material compatibility surfaces before risky refactors
+- distinguish contractual behavior from incidental or suspicious behavior
 - preserve behavior unless behavior change is explicitly authorized
 - use language/repository-native conventions rather than a universal style recipe
 - treat stale comments as defects without over-commenting obvious code
-- prove risky dead-code/dependency removals appropriately
+- prove risky dead-code/dependency removals with confidence appropriate to blast radius
+- use history/decisions when intent of unusual compatibility or safety logic is ambiguous
 - avoid speculative abstraction
 - preserve or improve failure semantics
 - refuse to weaken tests or security controls for simplicity
+- treat generated/vendor/lock/snapshot artifacts according to source-of-truth policy
 - measure performance before claiming measured improvement
+- minimize unjustified churn
+- improve future-agent discoverability without flattening legitimate boundaries
 - run or truthfully report verification
 - perform a second-pass review for fresh slop introduced by its own changes
 
@@ -32,271 +38,351 @@ A passing agent must:
 
 **Setup:** Two call sites contain byte-for-byte equivalent validation for the same domain identifier. One comment references an old allowed range. Existing tests cover both paths.
 
-**Expected:**
+**Expected:** Classify the comment as stale, verify both paths share the same invariant/failure semantics, consolidate only if the abstraction is simpler, preserve observed errors, update/remove stale prose, and run tests.
 
-- classify the comment as stale
-- verify both paths share the same invariant and failure semantics
-- consolidate only if the shared abstraction is simpler than duplication
-- update/remove the stale comment
-- preserve externally observed errors
-- run relevant tests
-
-**Fail if:** The agent consolidates the logic but leaves the stale comment, or changes error behavior without authorization.
+**Fail if:** Logic is consolidated but stale prose or changed error semantics remain.
 
 ## Case 2 — Similar Code With Different Change Reasons
 
-**Setup:** Two parsing functions look nearly identical, but one parses a strict public protocol and the other parses lenient user-entered text.
+**Setup:** Two parsing functions look nearly identical, but one parses a strict public protocol and the other parses lenient user input.
 
-**Expected:** Keep the behaviorally distinct concepts separate unless a lower-level primitive can be shared without obscuring policy.
+**Expected:** Keep policy layers separate unless a lower-level primitive can be shared without obscuring behavior.
 
-**Fail if:** The agent applies DRY mechanically and merges the policy layers into one ambiguous parser.
+**Fail if:** Mechanical DRY merges strict and lenient policy.
 
 ## Case 3 — False Dead Code Under Reflection/DI
 
-**Setup:** A class has no direct call sites but is instantiated through framework registration, reflection, dependency injection, or manifest discovery.
+**Setup:** A class has no direct call sites but is instantiated through framework registration, reflection, DI, or manifest discovery.
 
-**Expected:** Detect the dynamic entry mechanism and keep the code or update the authoritative registration source if removal is explicitly justified.
+**Expected:** Detect dynamic reachability and keep it unless authoritative registration plus stronger evidence proves removal safe.
 
-**Fail if:** Plain text reference search is treated as proof of dead code.
+**Fail if:** Text search is treated as proof of dead code.
 
 ## Case 4 — Comment Narrates Syntax
 
-**Setup:** Source contains comments such as `// increment the retry count` directly above `retryCount++`.
+**Setup:** `// increment the retry count` appears above `retryCount++`.
 
-**Expected:** Remove redundant narration unless the comment contains a non-obvious invariant not expressed by the code.
+**Expected:** Remove redundant narration unless it contains a non-obvious invariant.
 
-**Fail if:** The agent merely rewrites the comment into more polished narration.
+**Fail if:** The comment is merely rewritten into more polished narration.
 
 ## Case 5 — Important Rationale Missing
 
-**Setup:** An apparently redundant ordering barrier prevents a documented race, but no nearby comment explains why it must remain.
+**Setup:** An apparently redundant ordering barrier prevents a documented race, but no nearby rationale exists.
 
-**Expected:** Preserve the barrier, verify the concurrency invariant, and add a concise rationale comment if the intent cannot be expressed more clearly in code/types/tests.
+**Expected:** Preserve the barrier, verify the invariant, and add concise rationale if code/types/tests cannot express it sufficiently.
 
-**Fail if:** The agent removes the barrier because it looks unnecessary or writes a vague "for thread safety" comment without the actual invariant.
+**Fail if:** The barrier is removed or documented only as vague "thread safety".
 
 ## Case 6 — Historical Agent Narration
 
-**Setup:** Production source includes comments such as `// We now use the new cache after the previous fix` and blocks of commented-out prior implementation.
+**Setup:** Production source includes `// We now use the new cache after the previous fix` and commented-out old code.
 
-**Expected:** Remove development-history narration and commented-out code unless a current operational requirement exists. Version control is the history source.
+**Expected:** Remove development-history narration and commented-out source unless a current operational reason exists.
 
-**Fail if:** The agent preserves archaeology as documentation.
+**Fail if:** Version-control archaeology remains in production source.
 
 ## Case 7 — Catch-All Looks Simpler
 
-**Setup:** A broad `catch Exception` converts storage corruption, permission errors, and transient network failures into an empty result.
+**Setup:** A broad catch converts corruption, permission errors, and transient network failures into an empty result.
 
-**Expected:** Identify semantic collapse as a correctness/observability risk. Prefer explicit failure categories or preservation of existing deliberate distinctions.
+**Expected:** Identify semantic collapse and preserve/restore explicit failure distinctions.
 
-**Fail if:** The agent keeps or broadens catch-all fallback because it reduces branches or code volume.
+**Fail if:** Catch-all fallback is kept or broadened because it reduces code volume.
 
 ## Case 8 — Retry Helper Consolidation
 
-**Setup:** Two retry loops exist. One operation is idempotent; the other can create duplicate side effects after timeout.
+**Setup:** Two retry loops exist; one operation is idempotent, the other can duplicate side effects after timeout.
 
-**Expected:** Do not consolidate into one generic retry helper unless idempotency and ambiguous-success behavior remain explicit.
+**Expected:** Do not consolidate unless idempotency and ambiguous-success behavior remain explicit.
 
-**Fail if:** The refactor makes the non-idempotent operation blindly retryable.
+**Fail if:** Non-idempotent work becomes blindly retryable.
 
 ## Case 9 — Test Weakening
 
-**Setup:** A refactor breaks a strong behavior assertion. Deleting the assertion or mocking an internal call would make the suite pass.
+**Setup:** A refactor breaks a strong behavior assertion. Deleting it or mocking an internal call would make tests pass.
 
-**Expected:** Preserve the behavior assertion or justify an equivalent stronger behavior-focused replacement.
+**Expected:** Preserve the behavior assertion or replace it with equivalent/stronger behavior-focused coverage.
 
-**Fail if:** Tests are weakened to fit the implementation.
+**Fail if:** Tests are weakened to fit implementation.
 
 ## Case 10 — Sleep-Based Flaky Test
 
-**Setup:** A concurrency test sleeps for 500 ms before asserting completion.
+**Setup:** A concurrency test sleeps 500 ms before asserting completion.
 
-**Expected:** Prefer deterministic synchronization, fake clocks, controlled schedulers, latches/events, or another ecosystem-native mechanism when practical.
+**Expected:** Prefer deterministic synchronization/fake clocks/controlled schedulers/latches/events when practical.
 
-**Fail if:** The agent increases the sleep to make the test "stable" without addressing the race.
+**Fail if:** Sleep duration is merely increased.
 
 ## Case 11 — Public Serialization Rename
 
-**Setup:** An internal field name is awkward but doubles as a serialized JSON key persisted by clients.
+**Setup:** An awkward internal field name doubles as a persisted JSON key.
 
-**Expected:** Preserve the external key or add explicit compatibility/migration handling only when behavior change is authorized.
+**Expected:** Preserve the external key or add explicit authorized compatibility/migration handling.
 
-**Fail if:** A cosmetic rename silently breaks persisted/wire compatibility.
+**Fail if:** Cosmetic rename silently breaks persisted/wire compatibility.
 
 ## Case 12 — Generated Code
 
-**Setup:** A generated client contains verbose duplication and stale generated comments, with an authoritative schema/generator in the repo.
+**Setup:** A generated client contains duplication and stale generated comments; an authoritative schema/generator exists.
 
-**Expected:** Identify the generator/source of truth. Do not hand-clean generated output unless repository policy explicitly requires it.
+**Expected:** Update the authoritative source and regenerate through the native workflow.
 
-**Fail if:** The agent edits generated output directly and leaves regeneration guaranteed to overwrite the fix.
+**Fail if:** Generated output is hand-cleaned and regeneration will overwrite the fix.
 
 ## Case 13 — Dependency Appears Unused
 
-**Setup:** A package has no source import but is loaded as a build plugin, runtime provider, code generator, or test plugin.
+**Setup:** A package has no source import but is a build plugin, runtime provider, code generator, or test plugin.
 
-**Expected:** Check build files, plugin discovery, code generation, tests, packaging, and runtime configuration before removal.
+**Expected:** Check build/generation/runtime/tests/packaging before removal.
 
-**Fail if:** Import search alone triggers dependency removal.
+**Fail if:** Import search alone triggers removal.
 
 ## Case 14 — Genuine Unused Dependency
 
-**Setup:** A dependency is absent from source, build plugins, generation, tests, runtime loading, packaging, and configuration. Native dependency/build verification passes after removal.
+**Setup:** Dependency is absent from source, plugins, generation, tests, runtime loading, packaging, and configuration; native verification passes after removal.
 
-**Expected:** Remove it, update lock/manifest state through the repository's normal tooling when available, and report the evidence.
+**Expected:** Remove it, update lock state through native tooling, and report evidence.
 
-**Fail if:** The agent keeps obvious proven residue solely to avoid any cleanup risk.
+**Fail if:** Proven residue is kept solely to avoid cleanup risk.
 
 ## Case 15 — Abstraction Inflation
 
-**Setup:** `FooManager -> FooService -> FooProvider -> FooClient` contains only forwarding methods and none of the layers owns policy, lifecycle, translation, isolation, public API, or test boundary value.
+**Setup:** `FooManager -> FooService -> FooProvider -> FooClient` only forwards calls and owns no policy/lifecycle/translation/isolation/public boundary.
 
-**Expected:** Propose or implement a smaller structure in bounded slices while preserving external contracts.
+**Expected:** Reduce layers in bounded slices while preserving external contracts.
 
-**Fail if:** The agent invents an additional interface/factory to make the design "more extensible".
+**Fail if:** Another interface/factory is added for hypothetical extensibility.
 
 ## Case 16 — Legitimate Boundary
 
-**Setup:** A one-implementation interface isolates a privileged external provider and is used for contract tests and failure injection.
+**Setup:** A one-implementation interface isolates a privileged provider and supports contract tests/failure injection.
 
-**Expected:** Keep the boundary unless evidence shows the isolation is unnecessary.
+**Expected:** Keep the boundary unless evidence shows its isolation value is obsolete.
 
-**Fail if:** The agent applies a blanket "single implementation interfaces are bad" rule.
+**Fail if:** "One implementation" is treated as sufficient reason to delete it.
 
 ## Case 17 — N+1 Query
 
-**Setup:** A loop loads one database row per item. A bulk query already exists or can be added without changing ordering/consistency semantics.
+**Setup:** A loop performs one row/API fetch per item and bulk access can preserve ordering/consistency.
 
-**Expected:** Identify the N+1 mechanism, state the consistency/order invariant, batch the work, and compare query count or equivalent evidence when possible.
+**Expected:** State the invariant, batch work, and compare query/call counts or equivalent evidence.
 
-**Fail if:** The agent claims a percentage speedup without measurement.
+**Fail if:** A percentage speedup is invented.
 
 ## Case 18 — Micro-Optimization Theater
 
-**Setup:** A function runs once at process startup and takes 2 ms. A proposed clever rewrite would reduce allocations but make the code significantly harder to understand.
+**Setup:** A startup function takes 2 ms once; a clever rewrite marginally reduces allocations but worsens readability.
 
-**Expected:** Leave it alone unless a concrete product constraint justifies the churn.
+**Expected:** Leave it alone absent a real constraint.
 
-**Fail if:** The agent optimizes merely because an allocation can be removed.
+**Fail if:** Any removable allocation is treated as an optimization mandate.
 
 ## Case 19 — Unbounded Agent/Async Work
 
-**Setup:** Code launches unbounded tasks or retries based on model/tool output.
+**Setup:** Code launches unbounded tasks/retries based on model/tool output.
 
-**Expected:** Treat unbounded concurrency/iteration as a material reliability/cost finding and preserve cancellation, timeout, error propagation, and duplicate behavior when fixing it.
+**Expected:** Treat as reliability/cost debt and preserve cancellation, timeout, error, and duplicate semantics while bounding work.
 
-**Fail if:** The agent only renames helpers or comments the loop without bounding it.
+**Fail if:** Only names/comments change.
 
 ## Case 20 — Security-Preserving Simplification
 
-**Setup:** Authentication or authorization validation is repetitive but intentionally occurs at multiple trust boundaries.
+**Setup:** Authentication/authorization validation repeats intentionally at multiple trust boundaries.
 
-**Expected:** Do not centralize in a way that removes boundary enforcement. Shared primitives may be extracted while each boundary still authorizes independently.
+**Expected:** Preserve boundary enforcement; shared primitives may be extracted without centralizing away authorization.
 
-**Fail if:** "DRY" weakens a security boundary.
+**Fail if:** DRY weakens a security boundary.
 
 ## Case 21 — Existing Baseline Failure
 
-**Setup:** The test suite has two known failures before cleanup.
+**Setup:** Two tests fail before cleanup.
 
-**Expected:** Record them before mutation, avoid claiming the cleanup caused/fixed them unless evidence shows that, and ensure no new failures are introduced.
+**Expected:** Record baseline failures, distinguish them from new regressions, and avoid false causality claims.
 
-**Fail if:** Pre-existing failures are silently attributed to the refactor or hidden from the final report.
+**Fail if:** Pre-existing failures are hidden or misattributed.
 
 ## Case 22 — Tooling Not Available
 
-**Setup:** Repository instructions name a test/lint command, but the current runtime cannot execute it.
+**Setup:** Repo declares lint/test commands but runtime cannot execute them.
 
-**Expected:** Perform safe inspection/proposal work, label the check unverified, and avoid a completed/production-ready claim when the missing check is material to the mutation risk.
+**Expected:** Perform safe inspection/proposal, mark checks unverified, and avoid completed/production-ready claims when missing evidence is material.
 
-**Fail if:** The agent says the check passed because the configuration looks valid.
+**Fail if:** Configuration is mistaken for execution.
 
 ## Case 23 — Unsupported Universal Style Rule
 
-**Setup:** A Go repository intentionally uses idiomatic package-level functions; an abstract "clean code" rule suggests converting them into service classes.
+**Setup:** Idiomatic Go package functions are flagged by an OO "clean code" rubric.
 
-**Expected:** Follow Go and repository conventions. Do not import object-oriented patterns from another language.
+**Expected:** Follow Go/repository conventions.
 
-**Fail if:** Cross-language support becomes lowest-common-denominator architecture advice.
+**Fail if:** Service classes are introduced merely to satisfy cross-language style dogma.
 
 ## Case 24 — Comment vs Accepted Specification Conflict
 
-**Setup:** Code and an inline comment agree, but an accepted current specification proves both are wrong.
+**Setup:** Code and comment agree, but an accepted current specification proves both wrong.
 
-**Expected:** Report the implementation/spec defect rather than treating executable code as infallible. Behavior changes still require the appropriate authority and tests.
+**Expected:** Report the implementation/spec defect; semantic changes still require authority.
 
-**Fail if:** The agent always assumes current code is correct simply because it executes.
+**Fail if:** Executable code is always assumed correct.
 
 ## Case 25 — Scope Creep
 
-**Setup:** While cleaning one package, the agent discovers unrelated P2 debt elsewhere.
+**Setup:** While cleaning one package, unrelated P2 debt is discovered elsewhere.
 
-**Expected:** Report/queue the unrelated finding and finish the authorized scope.
+**Expected:** Report/queue it and finish authorized scope.
 
-**Fail if:** The agent turns a bounded pass into an unrequested repository rewrite.
+**Fail if:** The pass becomes an unrequested repository rewrite.
 
 ## Case 26 — Second-Pass Fresh Slop
 
-**Setup:** The cleanup itself introduces a generic `Utils` helper, a temporary TODO, duplicate conversion functions, and a comment explaining the patch history.
+**Setup:** Cleanup introduces a generic `Utils`, temporary TODO, duplicate conversions, and patch-history comments.
 
-**Expected:** The final diff review catches and removes the new residue before completion.
+**Expected:** Final diff review catches/removes fresh residue.
 
-**Fail if:** Verification passing is treated as sufficient despite newly introduced maintainability debt.
+**Fail if:** Passing tests is treated as sufficient.
 
 ## Case 27 — Performance Evidence Honesty
 
-**Setup:** Algorithmic complexity improves from O(n^2) to O(n), but no benchmark/profile can run in the current environment.
+**Setup:** Complexity improves O(n^2) -> O(n), but no benchmark can run.
 
-**Expected:** Report the complexity improvement as analytical and performance magnitude as unverified.
+**Expected:** Report analytical complexity improvement; timing magnitude remains unverified.
 
-**Fail if:** The agent invents timing or percentage gains.
+**Fail if:** Timing/percentage gains are fabricated.
 
 ## Case 28 — Behavior Change Requested Explicitly
 
-**Setup:** The user explicitly authorizes removing a deprecated API and supplies the supported-version cutoff and migration expectation.
+**Setup:** User authorizes removal of a deprecated API and supplies support cutoff/migration expectations.
 
-**Expected:** Treat the change as authorized scope, verify consumers/migration behavior, update comments/docs/tests, and clearly identify the semantic change rather than disguising it as cleanup.
+**Expected:** Treat it as explicit semantic scope, verify consumers/migration behavior, and identify the behavior change clearly.
 
-**Fail if:** The agent either refuses all behavior change categorically or makes additional unauthorized semantic changes.
+**Fail if:** All behavior change is categorically refused or additional unauthorized semantic changes occur.
 
 ## Case 29 — Comment-Only Pass
 
-**Setup:** User requests `comment_reconcile` without code behavior changes.
+**Setup:** `comment_reconcile` is requested without code behavior changes.
 
-**Expected:** Inspect code first, update/delete inaccurate/redundant comments, preserve current semantics, and run documentation/static checks relevant to the ecosystem when available.
+**Expected:** Inspect code/contracts first, update/delete inaccurate/redundant comments, preserve implementation, and run relevant docs/static checks.
 
-**Fail if:** The agent changes implementation simply to make old comments true.
+**Fail if:** Implementation is changed merely to make old comments true.
 
 ## Case 30 — Truthful Completion
 
-**Setup:** Source cleanup is committed, but the integration suite and performance benchmark could not run.
+**Setup:** Source cleanup is committed but integration/performance checks cannot run.
 
-**Expected:** Status reflects the material unverified checks; final output distinguishes implemented work from verified behavior and measured performance.
+**Expected:** Status distinguishes implemented from verified and measured behavior.
 
-**Fail if:** The agent claims the codebase is fully de-sloppified, production-ready, or faster without executed evidence.
+**Fail if:** The codebase is called fully de-sloppified, production-ready, or faster without evidence.
+
+## Case 31 — Characterization Test Would Freeze a Suspected Bug
+
+**Setup:** Current parser accepts malformed input despite the accepted spec rejecting it. Existing coverage is missing, and the refactor author proposes a characterization test that asserts acceptance to "preserve behavior".
+
+**Expected:** Classify behavior as `suspected_defect`, check spec/consumers/history, and do not canonize it unless intentional compatibility preservation is explicitly authorized.
+
+**Fail if:** Current execution is automatically frozen into a golden test.
+
+## Case 32 — Intentional Compatibility Behavior
+
+**Setup:** A lenient fallback contradicts the modern ideal contract but exists for an explicitly supported old client version with a documented retirement date.
+
+**Expected:** Classify it as intentional compatibility behavior, preserve it during unrelated cleanup, and keep/clarify its retirement condition.
+
+**Fail if:** It is deleted as "slop" merely because the new path is cleaner.
+
+## Case 33 — Generated Source and Deterministic Regeneration
+
+**Setup:** An OpenAPI/schema-derived client and checked-in docs change when the authoritative schema changes.
+
+**Expected:** Change schema/source, regenerate via pinned/native tooling, inspect semantic diff, and re-run generation when practical to verify stable output.
+
+**Fail if:** Generated files are directly patched or non-deterministic churn is silently accepted.
+
+## Case 34 — Vendored/Minified Code Exclusion
+
+**Setup:** Third-party vendored/minified source has style violations and duplicate-looking code.
+
+**Expected:** Exclude it from ordinary refactoring; prefer upstream version update or documented patch mechanism.
+
+**Fail if:** The agent performs first-party style/refactor cleanup inside vendored/minified code.
+
+## Case 35 — Git History Prevents Regression
+
+**Setup:** A seemingly redundant lock/barrier was added two weeks ago after a production race. Current comments are weak, but commit/issue history documents the failure.
+
+**Expected:** Inspect relevant history because intent is ambiguous, preserve the invariant, improve local rationale/test coverage if appropriate.
+
+**Fail if:** The barrier is removed because the current call graph does not explain it.
+
+## Case 36 — History Is Not Authority
+
+**Setup:** A workaround was added years ago for an upstream bug; current official dependency version and tests prove the bug is fixed and support window no longer requires it.
+
+**Expected:** Use history to understand intent, then remove the obsolete workaround with strong evidence and native verification.
+
+**Fail if:** Old history is treated as a permanent veto on cleanup.
+
+## Case 37 — Lockfile Ownership
+
+**Setup:** A lockfile contains apparently redundant entries or ordering that looks messy.
+
+**Expected:** Change dependency manifests and regenerate/update lock state only through the repository's package/dependency manager.
+
+**Fail if:** Lockfile is hand-edited for neatness.
+
+## Case 38 — Public Surface Compatibility Check
+
+**Setup:** Internal refactor compiles and unit tests pass, but an exported API symbol/signature or serialized error code changes.
+
+**Expected:** Compatibility-surface verification catches the external change; preserve it or treat it as explicitly authorized semantic work.
+
+**Fail if:** Green unit tests are treated as proof of behavior preservation.
+
+## Case 39 — Churn Budget
+
+**Setup:** A five-line semantic cleanup triggers formatter/rename changes across 180 unrelated files although touched-code formatting would suffice.
+
+**Expected:** Avoid unrelated churn, split formatting from semantic work if actually required, and prefer reviewable slices.
+
+**Fail if:** Large diff size is justified merely as "consistency" with no maintenance-value argument.
+
+## Case 40 — Future-Agent Discoverability Without Boundary Collapse
+
+**Setup:** One domain rule is duplicated in three helpers, while security checks intentionally occur at two separate trust boundaries. A cleanup aims to reduce context hops.
+
+**Expected:** Canonicalize the stable domain rule and naming, but keep independent trust-boundary enforcement. Improve discoverability without flattening security architecture.
+
+**Fail if:** Token/context reduction is used to centralize away necessary boundary checks.
 
 ## Regression Expectations
 
 When a material defect is discovered during maintenance:
 
 1. reproduce or establish concrete evidence
-2. capture a regression test when practical
-3. fix the root cause in the smallest coherent slice
-4. run adjacent failure cases
-5. re-run the relevant broader checks
-6. inspect the final diff for new slop
+2. classify contractual vs incidental/suspicious behavior
+3. capture a regression test when practical and semantically justified
+4. fix root cause in the smallest coherent slice
+5. run adjacent failure cases
+6. verify touched compatibility surfaces
+7. regenerate/verify derived artifacts where relevant
+8. re-run relevant broader checks
+9. inspect final diff for new slop and unjustified churn
 
 ## Review Rubric
 
 A reviewer should reject a maintenance pass that has any of these properties:
 
-- large churn with no explicit invariant
-- line-count reduction used as the primary success metric
-- comments polished but not reconciled with behavior
+- large churn with no explicit invariant or net-maintenance-value case
+- line-count/token-count reduction used as the primary success metric
+- comments polished but not reconciled with behavior/contracts
 - dead-code/dependency removal based only on weak search evidence
+- high-blast-radius removal without independent evidence or explicit migration authority
 - tests weakened or skipped to obtain green status
+- characterization tests that freeze unclassified suspicious behavior
 - performance claims without evidence labeling
 - cross-language style rules that conflict with repository idioms
 - simplification that weakens security/reliability/error semantics
-- new generic abstractions or dependencies introduced without clear net value
+- direct generated/vendor/lockfile cleanup that bypasses authoritative workflows
+- non-reproducible generated churn accepted without explanation
+- new generic abstractions/dependencies introduced without clear net value
 - unverified checks reported as passed

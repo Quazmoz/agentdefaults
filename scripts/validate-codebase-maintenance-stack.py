@@ -37,6 +37,8 @@ PERMISSION_CLASSES = [
 ]
 
 MODES = ["audit", "de_slop", "refactor", "comment_reconcile", "efficiency"]
+GENERATED_POLICIES = ["source_and_regenerate", "preserve", "direct_edit_authorized"]
+CONFIDENCE = ["medium", "high", "very_high"]
 
 
 def read(path: str) -> str:
@@ -86,6 +88,13 @@ def check_manifest(failures: list[str]) -> None:
         failures.append(f"manifest {STACK_NAME} must reference only {STACK['prompt']}")
 
 
+def find_rule(schema: dict[str, Any], predicate) -> dict[str, Any] | None:
+    for rule in schema.get("allOf", []):
+        if isinstance(rule, dict) and predicate(rule.get("if", {})):
+            return rule
+    return None
+
+
 def check_schema(failures: list[str]) -> None:
     path = STACK["schema"]
     schema = load_json(path)
@@ -93,6 +102,10 @@ def check_schema(failures: list[str]) -> None:
 
     if schema.get("additionalProperties") is not False:
         failures.append(f"{path}: root additionalProperties must be false")
+
+    for required in ("target", "mode", "goal", "behavior_policy", "evidence_policy", "churn_policy", "authority"):
+        if required not in schema.get("required", []):
+            failures.append(f"{path}: root must require {required}")
 
     mode_enum = props.get("mode", {}).get("enum", [])
     if mode_enum != MODES:
@@ -109,13 +122,61 @@ def check_schema(failures: list[str]) -> None:
 
     behavior = props.get("behavior_policy", {})
     behavior_required = behavior.get("required", [])
-    for field in ("allow_behavior_changes", "reconcile_touched_comments"):
+    for field in (
+        "allow_behavior_changes",
+        "reconcile_touched_comments",
+        "generated_artifact_policy",
+        "require_history_for_ambiguous_intent",
+    ):
         if field not in behavior_required:
             failures.append(f"{path}: behavior_policy must require {field}")
+
+    generated_enum = (
+        behavior.get("properties", {})
+        .get("generated_artifact_policy", {})
+        .get("enum", [])
+    )
+    if generated_enum != GENERATED_POLICIES:
+        failures.append(f"{path}: generated_artifact_policy enum drifted")
+
+    characterization_enum = (
+        behavior.get("properties", {})
+        .get("characterization_policy", {})
+        .get("enum", [])
+    )
+    if characterization_enum != ["contract_only", "review_incidental_before_locking"]:
+        failures.append(f"{path}: characterization policy must preserve contractual/incidental distinction")
+
+    evidence = props.get("evidence_policy", {})
+    for field in (
+        "minimum_removal_confidence",
+        "distinguish_contractual_from_incidental_behavior",
+        "require_independent_evidence_for_high_blast_radius",
+    ):
+        if field not in evidence.get("required", []):
+            failures.append(f"{path}: evidence_policy must require {field}")
+    confidence_enum = (
+        evidence.get("properties", {})
+        .get("minimum_removal_confidence", {})
+        .get("enum", [])
+    )
+    if confidence_enum != CONFIDENCE:
+        failures.append(f"{path}: minimum_removal_confidence enum drifted")
+
+    churn = props.get("churn_policy", {})
+    for field in ("allow_unrelated_formatting", "require_independent_slice_verification"):
+        if field not in churn.get("required", []):
+            failures.append(f"{path}: churn_policy must require {field}")
+
+    focus_enum = props.get("focus", {}).get("items", {}).get("enum", [])
+    for focus in ("generated_artifacts", "discoverability_context"):
+        if focus not in focus_enum:
+            failures.append(f"{path}: focus missing {focus}")
 
     rules = schema.get("allOf", [])
     non_audit_rule = None
     behavior_change_rule = None
+    generated_direct_rule = None
     efficiency_rule = None
     irreversible_rule = None
 
@@ -133,14 +194,13 @@ def check_schema(failures: list[str]) -> None:
             if mode_rule.get("const") == "efficiency":
                 efficiency_rule = rule
         try:
-            allow_changes = (
-                condition["properties"]["behavior_policy"]["properties"]
-                ["allow_behavior_changes"]["const"]
-            )
+            behavior_props = condition["properties"]["behavior_policy"]["properties"]
         except (KeyError, TypeError):
-            allow_changes = None
-        if allow_changes is True:
+            behavior_props = {}
+        if behavior_props.get("allow_behavior_changes", {}).get("const") is True:
             behavior_change_rule = rule
+        if behavior_props.get("generated_artifact_policy", {}).get("const") == "direct_edit_authorized":
+            generated_direct_rule = rule
         try:
             permission = (
                 condition["properties"]["authority"]["properties"]
@@ -164,7 +224,7 @@ def check_schema(failures: list[str]) -> None:
         if authority.get("properties", {}).get("authorized_mutations", {}).get("minItems") != 1:
             failures.append(f"{path}: authorized_mutations must be non-empty")
         verification = then_props.get("verification", {})
-        for field in ("required_checks", "postconditions"):
+        for field in ("required_checks", "compatibility_checks", "postconditions"):
             if field not in verification.get("required", []):
                 failures.append(f"{path}: mutating verification must require {field}")
             if verification.get("properties", {}).get(field, {}).get("minItems") != 1:
@@ -190,6 +250,17 @@ def check_schema(failures: list[str]) -> None:
             failures.append(f"{path}: allow_behavior_changes=true must require authorized_behavior_changes")
         if behavior_then.get("properties", {}).get("authorized_behavior_changes", {}).get("minItems") != 1:
             failures.append(f"{path}: authorized_behavior_changes must be non-empty")
+
+    if generated_direct_rule is None:
+        failures.append(f"{path}: missing direct-generated-edit justification contract")
+    else:
+        behavior_then = (
+            generated_direct_rule.get("then", {})
+            .get("properties", {})
+            .get("behavior_policy", {})
+        )
+        if "direct_generated_edit_justification" not in behavior_then.get("required", []):
+            failures.append(f"{path}: direct generated edits must require justification")
 
     if efficiency_rule is None:
         failures.append(f"{path}: missing efficiency evidence contract")
@@ -236,13 +307,20 @@ def check_content(failures: list[str]) -> None:
     quickstart = read(STACK["quickstart"])
     acceptance = read(STACK["acceptance_tests"])
     wrapper = read(STACK["wrapper"])
+    example = read(STACK["example"])
 
     require_terms(
         agent,
         [
             "The Agentic-Code Rot Model",
+            "Compatibility Surface Map",
+            "Evidence Ladder and Confidence",
+            "Generated, Vendored, and Derived Artifacts",
+            "Characterization Tests and Incidental Behavior",
+            "Maintenance Economics",
             "Comment and Documentation Contract",
             "Cross-Language Adaptation",
+            "Future-Agent Context Efficiency",
             "second-pass de-slop review",
             "Text search alone is not proof",
             "behavior-preserving",
@@ -254,11 +332,17 @@ def check_content(failures: list[str]) -> None:
     require_terms(
         skill,
         [
+            "Evidence Ladder",
+            "Compatibility Surface Map",
+            "Characterization Policy",
+            "Generated/Vendored/Lockfile Procedure",
+            "Maintenance Economics",
             "Comment drift",
             "Abstraction inflation",
             "Failure-handling slop",
             "Efficiency slop",
             "Language-Aware Verification",
+            "Future-Agent Context Efficiency",
             "Second-Pass Agentic Slop Check",
             "reflection",
             "N+1",
@@ -270,9 +354,14 @@ def check_content(failures: list[str]) -> None:
     require_terms(
         prompt,
         [
+            "COMPATIBILITY SURFACE MAP",
+            "EVIDENCE LADDER",
             "SLOP INVENTORY",
+            "MAINTENANCE ECONOMICS",
             "REFACTOR INVARIANT",
+            "CHARACTERIZATION POLICY",
             "COMMENT CONTRACT",
+            "GENERATED / VENDORED / DERIVED ARTIFACT CONTRACT",
             "second-pass de-slop review",
             "VERIFICATION",
             "DONE WHEN",
@@ -285,7 +374,13 @@ def check_content(failures: list[str]) -> None:
         quickstart,
         [
             "stale comments",
+            "Compatibility Surface Map",
+            "Evidence and Confidence",
+            "Generated, Vendored, and Lockfile Policy",
+            "Characterization Tests",
             "Cross-Language Behavior",
+            "Maintenance Economics",
+            "Future-Agent Context Efficiency",
             "Safe Dead-Code Removal",
             "Efficiency Work",
         ],
@@ -303,14 +398,53 @@ def check_content(failures: list[str]) -> None:
         "second-pass fresh slop",
         "performance evidence honesty",
         "truthful completion",
+        "characterization test would freeze a suspected bug",
+        "generated source and deterministic regeneration",
+        "vendored/minified code exclusion",
+        "git history prevents regression",
+        "history is not authority",
+        "lockfile ownership",
+        "public surface compatibility check",
+        "churn budget",
+        "future-agent discoverability without boundary collapse",
     ]:
         if term not in acceptance_lower:
             failures.append(f"{STACK['acceptance_tests']}: missing adversarial case {term!r}")
 
+    case_count = acceptance_lower.count("## case ")
+    if case_count < 40:
+        failures.append(f"{STACK['acceptance_tests']}: expected at least 40 adversarial cases, found {case_count}")
+
     require_terms(
         wrapper,
-        [STACK["agent"], STACK["skill"], "Comment Contract", "second-pass"],
+        [
+            STACK["agent"],
+            STACK["skill"],
+            "compatibility surfaces",
+            "characterization",
+            "generated",
+            "evidence levels/confidence",
+            "Comment Contract",
+            "second-pass",
+        ],
         STACK["wrapper"],
+        failures,
+    )
+
+    require_terms(
+        example,
+        [
+            "generated_artifact_policy: source_and_regenerate",
+            "require_history_for_ambiguous_intent: true",
+            "minimum_removal_confidence: high",
+            "distinguish_contractual_from_incidental_behavior: true",
+            "require_independent_evidence_for_high_blast_radius: true",
+            "allow_unrelated_formatting: false",
+            "require_independent_slice_verification: true",
+            "compatibility_checks:",
+            "reproducibility_checks:",
+        ],
+        STACK["example"],
         failures,
     )
 
@@ -359,9 +493,10 @@ def main() -> int:
 
     print("PASS: required files and manifest registration")
     print("PASS: structured maintenance task contract")
+    print("PASS: compatibility/evidence/churn/generated-artifact contracts")
     print("PASS: comment/refactor/efficiency safety invariants")
     print("PASS: routing and wrapper references")
-    print("PASS: adversarial acceptance-test coverage")
+    print("PASS: adversarial acceptance-test coverage (40+ cases)")
     print("\nResult: PASS")
     return 0
 

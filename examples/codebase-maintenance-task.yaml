@@ -5,19 +5,25 @@ target:
   repository: Quazmoz/example-app
   ref: main
   scope: src/ and tests/ for the capture pipeline
+  exclusions:
+    - vendor/
+    - dist/
+    - generated/ unless changed through its authoritative schema/generator
 
 mode: de_slop
 
 goal: >-
   Reduce agent-induced code rot in the capture pipeline by reconciling stale comments,
   consolidating truly duplicate validation, removing proven-dead compatibility residue,
-  simplifying error handling, and preserving all external behavior.
+  simplifying error handling, preserving all external behavior, and keeping generated
+  artifacts reproducible from their authoritative source.
 
 non_goals:
   - Redesign the product workflow.
   - Change public API fields or persisted data formats.
   - Introduce a new framework or dependency.
   - Reformat unrelated files.
+  - Hand-edit vendored, generated, minified, or lock/resolution output.
 
 behavior_policy:
   allow_behavior_changes: false
@@ -25,9 +31,23 @@ behavior_policy:
     - Public API and serialized field names remain unchanged.
     - Persisted data remains backward compatible.
     - Existing retry and cancellation semantics remain at least as strict.
+    - Security-boundary validation remains enforced at each trust boundary.
   reconcile_touched_comments: true
   allow_repository_wide_formatting: false
   allow_new_dependencies: false
+  generated_artifact_policy: source_and_regenerate
+  require_history_for_ambiguous_intent: true
+  characterization_policy: review_incidental_before_locking
+
+evidence_policy:
+  minimum_removal_confidence: high
+  distinguish_contractual_from_incidental_behavior: true
+  require_independent_evidence_for_high_blast_radius: true
+
+churn_policy:
+  allow_unrelated_formatting: false
+  require_independent_slice_verification: true
+  max_files_per_slice: 12
 
 focus:
   - comment_drift
@@ -37,13 +57,16 @@ focus:
   - failure_semantics
   - test_quality
   - dependencies
+  - generated_artifacts
   - performance
+  - discoverability_context
 
 authority:
   maximum_permission_class: mutate_reversible
   authorized_mutations:
     - Modify source, tests, and repository documentation in the declared scope.
     - Remove dependencies or configuration only when non-use is proven and native validation passes.
+    - Update authoritative schemas/templates/generators and regenerate derived output through repository-native tooling.
   approval_required: false
 
 verification:
@@ -51,15 +74,25 @@ verification:
     - Run the repository's configured formatter/linter/static-analysis checks for touched code.
     - Run compile/type/build checks.
     - Run unit and integration tests covering the capture pipeline.
+  compatibility_checks:
+    - Verify public API and serialized/persisted field names remain unchanged.
+    - Verify retry, cancellation, and externally observed failure semantics remain compatible.
   targeted_regressions:
     - Add a regression test for any material latent defect discovered during cleanup.
     - Verify serialized/persisted compatibility for renamed or consolidated internal models.
+  reproducibility_checks:
+    - If generated artifacts change, regenerate them from authoritative inputs and confirm a second regeneration is stable when practical.
+    - Update lock/resolution state only through the native package manager.
   postconditions:
     - No stale behavior comments remain in materially touched files.
     - No public or persisted contract changed unintentionally.
-    - The final diff has no new duplicate helper, placeholder TODO, debug code, or weakened assertion.
+    - No suspicious behavior was newly canonized in a characterization test without classification.
+    - The final diff has no new duplicate helper, placeholder TODO, debug code, weakened assertion, or unsustainable generated/vendor/lockfile edit.
 
 constraints:
   - Prefer the smallest independently verifiable refactor slices.
+  - Use recent history and accepted decisions when the intent of unusual compatibility or safety logic is ambiguous.
   - Do not treat text search alone as proof that dynamically reachable code is dead.
+  - Prefer two independent evidence types for high-blast-radius removal.
   - Report performance improvements as measured only when a benchmark, profile, or equivalent check ran.
+  - Optimize future discoverability without flattening legitimate trust, lifecycle, protocol, or process boundaries.
