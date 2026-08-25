@@ -42,6 +42,7 @@ Then choose a path:
 |---|---|
 | Pick the right files quickly | [`docs/user-guide.md`](docs/user-guide.md) |
 | Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
+| Run implementation/qualification through a bounded lead + reviewer loop | [`docs/quickstarts/bounded-completion.md`](docs/quickstarts/bounded-completion.md) |
 | De-slop/refactor an existing codebase without silently changing behavior | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
 | Select or challenge an automation platform architecture | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Use a local repo-aware coding CLI | [`docs/quickstarts/cli.md`](docs/quickstarts/cli.md) |
@@ -97,6 +98,28 @@ docs/patterns/agent.md
 ```
 
 The stack defaults to one agent plus selectively loaded skills. It introduces multiple agents only when permission isolation, independent specialist context, parallel execution with reconciliation, independent verification, separate durable control loops, or fault isolation provides a concrete benefit. A skill, retrieved document, tool output, or sub-agent cannot broaden the parent agent's authority.
+
+### Bounded Completion Stack
+
+Use when implementation or qualification needs a single Integration Owner, independent adversarial review, durable task/findings state, deterministic verification evidence, bounded continuation, and an objective completion gate.
+
+```text
+docs/quickstarts/bounded-completion.md
+agents/bounded-completion-lead.md
+agents/bounded-completion-reviewer.md
+skills/bounded-completion-orchestration.md
+schemas/bounded-completion-task.schema.json
+schemas/bounded-completion-state.schema.json
+schemas/bounded-completion-findings.schema.json
+examples/bounded-completion-task.json
+config/bounded-completion.json
+scripts/bounded-completion.py
+scripts/validate-bounded-completion.py
+.github/agents/bounded-completion-lead.agent.md
+.github/agents/bounded-completion-reviewer.agent.md
+```
+
+Bounded completion is an **orchestration overlay, not a domain owner**. Select the smallest correct engineering owner first; the lead coordinates that owner’s implementation behavior while the reviewer challenges plans, findings, visual evidence when required, and final completion claims. The committed Copilot agents intentionally omit guessed `model:` identifiers, and distinct-model review counts only when the operator or runtime confirms that a genuinely different reviewer model ran.
 
 ### Codebase Maintenance and De-Slop Stack
 
@@ -310,7 +333,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Claude / Claude Code | [`CLAUDE.md`](CLAUDE.md) | Claude-oriented wrapper, delegates shared rules to `AGENTS.md`. |
 | Gemini / Gemini CLI | [`GEMINI.md`](GEMINI.md) | Gemini-oriented wrapper, delegates shared behavior to `AGENTS.md`. |
 | GitHub Copilot repo instructions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Repo-wide behavior and maintenance rules. |
-| GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) | Selectable profile wrappers. |
+| GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) | Selectable profile wrappers, including bounded completion lead/reviewer roles. |
 | Cursor | [`.cursor/rules/agentdefaults.mdc`](.cursor/rules/agentdefaults.mdc) | Thin rule wrapper pointing back to canonical files. |
 | Windsurf | [`.windsurfrules`](.windsurfrules) | Thin wrapper pointing back to canonical files. |
 | MCP-connected apps | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) | Palmier Pro video-editing workflow over local MCP. |
@@ -322,6 +345,8 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Type | Name | Path |
 |---|---|---|
 | Agent | Agent Architect and Builder | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
+| Agent | Bounded Completion Lead | [`agents/bounded-completion-lead.md`](agents/bounded-completion-lead.md) |
+| Agent | Bounded Completion Reviewer | [`agents/bounded-completion-reviewer.md`](agents/bounded-completion-reviewer.md) |
 | Agent | Codebase Maintenance and De-Slop Engineer | [`agents/codebase-maintenance-engineer.md`](agents/codebase-maintenance-engineer.md) |
 | Agent | Automation Platform Selection Advisor | [`agents/automation-platform-selection-advisor.md`](agents/automation-platform-selection-advisor.md) |
 | Agent | Palmier Pro MCP Video Editor | [`agents/palmierpro-mcp-video-editor-agent.md`](agents/palmierpro-mcp-video-editor-agent.md) |
@@ -338,6 +363,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Agent | Android Wear OS Release Engineer | [`agents/android-wearos-release-engineer.md`](agents/android-wearos-release-engineer.md) |
 | Agent | US to Europe Travel Advisor | [`agents/us-europe-travel-advisor.md`](agents/us-europe-travel-advisor.md) |
 | Skill | Agent Design and Build | [`skills/agent-design-and-build.md`](skills/agent-design-and-build.md) |
+| Skill | Bounded Completion Orchestration | [`skills/bounded-completion-orchestration.md`](skills/bounded-completion-orchestration.md) |
 | Skill | Codebase De-Slop and Refactoring | [`skills/codebase-de-slop-and-refactoring.md`](skills/codebase-de-slop-and-refactoring.md) |
 | Skill | Automation Platform Capability Taxonomy | [`skills/automation-platform-capability-taxonomy.md`](skills/automation-platform-capability-taxonomy.md) |
 | Skill | Automation Platform Candidate Discovery | [`skills/automation-platform-candidate-discovery.md`](skills/automation-platform-candidate-discovery.md) |
@@ -400,6 +426,7 @@ For the full list, use [`INDEX.md`](INDEX.md).
 | Recipe | Use |
 |---|---|
 | [`examples/agent-build-brief.yaml`](examples/agent-build-brief.yaml) | Ready-to-adapt structured brief for building a repository maintenance agent with explicit runtime and authority boundaries. |
+| [`examples/bounded-completion-task.json`](examples/bounded-completion-task.json) | Structured bounded-completion contract with explicit criteria, verification, approvals, and iteration limits. |
 | [`examples/codebase-maintenance-task.yaml`](examples/codebase-maintenance-task.yaml) | Behavior-preserving de-slop brief covering comments, duplication, dead code, failure semantics, tests, dependencies, and verification. |
 | [`examples/automation-platform-decision-brief.yaml`](examples/automation-platform-decision-brief.yaml) | Category-aware automation selection brief with incumbents, alternatives, hosting, licensing, migration, and evidence controls. |
 | [`examples/app-market-research-brief.yaml`](examples/app-market-research-brief.yaml) | Ready-to-adapt Wear OS market-research brief. |
@@ -439,6 +466,7 @@ It checks:
 - The Agent Architect and Builder stack preserves canonical build modes, architecture choices, permission classes, runtime-capability fields, required contract terms, and all 22 acceptance scenarios.
 - The automation platform stack preserves its canonical capability, evidence, economics, and acceptance-test invariants.
 - The Codebase Maintenance and De-Slop stack preserves behavior-change authorization, comment reconciliation, mutation/verification contracts, performance-evidence honesty, routing, and adversarial acceptance coverage.
+- The bounded-completion stack preserves deterministic task/findings state, verification freshness, review/integrity evidence, approval provenance, visual-artifact requirements, iteration/stop bounds, and completion-gate regressions.
 - Local Markdown links resolve.
 
 ## Benchmark Evidence
@@ -460,15 +488,21 @@ agentdefaults/
 ├── AUTOMATION_PLATFORM_INDEX.md
 ├── agentdefaults.manifest.json
 ├── scripts/
+│   ├── bounded-completion.py
 │   ├── validate-agentdefaults.py
+│   ├── validate-bounded-completion.py
 │   └── validate-codebase-maintenance-stack.py
 ├── schemas/
 │   ├── agent-build-brief.schema.json
+│   ├── bounded-completion-task.schema.json
+│   ├── bounded-completion-state.schema.json
+│   ├── bounded-completion-findings.schema.json
 │   ├── codebase-maintenance-task.schema.json
 │   ├── automation-platform-decision-brief.schema.json
 │   └── app-market-research-brief.schema.json
 ├── docs/
 │   ├── agent-builder-acceptance-tests.md
+│   ├── bounded-completion-acceptance-tests.md
 │   ├── codebase-maintenance-engineer-acceptance-tests.md
 │   ├── automation-platform-selection-acceptance-tests.md
 │   ├── user-guide.md
@@ -477,6 +511,7 @@ agentdefaults/
 │   ├── app-market-research-acceptance-tests.md
 │   ├── quickstarts/
 │   │   ├── agent-builder.md
+│   │   ├── bounded-completion.md
 │   │   ├── codebase-maintenance-engineer.md
 │   │   ├── automation-platform-selection.md
 │   │   └── community-app-validation.md
@@ -485,15 +520,19 @@ agentdefaults/
 │   └── benchmarks/
 ├── examples/
 │   ├── agent-build-brief.yaml
+│   ├── bounded-completion-task.json
 │   ├── codebase-maintenance-task.yaml
 │   └── automation-platform-decision-brief.yaml
 ├── agents/
 │   ├── agent-architect-builder.md
+│   ├── bounded-completion-lead.md
+│   ├── bounded-completion-reviewer.md
 │   ├── codebase-maintenance-engineer.md
 │   ├── automation-platform-selection-advisor.md
 │   └── community-app-idea-validation-agent.md
 ├── skills/
 │   ├── agent-design-and-build.md
+│   ├── bounded-completion-orchestration.md
 │   ├── codebase-de-slop-and-refactoring.md
 │   ├── automation-platform-capability-taxonomy.md
 │   ├── automation-platform-candidate-discovery.md
@@ -503,18 +542,24 @@ agentdefaults/
 │   ├── gitops-runbook-and-workflow-platform-analysis.md
 │   └── subreddit-app-idea-validation.md
 ├── prompts/
+│   ├── orchestration/
+│   │   ├── start-bounded-completion.md
+│   │   └── resume-bounded-completion.md
 │   ├── implementation/
 │   │   └── codebase-de-slop-task.md
 │   ├── planning/
 │   │   ├── build-ai-agent.md
 │   │   └── select-automation-platform.md
 │   ├── review/
+│   │   ├── bounded-completion-review.md
 │   │   └── challenge-automation-platform-choice.md
 │   └── research/
 │       └── validate-app-idea-in-community.md
 ├── .github/
 │   └── agents/
 │       ├── agent-architect-builder.agent.md
+│       ├── bounded-completion-lead.agent.md
+│       ├── bounded-completion-reviewer.agent.md
 │       ├── codebase-maintenance-engineer.agent.md
 │       ├── automation-platform-selection-advisor.agent.md
 │       └── community-app-idea-validator.agent.md
@@ -550,7 +595,7 @@ Use [`docs/patterns/agent.md`](docs/patterns/agent.md) for new agent profiles an
 
 ## Status
 
-Usable cross-tool scaffold with reusable agent-construction defaults, behavior-preserving codebase maintenance/de-slop engineering, category-aware automation platform architecture and selection, token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
+Usable cross-tool scaffold with reusable agent-construction defaults, bounded lead/reviewer completion orchestration, behavior-preserving codebase maintenance/de-slop engineering, category-aware automation platform architecture and selection, token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
 
 ## License
 
