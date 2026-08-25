@@ -42,6 +42,7 @@ Then choose a path:
 |---|---|
 | Pick the right files quickly | [`docs/user-guide.md`](docs/user-guide.md) |
 | Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
+| De-slop/refactor an existing codebase without silently changing behavior | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
 | Select or challenge an automation platform architecture | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Use a local repo-aware coding CLI | [`docs/quickstarts/cli.md`](docs/quickstarts/cli.md) |
 | Use Claude-style repo instructions | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
@@ -96,6 +97,23 @@ docs/patterns/agent.md
 ```
 
 The stack defaults to one agent plus selectively loaded skills. It introduces multiple agents only when permission isolation, independent specialist context, parallel execution with reconciliation, independent verification, separate durable control loops, or fault isolation provides a concrete benefit. A skill, retrieved document, tool output, or sub-agent cannot broaden the parent agent's authority.
+
+### Codebase Maintenance and De-Slop Stack
+
+Use after rapid or agentic development when a repository works but is accumulating quiet maintenance rot: stale comments/docstrings/TODOs, session-to-session duplicate helpers, abandoned implementation paths, abstraction inflation, catch-all failure handling, brittle tests, dependency/configuration residue, or practical performance problems.
+
+```text
+docs/quickstarts/codebase-maintenance-engineer.md
+agents/codebase-maintenance-engineer.md
+skills/codebase-de-slop-and-refactoring.md
+prompts/implementation/codebase-de-slop-task.md
+schemas/codebase-maintenance-task.schema.json
+examples/codebase-maintenance-task.yaml
+docs/codebase-maintenance-engineer-acceptance-tests.md
+.github/agents/codebase-maintenance-engineer.agent.md
+```
+
+The stack is behavior-preserving by default. It fingerprints the target repository's real language/framework/toolchain, uses repository-native format/lint/type/build/test/static-analysis conventions, requires evidence for risky dead-code/dependency removal, reconciles stale comments in touched code, measures performance before claiming measured gains, and performs a second-pass review for fresh slop introduced by the cleanup itself.
 
 ### Automation Platform Architecture and Selection Stack
 
@@ -304,6 +322,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Type | Name | Path |
 |---|---|---|
 | Agent | Agent Architect and Builder | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) |
+| Agent | Codebase Maintenance and De-Slop Engineer | [`agents/codebase-maintenance-engineer.md`](agents/codebase-maintenance-engineer.md) |
 | Agent | Automation Platform Selection Advisor | [`agents/automation-platform-selection-advisor.md`](agents/automation-platform-selection-advisor.md) |
 | Agent | Palmier Pro MCP Video Editor | [`agents/palmierpro-mcp-video-editor-agent.md`](agents/palmierpro-mcp-video-editor-agent.md) |
 | Agent | App Market Research Agent | [`agents/app-market-research-agent.md`](agents/app-market-research-agent.md) |
@@ -319,6 +338,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Agent | Android Wear OS Release Engineer | [`agents/android-wearos-release-engineer.md`](agents/android-wearos-release-engineer.md) |
 | Agent | US to Europe Travel Advisor | [`agents/us-europe-travel-advisor.md`](agents/us-europe-travel-advisor.md) |
 | Skill | Agent Design and Build | [`skills/agent-design-and-build.md`](skills/agent-design-and-build.md) |
+| Skill | Codebase De-Slop and Refactoring | [`skills/codebase-de-slop-and-refactoring.md`](skills/codebase-de-slop-and-refactoring.md) |
 | Skill | Automation Platform Capability Taxonomy | [`skills/automation-platform-capability-taxonomy.md`](skills/automation-platform-capability-taxonomy.md) |
 | Skill | Automation Platform Candidate Discovery | [`skills/automation-platform-candidate-discovery.md`](skills/automation-platform-candidate-discovery.md) |
 | Skill | CI/CD Platform Alternatives Analysis | [`skills/ci-cd-platform-alternatives-analysis.md`](skills/ci-cd-platform-alternatives-analysis.md) |
@@ -361,6 +381,7 @@ docs/benchmarks/token-efficiency-fresh-2026-06-25.md
 | Skill | Wear OS Screen Edge Safety | [`skills/wearos-screen-edge-safety.md`](skills/wearos-screen-edge-safety.md) |
 | Skill | US-Europe Baggage and Packing Research | [`skills/us-europe-baggage-packing-research.md`](skills/us-europe-baggage-packing-research.md) |
 | Prompt | Build a Production-Quality AI Agent | [`prompts/planning/build-ai-agent.md`](prompts/planning/build-ai-agent.md) |
+| Prompt | De-Slop and Refactor an Existing Codebase | [`prompts/implementation/codebase-de-slop-task.md`](prompts/implementation/codebase-de-slop-task.md) |
 | Prompt | Select the Right Automation Platform | [`prompts/planning/select-automation-platform.md`](prompts/planning/select-automation-platform.md) |
 | Prompt | Challenge an Automation Platform Choice | [`prompts/review/challenge-automation-platform-choice.md`](prompts/review/challenge-automation-platform-choice.md) |
 | Prompt | Validate an App Idea in a Community | [`prompts/research/validate-app-idea-in-community.md`](prompts/research/validate-app-idea-in-community.md) |
@@ -379,6 +400,7 @@ For the full list, use [`INDEX.md`](INDEX.md).
 | Recipe | Use |
 |---|---|
 | [`examples/agent-build-brief.yaml`](examples/agent-build-brief.yaml) | Ready-to-adapt structured brief for building a repository maintenance agent with explicit runtime and authority boundaries. |
+| [`examples/codebase-maintenance-task.yaml`](examples/codebase-maintenance-task.yaml) | Behavior-preserving de-slop brief covering comments, duplication, dead code, failure semantics, tests, dependencies, and verification. |
 | [`examples/automation-platform-decision-brief.yaml`](examples/automation-platform-decision-brief.yaml) | Category-aware automation selection brief with incumbents, alternatives, hosting, licensing, migration, and evidence controls. |
 | [`examples/app-market-research-brief.yaml`](examples/app-market-research-brief.yaml) | Ready-to-adapt Wear OS market-research brief. |
 | [`examples/palmierpro-mcp-workflow.md`](examples/palmierpro-mcp-workflow.md) | Copy-paste Palmier Pro MCP editing workflows. |
@@ -416,6 +438,7 @@ It checks:
 - Manifest metadata and featured-stack references are valid.
 - The Agent Architect and Builder stack preserves canonical build modes, architecture choices, permission classes, runtime-capability fields, required contract terms, and all 22 acceptance scenarios.
 - The automation platform stack preserves its canonical capability, evidence, economics, and acceptance-test invariants.
+- The Codebase Maintenance and De-Slop stack preserves behavior-change authorization, comment reconciliation, mutation/verification contracts, performance-evidence honesty, routing, and adversarial acceptance coverage.
 - Local Markdown links resolve.
 
 ## Benchmark Evidence
@@ -437,13 +460,16 @@ agentdefaults/
 ├── AUTOMATION_PLATFORM_INDEX.md
 ├── agentdefaults.manifest.json
 ├── scripts/
-│   └── validate-agentdefaults.py
+│   ├── validate-agentdefaults.py
+│   └── validate-codebase-maintenance-stack.py
 ├── schemas/
 │   ├── agent-build-brief.schema.json
+│   ├── codebase-maintenance-task.schema.json
 │   ├── automation-platform-decision-brief.schema.json
 │   └── app-market-research-brief.schema.json
 ├── docs/
 │   ├── agent-builder-acceptance-tests.md
+│   ├── codebase-maintenance-engineer-acceptance-tests.md
 │   ├── automation-platform-selection-acceptance-tests.md
 │   ├── user-guide.md
 │   ├── ux-roadmap.md
@@ -451,6 +477,7 @@ agentdefaults/
 │   ├── app-market-research-acceptance-tests.md
 │   ├── quickstarts/
 │   │   ├── agent-builder.md
+│   │   ├── codebase-maintenance-engineer.md
 │   │   ├── automation-platform-selection.md
 │   │   └── community-app-validation.md
 │   ├── patterns/
@@ -458,13 +485,16 @@ agentdefaults/
 │   └── benchmarks/
 ├── examples/
 │   ├── agent-build-brief.yaml
+│   ├── codebase-maintenance-task.yaml
 │   └── automation-platform-decision-brief.yaml
 ├── agents/
 │   ├── agent-architect-builder.md
+│   ├── codebase-maintenance-engineer.md
 │   ├── automation-platform-selection-advisor.md
 │   └── community-app-idea-validation-agent.md
 ├── skills/
 │   ├── agent-design-and-build.md
+│   ├── codebase-de-slop-and-refactoring.md
 │   ├── automation-platform-capability-taxonomy.md
 │   ├── automation-platform-candidate-discovery.md
 │   ├── ci-cd-platform-alternatives-analysis.md
@@ -473,6 +503,8 @@ agentdefaults/
 │   ├── gitops-runbook-and-workflow-platform-analysis.md
 │   └── subreddit-app-idea-validation.md
 ├── prompts/
+│   ├── implementation/
+│   │   └── codebase-de-slop-task.md
 │   ├── planning/
 │   │   ├── build-ai-agent.md
 │   │   └── select-automation-platform.md
@@ -483,6 +515,7 @@ agentdefaults/
 ├── .github/
 │   └── agents/
 │       ├── agent-architect-builder.agent.md
+│       ├── codebase-maintenance-engineer.agent.md
 │       ├── automation-platform-selection-advisor.agent.md
 │       └── community-app-idea-validator.agent.md
 ├── .cursor/
@@ -517,7 +550,7 @@ Use [`docs/patterns/agent.md`](docs/patterns/agent.md) for new agent profiles an
 
 ## Status
 
-Usable cross-tool scaffold with reusable agent-construction defaults, category-aware automation platform architecture and selection, token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
+Usable cross-tool scaffold with reusable agent-construction defaults, behavior-preserving codebase maintenance/de-slop engineering, category-aware automation platform architecture and selection, token-efficiency defaults, browser-based app-market research, focused subreddit/community app-idea validation, Palmier Pro MCP video-editing defaults, Google Play growth tooling, Wear OS development and release stacks, travel research, tool wrappers, quickstarts, examples, schemas, patterns, and validation tooling.
 
 ## License
 

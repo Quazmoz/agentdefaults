@@ -27,6 +27,7 @@ Do not use this index as a substitute for the selected canonical agent. Tool wra
 | Infrastructure, automation, CI/CD, GitOps, Kubernetes, cloud/IAM/network, SRE, incidents, releases outside the K8SHomelab-specific route | [`agents/principal-devops-engineer.md`](agents/principal-devops-engineer.md) | `skills/production-devops-engineering.md` |
 | Cybersecurity-focused DevOps review, hardening, incident analysis, or security-sensitive release work across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, or supply chain | [`agents/devsecops-security-engineer.md`](agents/devsecops-security-engineer.md) | `skills/devsecops-security-engineering.md` |
 | DevOps/platform documentation, docs-as-code, runbooks, architecture docs, Markdown, Mermaid, documentation diagrams | [`agents/devops-documentation-engineer.md`](agents/devops-documentation-engineer.md) | `skills/devops-documentation-engineering.md` |
+| Behavior-preserving codebase maintenance across languages: agentic-code rot, stale comments/docstrings, duplication, dead code, abstraction inflation, weak failure handling, brittle tests, dependency/config drift, or practical efficiency refactoring | [`agents/codebase-maintenance-engineer.md`](agents/codebase-maintenance-engineer.md) | `skills/codebase-de-slop-and-refactoring.md` |
 | LLM apps, agents, MCP, RAG, inference, prompts/context, evals, AI security/observability | [`agents/principal-ai-engineer.md`](agents/principal-ai-engineer.md) | `skills/production-ai-engineering.md` |
 | One task materially spans both AI application behavior and DevOps/platform behavior | [`agents/principal-ai-devops-engineer.md`](agents/principal-ai-devops-engineer.md) | `skills/production-ai-devops-engineering.md` |
 | Design, build, or audit another reusable agent | [`agents/agent-architect-builder.md`](agents/agent-architect-builder.md) | `skills/agent-design-and-build.md` |
@@ -40,6 +41,9 @@ Do not use this index as a substitute for the selected canonical agent. Tool wra
 - A security review uncovers broad platform refactoring that is not required to close the security defect -> keep the security remediation with the DevSecOps specialist and hand broad refactoring to the Principal DevOps Engineer.
 - Reconcile Jenkins/Ansible GitOps Markdown and Mermaid against implementation without changing the platform -> DevOps Documentation Engineer.
 - A documentation audit proves the Jenkins/AAP implementation itself is defective -> document the discrepancy with the DevOps Documentation Engineer, then route the implementation fix to the Principal DevOps Engineer or DevSecOps Security Engineer when the defect is primarily security-related.
+- A mature repository works but has stale comments, duplicate helpers, abandoned compatibility paths, excess forwarding abstractions, or weak tests after many coding-agent sessions -> Codebase Maintenance and De-Slop Engineer.
+- A de-slop pass discovers a primary security-boundary flaw, production incident, AI-system defect, or platform architecture defect -> keep the maintenance findings, but route the primary remediation to the appropriate specialist when the required outcome exceeds maintenance scope.
+- A new feature needs implementation and only incidental cleanup -> keep the feature with the owning product/domain engineer; run the maintenance agent afterward or on a bounded supporting slice.
 - Prompt, RAG, tool-calling, model integration, MCP, agent loop, or eval defect with no platform ownership change -> Principal AI Engineer.
 - Model-serving code and Kubernetes/GPU runtime both require coordinated fixes -> Principal AI and DevOps Engineer.
 - Infrastructure merely hosting an AI application does **not** automatically require the combined agent.
@@ -115,6 +119,31 @@ Owns evidence-backed Markdown, Mermaid, runbooks, architecture documentation, do
 
 For complex GitOps documentation it must trace desired-state source, review/approval, trigger, validation, controller/orchestrator, execution identity and target, authoritative state, success/failure signals, retry/reconciliation, promotion, and rollback. Opaque image diagrams without editable source must not be silently reconstructed from inference.
 
+## Codebase Maintenance and De-Slop Engineering
+
+Use this specialist when the primary outcome is reducing maintenance debt in existing code without turning cleanup into an unrequested redesign.
+
+```text
+docs/quickstarts/codebase-maintenance-engineer.md
+agents/codebase-maintenance-engineer.md
+skills/codebase-de-slop-and-refactoring.md
+prompts/implementation/codebase-de-slop-task.md
+schemas/codebase-maintenance-task.schema.json
+examples/codebase-maintenance-task.yaml
+docs/codebase-maintenance-engineer-acceptance-tests.md
+.github/agents/codebase-maintenance-engineer.agent.md
+```
+
+Owns behavior-preserving cleanup of agentic-code rot: stale comments/docstrings/TODOs, session-to-session duplicate logic, dead or abandoned residue, abstraction inflation, catch-all/silent failure handling, brittle tests, dependency/configuration accretion, and practical performance problems such as N+1 I/O or unbounded work.
+
+It is deliberately cross-language. The specialist must fingerprint the target repository's actual ecosystem and use its configured formatter, linter, type/static analysis, build, test, generator, migration, benchmark, and profiling conventions rather than imposing one universal style guide.
+
+The specialist treats stale comments as defects but does not reward comment volume. It preserves comments that explain non-obvious invariants, compatibility constraints, concurrency/lifecycle rules, or exact workaround-removal conditions; it removes syntax narration, commented-out code, agent/process history, and claims that no longer match executable behavior.
+
+Dead-code and dependency removal must use evidence appropriate to the runtime. Text search alone is not proof when reflection, dependency injection, plugin discovery, manifests, templates, serialization, generated registration, native entry points, or external callers may exist.
+
+Default maintenance work preserves product semantics, public APIs, persistence/wire formats, UX, security controls, error/retry/cancellation semantics, and operational behavior. Explicit behavior changes require explicit authorization and must be reported as semantic changes rather than disguised as cleanup.
+
 ## Principal AI Engineering
 
 ```text
@@ -164,7 +193,8 @@ Examples:
 8. Do not preload the combined agent as a generic superset.
 9. Security-focused DevOps tasks may inspect broad platform evidence without turning the specialist into the default owner for non-security refactoring.
 10. Documentation tasks may load platform implementation evidence without inheriting platform mutation authority.
-11. Task evidence outranks generic guidance; current official documentation outranks stale platform assumptions.
+11. Codebase-maintenance tasks may inspect broad source/tooling evidence but must hand off primary domain/security/platform defects when the required remediation exceeds behavior-preserving maintenance scope.
+12. Task evidence outranks generic guidance; current official documentation outranks stale platform assumptions.
 
 ## Shared Invariants
 

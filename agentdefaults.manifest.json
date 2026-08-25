@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.15.0",
-  "description": "Reusable defaults for AI agent architecture and construction, combined and scoped production AI/DevOps engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.16.0",
+  "description": "Reusable defaults for AI agent architecture and construction, codebase maintenance and de-slop refactoring, combined and scoped production AI/DevOps engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -15,6 +15,17 @@
       "example": "examples/agent-build-brief.yaml",
       "acceptance_tests": "docs/agent-builder-acceptance-tests.md",
       "wrapper": ".github/agents/agent-architect-builder.agent.md"
+    },
+    {
+      "name": "Codebase Maintenance and De-Slop Engineering",
+      "quickstart": "docs/quickstarts/codebase-maintenance-engineer.md",
+      "agent": "agents/codebase-maintenance-engineer.md",
+      "skills": ["skills/codebase-de-slop-and-refactoring.md"],
+      "prompts": ["prompts/implementation/codebase-de-slop-task.md"],
+      "schema": "schemas/codebase-maintenance-task.schema.json",
+      "example": "examples/codebase-maintenance-task.yaml",
+      "acceptance_tests": "docs/codebase-maintenance-engineer-acceptance-tests.md",
+      "wrapper": ".github/agents/codebase-maintenance-engineer.agent.md"
     },
     {
       "name": "Principal AI and DevOps Engineering",

@@ -18,12 +18,15 @@ For engineering work, read `ENGINEERING_AGENTS_INDEX.md` first and choose the sm
 | Infrastructure, cloud, IaC, Ansible/AAP, CI/CD, GitOps, Kubernetes, networking/IAM, SRE, incidents, releases outside the K8SHomelab-specific route | `agents/principal-devops-engineer.md` | `skills/production-devops-engineering.md` |
 | Cybersecurity-focused DevOps review, hardening, incident analysis, or security-sensitive release work across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, or supply chain | `agents/devsecops-security-engineer.md` | `skills/devsecops-security-engineering.md` |
 | DevOps/platform documentation, docs-as-code, runbooks, architecture docs, Markdown, Mermaid, or documentation diagrams | `agents/devops-documentation-engineer.md` | `skills/devops-documentation-engineering.md` |
+| Behavior-preserving codebase cleanup, agentic-code rot, stale comments/docstrings, duplication, dead code, abstraction inflation, dependency/config drift, brittle tests, or practical efficiency refactoring across languages | `agents/codebase-maintenance-engineer.md` | `skills/codebase-de-slop-and-refactoring.md` |
 | LLM apps, agents, MCP, RAG, inference, prompts/context, evals, AI security/observability | `agents/principal-ai-engineer.md` | `skills/production-ai-engineering.md` |
 | One task materially requires coordinated AI-application and platform/DevOps changes | `agents/principal-ai-devops-engineer.md` | `skills/production-ai-devops-engineering.md` |
 | Design, build, or audit another reusable agent | `agents/agent-architect-builder.md` | `skills/agent-design-and-build.md` |
 | Select which automation platform/product should own a workload | `agents/automation-platform-selection-advisor.md` | Load only its task-relevant selection skills |
 
 For `Quazmoz/K8SHomelab`, the specialist must re-read that target repository's current `AGENTS.md`, use its Graft-first context workflow when available, and load only the task-relevant target-repo `.github/skills/*/SKILL.md`. Target-repo instructions and current manifests/runtime evidence outrank cached homelab assumptions.
+
+For codebase maintenance work, the specialist must fingerprint the target repository's actual language/framework/build/test/static-analysis toolchain before editing. It preserves behavior and external contracts by default, requires evidence for risky dead-code/dependency removal, reconciles stale comments in touched code, and performs a second-pass review for fresh agent-generated slop.
 
 For Palmier Pro video-editing work, route directly without treating the editing task as generic AI engineering:
 
@@ -57,8 +60,9 @@ Rules:
 5. Unknown runtime capabilities remain unavailable until verified.
 6. Security-focused DevOps routing does not authorize credential, IAM, state, network, controller, or production mutation without explicit task authority.
 7. Documentation authority does not imply permission to change the infrastructure or automation being documented.
-8. The K8SHomelab specialist does not infer live-cluster mutation authority from GitHub write access; watched-branch writes can themselves be deployment actions under Flux.
-9. Palmier external MCP tool availability does not imply Palmier in-app agent capabilities are exposed to Claude/Codex.
+8. Codebase-maintenance authority does not imply permission to change product semantics, external contracts, production data, deployments, or security controls; those require explicit task authority and the appropriate owning specialist when primary.
+9. The K8SHomelab specialist does not infer live-cluster mutation authority from GitHub write access; watched-branch writes can themselves be deployment actions under Flux.
+10. Palmier external MCP tool availability does not imply Palmier in-app agent capabilities are exposed to Claude/Codex.
 
 ## Instruction and Authority Precedence
 
@@ -109,6 +113,7 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `docs/quickstarts/kubernetes-homelab-engineer.md` - repository-specific K8SHomelab usage.
 - `docs/quickstarts/devsecops-security-engineer.md` - DevSecOps security usage for Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, IAM, and supply chain.
 - `docs/quickstarts/devops-documentation-engineer.md` - DevOps documentation-as-code usage.
+- `docs/quickstarts/codebase-maintenance-engineer.md` - behavior-preserving codebase de-slop, comment reconciliation, refactoring, and efficiency cleanup across languages.
 - `docs/quickstarts/palmierpro-mcp.md` - Palmier Pro external MCP setup for Claude/Codex and video-editing stack selection.
 - `docs/tool-integration-guide.md` - cross-tool mapping and wrapper rules.
 - `.github/agents/` - GitHub Copilot custom-agent adapters.
@@ -116,6 +121,7 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `scripts/validate-cross-tool-routing.py` - cross-tool routing and adapter regression validation.
 - `scripts/validate-documentation-stack.py` - DevOps documentation stack contract validation.
 - `scripts/validate-devsecops-security-stack.py` - DevSecOps security stack contract validation.
+- `scripts/validate-codebase-maintenance-stack.py` - codebase-maintenance/de-slop stack contract and routing validation.
 
 ## Working Rules
 
@@ -138,12 +144,18 @@ After AgentDefaults changes, run the canonical validation suite:
 python3 scripts/validate-agentdefaults.py
 ```
 
-Its component validators include cross-tool routing, principal engineering contracts, specialist documentation-stack validation, and DevSecOps security-stack validation. Run additional domain-specific tests when the change affects canonical agents, skills, schemas, examples, or executable behavior.
+Its component validators include cross-tool routing, principal engineering contracts, specialist documentation-stack validation, DevSecOps security-stack validation, and codebase-maintenance/de-slop stack validation. Run additional domain-specific tests when the change affects canonical agents, skills, schemas, examples, or executable behavior.
 
 For K8SHomelab agent changes, also review the behavioral cases in:
 
 ```text
 docs/kubernetes-homelab-engineer-acceptance-tests.md
+```
+
+For codebase-maintenance agent changes, also review the behavioral cases in:
+
+```text
+docs/codebase-maintenance-engineer-acceptance-tests.md
 ```
 
 For Palmier agent changes, also review the behavioral cases in:
