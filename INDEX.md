@@ -8,19 +8,29 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 
 | Need | Start with |
 |---|---|
+| Operate the bounded loop quickly | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
+| Understand the full bounded lead/reviewer loop | [`docs/loops/README.md`](docs/loops/README.md) |
 | Run a bounded lead/reviewer completion loop in VS Code Copilot | [`docs/quickstarts/bounded-completion.md`](docs/quickstarts/bounded-completion.md) |
 | Choose among the principal and specialist engineering agents | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
+| Use authenticated Comet browser research | [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) |
+| Apply the Token Economy stack | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | Use OpenAI Codex | [`docs/quickstarts/codex.md`](docs/quickstarts/codex.md) |
 | Use Claude Code | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
+| Understand Claude project hooks / Graft adapter | [`.claude/README.md`](.claude/README.md) |
 | Use GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) |
+| Understand Copilot prompt adapters | [`.github/prompts/README.md`](.github/prompts/README.md) |
 | Use Gemini / Gemini CLI | [`GEMINI.md`](GEMINI.md) |
 | Use a generic repository-aware agent | [`AGENTS.md`](AGENTS.md) |
+| Adapt examples safely | [`examples/README.md`](examples/README.md) |
+| Understand loop configuration | [`config/README.md`](config/README.md) |
 | See all tool mappings | [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) |
 | Validate the repository | [`scripts/validate-agentdefaults.py`](scripts/validate-agentdefaults.py) |
 
 ## Bounded Completion Workflow
 
 Use [`docs/quickstarts/bounded-completion.md`](docs/quickstarts/bounded-completion.md) when implementation/qualification work needs a single Integration Owner, independent adversarial review, durable loop state, deterministic verification, bounded continuation, visual-artifact evidence, and an objective completion gate.
+
+For active operation, keep [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) open. For ownership, state, stale-evidence, approval, Stop-hook, recovery, and loop-design semantics, use the full [`docs/loops/README.md`](docs/loops/README.md).
 
 ```text
 agents/bounded-completion-lead.md
@@ -64,10 +74,21 @@ Use the smallest correct owner. Infrastructure hosting an AI workload is still D
 | Palmier Pro MCP video editing | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
 | App-market browser research | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) |
 | Community app-idea validation | [`docs/quickstarts/community-app-validation.md`](docs/quickstarts/community-app-validation.md) |
-| Token economy | [`agents/token-economy-orchestrator.md`](agents/token-economy-orchestrator.md) |
+| Token economy | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | Wear OS development | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) |
 | Wear OS Play Store release | [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
 | US-Europe travel preparation | [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md) |
+
+## Additional Canonical Operator Guides
+
+Some canonical agents are intentionally not registered as featured stacks but still need explicit operating guidance.
+
+| Need | Start with |
+|---|---|
+| Authenticated local Comet research with human auth handoff and prompt-injection boundaries | [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) |
+| Understand all canonical agents and which ones need quickstarts | [`agents/README.md`](agents/README.md) |
+| Understand skill families/composition | [`skills/README.md`](skills/README.md) |
+| Understand prompt categories | [`prompts/README.md`](prompts/README.md) |
 
 ## Featured Stack Registry
 
@@ -107,8 +128,8 @@ Tool-specific entrypoints and wrappers route to these files; they are not separa
 
 ```text
 OpenAI Codex             -> AGENTS.md
-Claude Code              -> CLAUDE.md -> @AGENTS.md
-GitHub Copilot           -> .github/copilot-instructions.md + .github/agents/*.agent.md
+Claude Code              -> CLAUDE.md -> @AGENTS.md (+ optional .claude runtime adapters)
+GitHub Copilot           -> .github/copilot-instructions.md + .github/agents/*.agent.md + .github/prompts/*.prompt.md
 Gemini                    -> GEMINI.md
 Generic repo-aware agent -> AGENTS.md
 ```
