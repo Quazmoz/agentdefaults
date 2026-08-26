@@ -114,9 +114,11 @@ fresh verification + gate
 
 The lead/reviewer overlay cannot add production access, mutation authority, approvals, or permissions that the selected owner/task does not already have.
 
-Operator guide: [`../docs/loops/README.md`](../docs/loops/README.md)
+Day-to-day command reference: [`../docs/loops/QUICK_REFERENCE.md`](../docs/loops/QUICK_REFERENCE.md)
 
-Quickstart: [`../docs/quickstarts/bounded-completion.md`](../docs/quickstarts/bounded-completion.md)
+Full operator guide: [`../docs/loops/README.md`](../docs/loops/README.md)
+
+VS Code/Copilot quickstart: [`../docs/quickstarts/bounded-completion.md`](../docs/quickstarts/bounded-completion.md)
 
 ## Research, Growth, Product and Creative Agents
 
@@ -124,21 +126,25 @@ Quickstart: [`../docs/quickstarts/bounded-completion.md`](../docs/quickstarts/bo
 |---|---|---|
 | [`app-market-research-agent.md`](app-market-research-agent.md) | Browser-backed market, Play Store, forum and approved Play Console research | [`../docs/quickstarts/app-market-research.md`](../docs/quickstarts/app-market-research.md) |
 | [`community-app-idea-validation-agent.md`](community-app-idea-validation-agent.md) | Focused community-history/demand validation for an app idea | [`../docs/quickstarts/community-app-validation.md`](../docs/quickstarts/community-app-validation.md) |
-| [`comet-authenticated-research-agent.md`](comet-authenticated-research-agent.md) | Authenticated browser research using the Comet/local-bridge safety model | Canonical profile + related skills |
+| [`comet-authenticated-research-agent.md`](comet-authenticated-research-agent.md) | Authenticated browser research using human-visible auth handoff and, when justified, a narrowly controlled local-bridge safety model | [`../docs/quickstarts/comet-authenticated-research.md`](../docs/quickstarts/comet-authenticated-research.md) |
 | [`google-play-growth-optimizer-agent.md`](google-play-growth-optimizer-agent.md) | Google Play discovery, conversion, quality, web/entity visibility and growth experiments | [`../docs/quickstarts/google-play-growth.md`](../docs/quickstarts/google-play-growth.md) |
 | [`seo-ai-search-optimization-agent.md`](seo-ai-search-optimization-agent.md) | SEO, entity and AI-search discoverability work | Canonical profile |
 | [`palmierpro-mcp-video-editor-agent.md`](palmierpro-mcp-video-editor-agent.md) | Palmier Pro MCP timeline/video-editing workflows | [`../docs/quickstarts/palmierpro-mcp.md`](../docs/quickstarts/palmierpro-mcp.md) |
 | [`us-europe-travel-advisor.md`](us-europe-travel-advisor.md) | Current-source US-Europe travel preparation | [`../TRAVEL_INDEX.md`](../TRAVEL_INDEX.md) |
 
+### Why Comet has its own quickstart
+
+Authenticated browser research crosses several easy-to-confuse boundaries: public research vs private account state, login handoff vs credential collection, page evidence vs page instructions, human-visible operation vs local-bridge automation, and read access vs account mutation. Use the quickstart instead of inferring these boundaries from the canonical profile alone.
+
 ## Efficiency and Response-Control Agents
 
 These profiles alter how work is orchestrated or communicated. They generally should not replace a domain owner when domain expertise is required.
 
-| Agent | Use |
-|---|---|
-| [`token-economy-orchestrator.md`](token-economy-orchestrator.md) | Manage context/output/tool-result budgets and measurable token efficiency. |
-| [`token-efficient-response-agent.md`](token-efficient-response-agent.md) | Produce compact responses without deleting required constraints/evidence. |
-| [`terse-technical-coding-agent.md`](terse-technical-coding-agent.md) | Focused coding with compact status reporting. |
+| Agent | Use | Start here |
+|---|---|---|
+| [`token-economy-orchestrator.md`](token-economy-orchestrator.md) | Manage context/output/tool-result budgets and measurable token efficiency. | [`../docs/quickstarts/token-economy.md`](../docs/quickstarts/token-economy.md) |
+| [`token-efficient-response-agent.md`](token-efficient-response-agent.md) | Produce compact responses without deleting required constraints/evidence. | Canonical profile |
+| [`terse-technical-coding-agent.md`](terse-technical-coding-agent.md) | Focused coding with compact status reporting. | Canonical profile |
 
 When correctness conflicts with token savings, correctness wins.
 
