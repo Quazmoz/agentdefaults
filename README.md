@@ -4,7 +4,7 @@
 
 **Reusable, production-minded defaults for AI agents, skills, prompts, orchestration loops, schemas, examples, and cross-tool wrappers.**
 
-[User Guide](docs/user-guide.md) · [Human Index](INDEX.md) · [Agent Loops](docs/loops/README.md) · [Agents](agents/README.md) · [Skills](skills/README.md) · [Prompts](prompts/README.md) · [Validation](scripts/README.md)
+[User Guide](docs/user-guide.md) · [Human Index](INDEX.md) · [Loop Quick Reference](docs/loops/QUICK_REFERENCE.md) · [Agent Loops](docs/loops/README.md) · [Agents](agents/README.md) · [Skills](skills/README.md) · [Validation](scripts/README.md)
 
 </div>
 
@@ -43,8 +43,13 @@ Then choose what you are trying to do:
 | Choose a canonical agent | [`agents/README.md`](agents/README.md) |
 | Understand or compose skills | [`skills/README.md`](skills/README.md) |
 | Find a copy-paste task prompt | [`prompts/README.md`](prompts/README.md) |
-| Run or resume an agent loop | [`docs/loops/README.md`](docs/loops/README.md) |
+| Operate a Bounded Completion loop quickly | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
+| Understand the full agent-loop model | [`docs/loops/README.md`](docs/loops/README.md) |
+| Use authenticated Comet browser research | [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) |
+| Reduce context/tool/output token waste | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | Understand task/state schemas | [`schemas/README.md`](schemas/README.md) |
+| Adapt examples safely | [`examples/README.md`](examples/README.md) |
+| Understand loop configuration | [`config/README.md`](config/README.md) |
 | Use validators or the loop control plane | [`scripts/README.md`](scripts/README.md) |
 | Design or audit an AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | De-slop/refactor a codebase safely | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
@@ -114,6 +119,7 @@ Tool-specific files should stay thin:
 ```text
 AGENTS.md                         generic/Codex repository instructions
 CLAUDE.md                         Claude-oriented wrapper
+.claude/                          Claude runtime hooks/status integration
 GEMINI.md                         Gemini-oriented wrapper
 .github/copilot-instructions.md   Copilot repository instructions
 .github/agents/                   Copilot custom-agent adapters
@@ -124,11 +130,20 @@ GEMINI.md                         Gemini-oriented wrapper
 
 **Change canonical behavior at its canonical source first.** Update wrappers only when routing, runtime syntax, or discoverability must change.
 
+Runtime adapter READMEs:
+
+- [` .claude/README.md`](.claude/README.md) — Claude project settings and optional Graft hook/status-line integration.
+- [`.github/agents/README.md`](.github/agents/README.md) — Copilot custom-agent adapters.
+- [`.github/prompts/README.md`](.github/prompts/README.md) — Copilot prompt adapters.
+
 ## Agent Loops
 
 Agent loops are deliberately bounded because retries, self-review, and multi-agent handoffs can otherwise amplify cost, repeat bad strategies, or create false completion signals.
 
-The detailed operator guide is [`docs/loops/README.md`](docs/loops/README.md).
+Use:
+
+- [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) during active day-to-day operation;
+- [`docs/loops/README.md`](docs/loops/README.md) for the full ownership, state, evidence, reviewer, approval, Stop-hook, recovery, and loop-design model.
 
 ### Formal persisted loop currently included
 
@@ -145,11 +160,13 @@ The detailed operator guide is [`docs/loops/README.md`](docs/loops/README.md).
 Start with:
 
 ```text
+docs/loops/QUICK_REFERENCE.md
 docs/loops/README.md
 docs/quickstarts/bounded-completion.md
 agents/bounded-completion-lead.md
 agents/bounded-completion-reviewer.md
 skills/bounded-completion-orchestration.md
+config/README.md
 scripts/bounded-completion.py
 ```
 
@@ -168,7 +185,7 @@ This table is a routing map, not a preload list. Load the smallest coherent stac
 | Stack | Owns | Start here |
 |---|---|---|
 | Agent Architect and Builder | Designing, building, or auditing reusable agents | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
-| Bounded Completion | Durable implementation/review orchestration | [`docs/loops/README.md`](docs/loops/README.md) |
+| Bounded Completion | Durable implementation/review orchestration | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
 | Codebase Maintenance / De-Slop | Behavior-preserving maintenance and refactoring | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
 | Principal DevOps | Infrastructure/platform/CI/CD/operations | [`docs/quickstarts/principal-devops-engineer.md`](docs/quickstarts/principal-devops-engineer.md) |
 | Principal AI | LLM/agent/RAG/eval/inference application engineering | [`docs/quickstarts/principal-ai-engineer.md`](docs/quickstarts/principal-ai-engineer.md) |
@@ -182,8 +199,10 @@ This table is a routing map, not a preload list. Load the smallest coherent stac
 | Google Play Growth | ASO, conversion, quality, web/entity and growth experiments | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
 | Palmier Pro MCP | Agent-driven video editing through Palmier Pro MCP | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
 | Wear OS Development / Release | Wear OS implementation and Play readiness | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
-| Token Economy | Context/output/token-cost reduction and measurement | [`agents/token-economy-orchestrator.md`](agents/token-economy-orchestrator.md) |
+| Token Economy | Context/output/token-cost reduction and measurement | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | US-Europe Travel Prep | Current-source travel preparation | [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md) |
+
+Additional security-sensitive operator guide: [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) for authenticated local Comet research.
 
 For the full human-readable registry use [`INDEX.md`](INDEX.md). The machine-readable featured-stack registry is [`agentdefaults.manifest.json`](agentdefaults.manifest.json).
 
@@ -192,9 +211,10 @@ For the full human-readable registry use [`INDEX.md`](INDEX.md). The machine-rea
 | Runtime | Primary entrypoint |
 |---|---|
 | OpenAI Codex / generic repo-aware coding agents | [`AGENTS.md`](AGENTS.md) |
-| Claude / Claude Code | [`CLAUDE.md`](CLAUDE.md) |
+| Claude / Claude Code | [`CLAUDE.md`](CLAUDE.md); see [`.claude/README.md`](.claude/README.md) for optional project hooks/Graft runtime integration |
 | GitHub Copilot repository instructions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
 | GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) |
+| GitHub Copilot prompt adapters | [`.github/prompts/README.md`](.github/prompts/README.md) |
 | Gemini / Gemini CLI | [`GEMINI.md`](GEMINI.md) |
 | Cursor | [`.cursor/rules/agentdefaults.mdc`](.cursor/rules/agentdefaults.mdc) |
 | Windsurf | [`.windsurfrules`](.windsurfrules) |
@@ -262,14 +282,22 @@ agentdefaults/
 │   └── validate-*.py
 ├── docs/
 │   ├── README.md
-│   ├── loops/README.md
+│   ├── loops/
+│   │   ├── README.md
+│   │   └── QUICK_REFERENCE.md
 │   ├── quickstarts/
 │   ├── patterns/
 │   ├── benchmarks/
 │   └── *-acceptance-tests.md
 ├── examples/
+│   └── README.md
 ├── config/
+│   └── README.md
+├── .claude/
+│   └── README.md
 ├── .github/
+│   ├── agents/README.md
+│   └── prompts/README.md
 ├── .cursor/
 └── agentdefaults.manifest.json
 ```
