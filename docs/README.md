@@ -11,12 +11,19 @@ Canonical behavior still lives in the relevant [`../agents/`](../agents/), [`../
 | I need to... | Read |
 |---|---|
 | Understand agent loops and when to use them | [`loops/README.md`](loops/README.md) |
+| Operate Bounded Completion day to day | [`loops/QUICK_REFERENCE.md`](loops/QUICK_REFERENCE.md) |
 | Start/resume bounded completion in VS Code/Copilot | [`quickstarts/bounded-completion.md`](quickstarts/bounded-completion.md) |
 | Choose a canonical agent | [`../agents/README.md`](../agents/README.md) |
 | Understand skill composition | [`../skills/README.md`](../skills/README.md) |
 | Find task prompts | [`../prompts/README.md`](../prompts/README.md) |
+| Use authenticated Comet browser research safely | [`quickstarts/comet-authenticated-research.md`](quickstarts/comet-authenticated-research.md) |
+| Reduce context/tool/output token waste | [`quickstarts/token-economy.md`](quickstarts/token-economy.md) |
 | Understand structured contracts/state | [`../schemas/README.md`](../schemas/README.md) |
+| Adapt repository examples safely | [`../examples/README.md`](../examples/README.md) |
+| Understand bounded-loop defaults | [`../config/README.md`](../config/README.md) |
 | Run validators/control-plane commands | [`../scripts/README.md`](../scripts/README.md) |
+| Understand Claude project hooks/Graft integration | [`../.claude/README.md`](../.claude/README.md) |
+| Understand Copilot prompt adapters | [`../.github/prompts/README.md`](../.github/prompts/README.md) |
 | Understand cross-tool integration | [`tool-integration-guide.md`](tool-integration-guide.md) |
 | Use AgentDefaults generally | [`user-guide.md`](user-guide.md) |
 | Browse featured stacks | [`../INDEX.md`](../INDEX.md) |
@@ -39,8 +46,10 @@ Current quickstarts include:
 - [`quickstarts/automation-platform-selection.md`](quickstarts/automation-platform-selection.md)
 - [`quickstarts/app-market-research.md`](quickstarts/app-market-research.md)
 - [`quickstarts/community-app-validation.md`](quickstarts/community-app-validation.md)
+- [`quickstarts/comet-authenticated-research.md`](quickstarts/comet-authenticated-research.md)
 - [`quickstarts/google-play-growth.md`](quickstarts/google-play-growth.md)
 - [`quickstarts/palmierpro-mcp.md`](quickstarts/palmierpro-mcp.md)
+- [`quickstarts/token-economy.md`](quickstarts/token-economy.md)
 - [`quickstarts/codex.md`](quickstarts/codex.md)
 - [`quickstarts/claude.md`](quickstarts/claude.md)
 - [`quickstarts/gemini.md`](quickstarts/gemini.md)
@@ -52,15 +61,15 @@ A quickstart should not duplicate the full canonical profile. If behavior confli
 
 ## Agent Loops
 
-[`loops/README.md`](loops/README.md) is the operator-level guide for repeated agent workflows.
+[`loops/README.md`](loops/README.md) is the complete operator-level guide for repeated agent workflows. [`loops/QUICK_REFERENCE.md`](loops/QUICK_REFERENCE.md) is the compact command/order reference for active Bounded Completion work.
 
-It distinguishes:
+The full guide distinguishes:
 
 - normal single-agent execution;
 - iterative agent workflows such as codebase maintenance;
 - the formal persisted Bounded Completion loop.
 
-Read it before using `.agent-loop/`, Stop-hook continuation, reviewer handoffs, completion gates, visual evidence or loop escalation.
+Read the full guide before changing loop semantics, state ownership, Stop-hook behavior, reviewer independence, approval rules, or escalation policy. Use the quick reference for routine start/status/verify/findings/final-gate operation.
 
 ## Acceptance Tests
 
@@ -117,10 +126,18 @@ Do not convert internal smoke-test results into stronger public claims than the 
 ## Tool and Integration Documentation
 
 - [`tool-integration-guide.md`](tool-integration-guide.md): how canonical content maps to Codex, Claude, Copilot, Gemini, Cursor, Windsurf and related runtimes.
+- [`../.claude/README.md`](../.claude/README.md): Claude Code project settings plus optional Graft hook/status-line adapter behavior.
+- [`../.github/agents/README.md`](../.github/agents/README.md): GitHub Copilot custom-agent adapters versus canonical agents.
+- [`../.github/prompts/README.md`](../.github/prompts/README.md): GitHub Copilot prompt adapters versus canonical prompts.
 - [`palmierpro-mcp-tool-map.md`](palmierpro-mcp-tool-map.md): Palmier Pro MCP tool/operation mapping.
 - [`chatgpt-project-google-play-marketing-instructions.md`](chatgpt-project-google-play-marketing-instructions.md): focused ChatGPT project instructions for Google Play marketing use.
 
 Tool documentation does not grant access merely because a tool is described.
+
+## Examples and Configuration
+
+- [`../examples/README.md`](../examples/README.md) explains how to adapt structured examples without inheriting fake approvals, example verification commands, or environment-specific values.
+- [`../config/README.md`](../config/README.md) explains repository-owned Bounded Completion defaults and why model labels/configuration do not create authority or reviewer proof.
 
 ## Source-of-Truth Order
 
