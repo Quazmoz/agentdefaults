@@ -8,20 +8,27 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 
 - Design, build, or audit an AI agent: `docs/quickstarts/agent-builder.md`
 - Run a bounded lead/reviewer implementation or qualification loop: `docs/quickstarts/bounded-completion.md`
+- Operate an active bounded loop quickly: `docs/loops/QUICK_REFERENCE.md`
+- Read the complete agent-loop model: `docs/loops/README.md`
 - DevOps documentation-as-code, Markdown, Mermaid, runbooks, and diagrams: `docs/quickstarts/devops-documentation-engineer.md`
 - Automation platform architecture and product selection: `AUTOMATION_PLATFORM_INDEX.md`
+- Authenticated local Comet browser research: `docs/quickstarts/comet-authenticated-research.md`
+- Token/context/output efficiency: `docs/quickstarts/token-economy.md`
 - Generic repo-aware coding agent: `AGENTS.md`
-- Claude: `CLAUDE.md`
+- Claude: `CLAUDE.md`, with `.claude/README.md` for optional project hooks/Graft integration
 - Gemini: `GEMINI.md`
 - Cursor: `.cursor/rules/agentdefaults.mdc`
 - Windsurf: `.windsurfrules`
 - GitHub Copilot custom agents: `.github/agents/*.agent.md`
+- GitHub Copilot prompt adapters: `.github/prompts/README.md`
 - Palmier Pro MCP video editing: `docs/quickstarts/palmierpro-mcp.md`
 - Google Play growth / ASO: `docs/quickstarts/google-play-growth.md`
 - App-market research (browser): `docs/quickstarts/app-market-research.md`
 - Community app-idea validation: `docs/quickstarts/community-app-validation.md`
 - Wear OS development or release: `WEAROS_DEVELOPMENT_INDEX.md`, `WEAROS_INDEX.md`
 - US-to-Europe travel prep: `TRAVEL_INDEX.md`
+- Example adaptation: `examples/README.md`
+- Bounded-loop configuration: `config/README.md`
 - Chat or local model: copy files from `agents/`, `skills/`, and `prompts/`
 
 ## Goals
@@ -32,9 +39,12 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 - Use the canonical reusable agent layout: `docs/patterns/agent.md`
 - Run the agent-builder failure and adversarial test matrix: `docs/agent-builder-acceptance-tests.md`
 - Run implementation/qualification through a bounded Integration Owner + reviewer loop: `docs/quickstarts/bounded-completion.md`
+- Use the bounded day-to-day command/order reference: `docs/loops/QUICK_REFERENCE.md`
 - Use the bounded task contract and example: `schemas/bounded-completion-task.schema.json`, `examples/bounded-completion-task.json`
 - Inspect or invoke the deterministic bounded control plane: `scripts/bounded-completion.py`
 - Run bounded-completion adversarial regressions: `scripts/validate-bounded-completion.py`
+- Research a private/authenticated website safely through Comet: `docs/quickstarts/comet-authenticated-research.md`
+- Design/review a Comet local bridge boundary: `skills/comet-local-bridge-safety.md`
 - Create or reconcile DevOps documentation from implementation evidence: `agents/devops-documentation-engineer.md`
 - Document Jenkins and Ansible/AAP GitOps flows with evidence-backed Mermaid: `skills/devops-documentation-engineering.md`
 - Start from a structured documentation task: `schemas/devops-documentation-task.schema.json`
@@ -61,7 +71,7 @@ Help users choose the right AgentDefaults entrypoint, stack, output depth, and v
 - Prepare a Wear OS app for Play release: `agents/android-wearos-release-engineer.md`
 - Plan a US-to-Europe trip: `agents/us-europe-travel-advisor.md`
 - Reduce verbose answers: `agents/token-efficient-response-agent.md` and `skills/token-output-budgeting.md`
-- Manage token budgets: `agents/token-economy-orchestrator.md`
+- Manage token budgets: `docs/quickstarts/token-economy.md`, `agents/token-economy-orchestrator.md`
 - Build a terse coding agent: `agents/terse-technical-coding-agent.md`
 - Benchmark token savings: `prompts/token-efficiency/common-task-benchmark.md`
 - Compare models: `prompts/token-efficiency/compare-models.md`
@@ -111,6 +121,8 @@ Before building, verify real runtime capabilities, authority consistency, author
 Use this orchestration overlay when implementation or qualification needs one Integration Owner, independent adversarial review, durable task/findings state, deterministic verification evidence, bounded continuation, and an objective completion gate.
 
 ```text
+docs/loops/QUICK_REFERENCE.md
+docs/loops/README.md
 docs/quickstarts/bounded-completion.md
 agents/bounded-completion-lead.md
 agents/bounded-completion-reviewer.md
@@ -132,6 +144,8 @@ scripts/validate-bounded-completion.py
 Bounded completion does **not** replace domain ownership. Select the smallest correct engineering owner first; the lead coordinates that owner’s implementation behavior and the reviewer challenges evidence and completion claims. The committed custom agents intentionally omit guessed `model:` identifiers. Distinct-model review counts only when the operator or runtime confirms that the reviewer actually ran on a distinct model.
 
 Use the deterministic CLI and durable `.agent-loop/` state to resume work without relying on conversation memory. The gate should pass only after required criteria, verification, diff/integrity evidence, approvals, visual artifacts when applicable, and final review are current for the active workspace state.
+
+Use the quick reference during active operation; use the full loop README when changing or debugging state, reviewer, approval, recovery, Stop-hook, or gating semantics.
 
 ## Recommended DevOps Documentation Stack
 
@@ -219,6 +233,8 @@ prompts/palmierpro/youtube-short-from-long-form.md
 
 ## Recommended Token-Efficiency Stack
 
+Start with [`quickstarts/token-economy.md`](quickstarts/token-economy.md) when deciding how to apply the stack without replacing the actual domain owner.
+
 ```text
 AGENTS.md
 agents/token-economy-orchestrator.md
@@ -228,6 +244,8 @@ skills/token-output-budgeting.md
 skills/token-efficient-response-compression.md
 skills/token-efficiency-measurement.md
 ```
+
+Correctness, safety, required evidence, and user-requested depth outrank token savings. Benchmark claimed savings instead of assuming shorter output is better.
 
 ## Validate
 
