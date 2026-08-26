@@ -157,6 +157,8 @@ scripts/bounded-completion.py
 
 Some agents perform internal cycles such as inspect → change → verify → second-pass review. For example, the Codebase Maintenance and De-Slop Engineer does this intentionally, but it does **not** create `.agent-loop/` state by itself.
 
+Canonical maintenance owner: [`agents/codebase-maintenance-engineer.md`](agents/codebase-maintenance-engineer.md).
+
 When that work needs durable state, independent review, or an objective completion gate, run the maintenance agent as the domain owner under the bounded completion overlay.
 
 ## Featured Stacks
