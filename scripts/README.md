@@ -28,13 +28,16 @@ validate-engineering-contracts.py
 validate-cross-tool-routing.py
 validate-documentation-stack.py
 validate-devsecops-security-stack.py
+validate-github-actions-stack.py
 validate-codebase-maintenance-stack.py
 validate-bounded-completion.py
 ```
 
-Use the relevant component while iterating, then run `validate-agentdefaults.py` before declaring the repository validation complete.
+Use the relevant component while iterating, then run `validate-agentdefaults.py` before declaring repository validation complete.
 
-A repository-level validator does not replace build/lint/type/test/e2e/security checks in a target repository being operated by one of the agents.
+`validate-github-actions-stack.py` checks the GitHub Actions specialist's manifest registration, authority/trust schema, canonical agent/skill/prompt/example/acceptance invariants, cross-tool routing, Copilot adapter references, and inclusion in the primary validation suite.
+
+A repository-level validator does not replace build/lint/type/test/e2e/security checks or actual GitHub Actions runtime qualification in a target repository being operated by one of the agents.
 
 ## Bounded Completion Control Plane
 
@@ -130,6 +133,13 @@ When modifying validators or control-plane code:
 3. run the focused validator;
 4. run `python3 scripts/validate-agentdefaults.py`;
 5. report anything not executable in the current environment as unverified.
+
+GitHub Actions stack changes should run:
+
+```bash
+python3 scripts/validate-github-actions-stack.py
+python3 scripts/validate-agentdefaults.py
+```
 
 Bounded-completion control-plane changes should run:
 

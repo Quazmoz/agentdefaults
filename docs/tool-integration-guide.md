@@ -34,7 +34,11 @@ Rule: canonical behavior changes at the canonical source. Tool wrappers may adap
 For engineering work, every adapter should converge on `ENGINEERING_AGENTS_INDEX.md` and the same ownership model:
 
 ```text
-DevOps/platform work
+GitHub Actions-specific workflow/action/runtime work
+-> agents/github-actions-engineer.md
+-> skills/github-actions-engineering.md
+
+DevOps/platform work outside a narrower specialist route
 -> agents/principal-devops-engineer.md
 -> skills/production-devops-engineering.md
 
@@ -47,11 +51,31 @@ Materially cross-domain AI + platform work
 -> skills/production-ai-devops-engineering.md
 ```
 
-Preserve specialist routing to `agents/agent-architect-builder.md` and `agents/automation-platform-selection-advisor.md` when those agents are the narrower owner.
+Preserve specialist routing to `agents/github-actions-engineer.md`, `agents/agent-architect-builder.md`, `agents/devsecops-security-engineer.md`, `agents/devops-documentation-engineer.md`, `agents/codebase-maintenance-engineer.md`, `agents/kubernetes-homelab-engineer.md`, and `agents/automation-platform-selection-advisor.md` when those agents are the narrower owner.
 
-Use the smallest correct owner. Do not preload all three engineering stacks.
+Use the smallest correct owner. Do not preload all engineering stacks.
 
 Bounded completion is an optional orchestration overlay **after** owner selection. It adds deterministic evidence, independent review, bounded continuation, durable state, and a completion gate; it does not become the domain owner or widen permissions. See `docs/quickstarts/bounded-completion.md`.
+
+## GitHub Actions Specialist Routing
+
+The GitHub Actions stack is intentionally canonical and cross-tool rather than Copilot-only:
+
+```text
+agents/github-actions-engineer.md
+skills/github-actions-engineering.md
+prompts/implementation/github-actions-task.md
+schemas/github-actions-task.schema.json
+examples/github-actions-task.yaml
+docs/quickstarts/github-actions-engineer.md
+docs/github-actions-engineer-acceptance-tests.md
+.github/agents/github-actions-engineer.agent.md
+scripts/validate-github-actions-stack.py
+```
+
+Codex, Claude, Gemini, Cursor, Windsurf, and generic repository-aware agents reach the specialist through `AGENTS.md` / `ENGINEERING_AGENTS_INDEX.md`. GitHub Copilot additionally gets the thin custom-agent adapter.
+
+The runtime must still inspect actual GitHub repository/org settings and run evidence when material. A tool-specific wrapper cannot make event trust, token permissions, Dependabot restrictions, runner isolation, OIDC trust, or a workflow run successful by declaration.
 
 ## OpenAI Codex
 
@@ -109,6 +133,12 @@ Principal engineering custom-agent adapters:
 .github/agents/principal-devops-engineer.agent.md
 .github/agents/principal-ai-engineer.agent.md
 .github/agents/principal-ai-devops-engineer.agent.md
+```
+
+Specialist Actions adapter:
+
+```text
+.github/agents/github-actions-engineer.agent.md
 ```
 
 Bounded completion adapters and prompt entrypoints:
@@ -180,14 +210,25 @@ Avoid persistent imports of the whole repository and avoid copying canonical log
 
 ## Validation
 
-Run both repository validators after cross-tool or routing changes:
+Run canonical repository validation after cross-tool or routing changes:
 
 ```bash
 python3 scripts/validate-agentdefaults.py
+```
+
+Focused routing validation remains available:
+
+```bash
 python3 scripts/validate-cross-tool-routing.py
 ```
 
-The canonical suite preserves structural, manifest, schema, stack, Markdown, specialist, maintenance, and bounded-completion control-plane checks. The cross-tool validator checks the shared entrypoints, engineering routing references, Claude shared-rule import, quickstarts, and principal Copilot wrapper-to-canonical mappings.
+For GitHub Actions stack changes also run:
+
+```bash
+python3 scripts/validate-github-actions-stack.py
+```
+
+The canonical suite preserves structural, manifest, schema, stack, Markdown, specialist, maintenance, and bounded-completion control-plane checks. The cross-tool validator checks shared entrypoints, engineering routing references, Claude shared-rule import, quickstarts, and principal Copilot wrapper-to-canonical mappings. The GitHub Actions validator separately enforces the Actions stack's manifest, authority/trust schema, behavioral concepts, routing, and Copilot adapter references.
 
 ## Maintenance Rules
 

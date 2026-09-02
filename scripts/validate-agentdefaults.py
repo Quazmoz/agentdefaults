@@ -14,6 +14,7 @@ VALIDATORS = [
     ROOT / "scripts/validate-engineering-contracts.py",
     ROOT / "scripts/validate-documentation-stack.py",
     ROOT / "scripts/validate-devsecops-security-stack.py",
+    ROOT / "scripts/validate-github-actions-stack.py",
     ROOT / "scripts/validate-codebase-maintenance-stack.py",
     ROOT / "scripts/validate-bounded-completion.py",
 ]

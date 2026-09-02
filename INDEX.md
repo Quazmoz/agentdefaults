@@ -12,6 +12,7 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 | Understand the full bounded lead/reviewer loop | [`docs/loops/README.md`](docs/loops/README.md) |
 | Run a bounded lead/reviewer completion loop in VS Code Copilot | [`docs/quickstarts/bounded-completion.md`](docs/quickstarts/bounded-completion.md) |
 | Choose among the principal and specialist engineering agents | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
+| Engineer or harden GitHub Actions workflows/actions | [`docs/quickstarts/github-actions-engineer.md`](docs/quickstarts/github-actions-engineer.md) |
 | Use authenticated Comet browser research | [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) |
 | Apply the Token Economy stack | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | Use OpenAI Codex | [`docs/quickstarts/codex.md`](docs/quickstarts/codex.md) |
@@ -53,18 +54,37 @@ The custom agents intentionally omit `model:` bindings until exact qualified loc
 | AI engineering | [`agents/principal-ai-engineer.md`](agents/principal-ai-engineer.md) | [`skills/production-ai-engineering.md`](skills/production-ai-engineering.md) | [`docs/quickstarts/principal-ai-engineer.md`](docs/quickstarts/principal-ai-engineer.md) | [`.github/agents/principal-ai-engineer.agent.md`](.github/agents/principal-ai-engineer.agent.md) |
 | Materially cross-domain AI + DevOps | [`agents/principal-ai-devops-engineer.md`](agents/principal-ai-devops-engineer.md) | [`skills/production-ai-devops-engineering.md`](skills/production-ai-devops-engineering.md) | [`docs/quickstarts/principal-ai-devops-engineer.md`](docs/quickstarts/principal-ai-devops-engineer.md) | [`.github/agents/principal-ai-devops-engineer.agent.md`](.github/agents/principal-ai-devops-engineer.agent.md) |
 
-Use the smallest correct owner. Infrastructure hosting an AI workload is still DevOps-only unless AI application behavior also requires material change.
+Use the smallest correct owner. Infrastructure hosting an AI workload is still DevOps-only unless AI application behavior also requires material change. GitHub Actions-specific workflow/runtime work should use the specialist route below before the generic DevOps route.
 
 ## Specialist Engineering Routes
 
 | Need | Start with |
 |---|---|
+| GitHub Actions workflow/action engineering, reusable workflows, runner trust, `GITHUB_TOKEN`, OIDC, Dependabot/fork boundaries, Actions release automation, artifacts/caches, concurrency/reruns, or qualification | [`docs/quickstarts/github-actions-engineer.md`](docs/quickstarts/github-actions-engineer.md) · [`agents/github-actions-engineer.md`](agents/github-actions-engineer.md) |
 | Work specifically on `Quazmoz/K8SHomelab` Kubernetes/Flux GitOps, app deployment, storage/networking, or cluster incidents | [`docs/quickstarts/kubernetes-homelab-engineer.md`](docs/quickstarts/kubernetes-homelab-engineer.md) · [`agents/kubernetes-homelab-engineer.md`](agents/kubernetes-homelab-engineer.md) |
 | Audit or harden DevOps cybersecurity across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, secrets, runners/agents, state, or software supply chain | [`docs/quickstarts/devsecops-security-engineer.md`](docs/quickstarts/devsecops-security-engineer.md) · [`agents/devsecops-security-engineer.md`](agents/devsecops-security-engineer.md) |
 | Create, audit, or reconcile DevOps docs-as-code, runbooks, Markdown, Mermaid, and documentation diagrams | [`docs/quickstarts/devops-documentation-engineer.md`](docs/quickstarts/devops-documentation-engineer.md) · [`agents/devops-documentation-engineer.md`](agents/devops-documentation-engineer.md) |
 | De-slop an existing codebase: stale comments/docstrings, duplicate helpers, dead residue, abstraction inflation, brittle tests, dependency/config drift, weak failure handling, or practical efficiency cleanup across languages | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) · [`agents/codebase-maintenance-engineer.md`](agents/codebase-maintenance-engineer.md) |
 | Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
+
+## GitHub Actions Engineering
+
+```text
+docs/quickstarts/github-actions-engineer.md
+agents/github-actions-engineer.md
+skills/github-actions-engineering.md
+prompts/implementation/github-actions-task.md
+schemas/github-actions-task.schema.json
+examples/github-actions-task.yaml
+docs/github-actions-engineer-acceptance-tests.md
+.github/agents/github-actions-engineer.agent.md
+scripts/validate-github-actions-stack.py
+```
+
+This specialist owns GitHub Actions-specific event trust, fork/Dependabot behavior, `pull_request_target`/privileged `workflow_run` risks, token/secret/OIDC scope, reusable-workflow contracts, action/workflow pinning and provenance, GitHub-hosted/self-hosted runner boundaries, caches/artifacts, concurrency/cancellation/reruns, release/deployment automation, artifact identity, and Actions cost controls.
+
+Use `prompts/implementation/github-actions-task.md` for repeatable work and `schemas/github-actions-task.schema.json` when an orchestrator needs a machine-verifiable authority/trust/verification contract.
 
 ## Other Featured Stacks
 
@@ -99,6 +119,7 @@ The authoritative stack composition is [`agentdefaults.manifest.json`](agentdefa
 - Bounded Two-Agent Completion
 - Principal AI and DevOps Engineering
 - Principal DevOps Engineering
+- GitHub Actions Engineering
 - Kubernetes Homelab Engineering
 - DevSecOps Security Engineering
 - DevOps Documentation Engineering
@@ -144,6 +165,12 @@ Run:
 python3 scripts/validate-agentdefaults.py
 ```
 
-The canonical suite covers structure, schemas, manifest integrity, stack invariants, Markdown links, cross-tool entrypoints, principal engineering contracts, specialist DevOps documentation contracts, DevSecOps security contracts, codebase-maintenance/de-slop contracts, and bounded-completion control-plane regressions. K8SHomelab-specific behavior is additionally covered by [`docs/kubernetes-homelab-engineer-acceptance-tests.md`](docs/kubernetes-homelab-engineer-acceptance-tests.md), while maintenance behavior is covered by [`docs/codebase-maintenance-engineer-acceptance-tests.md`](docs/codebase-maintenance-engineer-acceptance-tests.md).
+The canonical suite covers structure, schemas, manifest integrity, stack invariants, Markdown links, cross-tool entrypoints, principal engineering contracts, GitHub Actions contracts/routing, specialist DevOps documentation contracts, DevSecOps security contracts, codebase-maintenance/de-slop contracts, and bounded-completion control-plane regressions.
+
+For GitHub Actions stack changes, the focused check is:
+
+```bash
+python3 scripts/validate-github-actions-stack.py
+```
 
 Do not report a validator as passed unless it actually ran successfully.

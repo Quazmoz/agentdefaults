@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.17.0",
-  "description": "Reusable defaults for AI agent architecture and construction, bounded two-agent completion, codebase maintenance and de-slop refactoring, combined and scoped production AI/DevOps engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.18.0",
+  "description": "Reusable defaults for AI agent architecture and construction, bounded two-agent completion, codebase maintenance and de-slop refactoring, combined and scoped production AI/DevOps engineering, GitHub Actions engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -83,6 +83,21 @@
       "example": "examples/principal-devops-task.yaml",
       "acceptance_tests": "docs/principal-devops-engineer-acceptance-tests.md",
       "wrapper": ".github/agents/principal-devops-engineer.agent.md"
+    },
+    {
+      "name": "GitHub Actions Engineering",
+      "quickstart": "docs/quickstarts/github-actions-engineer.md",
+      "agent": "agents/github-actions-engineer.md",
+      "skills": [
+        "skills/github-actions-engineering.md"
+      ],
+      "prompts": [
+        "prompts/implementation/github-actions-task.md"
+      ],
+      "schema": "schemas/github-actions-task.schema.json",
+      "example": "examples/github-actions-task.yaml",
+      "acceptance_tests": "docs/github-actions-engineer-acceptance-tests.md",
+      "wrapper": ".github/agents/github-actions-engineer.agent.md"
     },
     {
       "name": "Kubernetes Homelab Engineering",

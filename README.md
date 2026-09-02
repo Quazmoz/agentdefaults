@@ -41,6 +41,7 @@ Then choose what you are trying to do:
 |---|---|
 | Understand the repository and documentation layout | [`docs/README.md`](docs/README.md) |
 | Choose a canonical agent | [`agents/README.md`](agents/README.md) |
+| Engineer, debug, harden, or qualify GitHub Actions | [`docs/quickstarts/github-actions-engineer.md`](docs/quickstarts/github-actions-engineer.md) |
 | Understand or compose skills | [`skills/README.md`](skills/README.md) |
 | Find a copy-paste task prompt | [`prompts/README.md`](prompts/README.md) |
 | Operate a Bounded Completion loop quickly | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
@@ -132,7 +133,7 @@ GEMINI.md                         Gemini-oriented wrapper
 
 Runtime adapter READMEs:
 
-- [` .claude/README.md`](.claude/README.md) — Claude project settings and optional Graft hook/status-line integration.
+- [`.claude/README.md`](.claude/README.md) — Claude project settings and optional Graft hook/status-line integration.
 - [`.github/agents/README.md`](.github/agents/README.md) — Copilot custom-agent adapters.
 - [`.github/prompts/README.md`](.github/prompts/README.md) — Copilot prompt adapters.
 
@@ -187,7 +188,8 @@ This table is a routing map, not a preload list. Load the smallest coherent stac
 | Agent Architect and Builder | Designing, building, or auditing reusable agents | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Bounded Completion | Durable implementation/review orchestration | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
 | Codebase Maintenance / De-Slop | Behavior-preserving maintenance and refactoring | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
-| Principal DevOps | Infrastructure/platform/CI/CD/operations | [`docs/quickstarts/principal-devops-engineer.md`](docs/quickstarts/principal-devops-engineer.md) |
+| GitHub Actions Engineering | Actions workflows/actions, event trust, reusable workflows, runners, OIDC, releases, provenance, reliability and CI cost | [`agents/github-actions-engineer.md`](agents/github-actions-engineer.md) / [`docs/quickstarts/github-actions-engineer.md`](docs/quickstarts/github-actions-engineer.md) |
+| Principal DevOps | Infrastructure/platform/CI/CD/operations outside narrower specialist routes | [`docs/quickstarts/principal-devops-engineer.md`](docs/quickstarts/principal-devops-engineer.md) |
 | Principal AI | LLM/agent/RAG/eval/inference application engineering | [`docs/quickstarts/principal-ai-engineer.md`](docs/quickstarts/principal-ai-engineer.md) |
 | Principal AI + DevOps | Materially cross-domain AI/platform work | [`docs/quickstarts/principal-ai-devops-engineer.md`](docs/quickstarts/principal-ai-devops-engineer.md) |
 | Kubernetes Homelab | `Quazmoz/K8SHomelab` Kubernetes/Flux operations | [`docs/quickstarts/kubernetes-homelab-engineer.md`](docs/quickstarts/kubernetes-homelab-engineer.md) |
@@ -230,11 +232,17 @@ Canonical repository validation:
 python3 scripts/validate-agentdefaults.py
 ```
 
-The suite checks repository structure, schemas/references, manifest integrity, Markdown links, cross-tool routing, engineering contracts, specialist stacks, codebase-maintenance behavior, and bounded-completion control-plane regressions.
+The suite checks repository structure, schemas/references, manifest integrity, Markdown links, cross-tool routing, engineering contracts, GitHub Actions contracts/routing, specialist stacks, codebase-maintenance behavior, and bounded-completion control-plane regressions.
+
+Focused Actions validation:
+
+```bash
+python3 scripts/validate-github-actions-stack.py
+```
 
 Use [`scripts/README.md`](scripts/README.md) to understand individual validators and the bounded-completion CLI.
 
-A validator result is evidence only when it actually ran. Target-repository build/lint/type/test/security/e2e checks still own target-system correctness.
+A validator result is evidence only when it actually ran. Target-repository build/lint/type/test/security/e2e checks and actual GitHub Actions runs still own target-system correctness.
 
 ## Adding or Changing a Default
 
@@ -246,7 +254,7 @@ Before adding another artifact:
 4. Keep authority in the owning agent. Skills, retrieved data, wrappers, and sub-agents cannot broaden it.
 5. Define objective completion and bounded retry/stop behavior for anything iterative.
 6. Add a quickstart/example/schema/acceptance test when complexity makes correct use non-obvious.
-7. Run canonical validation and relevant stack-specific checks.
+7. Register featured stacks in `agentdefaults.manifest.json`, update routing/discoverability, add deterministic validation, and run canonical validation plus relevant stack-specific checks.
 
 Patterns:
 
@@ -317,7 +325,7 @@ agentdefaults/
 
 ## Status
 
-AgentDefaults is an actively evolving cross-tool scaffold containing reusable engineering, maintenance, research, growth, Wear OS, travel, token-efficiency, MCP, and orchestration defaults plus schemas, examples, acceptance tests, and validators.
+AgentDefaults is an actively evolving cross-tool scaffold containing reusable engineering, GitHub Actions, maintenance, research, growth, Wear OS, travel, token-efficiency, MCP, and orchestration defaults plus schemas, examples, acceptance tests, and validators.
 
 ## License
 

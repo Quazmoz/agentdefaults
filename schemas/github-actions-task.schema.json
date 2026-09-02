@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Quazmoz/agentdefaults/schemas/github-actions-task.schema.json",
+  "title": "GitHub Actions Engineering Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal",
+    "mode",
+    "target",
+    "trust_model",
+    "authority",
+    "acceptance"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "mode": {
+      "type": "string",
+      "enum": ["investigate", "review", "design", "implement", "incident", "release"]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 3, "pattern": "^[^/\\s]+/[^/\\s]+$"},
+        "branch_or_ref": {"type": "string", "minLength": 1},
+        "workflow_paths": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "action_paths": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "workflow_run_ids": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "uniqueItems": true
+        },
+        "environment": {"type": "string", "minLength": 1},
+        "release_or_deployment_target": {"type": "string", "minLength": 1}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "push",
+              "pull_request",
+              "pull_request_target",
+              "workflow_run",
+              "workflow_call",
+              "workflow_dispatch",
+              "issue_comment",
+              "schedule",
+              "repository_dispatch",
+              "merge_group",
+              "deployment",
+              "release",
+              "other"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "runner_types": {
+          "type": "array",
+          "items": {"type": "string", "enum": ["github_hosted", "self_hosted", "mixed", "unknown"]},
+          "uniqueItems": true
+        },
+        "reusable_workflows": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "external_systems": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "trust_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_actors", "untrusted_inputs", "privileged_identities", "runner_boundaries"],
+      "properties": {
+        "event_actors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "untrusted_inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "privileged_identities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "secrets": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "runner_boundaries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "artifact_cache_boundaries": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "external_side_effects": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository_paths": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "workflow_runs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "settings_or_rules": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "official_docs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_permission_class"],
+      "properties": {
+        "maximum_permission_class": {
+          "type": "string",
+          "enum": ["observe", "propose", "mutate_reversible", "mutate_irreversible"]
+        },
+        "authorized_mutations": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true,
+          "default": []
+        },
+        "approval_required": {"type": "boolean", "default": false},
+        "approval_gates": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "non_goals": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "required_runner_constraints": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "compatibility_requirements": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "quota_or_cost_limits": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "forbidden_actions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_checks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "representative_runs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "security_postconditions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "adversarial_cases": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "artifact_identity_checks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "rollback_checks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "implement"}}, "required": ["mode"]},
+      "then": {
+        "required": ["verification"],
+        "properties": {
+          "authority": {
+            "required": ["authorized_mutations"],
+            "properties": {
+              "maximum_permission_class": {"enum": ["mutate_reversible", "mutate_irreversible"]},
+              "authorized_mutations": {"minItems": 1}
+            }
+          },
+          "verification": {
+            "required": ["required_checks", "security_postconditions", "adversarial_cases"],
+            "properties": {
+              "required_checks": {"minItems": 1},
+              "security_postconditions": {"minItems": 1},
+              "adversarial_cases": {"minItems": 1}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "incident"}}, "required": ["mode"]},
+      "then": {
+        "required": ["verification"],
+        "properties": {
+          "verification": {
+            "required": ["required_checks", "adversarial_cases"],
+            "properties": {
+              "required_checks": {"minItems": 1},
+              "adversarial_cases": {"minItems": 1}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "release"}}, "required": ["mode"]},
+      "then": {
+        "required": ["verification"],
+        "properties": {
+          "verification": {
+            "required": ["required_checks", "representative_runs", "security_postconditions", "adversarial_cases", "artifact_identity_checks", "rollback_checks"],
+            "properties": {
+              "required_checks": {"minItems": 1},
+              "representative_runs": {"minItems": 1},
+              "security_postconditions": {"minItems": 1},
+              "adversarial_cases": {"minItems": 1},
+              "artifact_identity_checks": {"minItems": 1},
+              "rollback_checks": {"minItems": 1}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "maximum_permission_class": {"const": "mutate_irreversible"}
+            },
+            "required": ["maximum_permission_class"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "authority": {
+            "required": ["approval_required", "approval_gates", "authorized_mutations"],
+            "properties": {
+              "approval_required": {"const": true},
+              "approval_gates": {"minItems": 1},
+              "authorized_mutations": {"minItems": 1}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

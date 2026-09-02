@@ -1,0 +1,134 @@
+task_id: github-actions-release-hardening-001
+goal: >-
+  Harden CI and release automation so fork and Dependabot changes remain
+  low-trust, production publication uses narrowly scoped OIDC, and the exact
+  qualified artifact is promoted without duplicate-release ambiguity.
+mode: implement
+
+target:
+  repository: org/service
+  branch_or_ref: main
+  workflow_paths:
+    - .github/workflows/ci.yml
+    - .github/workflows/release.yml
+    - .github/workflows/deploy.yml
+  environment: production
+  release_or_deployment_target: container registry and production service
+
+scope:
+  events:
+    - pull_request
+    - workflow_run
+    - workflow_dispatch
+    - release
+  runner_types:
+    - github_hosted
+  reusable_workflows:
+    - org/platform/.github/workflows/deploy.yml@<verified-full-commit-sha>
+  external_systems:
+    - container registry
+    - production cloud account
+
+trust_model:
+  event_actors:
+    - fork pull-request authors
+    - repository collaborators
+    - dependabot[bot]
+    - release operators
+  untrusted_inputs:
+    - fork pull-request source code
+    - pull-request titles and branch names
+    - Dependabot-generated source changes
+    - artifacts and outputs produced by low-trust CI
+    - generated matrix values
+  privileged_identities:
+    - release-job GITHUB_TOKEN with package write permission
+    - production OIDC deployment role
+  secrets:
+    - environment-scoped non-OIDC deployment secrets only if still required
+  runner_boundaries:
+    - fork and Dependabot CI remains on isolated GitHub-hosted runners
+    - privileged release and deployment jobs do not execute lower-trust code or downloaded executables
+  artifact_cache_boundaries:
+    - low-trust caches cannot provide executable state to privileged publication jobs
+    - release artifact must be tied to the trusted source SHA and qualified build run
+  external_side_effects:
+    - publish container image
+    - create release metadata
+    - deploy production
+
+sources:
+  repository_paths:
+    - .github/workflows/
+    - .github/actions/
+    - dependabot.yml
+  workflow_runs:
+    - recent fork PR CI run
+    - recent Dependabot CI run
+    - most recent successful release/deployment run
+  settings_or_rules:
+    - repository Actions token/fork policies
+    - environment protection rules
+    - branch/ruleset required checks
+    - allowed-actions and SHA-pinning policy if configured
+  official_docs:
+    - GitHub Actions secure use reference
+    - Securely using pull_request_target
+    - Reusing workflow configurations
+    - OpenID Connect reference
+    - Dependabot on GitHub Actions
+
+constraints:
+  non_goals:
+    - Do not redesign application build logic outside what is required for artifact promotion.
+    - Do not replace GitHub Actions with another CI/CD platform.
+  required_runner_constraints:
+    - Do not move untrusted fork PR execution onto persistent self-hosted runners.
+  quota_or_cost_limits:
+    - Keep generated matrices bounded and preserve existing required test coverage.
+  forbidden_actions:
+    - Do not expose production secrets to fork or Dependabot code.
+    - Do not disable required checks or environment approval merely to make the workflow pass.
+    - Do not publish or deploy during repository-only qualification without separate release authority.
+
+authority:
+  maximum_permission_class: mutate_reversible
+  authorized_mutations:
+    - Update repository-managed GitHub Actions workflows and local custom actions required by the accepted remediation.
+  approval_required: false
+
+acceptance:
+  - Fork and Dependabot CI cannot obtain production secrets or privileged repository/cloud authority.
+  - External actions and reusable workflows used in privileged jobs are pinned to verified full commit SHAs where supported.
+  - Production OIDC trust is limited to the intended repository/ref/environment/reusable deployment workflow as supported by the provider.
+  - Privileged jobs do not execute artifacts, caches, or source produced by lower-trust workflows without an explicit safe promotion boundary.
+  - Release/deployment reruns reconcile authoritative state before repeating non-idempotent side effects.
+  - The artifact promoted to production is traceable to the qualified source SHA, build run, and digest.
+
+verification:
+  required_checks:
+    - Parse and lint changed workflow YAML with available repository tooling and actionlint when available.
+    - Audit every uses reference in privileged paths for immutable pinning and intended-repository provenance.
+    - Audit GITHUB_TOKEN permissions, secrets, OIDC permissions, runner trust, cache/artifact flow, and concurrency semantics.
+    - Review the final diff for unrelated changes and secret leakage.
+  representative_runs:
+    - Fork or fork-equivalent pull-request CI run demonstrating the low-trust boundary.
+    - Dependabot-triggered CI run or authoritative evidence of its restricted token/secret path.
+    - Trusted release/deployment qualification run when separately authorized.
+  security_postconditions:
+    - Lower-trust source or event metadata cannot execute with production credentials.
+    - OIDC tokens cannot assume the production role from unintended repositories, refs, environments, or workflow identities.
+    - Lower-trust caches/artifacts cannot become executable privileged state.
+  adversarial_cases:
+    - Malicious PR title/branch attempts command injection.
+    - pull_request_target or workflow_run path attempts to execute fork-controlled code or artifact.
+    - Dependabot run lacks Actions secrets and cannot be fixed by silently broadening production authority.
+    - Reusable workflow attempts to request permissions broader than the caller grants.
+    - Deployment times out after remote success and a rerun is requested.
+    - Generated matrix input attempts excessive job fan-out.
+  artifact_identity_checks:
+    - Published artifact digest maps to the qualified build run and source SHA.
+    - Production promotion does not independently rebuild a materially different artifact.
+  rollback_checks:
+    - Workflow changes have a normal Git revert path.
+    - Release/deployment automation documents reconciliation or rollback for partial/ambiguous external mutation.

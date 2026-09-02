@@ -14,6 +14,7 @@ Choose the **smallest correct owner** for the primary risk and outcome.
 
 Do not select a broader agent merely because the task touches adjacent technology. Examples:
 
+- A task specifically about GitHub Actions workflow/action/runtime behavior should use the GitHub Actions Engineer rather than generic Principal DevOps.
 - Hosting an AI service on Kubernetes is usually DevOps-owned unless model/RAG/agent behavior also requires material change.
 - Finding a security issue during maintenance does not make the maintenance agent the security owner.
 - Producing infrastructure documentation does not authorize infrastructure mutation.
@@ -39,7 +40,7 @@ Use these when the task is broad within a core engineering discipline.
 
 | Agent | Owns | Use when | Quickstart |
 |---|---|---|---|
-| [`principal-devops-engineer.md`](principal-devops-engineer.md) | Infrastructure, platform, CI/CD, reliability, cloud, containers, IaC, automation operations | The primary change/risk is DevOps/platform behavior | [`../docs/quickstarts/principal-devops-engineer.md`](../docs/quickstarts/principal-devops-engineer.md) |
+| [`principal-devops-engineer.md`](principal-devops-engineer.md) | Infrastructure, platform, broad CI/CD, reliability, cloud, containers, IaC, automation operations | The primary change/risk is broad DevOps/platform behavior and no narrower specialist owns it | [`../docs/quickstarts/principal-devops-engineer.md`](../docs/quickstarts/principal-devops-engineer.md) |
 | [`principal-ai-engineer.md`](principal-ai-engineer.md) | LLM apps, agents, RAG, evals, inference, model/tool integration | The primary change/risk is AI-system behavior | [`../docs/quickstarts/principal-ai-engineer.md`](../docs/quickstarts/principal-ai-engineer.md) |
 | [`principal-ai-devops-engineer.md`](principal-ai-devops-engineer.md) | Materially cross-domain AI + platform systems | Both AI application behavior and platform/deployment behavior require material engineering | [`../docs/quickstarts/principal-ai-devops-engineer.md`](../docs/quickstarts/principal-ai-devops-engineer.md) |
 
@@ -49,14 +50,41 @@ Prefer a specialist below when it owns the task more precisely.
 
 | Agent | Owns | Use when | Operator guide |
 |---|---|---|---|
+| [`github-actions-engineer.md`](github-actions-engineer.md) | GitHub Actions workflows/actions, event trust, `GITHUB_TOKEN`, OIDC, Dependabot/fork behavior, reusable workflows, runner trust, artifacts/caches, release automation, provenance, concurrency/reruns, Actions cost | GitHub Actions itself is the primary correctness/security/reliability surface | [`../docs/quickstarts/github-actions-engineer.md`](../docs/quickstarts/github-actions-engineer.md) |
 | [`agent-architect-builder.md`](agent-architect-builder.md) | Reusable agent architecture, contracts, skills, tools, permissions, evaluation, stop behavior | Designing, building, or auditing another agent | [`../docs/quickstarts/agent-builder.md`](../docs/quickstarts/agent-builder.md) |
 | [`codebase-maintenance-engineer.md`](codebase-maintenance-engineer.md) | Behavior-preserving de-slop, refactoring, comment reconciliation, dependency/config cleanup, maintenance efficiency | Code works but maintainability has drifted | [`../docs/quickstarts/codebase-maintenance-engineer.md`](../docs/quickstarts/codebase-maintenance-engineer.md) |
-| [`devsecops-security-engineer.md`](devsecops-security-engineer.md) | Security of Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, runners, secrets and supply chain | Security is the primary objective/risk | [`../docs/quickstarts/devsecops-security-engineer.md`](../docs/quickstarts/devsecops-security-engineer.md) |
+| [`devsecops-security-engineer.md`](devsecops-security-engineer.md) | Security of Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, runners, secrets and supply chain | Security is the primary objective/risk across a broader DevOps trust path | [`../docs/quickstarts/devsecops-security-engineer.md`](../docs/quickstarts/devsecops-security-engineer.md) |
 | [`devops-documentation-engineer.md`](devops-documentation-engineer.md) | Evidence-backed documentation-as-code, runbooks, Markdown, Mermaid and diagrams | Documentation is the primary deliverable | [`../docs/quickstarts/devops-documentation-engineer.md`](../docs/quickstarts/devops-documentation-engineer.md) |
 | [`kubernetes-homelab-engineer.md`](kubernetes-homelab-engineer.md) | `Quazmoz/K8SHomelab` Kubernetes/Flux GitOps, deployment, storage/networking and incidents | Work targets the K8SHomelab repository/runtime | [`../docs/quickstarts/kubernetes-homelab-engineer.md`](../docs/quickstarts/kubernetes-homelab-engineer.md) |
-| [`automation-platform-selection-advisor.md`](automation-platform-selection-advisor.md) | Automation capability classification, product fit, architecture, evidence and migration economics | Choosing/challenging Terraform, Ansible, Jenkins, GitOps, workflow or adjacent platforms | [`../AUTOMATION_PLATFORM_INDEX.md`](../AUTOMATION_PLATFORM_INDEX.md) |
+| [`automation-platform-selection-advisor.md`](automation-platform-selection-advisor.md) | Automation capability classification, product fit, architecture, evidence and migration economics | Choosing/challenging Terraform, Ansible, Jenkins, GitHub Actions, GitOps, workflow or adjacent platforms | [`../AUTOMATION_PLATFORM_INDEX.md`](../AUTOMATION_PLATFORM_INDEX.md) |
 | [`wearos-app-developer.md`](wearos-app-developer.md) | Wear OS implementation and UI/runtime engineering | Building or fixing Wear OS functionality | [`../WEAROS_DEVELOPMENT_INDEX.md`](../WEAROS_DEVELOPMENT_INDEX.md) |
 | [`android-wearos-release-engineer.md`](android-wearos-release-engineer.md) | Android/Wear OS release qualification and Play readiness | Final release-readiness work | [`../WEAROS_INDEX.md`](../WEAROS_INDEX.md) |
+
+### GitHub Actions vs broader DevOps/security
+
+Use the GitHub Actions Engineer when the main object under review is Actions itself:
+
+```text
+.github/workflows/*
+reusable workflows / custom actions
+event trust and fork/Dependabot behavior
+GITHUB_TOKEN / Actions secrets / OIDC
+GitHub-hosted or self-hosted runners
+cache/artifact trust crossing
+Actions concurrency/rerun semantics
+release/package/deployment automation in Actions
+```
+
+Hand off or choose another owner when the required outcome is primarily:
+
+```text
+broad cloud/platform architecture          -> Principal DevOps
+security spanning multiple DevOps systems  -> DevSecOps Security
+which automation platform should own work  -> Automation Platform Selection
+application/product code behavior          -> owning product/domain engineer
+```
+
+An Actions-only pwn request or token/runner/cache defect can remain with the Actions specialist. A broader compromise path spanning Actions, cloud IAM, Kubernetes, Terraform state, Jenkins/AAP, or multiple privileged systems is DevSecOps-owned.
 
 ### Codebase maintenance vs domain engineering
 
@@ -161,9 +189,9 @@ agents/principal-ai-engineer.md
 or:
 
 ```text
-agents/kubernetes-homelab-engineer.md
-+ skills/kubernetes-gitops-change-management.md
-+ skills/kubernetes-homelab-troubleshooting.md
+agents/github-actions-engineer.md
++ skills/github-actions-engineering.md
++ prompts/implementation/github-actions-task.md
 ```
 
 Do not load every skill "just in case." Selective loading reduces conflicting instructions and context cost.
@@ -230,6 +258,12 @@ After changing canonical agents, run:
 
 ```bash
 python3 scripts/validate-agentdefaults.py
+```
+
+For GitHub Actions stack changes also run:
+
+```bash
+python3 scripts/validate-github-actions-stack.py
 ```
 
 Run the relevant specialist validator/acceptance tests as well. A passing AgentDefaults validator does not replace build/test/runtime verification in a target repository.
