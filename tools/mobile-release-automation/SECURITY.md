@@ -2,91 +2,38 @@
 
 ## Agent boundary
 
-Version 1.2 makes the installed MCP surface read-only by default.
+Version 1.3 uses a risk-gated MCP surface rather than a read-only one.
 
-Both of these entry points run the read-only server:
+Both `mra-mcp` and `mra-agent-mcp` expose the same local server. The AI may perform reads, dry-runs, and contained mutations directly. High-risk mutations require a real local operator approval before the vendor API call occurs.
 
-```text
-mra-mcp
-mra-agent-mcp
-```
+## Risk classes
 
-They may inspect configured Google Play and RevenueCat state, but they do not expose platform publish, promote, create-product, create-app, or other live mutation tools.
+- `observe`: diagnostics, reads, and Play dry-runs.
+- `contained`: internal-track Play releases, creation of individual RevenueCat objects that do not rewire live access, and individual AdMob app/ad-unit creation where supported.
+- `high`: non-internal Play releases or promotions, making a RevenueCat offering current, attaching products to entitlements or packages, backing-store product creation, and future destructive, financial, or broad multi-app mutations.
 
-Live changes remain operator actions through the local `mra` CLI. Mutating CLI commands continue to require `--yes`. Do not grant an AI client unrestricted shell access to the operator CLI if the intent is to enforce the MCP boundary.
+High-risk MCP tools do not accept an agent-controlled `confirm=true` bypass. On macOS they invoke a native approval dialog describing the exact target. If the operator declines, the dialog times out, or native approval is unavailable, the action fails closed.
 
-## Bitwarden bootstrap
+The operator CLI remains available for explicit local work and retains its own confirmation behavior.
 
-The Bitwarden Secrets Manager machine-account access token remains in macOS Keychain. Static vendor credentials are stored in the `mobile-release-automation` Bitwarden Secrets Manager project. Local configuration stores only immutable secret UUIDs.
+## Credentials
 
-## Google Play publisher credential
+Bitwarden Secrets Manager remains the static credential source. The Bitwarden machine-account token remains in macOS Keychain, and local MRA configuration stores only immutable secret references.
 
-Store the Google Play publisher service-account JSON as a Bitwarden secret, for example:
-
-```text
-mra/google-play/publisher-service-account-json
-```
-
-Copy the Bitwarden secret UUID and bind it locally:
-
-```bash
-mra-agent auth bind-play --secret-id YOUR_BITWARDEN_SECRET_UUID
-```
-
-`mra-agent doctor` should then report `google_play_publisher` with source `bitwarden-secrets-manager`.
-
-Google Play API sessions load the JSON directly from Bitwarden into process memory. No temporary credential file is created.
-
-## Dedicated RevenueCat Google Play credential
-
-Do not hand RevenueCat the publisher credential. Create a separate Google service account for RevenueCat and store its JSON as another Bitwarden secret, for example:
-
-```text
-mra/google-play/revenuecat-service-account-json
-```
-
-Bind that UUID separately:
-
-```bash
-mra-agent auth bind-revenuecat-play --secret-id YOUR_BITWARDEN_SECRET_UUID
-```
-
-This keeps release/publishing authority separate from the credential that is allowed to cross the RevenueCat vendor boundary.
-
-## Play Console permissions
-
-Do not use `Admin (all permissions)` for automation unless there is a specific requirement for the service account to manage Play Console users and permissions.
-
-For the publisher service account, grant only what the automated workflow needs. A typical portfolio release account needs:
-
-```text
-View app information and download bulk reports (read-only)
-Release apps to testing tracks
-Release to production, exclude devices and use Play app signing
-Manage store presence        # only when Play product/store configuration is automated
-```
-
-Add `Manage testing tracks and edit tester lists` only if the automation actually manages tester configuration.
-
-For the separate RevenueCat service account, follow RevenueCat's documented Play permissions instead of granting release authority:
-
-```text
-View app information and download bulk reports (read-only)
-View financial data, orders, and cancellation survey responses
-Manage orders and subscriptions
-Manage store presence
-```
+Google Play publisher credentials and the separate Google credential used by RevenueCat remain distinct. The publisher credential is used for Play release automation; the RevenueCat credential is the only Google credential intended to cross into RevenueCat.
 
 ## Verification
 
-After binding the publisher secret:
+After updating MRA, run:
 
 ```bash
 mra-agent doctor
-mra play tracks --profile motionguard
-mra play products --profile motionguard
 ```
 
-Those commands verify credential resolution and read access without publishing a release.
+The report should show `platform_mutations` as `risk-gated` and `human_approval` as ready on macOS.
 
-For AI clients, use the read-only MCP entry point and ask it to run `doctor`, list Play tracks/products, and list RevenueCat apps/products. Platform mutations should be proposed by the AI and executed by the operator through the CLI after reviewing the exact target and blast radius.
+For an MCP client, call `approval_policy` before mutation-heavy work. Reads and contained actions may proceed through MCP. High-risk operations must surface the local human approval dialog and must not execute without approval.
+
+## Trust boundary
+
+The native approval gate protects the MCP path. It does not make unrestricted shell access safe. An agent with unrestricted execution under the same macOS user could invoke local binaries directly. Where this approval boundary matters, expose the MCP server and restrict direct access to the operator CLI, Bitwarden CLI, and Keychain commands.
