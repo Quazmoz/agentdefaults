@@ -54,6 +54,23 @@ class PlayClient:
         _raise_for_status(response, action)
         return response.json() if response.content else {}
 
+    def _list_paginated(self, suffix: str, field: str, action: str) -> list[dict]:
+        """Read every page from a Play catalog list endpoint."""
+        items: list[dict] = []
+        page_token: str | None = None
+        while True:
+            params: dict[str, Any] = {"pageSize": 1000}
+            if page_token:
+                params["pageToken"] = page_token
+            payload = self._request("GET", suffix, action, params=params)
+            page_items = payload.get(field, [])
+            if not isinstance(page_items, list):
+                raise PlayError(f"{action} returned non-list field {field!r}")
+            items.extend(page_items)
+            page_token = payload.get("nextPageToken")
+            if not page_token:
+                return items
+
     # ---- edits -------------------------------------------------------------
 
     @contextmanager
@@ -173,17 +190,21 @@ class PlayClient:
         )
 
     def list_subscriptions(self) -> list[dict]:
-        payload = self._request("GET", "/subscriptions", "list subscriptions")
-        return payload.get("subscriptions", [])
+        return self._list_paginated(
+            "/subscriptions", "subscriptions", "list subscriptions"
+        )
 
     def create_in_app_product(self, body: dict) -> dict:
+        """Legacy one-time-product creation path; retained for compatibility."""
         return self._request(
             "POST", "/inappproducts", "create in-app product", json=body
         )
 
     def list_in_app_products(self) -> list[dict]:
-        payload = self._request("GET", "/inappproducts", "list in-app products")
-        return payload.get("inappproduct", [])
+        """List one-time products using the current monetization publishing API."""
+        return self._list_paginated(
+            "/oneTimeProducts", "oneTimeProducts", "list one-time products"
+        )
 
 
 # ---- high level operations -------------------------------------------------
