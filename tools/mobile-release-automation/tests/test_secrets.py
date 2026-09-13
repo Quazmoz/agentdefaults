@@ -64,6 +64,8 @@ class RevenueCatSecretResolutionTest(unittest.TestCase):
             os.environ["MRA_HOME"] = self.previous_home
         if self.previous_key is not None:
             os.environ["REVENUECAT_V2_SECRET_KEY"] = self.previous_key
+        else:
+            os.environ.pop("REVENUECAT_V2_SECRET_KEY", None)
         self.tempdir.cleanup()
 
     def test_profile_resolves_its_bitwarden_secret(self) -> None:
@@ -72,12 +74,16 @@ class RevenueCatSecretResolutionTest(unittest.TestCase):
             self.assertEqual(auth.revenuecat_key(profile), "sk_motionguard")
         get.assert_called_once_with(SECRET_ID)
 
-    def test_environment_override_still_wins(self) -> None:
-        os.environ["REVENUECAT_V2_SECRET_KEY"] = "sk_ci_override"
+    def test_profile_secret_beats_stale_environment_override(self) -> None:
+        os.environ["REVENUECAT_V2_SECRET_KEY"] = "sk_wrong_app"
         profile = config.Profile(slug="motionguard", revenuecat_secret_id=SECRET_ID)
-        with mock.patch.object(auth.secret_provider, "bitwarden_secret") as get:
-            self.assertEqual(auth.revenuecat_key(profile), "sk_ci_override")
-        get.assert_not_called()
+        with mock.patch.object(auth.secret_provider, "bitwarden_secret", return_value="sk_motionguard") as get:
+            self.assertEqual(auth.revenuecat_key(profile), "sk_motionguard")
+        get.assert_called_once_with(SECRET_ID)
+
+    def test_environment_override_remains_for_unprofiled_legacy_use(self) -> None:
+        os.environ["REVENUECAT_V2_SECRET_KEY"] = "sk_ci_override"
+        self.assertEqual(auth.revenuecat_key(), "sk_ci_override")
 
     def test_agent_cli_binds_secret_reference_without_value(self) -> None:
         config.save_profile(
