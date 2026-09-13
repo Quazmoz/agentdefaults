@@ -8,8 +8,10 @@ internal testing, promoting releases, wiring a new app into RevenueCat, and
 creating AdMob inventory.
 
 Every operation is a thin wrapper over a documented public API. No vendor web UI
-is scripted. Credentials never leave your machine except to the owning vendor's
-own API host.
+is scripted. Credentials stay local except when a vendor's documented integration
+requires one credential to be sent to another vendor. In particular,
+`mra rc create-play-app` sends the Google Play service-account JSON to RevenueCat
+so RevenueCat can validate Play purchases.
 
 ## The Three Platforms Are Not Equally Automatable
 
@@ -36,6 +38,40 @@ Two AdMob facts that cannot be engineered around:
 
 Run `mra admob probe` before promising anyone that AdMob setup is automated.
 
+## Portfolio Convention
+
+For this portfolio, use **one RevenueCat project per app**.
+
+That gives every Android or Wear OS product an isolated RevenueCat configuration,
+product catalog, entitlement model, offering configuration, and secret API key.
+Do not put multiple portfolio apps into one RevenueCat project merely to simplify
+automation.
+
+RevenueCat secret API keys are project-wide. Therefore each app project gets its
+own V2 secret key. The app profile stores the RevenueCat `proj_...` ID, but the
+secret itself stays outside `profiles.json` and outside Git.
+
+Recommended local layout:
+
+```text
+~/.config/mobile-release-automation/
+  play-service-account.json
+  admob-oauth-client.json
+  admob-token.json
+  profiles.json
+  revenuecat-motionguard-v2-secret.key
+  revenuecat-pressdeck-v2-secret.key
+  revenuecat-adhockit-v2-secret.key
+  ...
+```
+
+The current CLI reads RevenueCat credentials from `REVENUECAT_V2_SECRET_KEY` or,
+if that variable is unset, from the legacy single-project fallback file
+`revenuecat-v2-secret.key`. For a portfolio with one RevenueCat project per app,
+prefer the per-app files above and inject the matching key into the environment
+for each RevenueCat command. Do not copy different app secrets back and forth
+into the fallback file.
+
 ## Install
 
 ```bash
@@ -50,8 +86,9 @@ The `mcp` requirement is needed only for the local MCP server. Both mcp 1.x
 ## Credential Setup
 
 All credentials live in `~/.config/mobile-release-automation` (override with
-`MRA_HOME`). The toolkit refuses to read any credential file that is group- or
-world-readable, so `chmod 600` everything.
+`MRA_HOME`). The toolkit refuses to read its credential files if they are group-
+or world-readable, so use owner-only permissions for every secret and credential
+file.
 
 ```bash
 mkdir -p ~/.config/mobile-release-automation
@@ -99,16 +136,66 @@ and treat creation as unavailable.
 
 ### RevenueCat
 
-In RevenueCat, create an API key with version **V2** and only the permissions
-the task needs (`project_configuration:apps:read_write` to create apps,
-`project_configuration:products:read_write` for products).
+Create a separate RevenueCat project for each app. Inside each project, create a
+**V2 secret API key** specifically for this automation toolkit.
 
-```bash
-printf '%s' 'sk_your_key' > ~/.config/mobile-release-automation/revenuecat-v2-secret.key
-chmod 600 ~/.config/mobile-release-automation/revenuecat-v2-secret.key
+For the toolkit as currently implemented, grant this minimum useful permission
+set:
+
+```text
+project_configuration:projects:read
+project_configuration:apps:read_write
+project_configuration:products:read_write
 ```
 
-Or export `REVENUECAT_V2_SECRET_KEY`, which takes precedence over the file.
+Why these are needed:
+
+- `project_configuration:projects:read` allows `mra rc projects` to verify the
+  project visible to the key.
+- `project_configuration:apps:read_write` allows the toolkit to list and create
+  the RevenueCat Play app.
+- `project_configuration:products:read_write` allows the toolkit to list and
+  register products.
+
+Do not grant entitlement, offering, package, customer, or other permissions
+until a command actually needs them. If automation is later extended to create
+the complete RevenueCat paywall model, add only the corresponding
+`entitlements`, `offerings`, and `packages` permissions at that time.
+
+A RevenueCat V2 secret begins with `sk_`. It is a server credential. Never put it
+in Android source, Gradle properties that ship with the app, a GitHub repository,
+screenshots, issue comments, or the RevenueCat SDK configuration. The Android app
+uses its RevenueCat **public SDK key**, not this secret.
+
+For each app, save the generated secret in its own owner-only file. Avoid putting
+the secret directly into your shell history:
+
+```bash
+read -s RC_KEY
+printf '%s' "$RC_KEY" > ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key
+unset RC_KEY
+chmod 600 ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key
+```
+
+Repeat with a different filename for each app project, for example:
+
+```text
+revenuecat-motionguard-v2-secret.key
+revenuecat-pressdeck-v2-secret.key
+revenuecat-adhockit-v2-secret.key
+```
+
+When running a RevenueCat command, inject only the matching app's key into that
+process:
+
+```bash
+REVENUECAT_V2_SECRET_KEY="$(cat ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key)" \
+  mra rc products --profile motionguard
+```
+
+This keeps each app's RevenueCat project isolated while preserving the existing
+CLI contract. `REVENUECAT_V2_SECRET_KEY` takes precedence over the legacy
+`revenuecat-v2-secret.key` fallback file.
 
 ### Verify
 
@@ -116,17 +203,67 @@ Or export `REVENUECAT_V2_SECRET_KEY`, which takes precedence over the file.
 .venv/bin/python -m mra.cli doctor
 ```
 
+`doctor` checks the legacy/global RevenueCat credential location. In a per-app
+RevenueCat layout, a missing global RevenueCat key is expected if the other
+credential checks pass. Validate each RevenueCat app key explicitly with the
+commands in the next section.
+
 ## Profiles
 
 A profile maps one app's identity across all three platforms so commands do not
-need long flags.
+need long flags. Under the portfolio convention, each profile should point to a
+different RevenueCat project ID.
+
+Example for MotionGuard:
 
 ```bash
-mra profile set --slug myapp \
-  --package-name com.example.myapp \
+mra profile set --slug motionguard \
+  --package-name com.example.motionguard \
   --revenuecat-project-id proj_abc123 \
   --admob-app-id ca-app-pub-000~111
 ```
+
+Example for PressDeck:
+
+```bash
+mra profile set --slug pressdeck \
+  --package-name com.example.pressdeck \
+  --revenuecat-project-id proj_def456 \
+  --admob-app-id ca-app-pub-000~222
+```
+
+Do not store a RevenueCat `sk_...` secret in `profiles.json`. Profiles contain
+identifiers only.
+
+## RevenueCat Per-App Verification
+
+After creating an app project, its V2 secret, and its local profile, verify it
+read-only before making any RevenueCat changes.
+
+For MotionGuard:
+
+```bash
+export REVENUECAT_V2_SECRET_KEY="$(cat ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key)"
+
+mra rc projects
+mra rc apps --profile motionguard
+mra rc products --profile motionguard
+
+unset REVENUECAT_V2_SECRET_KEY
+```
+
+Confirm that:
+
+1. `mra rc projects` returns the expected RevenueCat project.
+2. The returned `proj_...` ID matches the `revenuecat_project_id` stored in the
+   profile.
+3. `mra rc apps --profile motionguard` succeeds against that project.
+4. `mra rc products --profile motionguard` succeeds, even if the product list is
+   currently empty.
+
+If a command returns HTTP 403, check the V2 key permissions first. If it returns
+HTTP 404, verify that the profile's project ID belongs to the same RevenueCat
+project that issued the secret key.
 
 ## Common Commands
 
@@ -143,10 +280,12 @@ mra admob apps
 mra admob create-app --name "My App" --platform ANDROID --app-store-id com.example.myapp --yes
 mra admob create-adunit --app-id ca-app-pub-000~111 --name "Rewarded" --format REWARDED --type VIDEO --yes
 
-# RevenueCat
+# RevenueCat: load the secret for the profile's RevenueCat project first
+export REVENUECAT_V2_SECRET_KEY="$(cat ~/.config/mobile-release-automation/revenuecat-myapp-v2-secret.key)"
 mra rc projects
 mra rc create-play-app --profile myapp --name "My App" --yes
 mra rc products --profile myapp
+unset REVENUECAT_V2_SECRET_KEY
 ```
 
 Every command prints JSON on stdout so an agent can parse the result. Failures
@@ -162,6 +301,9 @@ go to stderr with a non-zero exit code.
 - **Play edits are always cleaned up.** A failed or dry-run edit is deleted so
   nothing is left dangling in the Console.
 - **Credential files must be owner-only** or the toolkit refuses to read them.
+- **RevenueCat secrets are project-wide.** With one project per app, use a
+  different V2 secret for every app project and never store those secrets in a
+  profile or repository.
 - **`mra rc create-play-app` sends your Play service account key to
   RevenueCat.** That is the documented way RevenueCat validates Play purchases,
   but it is a real credential leaving your machine, so the command says so.
