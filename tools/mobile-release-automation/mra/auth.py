@@ -37,9 +37,9 @@ ADMOB_CLIENT_HINT = (
     f"and place it at {config.path_for(config.ADMOB_OAUTH_CLIENT)} with chmod 600"
 )
 REVENUECAT_HINT = (
-    "configure the app profile with --revenuecat-secret-id for a Bitwarden Secrets "
-    "Manager secret, export REVENUECAT_V2_SECRET_KEY, or write a legacy fallback "
-    f"key to {config.path_for(config.REVENUECAT_KEY)} with chmod 600"
+    "configure the app profile with a Bitwarden Secrets Manager UUID, export "
+    "REVENUECAT_V2_SECRET_KEY for an unprofiled invocation, or write a legacy "
+    f"fallback key to {config.path_for(config.REVENUECAT_KEY)} with chmod 600"
 )
 
 
@@ -122,17 +122,7 @@ def _persist_admob_token(credentials) -> None:
 
 
 def revenuecat_key(profile: config.Profile | None = None) -> str:
-    """Return the RevenueCat API v2 secret key for the selected app profile.
-
-    Precedence is intentional:
-      1. REVENUECAT_V2_SECRET_KEY for CI/emergency override.
-      2. The profile's Bitwarden Secrets Manager UUID.
-      3. The legacy owner-only local fallback file.
-    """
-    environment_value = os.environ.get("REVENUECAT_V2_SECRET_KEY", "").strip()
-    if environment_value:
-        return environment_value
-
+    """Return the RevenueCat API v2 key for a profile or legacy invocation."""
     if profile and profile.revenuecat_secret_id:
         value = secret_provider.bitwarden_secret(profile.revenuecat_secret_id).strip()
         if not value:
@@ -140,6 +130,10 @@ def revenuecat_key(profile: config.Profile | None = None) -> str:
                 f"Bitwarden secret for profile {profile.slug!r} is empty"
             )
         return value
+
+    environment_value = os.environ.get("REVENUECAT_V2_SECRET_KEY", "").strip()
+    if environment_value:
+        return environment_value
 
     return config.require_file(config.REVENUECAT_KEY, REVENUECAT_HINT).read_text(
         encoding="utf-8"
