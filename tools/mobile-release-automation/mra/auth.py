@@ -69,44 +69,51 @@ def admob_scopes(include_monetization: bool = True) -> list[str]:
 def admob_session(include_monetization: bool = True, allow_consent: bool = False):
     """Return an authorized AdMob session without persisting OAuth JSON files.
 
-    The first call requires browser consent from a Google Account with AdMob
-    access. The long-lived refresh token is stored in the OS credential store;
-    short-lived access credentials are reconstructed in memory for each process.
+    `mra admob login` passes allow_consent=True and intentionally runs a fresh
+    browser grant so scopes can be upgraded or a revoked grant can be replaced.
+    Normal API calls reuse only the refresh token stored in the OS credential
+    store and reconstruct short-lived access credentials in memory.
     """
+    from google.auth.exceptions import RefreshError
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
 
     scopes = admob_scopes(include_monetization)
     client = admob_credentials.installed_client_info()
-    refresh_token = keychain.admob_refresh_token()
 
-    if refresh_token:
-        credentials = Credentials(
-            token=None,
-            refresh_token=refresh_token,
-            token_uri=client["token_uri"],
-            client_id=client["client_id"],
-            client_secret=client["client_secret"],
-            scopes=scopes,
-        )
-        credentials.refresh(Request())
-        if credentials.refresh_token and credentials.refresh_token != refresh_token:
-            keychain.store_admob_refresh_token(credentials.refresh_token)
+    if allow_consent:
+        credentials = _run_admob_consent(scopes)
+        if not credentials.refresh_token:
+            raise config.ConfigError(
+                "Google did not return an AdMob refresh token; revoke the existing OAuth grant "
+                "for this client and run `mra admob login` again"
+            )
+        keychain.store_admob_refresh_token(credentials.refresh_token)
         return _authorized_session(credentials)
 
-    if not allow_consent:
+    refresh_token = keychain.admob_refresh_token()
+    if not refresh_token:
         raise config.ConfigError(
             "AdMob is not authorized yet.\n"
             "  fix: run `mra admob login` once to complete browser consent"
         )
 
-    credentials = _run_admob_consent(scopes)
-    if not credentials.refresh_token:
+    credentials = Credentials(
+        token=None,
+        refresh_token=refresh_token,
+        token_uri=client["token_uri"],
+        client_id=client["client_id"],
+        client_secret=client["client_secret"],
+        scopes=scopes,
+    )
+    try:
+        credentials.refresh(Request())
+    except RefreshError as error:
         raise config.ConfigError(
-            "Google did not return an AdMob refresh token; revoke the existing OAuth grant "
-            "for this client and run `mra admob login` again"
-        )
-    keychain.store_admob_refresh_token(credentials.refresh_token)
+            "AdMob OAuth refresh failed; run `mra admob login` to authorize again"
+        ) from error
+    if credentials.refresh_token and credentials.refresh_token != refresh_token:
+        keychain.store_admob_refresh_token(credentials.refresh_token)
     return _authorized_session(credentials)
 
 
