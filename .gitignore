@@ -29,3 +29,9 @@ graft/
 # Credentials live in ~/.config/mobile-release-automation, never in the repo.
 tools/mobile-release-automation/.venv/
 tools/mobile-release-automation/*.egg-info/
+
+# repo-local agent tooling (ponytail + graft)
+.agent-tools/ponytail-graft/node_modules/
+.agent-tools/ponytail-graft/state/
+.claude/.ponytail-active
+.claude/.ponytail-statusline-nudged
