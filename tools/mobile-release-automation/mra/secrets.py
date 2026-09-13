@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import uuid
 
-from . import config
+from . import config, keychain
 
 BWS_ACCESS_TOKEN_ENV = "BWS_ACCESS_TOKEN"
 BWS_BINARY_ENV = "MRA_BWS_BIN"
@@ -36,13 +36,15 @@ def _bws_binary() -> str:
 
 def bitwarden_status() -> dict[str, str]:
     """Check Bitwarden bootstrap prerequisites without retrieving a vault secret."""
-    _bws_binary()
-    if not os.environ.get(BWS_ACCESS_TOKEN_ENV, "").strip():
-        raise SecretProviderError(
-            "BWS_ACCESS_TOKEN is not present in the process environment; "
-            "inject it from a local OS credential store before starting MRA"
-        )
-    return {"provider": "bitwarden-secrets-manager", "status": "ready"}
+    binary = _bws_binary()
+    keychain.bitwarden_access_token()
+    source = "environment" if os.environ.get(BWS_ACCESS_TOKEN_ENV, "").strip() else "macOS-keychain"
+    return {
+        "provider": "bitwarden-secrets-manager",
+        "status": "ready",
+        "bws": binary,
+        "token_source": source,
+    }
 
 
 def bitwarden_secret(secret_id: str) -> str:
@@ -54,14 +56,10 @@ def bitwarden_secret(secret_id: str) -> str:
             f"invalid Bitwarden secret id {secret_id!r}; expected a UUID"
         ) from error
 
-    access_token = os.environ.get(BWS_ACCESS_TOKEN_ENV, "").strip()
-    if not access_token:
-        raise SecretProviderError(
-            "BWS_ACCESS_TOKEN is missing; inject the Bitwarden machine-account token locally"
-        )
-
+    access_token = keychain.bitwarden_access_token()
     child_environment = os.environ.copy()
     child_environment[BWS_ACCESS_TOKEN_ENV] = access_token
+
     result = subprocess.run(
         [_bws_binary(), "secret", "get", normalized_id, "--output", "json"],
         capture_output=True,
