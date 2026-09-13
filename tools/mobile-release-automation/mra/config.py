@@ -1,7 +1,8 @@
 """Credential and profile resolution.
 
 Credentials live outside the repository by default. Nothing in this module ever
-writes a secret into the working tree.
+writes a secret into the working tree. Profiles may store immutable references to
+external secret-manager objects, but never secret values.
 """
 
 from __future__ import annotations
@@ -77,6 +78,7 @@ class Profile:
     admob_publisher_id: str | None = None
     revenuecat_project_id: str | None = None
     revenuecat_app_id: str | None = None
+    revenuecat_secret_id: str | None = None
 
     @classmethod
     def from_dict(cls, slug: str, data: dict) -> "Profile":
