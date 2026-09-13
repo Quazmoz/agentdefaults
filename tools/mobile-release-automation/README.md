@@ -2,171 +2,173 @@
 
 ## Purpose
 
-Give an agent a safe, auditable way to perform the repetitive Google Play,
-RevenueCat, and AdMob work that is otherwise done by hand: uploading builds to
-internal testing, promoting releases, wiring a new app into RevenueCat, and
-creating AdMob inventory.
+Give an agent a safe, auditable way to perform repetitive Google Play,
+RevenueCat, and AdMob work without placing vendor credentials in Git, prompts,
+agent context, or normal command output.
 
-Every operation is a thin wrapper over a documented public API. No vendor web UI
-is scripted. Credentials stay local except when a vendor's documented integration
-requires one credential to be sent to another vendor. In particular,
-`mra rc create-play-app` sends the Google Play service-account JSON to RevenueCat
-so RevenueCat can validate Play purchases.
+Every operation is a thin wrapper over documented public APIs. No vendor web UI
+is scripted.
 
-## The Three Platforms Are Not Equally Automatable
+## Platform constraints
 
-Read this before planning any work. The differences are not preferences.
-
-| Platform | Auth | Automatable today |
+| Platform | Auth | Automation status |
 |---|---|---|
-| Google Play | GCP service account | Yes. Upload, tracks, promotion, and monetization products are all API-driven. |
-| RevenueCat | API v2 secret key | Yes. Apps, products, entitlements, offerings, and packages are all API-driven. A first-party MCP server exists. |
-| AdMob | OAuth **user** credentials only | Reporting and listing: yes. Creating apps and ad units: **only if Google has allowlisted your AdMob account**. |
+| Google Play | GCP service account | Upload, tracks, promotion, and monetization are API-driven. |
+| RevenueCat | API v2 secret key | Apps, products, entitlements, offerings, and packages are API-driven. |
+| AdMob | OAuth user credentials | Reporting/listing works. App and ad-unit creation is available only when Google has allowlisted the AdMob account. |
 
-Two AdMob facts that cannot be engineered around:
+AdMob service accounts do not work. Run `mra admob probe` before depending on
+AdMob creation automation.
 
-1. **Service accounts do not work.** Google documents that "All requests to the
-   AdMob API must be authorized by an authenticated user" and that "No other
-   authorization protocols are supported." There is no IAM role that changes
-   this. AdMob needs a browser consent from the Google Account that owns the
-   publisher account, which this toolkit caches as a local refresh token.
-2. **Creation is limited access.** `accounts.apps.create` and
-   `accounts.adUnits.create` both carry the note: "This method has limited
-   access. If you see a 403 permission denied error, please reach out to your
-   account manager for access." The gate is applied per AdMob account by Google.
-   Granting yourself the `admob.monetization` scope does not lift it.
+## RevenueCat project convention
 
-Run `mra admob probe` before promising anyone that AdMob setup is automated.
+Default to **one RevenueCat project per independently monetized product/app
+family**.
 
-## Portfolio Convention
+RevenueCat projects are a sharing boundary. Apps in one RevenueCat project may
+share entitlement state and project-level configuration. Unrelated products such
+as MotionGuard, PressDeck, and AdHocKit should normally use separate RevenueCat
+projects. Phone, Wear OS, Android, or iOS variants that intentionally share one
+paid entitlement may belong to the same RevenueCat project.
 
-For this portfolio, default to **one RevenueCat project per independently
-monetized product/app family**.
+Each independent RevenueCat project should have its own V2 secret key.
 
-RevenueCat projects are a sharing boundary, not merely a folder. Entitlements are
-scoped to a project, users can share entitlement state across apps in the same
-project, and integrations are configured per project. Therefore unrelated apps
-that should not share purchases, entitlement state, or integration configuration
-should use separate RevenueCat projects.
+## Secret architecture
 
-For Quinn's portfolio, that normally means one project for MotionGuard, one for
-PressDeck, one for AdHocKit, and so on. Do not combine unrelated portfolio apps
-into one RevenueCat project merely to simplify automation.
+### Use Bitwarden Secrets Manager, not the Password Manager personal API key
 
-The exception is intentional shared monetization. If multiple platform variants
-or companion apps represent the same product and are intended to share the same
-RevenueCat entitlement/subscription state, keep those RevenueCat Apps in the same
-project. For example, Android and iOS variants of the same product commonly belong
-in one project. A phone and Wear OS component should also share a project if they
-are intentionally one paid product with shared entitlement state. If they are
-independently sold products, use separate projects.
+The normal Bitwarden Password Manager personal API key authenticates the CLI but
+does not replace vault unlock for decrypted data. For unattended local automation,
+use **Bitwarden Secrets Manager** instead.
 
-RevenueCat secret API keys are project-wide. Therefore each independent RevenueCat
-project gets its own V2 secret key. The local app profile stores the RevenueCat
-`proj_...` ID, but the secret itself stays outside `profiles.json` and outside Git.
+Bitwarden Secrets Manager Free currently provides unlimited secret storage, up
+to 3 projects, and up to 3 machine accounts. That is sufficient for this toolkit
+without creating one Bitwarden project per app.
 
-Recommended local layout:
+Use one Bitwarden Secrets Manager project named:
 
 ```text
-~/.config/mobile-release-automation/
-  play-service-account.json
-  admob-oauth-client.json
-  admob-token.json
-  profiles.json
-  revenuecat-motionguard-v2-secret.key
-  revenuecat-pressdeck-v2-secret.key
-  revenuecat-adhockit-v2-secret.key
-  ...
+mobile-release-automation
 ```
 
-The current CLI reads RevenueCat credentials from `REVENUECAT_V2_SECRET_KEY` or,
-if that variable is unset, from the legacy single-project fallback file
-`revenuecat-v2-secret.key`. For a portfolio with separate RevenueCat projects,
-prefer the per-project files above and inject the matching key into the
-environment for each RevenueCat command. Do not copy different project secrets
-back and forth into the fallback file.
+Store app-specific secrets inside that project using clear names such as:
+
+```text
+mra/revenuecat/motionguard/v2-secret
+mra/revenuecat/pressdeck/v2-secret
+mra/revenuecat/adhockit/v2-secret
+```
+
+The Bitwarden project is only an access-control grouping. It is unrelated to the
+RevenueCat project-per-product convention.
+
+### Machine account
+
+Create one Bitwarden Secrets Manager machine account for this MacBook, for
+example:
+
+```text
+mra-macbook
+```
+
+Grant it **Can read** access to the `mobile-release-automation` project. Routine
+release automation does not need permission to edit secrets.
+
+Generate a machine-account access token. This is the one bootstrap credential
+that allows the local toolkit to decrypt the secrets the machine account may
+read.
+
+### Store the bootstrap token in macOS Keychain
+
+Do not store the Bitwarden machine token in Git, `profiles.json`, shell startup
+files, or an agent prompt.
+
+The toolkit looks for this macOS Keychain item:
+
+```text
+service: com.quazmoz.mobile-release-automation.bitwarden
+account: mra-machine-account
+```
+
+Store the generated token without putting its literal value in shell history:
+
+```bash
+read -s BWS_TOKEN
+security add-generic-password -U \
+  -a mra-machine-account \
+  -s com.quazmoz.mobile-release-automation.bitwarden \
+  -w "$BWS_TOKEN"
+unset BWS_TOKEN
+```
+
+For CI or another trusted non-macOS environment, `BWS_ACCESS_TOKEN` can be
+injected by that platform's secret store instead.
+
+### Secret references, not secret values
+
+`profiles.json` stores only immutable Bitwarden secret UUIDs. Example shape:
+
+```json
+{
+  "motionguard": {
+    "package_name": "com.quazmoz.motionguard",
+    "revenuecat_project_id": "proj_example",
+    "revenuecat_secret_id": "6f7c12c0-df7b-4a2b-9360-1539a4d13392"
+  }
+}
+```
+
+A Bitwarden UUID is a reference, not the RevenueCat `sk_...` value.
+
+The secret flow is:
+
+```text
+AI or operator
+    -> mra-agent / local agent MCP
+    -> profile slug
+    -> Bitwarden secret UUID
+    -> bws secret get <UUID>
+    -> RevenueCat client in memory
+    -> RevenueCat API
+```
+
+The AI-facing surface receives the profile slug and API result. It does not
+receive the Bitwarden machine token or the RevenueCat secret.
+
+The Bitwarden provider retrieves exactly one secret by UUID. It does not list an
+entire project, does not use `bws run`, and does not print secret values.
 
 ## Install
 
 ```bash
 cd tools/mobile-release-automation
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -e ".[mcp]"
 ```
 
-The `mcp` requirement is needed only for the local MCP server. Both mcp 1.x
-(`FastMCP`) and mcp 2.x (`MCPServer`) are supported.
+Install Bitwarden's official Secrets Manager CLI (`bws`) separately and ensure it
+is on `PATH`.
 
-## Credential Setup
+Available entry points:
 
-All credentials live in `~/.config/mobile-release-automation` (override with
-`MRA_HOME`). The toolkit refuses to read its credential files if they are group-
-or world-readable, so use owner-only permissions for every secret and credential
-file.
+```text
+mra        general CLI
+mra-agent  agent-safe RevenueCat CLI with profile-bound Bitwarden auth
+mra-mcp    existing local MCP server
+```
+
+The agent-safe MCP module can currently be run directly with:
 
 ```bash
-mkdir -p ~/.config/mobile-release-automation
-chmod 700 ~/.config/mobile-release-automation
+.venv/bin/python -m mra.secure_mcp_server
 ```
 
-### Google Play
+## RevenueCat setup
 
-1. In Google Cloud, create a project and enable the **Google Play Android
-   Developer API**.
-2. Create a service account and download its JSON key.
-3. In Play Console, go to **Users and permissions**, invite the service account
-   email, and grant only what the task needs: *Release to testing tracks* for
-   internal testing, plus *Manage store presence* or monetization permissions
-   only if you intend to script products.
-4. Save the key and lock it down:
+Inside each independent RevenueCat project, create a V2 secret key for release
+automation.
 
-```bash
-cp ~/Downloads/play-sa.json ~/.config/mobile-release-automation/play-service-account.json
-chmod 600 ~/.config/mobile-release-automation/play-service-account.json
-```
-
-Play Console propagates new permissions slowly. A fresh invite can take a while
-before the API accepts it.
-
-### AdMob
-
-1. In the same Google Cloud project, enable the **AdMob API**.
-2. Configure the OAuth consent screen. Add the AdMob scopes you intend to use.
-   `admob.readonly` and `admob.report` are publicly documented;
-   `admob.monetization` is required for creation and is the gated one.
-3. Create an OAuth client of type **Desktop app** and download its JSON.
-
-```bash
-cp ~/Downloads/admob-client.json ~/.config/mobile-release-automation/admob-oauth-client.json
-chmod 600 ~/.config/mobile-release-automation/admob-oauth-client.json
-mra admob login       # one-time browser consent, caches a refresh token
-mra admob probe       # says whether monetization access is actually granted
-```
-
-Sign in as the Google Account that owns the AdMob publisher account. If
-`mra admob login` fails because `admob.monetization` is not permitted on your
-consent screen, re-run `mra admob login --read-only` to get reporting working
-and treat creation as unavailable.
-
-### RevenueCat
-
-Create a separate RevenueCat project for each independently monetized product/app
-family as described above. Inside each project, create a **V2 secret API key**
-specifically for this automation toolkit.
-
-RevenueCat documents permissions per endpoint. The current CLI uses these
-endpoints:
-
-| Toolkit operation | RevenueCat endpoint | Required permission |
-|---|---|---|
-| `mra rc projects` | `GET /v2/projects` | `project_configuration:projects:read` |
-| `mra rc apps` | `GET /v2/projects/{project_id}/apps` | `project_configuration:apps:read` |
-| `mra rc create-play-app` | `POST /v2/projects/{project_id}/apps` | `project_configuration:apps:read_write` |
-| `mra rc products` | `GET /v2/projects/{project_id}/products` | `project_configuration:products:read` |
-| `mra rc create-product` | `POST /v2/projects/{project_id}/products` | `project_configuration:products:read_write` |
-
-For the toolkit's normal read-and-create workflow, select this minimum practical
-permission set when creating the key:
+For the current read-and-create workflow use:
 
 ```text
 project_configuration:projects:read
@@ -174,10 +176,17 @@ project_configuration:apps:read_write
 project_configuration:products:read_write
 ```
 
-This is intentionally slightly broader than a read-only verification key because
-the toolkit can create RevenueCat Apps and Products. RevenueCat documents `read`
-for the list operations and `read_write` for the create operations. If you create
-a key solely for audit/read-only use, use the narrower set instead:
+Endpoint mapping:
+
+| Toolkit operation | RevenueCat endpoint | Required permission |
+|---|---|---|
+| list projects | `GET /v2/projects` | `project_configuration:projects:read` |
+| list apps | `GET /v2/projects/{project_id}/apps` | `project_configuration:apps:read` |
+| create Play app | `POST /v2/projects/{project_id}/apps` | `project_configuration:apps:read_write` |
+| list products | `GET /v2/projects/{project_id}/products` | `project_configuration:products:read` |
+| create product | `POST /v2/projects/{project_id}/products` | `project_configuration:products:read_write` |
+
+For an audit-only key use:
 
 ```text
 project_configuration:projects:read
@@ -185,198 +194,161 @@ project_configuration:apps:read
 project_configuration:products:read
 ```
 
-The toolkit does not create RevenueCat projects, so it does **not** need
+The toolkit does not create RevenueCat projects, so it does not need
 `project_configuration:projects:read_write`.
 
-Do not grant entitlement, offering, package, customer, or other permissions until
-a command actually needs them. If automation is exposed for those mutations,
-RevenueCat documents separate permissions such as
-`project_configuration:entitlements:read_write`,
-`project_configuration:offerings:read_write`, and
-`project_configuration:packages:read_write`.
+Do not grant entitlement, offering, package, or customer permissions until a
+command actually needs them.
 
 A RevenueCat V2 secret begins with `sk_`. It is a server credential. Never put it
-in Android source, Gradle properties that ship with the app, a GitHub repository,
-screenshots, issue comments, or the RevenueCat SDK configuration. The Android app
-uses its RevenueCat **public SDK key**, not this secret.
+in Android source or use it as the RevenueCat Android SDK key. Android uses the
+RevenueCat public SDK key instead.
 
-For each independent RevenueCat project, save the generated secret in its own
-owner-only file. Avoid putting the secret directly into your shell history:
+## Create the MotionGuard secret in Bitwarden
 
-```bash
-read -s RC_KEY
-printf '%s' "$RC_KEY" > ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key
-unset RC_KEY
-chmod 600 ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key
-```
+1. Open Bitwarden Secrets Manager.
+2. Open the `mobile-release-automation` project.
+3. Create a secret named `mra/revenuecat/motionguard/v2-secret`.
+4. Paste MotionGuard's RevenueCat V2 `sk_...` value into the secret value.
+5. Save it.
+6. Copy the Bitwarden secret UUID. Do not copy the `sk_...` value into the MRA
+   profile.
 
-Repeat with a different filename for each project, for example:
+## Configure the MotionGuard profile
 
-```text
-revenuecat-motionguard-v2-secret.key
-revenuecat-pressdeck-v2-secret.key
-revenuecat-adhockit-v2-secret.key
-```
-
-When running a RevenueCat command, inject only the matching project's key into
-that process:
-
-```bash
-REVENUECAT_V2_SECRET_KEY="$(cat ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key)" \
-  mra rc products --profile motionguard
-```
-
-This keeps independent RevenueCat projects isolated while preserving the existing
-CLI contract. `REVENUECAT_V2_SECRET_KEY` takes precedence over the legacy
-`revenuecat-v2-secret.key` fallback file.
-
-RevenueCat's own guidance is consistent with this security boundary: use a secret
-API key when calling the REST API for your own project, keep secret keys out of
-client apps and public repositories, and use the public SDK key in the app itself.
-For third-party clients that other developers authorize, RevenueCat recommends
-OAuth instead of asking users to share secret API keys.
-
-### Verify
-
-```bash
-.venv/bin/python -m mra.cli doctor
-```
-
-`doctor` checks the legacy/global RevenueCat credential location. In a per-project
-RevenueCat layout, a missing global RevenueCat key is expected if the other
-credential checks pass. Validate each RevenueCat project key explicitly with the
-commands in the next section.
-
-## Profiles
-
-A profile maps one app's identity across all three platforms so commands do not
-need long flags. Each profile should point to the RevenueCat project that owns its
-monetization model. Distinct independent portfolio apps will normally have
-different RevenueCat project IDs; variants intentionally sharing entitlement state
-may point to the same project.
-
-Example for MotionGuard:
+First create or update its ordinary identity mapping:
 
 ```bash
 mra profile set --slug motionguard \
   --package-name com.quazmoz.motionguard \
-  --revenuecat-project-id proj_abc123 \
-  --admob-app-id ca-app-pub-000~111
+  --revenuecat-project-id proj_YOUR_MOTIONGUARD_PROJECT
 ```
 
-Example for PressDeck:
+Then bind the Bitwarden secret UUID:
 
 ```bash
-mra profile set --slug pressdeck \
-  --package-name com.example.pressdeck \
-  --revenuecat-project-id proj_def456 \
-  --admob-app-id ca-app-pub-000~222
+mra-agent profile bind-revenuecat \
+  --profile motionguard \
+  --secret-id YOUR_BITWARDEN_SECRET_UUID
 ```
 
-Do not store a RevenueCat `sk_...` secret in `profiles.json`. Profiles contain
-identifiers only.
+The binding writes only the UUID to `profiles.json`.
 
-## RevenueCat Per-Project Verification
-
-After creating a project, its V2 secret, and its local profile, verify it read-only
-before making any RevenueCat changes.
-
-For MotionGuard:
+## Verify MotionGuard without exposing the secret
 
 ```bash
-export REVENUECAT_V2_SECRET_KEY="$(cat ~/.config/mobile-release-automation/revenuecat-motionguard-v2-secret.key)"
-
-mra rc projects
-mra rc apps --profile motionguard
-mra rc products --profile motionguard
-
-unset REVENUECAT_V2_SECRET_KEY
+mra-agent doctor
+mra-agent rc projects --profile motionguard
+mra-agent rc apps --profile motionguard
+mra-agent rc products --profile motionguard
 ```
 
-Confirm that:
+No manual `export REVENUECAT_V2_SECRET_KEY=...` is required.
 
-1. `mra rc projects` returns the expected RevenueCat project.
-2. The returned `proj_...` ID matches the `revenuecat_project_id` stored in the
-   profile.
-3. `mra rc apps --profile motionguard` succeeds against that project.
-4. `mra rc products --profile motionguard` succeeds, even if the product list is
-   currently empty.
+A 403 normally means the RevenueCat V2 key lacks an endpoint permission. A 404
+usually means the profile's `proj_...` ID does not belong to the RevenueCat
+project that issued that secret key.
 
-If a command returns HTTP 403, check the V2 key permissions first. If it returns
-HTTP 404, verify that the profile's project ID belongs to the same RevenueCat
-project that issued the secret key.
+## Agent and MCP usage
 
-## Common Commands
+For a local coding agent, expose `mra-agent` rather than raw `bws` commands. The
+agent should be allowed to select a profile and an operation, but should not be
+allowed to ask the secret provider to print values.
+
+For MCP-capable clients, run the local agent-safe server:
 
 ```bash
-# Google Play
-mra play tracks --profile myapp
-mra play publish --profile myapp --aab app/build/outputs/bundle/release/app-release.aab --dry-run
-mra play publish --profile myapp --aab ... --track internal --notes "en-US=Bug fixes" --yes
-mra play promote --profile myapp --source internal --target alpha --yes
+claude mcp add mobile-release-automation-agent -- \
+  /absolute/path/to/tools/mobile-release-automation/.venv/bin/python \
+  -m mra.secure_mcp_server
+```
 
-# AdMob
+The MCP tools accept inputs such as:
+
+```text
+rc_list_products(profile="motionguard")
+rc_list_apps(profile="motionguard")
+```
+
+Mutating MCP tools still require `confirm=true`.
+
+The MCP server resolves the profile, Bitwarden UUID, Bitwarden machine token, and
+RevenueCat key behind the tool boundary. None of those secret values are returned
+to the model.
+
+## Google Play
+
+Google Play currently still uses the owner-only local service-account file:
+
+```text
+~/.config/mobile-release-automation/play-service-account.json
+```
+
+Setup:
+
+1. Enable the Google Play Android Developer API in Google Cloud.
+2. Create a service account and download its JSON key.
+3. Add the service-account email under Play Console **Users and permissions**.
+4. Grant only the Play permissions required by the workflow.
+5. Save the JSON with mode 600.
+
+```bash
+mkdir -p ~/.config/mobile-release-automation
+chmod 700 ~/.config/mobile-release-automation
+cp ~/Downloads/play-sa.json ~/.config/mobile-release-automation/play-service-account.json
+chmod 600 ~/.config/mobile-release-automation/play-service-account.json
+```
+
+`mra-agent rc create-play-app` sends this JSON to RevenueCat because RevenueCat
+requires Play service credentials to validate Google Play purchases.
+
+## AdMob
+
+AdMob currently still uses its OAuth Desktop client locally. The resulting
+refresh token is dynamic machine-local state and should not be exposed to an AI
+model.
+
+```bash
+cp ~/Downloads/admob-client.json ~/.config/mobile-release-automation/admob-oauth-client.json
+chmod 600 ~/.config/mobile-release-automation/admob-oauth-client.json
+mra admob login
 mra admob probe
-mra admob apps
-mra admob create-app --name "My App" --platform ANDROID --app-store-id com.example.myapp --yes
-mra admob create-adunit --app-id ca-app-pub-000~111 --name "Rewarded" --format REWARDED --type VIDEO --yes
-
-# RevenueCat: load the secret for the profile's RevenueCat project first
-export REVENUECAT_V2_SECRET_KEY="$(cat ~/.config/mobile-release-automation/revenuecat-myapp-v2-secret.key)"
-mra rc projects
-mra rc create-play-app --profile myapp --name "My App" --yes
-mra rc products --profile myapp
-unset REVENUECAT_V2_SECRET_KEY
 ```
 
-Every command prints JSON on stdout so an agent can parse the result. Failures
-go to stderr with a non-zero exit code.
+Service accounts do not work for AdMob.
 
-## Safety Model
+## Next secret migrations
 
-- **Mutating commands refuse to run without `--yes`.** There is no way to
-  configure that away.
-- **`mra play publish` supports `--dry-run`**, which validates the Play edit and
-  then discards it. The upload still reaches Google, because Play cannot
-  validate a bundle it has not received, but nothing reaches testers.
-- **Play edits are always cleaned up.** A failed or dry-run edit is deleted so
-  nothing is left dangling in the Console.
-- **Credential files must be owner-only** or the toolkit refuses to read them.
-- **RevenueCat secrets are project-wide.** Use a different V2 secret for each
-  independent RevenueCat project and never store those secrets in a profile or
-  repository.
-- **RevenueCat projects define sharing.** Only place multiple apps in one project
-  when sharing entitlement/subscription state and project-level configuration is
-  intentional.
-- **`mra rc create-play-app` sends your Play service account key to
-  RevenueCat.** RevenueCat's v2 app endpoint explicitly accepts the complete
-  Google Cloud service-account JSON for Play Store apps so RevenueCat can
-  communicate with Google on the app's behalf.
+RevenueCat is the first provider moved behind Bitwarden because it has a natural
+per-app secret model.
 
-## MCP Server
+Next migrations should be:
 
-`mra.mcp_server` exposes the same operations over stdio MCP, with `confirm=true`
-required for every mutating tool and `dry_run` defaulting to `true`.
+1. Google Play service-account JSON into Bitwarden Secrets Manager.
+2. AdMob OAuth client JSON into Bitwarden Secrets Manager.
+3. Move the generated AdMob refresh token from a plaintext owner-only file into
+   macOS Keychain rather than treating a rotating OAuth token as a static
+   Bitwarden secret.
 
-Register it with Claude Code:
+That gives the desired end state: static vendor credentials are centrally stored
+in Bitwarden, machine-local rotating tokens live in the OS credential store, and
+AI agents receive only narrow profile-bound operations.
 
-```bash
-claude mcp add mobile-release-automation -- \
-  /absolute/path/to/tools/mobile-release-automation/.venv/bin/python -m mra.mcp_server
-```
+## Safety model
 
-For RevenueCat, prefer the first-party hosted server instead:
-
-```bash
-claude mcp add --transport http revenuecat https://mcp.revenuecat.ai/mcp
-```
-
-The RevenueCat tools in this local server exist only to cover gaps in that
-server and to support unattended scripting.
-
-Do not install a third-party Play Console or AdMob MCP server. There is no
-first-party one, and any such server would hold your Play Console service
-account and AdMob refresh token.
+- Mutating commands require explicit confirmation (`--yes` or `confirm=true`).
+- Profiles contain identifiers and secret UUIDs only, never secret values.
+- The Bitwarden machine account should have read-only access for normal release
+  automation.
+- The Bitwarden machine access token is stored in macOS Keychain.
+- `bws secret get` is called for one immutable secret UUID at a time.
+- Provider stdout/stderr is not echoed on retrieval failure because it could
+  contain sensitive material.
+- RevenueCat keys never need to be exported manually for normal `mra-agent`
+  operations.
+- Google Play and AdMob credentials remain outside Git.
+- RevenueCat projects define purchase-sharing boundaries. Bitwarden projects
+  define secret-access boundaries. Do not confuse the two.
 
 ## Tests
 
@@ -384,8 +356,7 @@ account and AdMob refresh token.
 .venv/bin/python -m unittest discover -s tests -t .
 ```
 
-The suite is fully offline: it uses in-memory HTTP doubles and never contacts a
-real platform. It covers the Play edit lifecycle and its cleanup paths, release
-validation, promotion, AdMob 403 handling and the access probe, RevenueCat
-request shaping and pagination, credential permission enforcement, and the
-confirmation gates in both the CLI and the MCP server.
+The test suite is offline. Secret-provider tests verify that the Bitwarden access
+token is passed only to the child `bws` environment, invalid secret IDs are
+rejected before provider access, provider failures do not echo provider output,
+and profile binding stores only the Bitwarden UUID.
