@@ -17,6 +17,7 @@ import os
 from typing import Sequence
 
 from . import config
+from . import play_credentials
 from . import secrets as secret_provider
 
 PLAY_SCOPES = ("https://www.googleapis.com/auth/androidpublisher",)
@@ -28,9 +29,8 @@ ADMOB_READ_SCOPES = (
 ADMOB_MONETIZATION_SCOPE = "https://www.googleapis.com/auth/admob.monetization"
 
 PLAY_HINT = (
-    "create a GCP service account, enable the Google Play Android Developer API, "
-    "download its JSON key, invite it under Play Console > Users and permissions, "
-    f"then place the key at {config.path_for(config.PLAY_SERVICE_ACCOUNT)} with chmod 600"
+    "bind the Google Play publisher credential from Bitwarden with "
+    "`mra-agent auth bind-play --secret-id <UUID>`"
 )
 ADMOB_CLIENT_HINT = (
     "in GCP create an OAuth client of type 'Desktop app', download the client JSON, "
@@ -47,7 +47,7 @@ def _authorized_session(credentials):
     from google.auth.transport.requests import AuthorizedSession
 
     session = AuthorizedSession(credentials)
-    session.headers["User-Agent"] = "mobile-release-automation/1.0"
+    session.headers["User-Agent"] = "mobile-release-automation/1.2"
     return session
 
 
@@ -55,9 +55,8 @@ def play_session():
     """Return an authorized session for the Google Play Developer API."""
     from google.oauth2 import service_account
 
-    key_path = config.require_file(config.PLAY_SERVICE_ACCOUNT, PLAY_HINT)
-    credentials = service_account.Credentials.from_service_account_file(
-        str(key_path), scopes=list(PLAY_SCOPES)
+    credentials = service_account.Credentials.from_service_account_info(
+        play_credentials.publisher_info(), scopes=list(PLAY_SCOPES)
     )
     return _authorized_session(credentials)
 

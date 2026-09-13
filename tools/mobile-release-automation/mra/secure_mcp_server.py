@@ -1,10 +1,11 @@
-"""Local MCP surface that keeps vendor credentials behind the tool boundary."""
+"""Read-only local MCP surface with vendor credentials behind the tool boundary."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from . import auth, config
+from . import auth, config, play_credentials
+from . import play as play_module
 from . import revenuecat as rc_module
 from . import secrets as secret_provider
 
@@ -20,11 +21,6 @@ except ImportError:  # pragma: no cover - SDK version fallback
 
 server = _Server("mobile-release-automation-agent")
 
-UNCONFIRMED = (
-    "Refused: this changes live platform state. Re-call with confirm=true only "
-    "after the operator has approved this exact action."
-)
-
 
 def _profile(slug: str) -> config.Profile:
     profile = config.load_profile(slug)
@@ -35,19 +31,52 @@ def _profile(slug: str) -> config.Profile:
     return profile
 
 
+def _package(slug: str) -> str:
+    profile = config.load_profile(slug)
+    if not profile.package_name:
+        raise ValueError(f"profile {slug!r} has no package_name")
+    return profile.package_name
+
+
 def _client(profile: config.Profile) -> rc_module.RevenueCatClient:
     return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
 
 
+def _probe(probe) -> dict:
+    try:
+        return probe()
+    except config.ConfigError as error:
+        return {"status": "not-ready", "detail": str(error)}
+
+
 @server.tool()
 def doctor() -> dict[str, Any]:
-    """Check Bitwarden bootstrap readiness and list profiles with secret references."""
+    """Check local credential bindings without returning credential values."""
     profiles = config.load_profiles()
     return {
         "bitwarden": secret_provider.bitwarden_status(),
+        "google_play_publisher": _probe(play_credentials.publisher_status),
+        "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
         "secured_profiles": sorted(
             slug for slug, profile in profiles.items() if profile.revenuecat_secret_id
         ),
+        "platform_mutations": "disabled",
+    }
+
+
+@server.tool()
+def play_list_tracks(profile: str) -> list[dict]:
+    """List Google Play tracks for a configured app profile."""
+    return play_module.track_status(_package(profile))
+
+
+@server.tool()
+def play_list_products(profile: str) -> dict:
+    """List Google Play subscriptions and in-app products for a profile."""
+    client = play_module.PlayClient(_package(profile))
+    return {
+        "subscriptions": client.list_subscriptions(),
+        "in_app_products": client.list_in_app_products(),
     }
 
 
@@ -70,47 +99,6 @@ def rc_list_products(profile: str) -> list[dict]:
     """List products in the selected profile's RevenueCat project."""
     resolved = _profile(profile)
     return _client(resolved).list_products(resolved.revenuecat_project_id)
-
-
-@server.tool()
-def rc_create_play_app(profile: str, name: str, confirm: bool = False) -> dict:
-    """Create the profile's Play app in RevenueCat without exposing credentials."""
-    if not confirm:
-        return {"status": "refused", "detail": UNCONFIRMED}
-    resolved = _profile(profile)
-    if not resolved.package_name:
-        raise ValueError(f"profile {profile!r} has no package_name")
-    key_path = config.require_file(config.PLAY_SERVICE_ACCOUNT, auth.PLAY_HINT)
-    return _client(resolved).create_play_app(
-        resolved.revenuecat_project_id,
-        name,
-        resolved.package_name,
-        key_path.read_text(encoding="utf-8"),
-    )
-
-
-@server.tool()
-def rc_create_product(
-    profile: str,
-    app_id: str,
-    store_identifier: str,
-    product_type: str,
-    display_name: str | None = None,
-    confirm: bool = False,
-) -> dict:
-    """Register a product in the selected profile's RevenueCat project."""
-    if not confirm:
-        return {"status": "refused", "detail": UNCONFIRMED}
-    if product_type not in rc_module.PRODUCT_TYPES:
-        raise ValueError(f"unsupported product_type {product_type!r}")
-    resolved = _profile(profile)
-    return _client(resolved).create_product(
-        resolved.revenuecat_project_id,
-        app_id,
-        store_identifier,
-        product_type,
-        display_name,
-    )
 
 
 def main() -> None:
