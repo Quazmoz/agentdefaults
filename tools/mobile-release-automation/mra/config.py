@@ -76,6 +76,7 @@ class SecretRefs:
 
     play_service_account_secret_id: str | None = None
     revenuecat_play_service_account_secret_id: str | None = None
+    admob_oauth_client_secret_id: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "SecretRefs":

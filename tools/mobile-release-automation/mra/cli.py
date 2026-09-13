@@ -14,7 +14,7 @@ import json
 import sys
 
 from . import admob as admob_module
-from . import auth, config, play_credentials
+from . import admob_credentials, auth, config, play_credentials
 from . import play as play_module
 from . import revenuecat as rc_module
 
@@ -107,16 +107,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
     record("play_service_account", play_credentials.publisher_status)
     record("revenuecat_key", revenuecat_status)
-    record(
-        "admob_oauth_client",
-        lambda: str(
-            config.require_file(config.ADMOB_OAUTH_CLIENT, auth.ADMOB_CLIENT_HINT)
-        ),
-    )
-    record(
-        "admob_token",
-        lambda: "cached" if config.path_for(config.ADMOB_TOKEN).is_file() else "absent",
-    )
+    record("admob", admob_credentials.status)
     record("profiles", lambda: sorted(config.load_profiles()))
 
     failed = [name for name, check in report["checks"].items() if check["status"] == "fail"]
@@ -193,7 +184,7 @@ def cmd_admob_login(args: argparse.Namespace) -> int:
     return emit(
         {
             "status": "authorized",
-            "token": str(config.path_for(config.ADMOB_TOKEN)),
+            "credentials": admob_credentials.status(),
             "scopes": auth.admob_scopes(include_monetization=not args.read_only),
         }
     )

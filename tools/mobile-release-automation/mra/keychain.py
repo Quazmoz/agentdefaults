@@ -1,7 +1,7 @@
 """Local OS credential-store helpers.
 
-Only the Bitwarden Secrets Manager machine-account access token is bootstrapped
-from the OS keychain. Vendor credentials remain in Bitwarden itself.
+The Bitwarden machine token is bootstrapped from macOS Keychain. Dynamic OAuth
+refresh tokens also live in the OS credential store rather than local files.
 """
 
 from __future__ import annotations
@@ -16,6 +16,9 @@ from . import config
 BITWARDEN_TOKEN_ENV = "BWS_ACCESS_TOKEN"
 BITWARDEN_KEYCHAIN_SERVICE = "com.quazmoz.mobile-release-automation.bitwarden"
 BITWARDEN_KEYCHAIN_ACCOUNT = "mra-machine-account"
+
+ADMOB_KEYCHAIN_SERVICE = "com.quazmoz.mobile-release-automation.admob"
+ADMOB_REFRESH_TOKEN_ACCOUNT = "oauth-refresh-token"
 
 
 def bitwarden_access_token() -> str:
@@ -52,3 +55,32 @@ def bitwarden_access_token() -> str:
             "Bitwarden machine-account token is missing from macOS Keychain"
         )
     return result.stdout.strip()
+
+
+def admob_refresh_token() -> str | None:
+    """Return the AdMob OAuth refresh token from the OS credential store."""
+    try:
+        import keyring
+        value = keyring.get_password(ADMOB_KEYCHAIN_SERVICE, ADMOB_REFRESH_TOKEN_ACCOUNT)
+    except Exception as error:  # noqa: BLE001 - normalize backend failures
+        raise config.ConfigError("could not read the AdMob refresh token from Keychain") from error
+    return value.strip() if value and value.strip() else None
+
+
+def store_admob_refresh_token(value: str) -> None:
+    """Persist the AdMob refresh token in the OS credential store."""
+    token = value.strip()
+    if not token:
+        raise config.ConfigError("refusing to store an empty AdMob refresh token")
+    try:
+        import keyring
+        keyring.set_password(ADMOB_KEYCHAIN_SERVICE, ADMOB_REFRESH_TOKEN_ACCOUNT, token)
+    except Exception as error:  # noqa: BLE001 - normalize backend failures
+        raise config.ConfigError("could not store the AdMob refresh token in Keychain") from error
+
+
+def admob_refresh_token_status() -> dict[str, str]:
+    return {
+        "status": "ready" if admob_refresh_token() else "not-authorized",
+        "source": "os-keychain",
+    }

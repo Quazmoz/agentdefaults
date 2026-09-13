@@ -52,16 +52,35 @@ python3 -m venv .venv
 
 ### 2. Provision credentials
 
-Follow `tools/mobile-release-automation/SECURITY.md` and `INSTALL.md`. Static vendor credentials are resolved through Bitwarden Secrets Manager; the Bitwarden machine-account token remains in macOS Keychain; profiles and local binding files contain secret references rather than secret values.
+Follow `tools/mobile-release-automation/SECURITY.md` and `INSTALL.md`.
+
+Static vendor credentials are resolved through Bitwarden Secrets Manager. The Bitwarden machine-account token remains in macOS Keychain. Profiles and local binding files contain secret references rather than secret values.
+
+For AdMob specifically:
+
+```text
+Desktop OAuth client JSON -> Bitwarden Secrets Manager
+OAuth refresh token       -> OS credential store / macOS Keychain
+access tokens              -> memory only
+```
+
+Bind the AdMob Desktop OAuth client UUID and perform browser consent once:
+
+```bash
+mra-agent auth bind-admob --secret-id YOUR_BITWARDEN_SECRET_UUID
+mra admob login
+```
 
 ### 3. Confirm what works
 
 ```bash
 mra-agent doctor
 mra admob probe
+mra admob apps
+mra admob adunits
 ```
 
-Record the AdMob probe result. It determines whether AdMob creation work is automatable for this account.
+Record the AdMob probe result. It determines whether the monetization scope is accepted. App/ad-unit creation is separately gated by Google and can still return 403 even after the probe succeeds.
 
 ### 4. Register the local MCP server
 

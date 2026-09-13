@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import auth, config, human_approval, play_credentials
+from . import admob_credentials, auth, config, human_approval, play_credentials
 from . import mcp_admob_tools, mcp_play_mutations, mcp_revenuecat_mutations
 from . import play as play_module
 from . import revenuecat as rc_module
@@ -58,6 +58,7 @@ def doctor() -> dict[str, Any]:
         "bitwarden": secret_provider.bitwarden_status(),
         "google_play_publisher": _probe(play_credentials.publisher_status),
         "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
+        "admob": _probe(admob_credentials.status),
         "human_approval": human_approval.status(),
         "secured_profiles": sorted(
             slug for slug, profile in profiles.items() if profile.revenuecat_secret_id

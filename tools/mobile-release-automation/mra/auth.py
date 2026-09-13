@@ -3,10 +3,9 @@
 Each platform authenticates differently and the differences are load-bearing:
 
 * Google Play  - service account (server-to-server, no human consent).
-* AdMob        - OAuth user credentials only. Google documents that "All requests
-                 to the AdMob API must be authorized by an authenticated user"
-                 and that "No other authorization protocols are supported".
-                 A service account will NOT work, regardless of IAM roles.
+* AdMob        - OAuth user credentials only. The static Desktop OAuth client is
+                 resolved from Bitwarden and the refresh token lives in the OS
+                 credential store; no authorized-user JSON is persisted locally.
 * RevenueCat   - a v2 secret API key sent as a bearer token. App profiles may
                  reference that key in Bitwarden Secrets Manager by UUID.
 """
@@ -16,8 +15,7 @@ from __future__ import annotations
 import os
 from typing import Sequence
 
-from . import config
-from . import play_credentials
+from . import admob_credentials, config, keychain, play_credentials
 from . import secrets as secret_provider
 
 PLAY_SCOPES = ("https://www.googleapis.com/auth/androidpublisher",)
@@ -33,8 +31,8 @@ PLAY_HINT = (
     "`mra-agent auth bind-play --secret-id <UUID>`"
 )
 ADMOB_CLIENT_HINT = (
-    "in GCP create an OAuth client of type 'Desktop app', download the client JSON, "
-    f"and place it at {config.path_for(config.ADMOB_OAUTH_CLIENT)} with chmod 600"
+    "store a Google Desktop OAuth client JSON in Bitwarden and bind it with "
+    "`mra-agent auth bind-admob --secret-id <UUID>`"
 )
 REVENUECAT_HINT = (
     "configure the app profile with a Bitwarden Secrets Manager UUID, export "
@@ -47,7 +45,7 @@ def _authorized_session(credentials):
     from google.auth.transport.requests import AuthorizedSession
 
     session = AuthorizedSession(credentials)
-    session.headers["User-Agent"] = "mobile-release-automation/1.2"
+    session.headers["User-Agent"] = "mobile-release-automation/1.4"
     return session
 
 
@@ -69,55 +67,60 @@ def admob_scopes(include_monetization: bool = True) -> list[str]:
 
 
 def admob_session(include_monetization: bool = True, allow_consent: bool = False):
-    """Return an authorized session for the AdMob API.
+    """Return an authorized AdMob session without persisting OAuth JSON files.
 
-    The first call requires a browser consent from a Google Account that has
-    access to the AdMob publisher account. The resulting refresh token is cached
-    locally so later calls are non-interactive.
+    The first call requires browser consent from a Google Account with AdMob
+    access. The long-lived refresh token is stored in the OS credential store;
+    short-lived access credentials are reconstructed in memory for each process.
     """
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
 
     scopes = admob_scopes(include_monetization)
-    token_path = config.path_for(config.ADMOB_TOKEN)
+    client = admob_credentials.installed_client_info()
+    refresh_token = keychain.admob_refresh_token()
 
-    credentials = None
-    if token_path.is_file():
-        config._require_private(token_path)
-        credentials = Credentials.from_authorized_user_file(str(token_path), scopes)
-
-    if credentials and credentials.valid:
-        return _authorized_session(credentials)
-
-    if credentials and credentials.expired and credentials.refresh_token:
+    if refresh_token:
+        credentials = Credentials(
+            token=None,
+            refresh_token=refresh_token,
+            token_uri=client["token_uri"],
+            client_id=client["client_id"],
+            client_secret=client["client_secret"],
+            scopes=scopes,
+        )
         credentials.refresh(Request())
-        _persist_admob_token(credentials)
+        if credentials.refresh_token and credentials.refresh_token != refresh_token:
+            keychain.store_admob_refresh_token(credentials.refresh_token)
         return _authorized_session(credentials)
 
     if not allow_consent:
         raise config.ConfigError(
-            "no usable AdMob token cached.\n"
+            "AdMob is not authorized yet.\n"
             "  fix: run `mra admob login` once to complete browser consent"
         )
 
     credentials = _run_admob_consent(scopes)
-    _persist_admob_token(credentials)
+    if not credentials.refresh_token:
+        raise config.ConfigError(
+            "Google did not return an AdMob refresh token; revoke the existing OAuth grant "
+            "for this client and run `mra admob login` again"
+        )
+    keychain.store_admob_refresh_token(credentials.refresh_token)
     return _authorized_session(credentials)
 
 
 def _run_admob_consent(scopes: Sequence[str]):
     from google_auth_oauthlib.flow import InstalledAppFlow
 
-    client_path = config.require_file(config.ADMOB_OAUTH_CLIENT, ADMOB_CLIENT_HINT)
-    flow = InstalledAppFlow.from_client_secrets_file(str(client_path), list(scopes))
-    return flow.run_local_server(port=0, prompt="consent")
-
-
-def _persist_admob_token(credentials) -> None:
-    config.ensure_home()
-    token_path = config.path_for(config.ADMOB_TOKEN)
-    token_path.write_text(credentials.to_json(), encoding="utf-8")
-    token_path.chmod(0o600)
+    flow = InstalledAppFlow.from_client_config(
+        admob_credentials.oauth_client_config(), list(scopes)
+    )
+    return flow.run_local_server(
+        port=0,
+        prompt="consent",
+        access_type="offline",
+    )
 
 
 def revenuecat_key(profile: config.Profile | None = None) -> str:

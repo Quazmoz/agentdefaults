@@ -1,9 +1,8 @@
 """Agent-facing CLI with profile-bound secret resolution.
 
-This surface is intentionally narrower than the operator `mra` CLI. It performs
-read-only platform calls plus local credential/profile binding. Platform
-mutations belong to the operator CLI and require explicit confirmation there.
-Secret values are never printed.
+This surface performs read-only platform calls plus local credential/profile
+binding. Secret values are never printed. Live platform changes belong to the
+risk-gated MCP surface or explicit operator CLI.
 """
 
 from __future__ import annotations
@@ -12,7 +11,7 @@ import argparse
 import json
 import sys
 
-from . import auth, config, play_credentials
+from . import admob_credentials, auth, config, play_credentials
 from . import revenuecat as rc_module
 from . import secrets as secret_provider
 
@@ -62,8 +61,9 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             "bitwarden": secret_provider.bitwarden_status(),
             "google_play_publisher": _probe(play_credentials.publisher_status),
             "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
+            "admob": _probe(admob_credentials.status),
             "secured_profiles": secured,
-            "platform_mutations": "disabled on agent surfaces; use operator mra CLI",
+            "platform_mutations": "risk-gated on MCP; explicit on operator mra CLI",
         }
     )
 
@@ -106,6 +106,19 @@ def cmd_bind_revenuecat_play(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_bind_admob(args: argparse.Namespace) -> int:
+    path = config.save_secret_refs(
+        config.SecretRefs(admob_oauth_client_secret_id=args.secret_id)
+    )
+    return emit(
+        {
+            "saved": str(path),
+            "binding": "admob-oauth-client",
+            "secret_id": config.load_secret_refs().admob_oauth_client_secret_id,
+        }
+    )
+
+
 def cmd_rc_projects(args: argparse.Namespace) -> int:
     profile = _profile(args.profile)
     return emit(_client(profile).list_projects())
@@ -139,17 +152,25 @@ def build_parser() -> argparse.ArgumentParser:
     auth_parser = subparsers.add_parser(
         "auth", help="bind external credential references; does not mutate vendor state"
     ).add_subparsers(dest="auth_command", required=True)
+
     bind_play = auth_parser.add_parser(
         "bind-play", help="bind the Google Play publisher credential UUID"
     )
     bind_play.add_argument("--secret-id", required=True)
     bind_play.set_defaults(func=cmd_bind_play)
+
     bind_rc_play = auth_parser.add_parser(
         "bind-revenuecat-play",
         help="bind the dedicated Google Play credential UUID used by RevenueCat",
     )
     bind_rc_play.add_argument("--secret-id", required=True)
     bind_rc_play.set_defaults(func=cmd_bind_revenuecat_play)
+
+    bind_admob = auth_parser.add_parser(
+        "bind-admob", help="bind the AdMob Desktop OAuth client JSON UUID"
+    )
+    bind_admob.add_argument("--secret-id", required=True)
+    bind_admob.set_defaults(func=cmd_bind_admob)
 
     profile = subparsers.add_parser("profile", help="manage profile secret references").add_subparsers(
         dest="profile_command", required=True
