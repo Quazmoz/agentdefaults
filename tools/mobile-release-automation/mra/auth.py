@@ -7,14 +7,17 @@ Each platform authenticates differently and the differences are load-bearing:
                  to the AdMob API must be authorized by an authenticated user"
                  and that "No other authorization protocols are supported".
                  A service account will NOT work, regardless of IAM roles.
-* RevenueCat   - a v2 secret API key sent as a bearer token.
+* RevenueCat   - a v2 secret API key sent as a bearer token. App profiles may
+                 reference that key in Bitwarden Secrets Manager by UUID.
 """
 
 from __future__ import annotations
 
+import os
 from typing import Sequence
 
 from . import config
+from . import secrets as secret_provider
 
 PLAY_SCOPES = ("https://www.googleapis.com/auth/androidpublisher",)
 
@@ -34,9 +37,9 @@ ADMOB_CLIENT_HINT = (
     f"and place it at {config.path_for(config.ADMOB_OAUTH_CLIENT)} with chmod 600"
 )
 REVENUECAT_HINT = (
-    "in RevenueCat create an API key with version V2 and the permissions your task "
-    f"needs, then export REVENUECAT_V2_SECRET_KEY or write it to "
-    f"{config.path_for(config.REVENUECAT_KEY)} with chmod 600"
+    "configure the app profile with --revenuecat-secret-id for a Bitwarden Secrets "
+    "Manager secret, export REVENUECAT_V2_SECRET_KEY, or write a legacy fallback "
+    f"key to {config.path_for(config.REVENUECAT_KEY)} with chmod 600"
 )
 
 
@@ -118,8 +121,26 @@ def _persist_admob_token(credentials) -> None:
     token_path.chmod(0o600)
 
 
-def revenuecat_key() -> str:
-    """Return the RevenueCat API v2 secret key."""
-    return config.read_secret(
-        config.REVENUECAT_KEY, "REVENUECAT_V2_SECRET_KEY", REVENUECAT_HINT
-    )
+def revenuecat_key(profile: config.Profile | None = None) -> str:
+    """Return the RevenueCat API v2 secret key for the selected app profile.
+
+    Precedence is intentional:
+      1. REVENUECAT_V2_SECRET_KEY for CI/emergency override.
+      2. The profile's Bitwarden Secrets Manager UUID.
+      3. The legacy owner-only local fallback file.
+    """
+    environment_value = os.environ.get("REVENUECAT_V2_SECRET_KEY", "").strip()
+    if environment_value:
+        return environment_value
+
+    if profile and profile.revenuecat_secret_id:
+        value = secret_provider.bitwarden_secret(profile.revenuecat_secret_id).strip()
+        if not value:
+            raise config.ConfigError(
+                f"Bitwarden secret for profile {profile.slug!r} is empty"
+            )
+        return value
+
+    return config.require_file(config.REVENUECAT_KEY, REVENUECAT_HINT).read_text(
+        encoding="utf-8"
+    ).strip()
