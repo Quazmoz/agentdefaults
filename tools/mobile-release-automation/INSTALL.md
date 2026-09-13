@@ -25,7 +25,7 @@ command -v mra-mcp
 command -v mra-agent-mcp
 ```
 
-The read-only MCP/Bitwarden build is version 1.2.0 or newer.
+The risk-gated MCP build is version 1.3.0 or newer.
 
 ## Fresh install
 
@@ -49,10 +49,10 @@ grep -A6 '^\[project.scripts\]' pyproject.toml
 ls -l .venv/bin/mra-agent
 ```
 
-The `pyproject.toml` script table must contain `mra`, `mra-agent`, `mra-mcp`, and `mra-agent-mcp`. If it does not, the local checkout is stale. Check `git status`, preserve any local work as appropriate, update from `main`, and reinstall the editable package.
+The `pyproject.toml` script table must contain `mra`, `mra-agent`, `mra-mcp`, and `mra-agent-mcp`. If it does not, the local checkout is stale. Preserve local work, update from `main`, and reinstall the editable package.
 
 ## Security defaults
 
-`mra-mcp` and `mra-agent-mcp` are read-only platform surfaces. Use them for agent observation and proposals. Live vendor changes stay on the local `mra` operator CLI and require `--yes`.
+`mra-mcp` and `mra-agent-mcp` expose the risk-gated local server. Reads, dry-runs, and contained single-object mutations are available to agents. High-risk actions require a native local human approval and fail closed if approval is unavailable or declined.
 
-After install, continue with the Bitwarden and Google Play setup in `SECURITY.md`.
+After install, run `mra-agent doctor` and review `SECURITY.md`.
