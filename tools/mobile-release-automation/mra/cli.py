@@ -14,7 +14,7 @@ import json
 import sys
 
 from . import admob as admob_module
-from . import auth, config
+from . import auth, config, play_credentials
 from . import play as play_module
 from . import revenuecat as rc_module
 
@@ -87,14 +87,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         except Exception as error:  # noqa: BLE001 - doctor reports, never raises
             report["checks"][name] = {"status": "fail", "detail": str(error)}
 
-    record(
-        "play_service_account",
-        lambda: json.loads(
-            config.require_file(config.PLAY_SERVICE_ACCOUNT, auth.PLAY_HINT).read_text(
-                encoding="utf-8"
-            )
-        )["client_email"],
-    )
+    record("play_service_account", play_credentials.publisher_status)
     record("revenuecat_key", lambda: f"present ({len(auth.revenuecat_key())} chars)")
     record(
         "admob_oauth_client",
@@ -233,17 +226,16 @@ def cmd_rc_apps(args: argparse.Namespace) -> int:
 
 def cmd_rc_create_play_app(args: argparse.Namespace) -> int:
     confirm(args, f"create RevenueCat app {args.name!r}")
-    key_path = config.require_file(config.PLAY_SERVICE_ACCOUNT, auth.PLAY_HINT)
     note(
-        "sending the Play service account key to RevenueCat so it can validate "
-        "Play purchases; this is the documented setup path"
+        "sending the dedicated RevenueCat Google Play service credential to RevenueCat "
+        "so it can validate Play purchases"
     )
     return emit(
         rc_module.RevenueCatClient().create_play_app(
             resolve_project(args),
             args.name,
             args.package_name or resolve_package(args),
-            key_path.read_text(encoding="utf-8"),
+            play_credentials.revenuecat_json(),
         )
     )
 
