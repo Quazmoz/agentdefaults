@@ -1,0 +1,82 @@
+# Ship a new build to internal testing and wire its subscription end to end.
+task_id: mra-2026-09-13-internal-and-paywall
+goal: >-
+  Version code 184 is available on the Play internal track and the premium_monthly
+  subscription resolves through the default RevenueCat offering.
+mode: release
+platforms:
+  - google_play
+  - revenuecat
+
+app:
+  profile: myapp
+  package_name: com.example.myapp
+  revenuecat_project_id: proj_abc123
+  revenuecat_app_id: app_def456
+
+release:
+  bundle_path: app/build/outputs/bundle/release/app-release.aab
+  version_code: 184
+  track: internal
+  status: completed
+  release_notes:
+    en-US: Subscription paywall and crash fixes.
+  dry_run: false
+
+monetization:
+  store_products:
+    - product_id: premium_monthly
+      type: subscription
+      already_exists: true
+  revenuecat_products:
+    - store_identifier: premium_monthly
+      type: subscription
+      display_name: Premium Monthly
+  entitlements:
+    - lookup_key: premium
+      display_name: Premium
+      product_store_identifiers:
+        - premium_monthly
+  offering:
+    lookup_key: default
+    display_name: Default
+    make_current: false
+    packages:
+      - lookup_key: $rc_monthly
+        display_name: Monthly
+        product_store_identifiers:
+          - premium_monthly
+
+execution:
+  surface: local_mcp
+  credential_home: ~/.config/mobile-release-automation
+  admob_access_probed: not_probed
+
+authority:
+  permission_class: mutate_reversible
+  approved_actions:
+    - publish version code 184 to the internal track of com.example.myapp
+    - create RevenueCat product premium_monthly in project proj_abc123
+    - create entitlement premium and attach premium_monthly
+    - create offering default with package $rc_monthly
+  forbidden_actions:
+    - promote any release to a closed, open, or production track
+    - make the default offering current
+    - create or activate any Play subscription, base plan, or offer
+  credential_boundary_acknowledged: true
+
+constraints:
+  - The Play store product premium_monthly already exists; do not create it.
+  - Do not change which offering is current; a human will flip that after QA.
+
+acceptance:
+  - Play reports version code 184 on the internal track with status completed.
+  - RevenueCat lists premium_monthly as a subscription product on app_def456.
+  - The premium entitlement lists premium_monthly among its products.
+  - The default offering contains a $rc_monthly package carrying premium_monthly.
+
+verification:
+  read_back_required: true
+  checks:
+    - mra play tracks --profile myapp
+    - mra rc products --profile myapp

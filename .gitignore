@@ -24,3 +24,8 @@ __pycache__/
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 graft/
+
+# Mobile release automation toolkit: local virtualenv and build artifacts.
+# Credentials live in ~/.config/mobile-release-automation, never in the repo.
+tools/mobile-release-automation/.venv/
+tools/mobile-release-automation/*.egg-info/

@@ -34,6 +34,10 @@ Behavior-preserving codebase de-slop/refactoring across languages
 -> agents/codebase-maintenance-engineer.md
 -> skills/codebase-de-slop-and-refactoring.md
 
+Google Play release, RevenueCat monetization, or AdMob inventory automation
+-> agents/mobile-release-automation-engineer.md
+-> skills/mobile-release-automation-orchestration.md
+
 AI/LLM/agent/RAG/MCP/eval
 -> agents/principal-ai-engineer.md
 -> skills/production-ai-engineering.md
@@ -43,9 +47,11 @@ Materially cross-domain AI + platform
 -> skills/production-ai-devops-engineering.md
 ```
 
-Preserve specialist routing to `agents/kubernetes-homelab-engineer.md`, `agents/github-actions-engineer.md`, `agents/devsecops-security-engineer.md`, `agents/devops-documentation-engineer.md`, `agents/codebase-maintenance-engineer.md`, `agents/agent-architect-builder.md`, and `agents/automation-platform-selection-advisor.md`.
+Preserve specialist routing to `agents/kubernetes-homelab-engineer.md`, `agents/github-actions-engineer.md`, `agents/devsecops-security-engineer.md`, `agents/devops-documentation-engineer.md`, `agents/codebase-maintenance-engineer.md`, `agents/mobile-release-automation-engineer.md`, `agents/agent-architect-builder.md`, and `agents/automation-platform-selection-advisor.md`.
 
 For GitHub Actions work, inspect the event trust boundary, repository/org Actions settings when material, reusable-workflow call chain, `GITHUB_TOKEN`/secret/OIDC scope, runner trust, cache/artifact producer-consumer trust, and actual run evidence before mutation or completion claims. Treat fork/Dependabot restrictions, `pull_request_target`, privileged `workflow_run`, mutable `uses:` references, reusable-workflow permission contracts, self-hosted runners, and consequential reruns as explicit risk surfaces.
+
+For mobile release/monetization work, establish platform capability before planning. The AdMob API accepts OAuth user credentials only and rejects service accounts, and its app and ad-unit creation methods are limited access gated per AdMob account by Google; probe before promising AdMob automation and report a 403 as a platform constraint rather than a retryable error. Respect cross-platform dependency ordering, preserve artifact identity through track promotion, require explicit authorization for each irreversible store mutation, and read platform state back before claiming an outcome.
 
 For `Quazmoz/K8SHomelab`, also read that target repo's current `AGENTS.md`, obey its Graft-first context workflow when available, and load only the task-relevant target-repo `.github/skills/*/SKILL.md` files.
 
@@ -123,6 +129,7 @@ Do not copy full canonical agent behavior into Copilot wrappers. A wrapper may s
 .github/agents/devsecops-security-engineer.agent.md
 .github/agents/devops-documentation-engineer.agent.md
 .github/agents/codebase-maintenance-engineer.agent.md
+.github/agents/mobile-release-automation-engineer.agent.md
 ```
 
 ## Bounded Completion Custom Agents

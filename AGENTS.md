@@ -16,6 +16,7 @@ For engineering work, read `ENGINEERING_AGENTS_INDEX.md` first and choose the sm
 |---|---|---|
 | Work specifically on `Quazmoz/K8SHomelab` Kubernetes, Flux/GitOps, cluster networking/storage, deployments, or incidents | `agents/kubernetes-homelab-engineer.md` | `skills/kubernetes-gitops-change-management.md`; add `skills/kubernetes-homelab-troubleshooting.md` for incidents |
 | GitHub Actions workflows, reusable workflows/actions, runner trust, `GITHUB_TOKEN`, OIDC, Actions-specific release automation, artifacts/caches, or Actions runtime qualification | `agents/github-actions-engineer.md` | `skills/github-actions-engineering.md` |
+| Google Play release automation, RevenueCat monetization configuration, or AdMob inventory: uploading bundles to testing tracks, promoting releases, products, entitlements, offerings, packages, apps, and ad units | `agents/mobile-release-automation-engineer.md` | `skills/mobile-release-automation-orchestration.md`; add the per-platform skills the task touches |
 | Infrastructure, cloud, IaC, Ansible/AAP, CI/CD, GitOps, Kubernetes, networking/IAM, SRE, incidents, releases outside the K8SHomelab and GitHub-Actions-specific routes | `agents/principal-devops-engineer.md` | `skills/production-devops-engineering.md` |
 | Cybersecurity-focused DevOps review, hardening, incident analysis, or security-sensitive release work across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, or supply chain | `agents/devsecops-security-engineer.md` | `skills/devsecops-security-engineering.md` |
 | DevOps/platform documentation, docs-as-code, runbooks, architecture docs, Markdown, Mermaid, or documentation diagrams | `agents/devops-documentation-engineer.md` | `skills/devops-documentation-engineering.md` |
@@ -30,6 +31,8 @@ For GitHub Actions work, the specialist must inspect the actual event trust boun
 For `Quazmoz/K8SHomelab`, the specialist must re-read that target repository's current `AGENTS.md`, use its Graft-first context workflow when available, and load only the task-relevant target-repo `.github/skills/*/SKILL.md`. Target-repo instructions and current manifests/runtime evidence outrank cached homelab assumptions.
 
 For codebase maintenance work, the specialist must fingerprint the target repository's actual language/framework/build/test/static-analysis toolchain before editing. It preserves behavior and external contracts by default, requires evidence for risky dead-code/dependency removal, reconciles stale comments in touched code, and performs a second-pass review for fresh agent-generated slop.
+
+For mobile release and monetization work, the specialist must establish what each platform actually permits before planning. Google Play and RevenueCat support full API-driven creation; AdMob does not universally. The AdMob API accepts OAuth user credentials only and rejects service accounts entirely, and its `accounts.apps.create` and `accounts.adUnits.create` methods are limited access, gated per AdMob account by Google. The specialist probes AdMob access before promising AdMob automation, respects cross-platform dependency ordering, preserves artifact identity through track promotion, and reads platform state back before claiming any outcome.
 
 For implementation or qualification work that explicitly needs a bounded Integration Owner + independent reviewer loop, use `docs/quickstarts/bounded-completion.md` and `skills/bounded-completion-orchestration.md` after selecting the smallest correct domain owner. Bounded completion is an orchestration overlay, not a replacement owning agent; it cannot widen the selected owner's authority. Distinct-model review counts only when the operator or runtime confirms a genuinely distinct reviewer model.
 
@@ -70,6 +73,7 @@ Rules:
 10. Bounded-completion orchestration does not create new mutation authority, approvals, or tool permissions; the selected owner and active task remain authoritative.
 11. The K8SHomelab specialist does not infer live-cluster mutation authority from GitHub write access; watched-branch writes can themselves be deployment actions under Flux.
 12. Palmier external MCP tool availability does not imply Palmier in-app agent capabilities are exposed to Claude/Codex.
+13. Mobile release/monetization routing does not authorize releasing to closed, open, or production tracks, changing rollout fractions, creating or activating store subscriptions or offers, changing live entitlements or the current offering, or transmitting credentials across a vendor boundary without explicit task authority. A working platform credential is not approval to publish.
 
 ## Instruction and Authority Precedence
 
@@ -123,6 +127,7 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `docs/quickstarts/devsecops-security-engineer.md` - DevSecOps security usage for Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, IAM, and supply chain.
 - `docs/quickstarts/devops-documentation-engineer.md` - DevOps documentation-as-code usage.
 - `docs/quickstarts/codebase-maintenance-engineer.md` - behavior-preserving codebase de-slop, comment reconciliation, refactoring, and efficiency cleanup across languages.
+- `docs/quickstarts/mobile-release-automation.md` - Google Play, RevenueCat, and AdMob release and monetization automation, credential setup, and MCP wiring.
 - `docs/quickstarts/palmierpro-mcp.md` - Palmier Pro external MCP setup for Claude/Codex and video-editing stack selection.
 - `docs/tool-integration-guide.md` - cross-tool mapping and wrapper rules.
 - `.github/agents/` - GitHub Copilot custom-agent adapters.
@@ -132,6 +137,7 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `scripts/validate-devsecops-security-stack.py` - DevSecOps security stack contract validation.
 - `scripts/validate-github-actions-stack.py` - GitHub Actions stack contract, routing, schema, and behavioral-invariant validation.
 - `scripts/validate-codebase-maintenance-stack.py` - codebase-maintenance/de-slop stack contract and routing validation.
+- `scripts/validate-mobile-release-automation-stack.py` - mobile release/monetization stack contract, schema, toolkit-safety, and routing validation.
 - `scripts/validate-bounded-completion.py` - bounded-completion control-plane and adversarial regression validation.
 
 ## Working Rules
@@ -186,6 +192,12 @@ For Palmier agent changes, also review the behavioral cases in:
 
 ```text
 docs/palmierpro-mcp-acceptance-tests.md
+```
+
+For mobile release/monetization agent changes, also review the behavioral cases in:
+
+```text
+docs/mobile-release-automation-acceptance-tests.md
 ```
 
 ## Response Style

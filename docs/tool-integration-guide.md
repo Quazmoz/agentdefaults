@@ -51,7 +51,7 @@ Materially cross-domain AI + platform work
 -> skills/production-ai-devops-engineering.md
 ```
 
-Preserve specialist routing to `agents/github-actions-engineer.md`, `agents/agent-architect-builder.md`, `agents/devsecops-security-engineer.md`, `agents/devops-documentation-engineer.md`, `agents/codebase-maintenance-engineer.md`, `agents/kubernetes-homelab-engineer.md`, and `agents/automation-platform-selection-advisor.md` when those agents are the narrower owner.
+Preserve specialist routing to `agents/github-actions-engineer.md`, `agents/agent-architect-builder.md`, `agents/devsecops-security-engineer.md`, `agents/devops-documentation-engineer.md`, `agents/codebase-maintenance-engineer.md`, `agents/mobile-release-automation-engineer.md`, `agents/kubernetes-homelab-engineer.md`, and `agents/automation-platform-selection-advisor.md` when those agents are the narrower owner.
 
 Use the smallest correct owner. Do not preload all engineering stacks.
 

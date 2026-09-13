@@ -1,0 +1,5 @@
+google-auth>=2.35.0
+google-auth-oauthlib>=1.2.1
+requests>=2.32.3
+# Optional: only needed to run the local MCP server (mra-mcp).
+mcp>=1.2.0

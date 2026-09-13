@@ -65,6 +65,7 @@ Use the smallest correct owner. Infrastructure hosting an AI workload is still D
 | Audit or harden DevOps cybersecurity across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, secrets, runners/agents, state, or software supply chain | [`docs/quickstarts/devsecops-security-engineer.md`](docs/quickstarts/devsecops-security-engineer.md) · [`agents/devsecops-security-engineer.md`](agents/devsecops-security-engineer.md) |
 | Create, audit, or reconcile DevOps docs-as-code, runbooks, Markdown, Mermaid, and documentation diagrams | [`docs/quickstarts/devops-documentation-engineer.md`](docs/quickstarts/devops-documentation-engineer.md) · [`agents/devops-documentation-engineer.md`](agents/devops-documentation-engineer.md) |
 | De-slop an existing codebase: stale comments/docstrings, duplicate helpers, dead residue, abstraction inflation, brittle tests, dependency/config drift, weak failure handling, or practical efficiency cleanup across languages | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) · [`agents/codebase-maintenance-engineer.md`](agents/codebase-maintenance-engineer.md) |
+| Automate Google Play releases, RevenueCat monetization configuration, or AdMob inventory: internal testing uploads, track promotion, products, entitlements, offerings, packages, apps, and ad units | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) · [`agents/mobile-release-automation-engineer.md`](agents/mobile-release-automation-engineer.md) |
 | Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 
@@ -85,6 +86,30 @@ scripts/validate-github-actions-stack.py
 This specialist owns GitHub Actions-specific event trust, fork/Dependabot behavior, `pull_request_target`/privileged `workflow_run` risks, token/secret/OIDC scope, reusable-workflow contracts, action/workflow pinning and provenance, GitHub-hosted/self-hosted runner boundaries, caches/artifacts, concurrency/cancellation/reruns, release/deployment automation, artifact identity, and Actions cost controls.
 
 Use `prompts/implementation/github-actions-task.md` for repeatable work and `schemas/github-actions-task.schema.json` when an orchestrator needs a machine-verifiable authority/trust/verification contract.
+
+## Mobile Release and Monetization Automation
+
+```text
+docs/quickstarts/mobile-release-automation.md
+agents/mobile-release-automation-engineer.md
+skills/mobile-release-automation-orchestration.md
+skills/google-play-release-automation.md
+skills/revenuecat-monetization-automation.md
+skills/admob-inventory-automation.md
+prompts/implementation/mobile-release-automation-task.md
+schemas/mobile-release-automation-task.schema.json
+examples/mobile-release-automation-task.yaml
+docs/mobile-release-automation-acceptance-tests.md
+tools/mobile-release-automation/
+.github/agents/mobile-release-automation-engineer.agent.md
+scripts/validate-mobile-release-automation-stack.py
+```
+
+This specialist owns Play app bundle upload, testing tracks, staged rollout and promotion, Play monetization products, RevenueCat apps/products/entitlements/offerings/packages, and AdMob apps and ad units.
+
+The three platforms are not equally automatable, and the stack treats that as a first-class fact. Google Play and RevenueCat support API-driven creation. AdMob accepts OAuth user credentials only, rejects service accounts entirely, and gates app and ad-unit creation per account through a Google account manager. Probe AdMob access before planning AdMob automation.
+
+`tools/mobile-release-automation/` is the runnable local toolkit: a CLI, an offline test suite, and a local stdio MCP server for Play and AdMob, for which no first-party MCP server exists. Use RevenueCat's first-party server at `https://mcp.revenuecat.ai/mcp` for RevenueCat.
 
 ## Other Featured Stacks
 
@@ -126,6 +151,7 @@ The authoritative stack composition is [`agentdefaults.manifest.json`](agentdefa
 - Principal AI Engineering
 - Automation Platform Architecture and Selection
 - Google Play Growth Optimization
+- Mobile Release and Monetization Automation
 - Palmier Pro MCP Video Editing
 - App Market Browser Research
 - Community App Idea Validation

@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Quazmoz/agentdefaults/schemas/mobile-release-automation-task.schema.json",
+  "title": "Mobile Release and Monetization Automation Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal",
+    "mode",
+    "platforms",
+    "app",
+    "authority",
+    "acceptance"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "goal": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One observable, externally checkable platform outcome."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["assess", "setup", "release", "monetize", "inventory", "diagnose"]
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "enum": ["google_play", "revenuecat", "admob"]}
+    },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile": {"type": "string", "minLength": 1},
+        "package_name": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$"
+        },
+        "admob_publisher_id": {"type": "string", "pattern": "^pub-[0-9]{16}$"},
+        "admob_app_id": {"type": "string", "pattern": "^ca-app-pub-[0-9]{16}~[0-9]{10}$"},
+        "revenuecat_project_id": {"type": "string", "minLength": 1},
+        "revenuecat_app_id": {"type": "string", "minLength": 1}
+      },
+      "anyOf": [
+        {"required": ["profile"]},
+        {"required": ["package_name"]},
+        {"required": ["admob_publisher_id"]},
+        {"required": ["revenuecat_project_id"]}
+      ]
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundle_path": {"type": "string", "minLength": 1},
+        "version_code": {"type": "integer", "minimum": 1},
+        "track": {"type": "string", "minLength": 1},
+        "source_track": {"type": "string", "minLength": 1},
+        "status": {
+          "type": "string",
+          "enum": ["draft", "inProgress", "halted", "completed"]
+        },
+        "user_fraction": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "release_notes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"type": "string", "minLength": 1}
+        },
+        "dry_run": {"type": "boolean"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "inProgress"}}, "required": ["status"]},
+          "then": {"required": ["user_fraction"]}
+        }
+      ]
+    },
+    "monetization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "store_products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["product_id", "type"],
+            "properties": {
+              "product_id": {"type": "string", "minLength": 1},
+              "type": {"type": "string", "enum": ["subscription", "one_time"]},
+              "already_exists": {"type": "boolean"}
+            }
+          }
+        },
+        "revenuecat_products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["store_identifier", "type"],
+            "properties": {
+              "store_identifier": {"type": "string", "minLength": 1},
+              "type": {
+                "type": "string",
+                "enum": [
+                  "subscription",
+                  "one_time",
+                  "consumable",
+                  "non_consumable",
+                  "non_renewing_subscription"
+                ]
+              },
+              "display_name": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "entitlements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["lookup_key"],
+            "properties": {
+              "lookup_key": {"type": "string", "minLength": 1},
+              "display_name": {"type": "string", "minLength": 1},
+              "product_store_identifiers": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "offering": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lookup_key"],
+          "properties": {
+            "lookup_key": {"type": "string", "minLength": 1},
+            "display_name": {"type": "string", "minLength": 1},
+            "make_current": {"type": "boolean"},
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["lookup_key"],
+                "properties": {
+                  "lookup_key": {"type": "string", "minLength": 1},
+                  "display_name": {"type": "string", "minLength": 1},
+                  "product_store_identifiers": {
+                    "type": "array",
+                    "items": {"type": "string", "minLength": 1},
+                    "uniqueItems": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create_app": {"type": "boolean"},
+        "app_display_name": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "enum": ["ANDROID", "IOS"]},
+        "link_store_listing": {"type": "boolean"},
+        "ad_units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["display_name", "ad_format"],
+            "properties": {
+              "display_name": {"type": "string", "minLength": 1},
+              "ad_format": {
+                "type": "string",
+                "enum": [
+                  "BANNER",
+                  "INTERSTITIAL",
+                  "NATIVE",
+                  "REWARDED",
+                  "REWARDED_INTERSTITIAL",
+                  "APP_OPEN"
+                ]
+              },
+              "ad_types": {
+                "type": "array",
+                "items": {"type": "string", "enum": ["RICH_MEDIA", "VIDEO"]},
+                "uniqueItems": true
+              },
+              "ships_in_next_build": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "type": "string",
+          "enum": ["local_cli", "first_party_mcp", "local_mcp"]
+        },
+        "credential_home": {"type": "string", "minLength": 1},
+        "admob_access_probed": {
+          "type": "string",
+          "enum": ["denied", "likely", "unknown", "not_probed"]
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["permission_class"],
+      "properties": {
+        "permission_class": {
+          "type": "string",
+          "enum": ["observe", "propose", "mutate_reversible", "mutate_irreversible"]
+        },
+        "approved_actions": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true,
+          "description": "Each approved action names its exact target, e.g. 'publish to internal track of com.example.app'."
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "credential_boundary_acknowledged": {
+          "type": "boolean",
+          "description": "Set when the operator accepts that the Play service account key is sent to RevenueCat."
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "read_back_required": {"type": "boolean"},
+        "checks": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"mode": {"const": "release"}},
+        "required": ["mode"]
+      },
+      "then": {"required": ["release"]}
+    },
+    {
+      "if": {
+        "properties": {"mode": {"const": "inventory"}},
+        "required": ["mode"]
+      },
+      "then": {"required": ["inventory"]}
+    },
+    {
+      "if": {
+        "properties": {"mode": {"const": "monetize"}},
+        "required": ["mode"]
+      },
+      "then": {"required": ["monetization"]}
+    },
+    {
+      "if": {
+        "properties": {
+          "platforms": {"contains": {"const": "admob"}},
+          "mode": {"enum": ["inventory", "setup"]}
+        },
+        "required": ["platforms", "mode"]
+      },
+      "then": {
+        "properties": {
+          "execution": {"required": ["admob_access_probed"]}
+        },
+        "required": ["execution"]
+      }
+    }
+  ]
+}
