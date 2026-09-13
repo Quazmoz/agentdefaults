@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mobile-release-automation"
-version = "1.1.0"
+version = "1.2.0"
 description = "Local automation for Google Play, RevenueCat, and AdMob."
 requires-python = ">=3.10"
 dependencies = [
@@ -19,7 +19,7 @@ mcp = ["mcp>=1.2.0"]
 [project.scripts]
 mra = "mra.cli:main"
 mra-agent = "mra.secure_cli:main"
-mra-mcp = "mra.mcp_server:main"
+mra-mcp = "mra.secure_mcp_server:main"
 mra-agent-mcp = "mra.secure_mcp_server:main"
 
 [tool.setuptools]

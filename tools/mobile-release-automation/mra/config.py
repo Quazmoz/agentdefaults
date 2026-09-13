@@ -1,8 +1,9 @@
 """Credential and profile resolution.
 
 Credentials live outside the repository by default. Nothing in this module ever
-writes a secret into the working tree. Profiles may store immutable references to
-external secret-manager objects, but never secret values.
+writes a secret into the working tree. Profiles and global credential bindings
+may store immutable references to external secret-manager objects, but never
+secret values.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ ADMOB_OAUTH_CLIENT = "admob-oauth-client.json"
 ADMOB_TOKEN = "admob-token.json"
 REVENUECAT_KEY = "revenuecat-v2-secret.key"
 PROFILES = "profiles.json"
+SECRET_REFS = "secret-refs.json"
 
 
 class ConfigError(RuntimeError):
@@ -66,6 +68,52 @@ def ensure_home() -> Path:
     directory.mkdir(parents=True, exist_ok=True)
     directory.chmod(0o700)
     return directory
+
+
+@dataclass(frozen=True)
+class SecretRefs:
+    """Global immutable references to externally stored credential material."""
+
+    play_service_account_secret_id: str | None = None
+    revenuecat_play_service_account_secret_id: str | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SecretRefs":
+        known = set(cls.__dataclass_fields__)
+        unknown = sorted(set(data) - known)
+        if unknown:
+            raise ConfigError(f"secret refs have unknown keys: {', '.join(unknown)}")
+        return cls(**data)
+
+
+def load_secret_refs() -> SecretRefs:
+    path = path_for(SECRET_REFS)
+    if not path.is_file():
+        return SecretRefs()
+    _require_private(path)
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ConfigError(f"{path} must contain a JSON object")
+    return SecretRefs.from_dict(raw)
+
+
+def save_secret_refs(refs: SecretRefs) -> Path:
+    """Persist or merge global secret references, never secret values."""
+    ensure_home()
+    path = path_for(SECRET_REFS)
+    if path.is_file():
+        _require_private(path)
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ConfigError(f"{path} must contain a JSON object")
+    else:
+        raw = {}
+    updates = {key: value for key, value in vars(refs).items() if value is not None}
+    raw = {**raw, **updates}
+    SecretRefs.from_dict(raw)
+    path.write_text(json.dumps(raw, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.chmod(0o600)
+    return path
 
 
 @dataclass(frozen=True)

@@ -14,7 +14,7 @@ import json
 import sys
 
 from . import admob as admob_module
-from . import auth, config
+from . import auth, config, play_credentials
 from . import play as play_module
 from . import revenuecat as rc_module
 
@@ -62,6 +62,16 @@ def resolve_project(args: argparse.Namespace) -> str:
     raise SystemExit("pass --project or --profile")
 
 
+def rc_client(args: argparse.Namespace) -> rc_module.RevenueCatClient:
+    """Bind a profile's project identity and RevenueCat credential together."""
+    if getattr(args, "profile", None):
+        profile = config.load_profile(args.profile)
+        if not profile.revenuecat_secret_id:
+            raise config.ConfigError(f"profile {args.profile!r} has no revenuecat_secret_id")
+        return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
+    return rc_module.RevenueCatClient()
+
+
 def parse_notes(values: list[str] | None) -> dict[str, str] | None:
     """Parse repeated --notes LANG=TEXT into the release notes mapping."""
     if not values:
@@ -87,15 +97,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         except Exception as error:  # noqa: BLE001 - doctor reports, never raises
             report["checks"][name] = {"status": "fail", "detail": str(error)}
 
-    record(
-        "play_service_account",
-        lambda: json.loads(
-            config.require_file(config.PLAY_SERVICE_ACCOUNT, auth.PLAY_HINT).read_text(
-                encoding="utf-8"
-            )
-        )["client_email"],
-    )
-    record("revenuecat_key", lambda: f"present ({len(auth.revenuecat_key())} chars)")
+    def revenuecat_status() -> Any:
+        secured = sorted(
+            slug for slug, profile in config.load_profiles().items() if profile.revenuecat_secret_id
+        )
+        if secured:
+            return {"profile_bound": secured}
+        return f"legacy key present ({len(auth.revenuecat_key())} chars)"
+
+    record("play_service_account", play_credentials.publisher_status)
+    record("revenuecat_key", revenuecat_status)
     record(
         "admob_oauth_client",
         lambda: str(
@@ -224,38 +235,37 @@ def cmd_admob_create_adunit(args: argparse.Namespace) -> int:
 
 
 def cmd_rc_projects(args: argparse.Namespace) -> int:
-    return emit(rc_module.RevenueCatClient().list_projects())
+    return emit(rc_client(args).list_projects())
 
 
 def cmd_rc_apps(args: argparse.Namespace) -> int:
-    return emit(rc_module.RevenueCatClient().list_apps(resolve_project(args)))
+    return emit(rc_client(args).list_apps(resolve_project(args)))
 
 
 def cmd_rc_create_play_app(args: argparse.Namespace) -> int:
     confirm(args, f"create RevenueCat app {args.name!r}")
-    key_path = config.require_file(config.PLAY_SERVICE_ACCOUNT, auth.PLAY_HINT)
     note(
-        "sending the Play service account key to RevenueCat so it can validate "
-        "Play purchases; this is the documented setup path"
+        "sending the dedicated RevenueCat Google Play service credential to RevenueCat "
+        "so it can validate Play purchases"
     )
     return emit(
-        rc_module.RevenueCatClient().create_play_app(
+        rc_client(args).create_play_app(
             resolve_project(args),
             args.name,
             args.package_name or resolve_package(args),
-            key_path.read_text(encoding="utf-8"),
+            play_credentials.revenuecat_json(),
         )
     )
 
 
 def cmd_rc_products(args: argparse.Namespace) -> int:
-    return emit(rc_module.RevenueCatClient().list_products(resolve_project(args)))
+    return emit(rc_client(args).list_products(resolve_project(args)))
 
 
 def cmd_rc_create_product(args: argparse.Namespace) -> int:
     confirm(args, f"create RevenueCat product {args.store_identifier!r}")
     return emit(
-        rc_module.RevenueCatClient().create_product(
+        rc_client(args).create_product(
             resolve_project(args),
             args.app_id,
             args.store_identifier,
@@ -406,9 +416,9 @@ def build_parser() -> argparse.ArgumentParser:
         dest="rc_command", required=True
     )
 
-    rc.add_parser("projects", help="list RevenueCat projects").set_defaults(
-        func=cmd_rc_projects
-    )
+    rc_projects = rc.add_parser("projects", help="list RevenueCat projects")
+    rc_projects.add_argument("--profile")
+    rc_projects.set_defaults(func=cmd_rc_projects)
 
     rc_apps = rc.add_parser("apps", help="list apps in a project")
     rc_apps.add_argument("--project")
