@@ -18,6 +18,7 @@ mcp = ["mcp>=1.2.0"]
 
 [project.scripts]
 mra = "mra.cli:main"
+mra-agent = "mra.secure_cli:main"
 mra-mcp = "mra.mcp_server:main"
 
 [tool.setuptools]
