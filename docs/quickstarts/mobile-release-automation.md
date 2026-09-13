@@ -47,40 +47,30 @@ https://www.revenuecat.com/docs/tools/mcp
 ```bash
 cd tools/mobile-release-automation
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
+.venv/bin/pip install -e ".[mcp]"
 ```
 
 ### 2. Provision credentials
 
-Follow `tools/mobile-release-automation/README.md`. In short:
-
-```text
-Play        service account JSON, invited in Play Console with least privilege
-AdMob       OAuth Desktop app client, then `mra admob login` once in a browser
-RevenueCat  a v2 API key scoped to the permissions the task needs
-```
-
-All three live in `~/.config/mobile-release-automation`, owner-readable only.
+Follow `tools/mobile-release-automation/SECURITY.md` and `INSTALL.md`. Static vendor credentials are resolved through Bitwarden Secrets Manager; the Bitwarden machine-account token remains in macOS Keychain; profiles and local binding files contain secret references rather than secret values.
 
 ### 3. Confirm what works
 
 ```bash
-mra doctor
+mra-agent doctor
 mra admob probe
 ```
 
-Record the AdMob probe result. It determines whether AdMob work is automatable for this account at all.
+Record the AdMob probe result. It determines whether AdMob creation work is automatable for this account.
 
-### 4. Register MCP servers
+### 4. Register the local MCP server
 
 ```bash
-claude mcp add --transport http revenuecat https://mcp.revenuecat.ai/mcp
 claude mcp add mobile-release-automation -- \
-  /absolute/path/to/tools/mobile-release-automation/.venv/bin/python -m mra.mcp_server
+  /absolute/path/to/tools/mobile-release-automation/.venv/bin/mra-agent-mcp
 ```
 
-Use RevenueCat's first-party server for RevenueCat. Use the local server for Play and AdMob, because no first-party server exists for either and a third-party one would hold a credential that can publish your app.
+The local MCP server is risk-gated, not read-only. It can inspect state and perform contained automation directly. High-risk actions require a real local human approval before the vendor API call occurs.
 
 ### 5. Create a profile
 
@@ -90,15 +80,19 @@ mra profile set --slug myapp \
   --revenuecat-project-id proj_abc123
 ```
 
+Bind the app's RevenueCat secret reference with `mra-agent profile bind-revenuecat` and bind the global Google credential references as documented in `SECURITY.md`.
+
 ### 6. Give the agent a task
 
 Fill in `prompts/implementation/mobile-release-automation-task.md`, or write a task document against `schemas/mobile-release-automation-task.schema.json`. `examples/mobile-release-automation-task.yaml` is a worked example.
+
+Before mutation-heavy work, the agent should call the MCP `approval_policy` tool so it can explain which actions are automatic and which will require local approval.
 
 ## Use It For
 
 - Uploading an app bundle to internal testing
 - Promoting a qualified build to a wider track
-- Setting up a new app across all three platforms
+- Setting up a new app across Google Play, RevenueCat, and AdMob where APIs permit it
 - Creating RevenueCat products, entitlements, offerings, and packages
 - Creating AdMob apps and ad units where the account permits it
 - Diagnosing why a release, product, or ad unit did not appear
@@ -114,21 +108,22 @@ Fill in `prompts/implementation/mobile-release-automation-task.md`, or write a t
 ## Permission Model
 
 ```text
-observe               read tracks, products, inventory; dry-run a Play edit
-mutate_reversible     upload to internal testing; create RevenueCat or AdMob objects
-mutate_irreversible   closed/open/production release; rollout changes; subscription
-                      pricing; live entitlement changes; create_in_store
+observe      read tracks, products, inventory; dry-run a Play edit
+contained    publish to internal testing; create individual RevenueCat or AdMob objects
+high         non-internal Play releases/promotions; current-offering changes;
+             live entitlement/package wiring; backing-store creation; future
+             destructive, financial, or broad multi-app mutations
 ```
 
-Default ceiling is `propose`. Every irreversible action needs its own authorization naming the exact target. An approval for the internal track never covers production.
+Contained actions may execute through MCP. High-risk MCP actions fail closed unless the local operator approves the exact action in the native macOS approval dialog. The AI cannot self-authorize by setting a confirmation boolean.
 
-Mutating operations refuse to run without explicit confirmation: `--yes` on the CLI, `confirm=true` on the MCP server, where `dry_run` also defaults to `true`.
+The operator CLI remains available for explicit local work and retains its `--yes` confirmation behavior.
 
 ## What Is Not Automatable
 
 State these plainly rather than working around them:
 
-- Creating a brand-new app in Play Console, plus content rating, data safety, and target audience declarations. The Play Developer API cannot do this.
+- Creating a brand-new app in Play Console, plus content rating, Data safety, and target audience declarations. The Play Developer API cannot do this.
 - AdMob app and ad unit creation on an account Google has not allowlisted.
 - Creating a RevenueCat project, which is a dashboard action.
 
@@ -139,9 +134,9 @@ Scripting a vendor console UI is not an approved workaround for any of these.
 Before claiming a result, read it back from the platform:
 
 ```bash
-mra play tracks --profile myapp        # version code, track, status
-mra rc products --profile myapp        # product resolution
-mra admob adunits                      # ad unit ids and formats
+mra play tracks --profile myapp
+mra rc products --profile myapp
+mra admob adunits
 ```
 
 An HTTP 200 means the request was accepted. It is not proof the intent was achieved.
