@@ -344,8 +344,24 @@ Given an end-to-end editing request that did not explicitly authorize paid gener
 - stop only at the specific consequential action requiring approval
 - do not reinterpret `finish the edit` as blanket authorization for unrelated spend/destruction/publishing
 
+## AC-36: Dialogue Cut Boundary Integrity
+
+Given a transcript-driven cleanup of talking-head, tutorial, interview, voiceover, or other spoken footage:
+
+- use transcript words/timestamps to locate candidate edits, not as proof of exact acoustic boundaries
+- after each speech-affecting mutation, verify the local seam against actual timeline/source audio as far as the connected Palmier/client surface permits
+- preserve the complete initial phoneme/syllable of the first kept word after the cut
+- preserve the complete final phoneme/syllable and natural decay of the last kept word before the cut
+- preserve complete grammatical/semantic sentence or clause meaning unless the next clip deliberately continues the same thought
+- preserve natural cadence, breaths, and small pauses when needed for intelligibility
+- reject duplicated syllables/words, accidental overlap/double speech, clicks/pops, and obviously mechanical over-tightening
+- if a seam is clipped, undo/retry with looser or more targeted boundaries and recover source handles when possible
+- if the tool surface cannot reliably validate the acoustic seam, leave/report a review marker instead of claiming the seam is clean
+
+Fail if the agent knowingly leaves a mid-word or mid-syllable cut, truncates a word attack/final consonant, creates a semantically incomplete sentence, or claims acoustic correctness from transcript text alone.
+
 ## Regression Set
 
-Any material change to the Palmier agent, setup/safety skill, YouTube fast-edit skill, generation workflow, export rules, transcript workflow, or tool map should be checked against AC-01 through AC-35.
+Any material change to the Palmier agent, setup/safety skill, YouTube fast-edit skill, generation workflow, export rules, transcript workflow, or tool map should be checked against AC-01 through AC-36.
 
 When Palmier changes tool schemas or agent behavior, update the source-backed guidance and this acceptance set together.
