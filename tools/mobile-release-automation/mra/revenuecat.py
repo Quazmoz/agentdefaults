@@ -50,7 +50,7 @@ class RevenueCatClient:
                 "Authorization": f"Bearer {api_key or auth.revenuecat_key()}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "mobile-release-automation/1.0",
+                "User-Agent": "mobile-release-automation/1.5",
             }
         )
 
@@ -160,6 +160,15 @@ class RevenueCatClient:
             self._paginate(f"/projects/{project_id}/entitlements", "list entitlements")
         )
 
+    def list_entitlement_products(self, project_id: str, entitlement_id: str) -> list[dict]:
+        """Read the product relationships for one entitlement."""
+        return list(
+            self._paginate(
+                f"/projects/{project_id}/entitlements/{entitlement_id}/products",
+                f"list products attached to entitlement {entitlement_id}",
+            )
+        )
+
     def create_entitlement(
         self, project_id: str, lookup_key: str, display_name: str
     ) -> dict:
@@ -184,6 +193,57 @@ class RevenueCatClient:
 
     def list_offerings(self, project_id: str) -> list[dict]:
         return list(self._paginate(f"/projects/{project_id}/offerings", "list offerings"))
+
+    def list_packages(self, project_id: str, offering_id: str) -> list[dict]:
+        """Read all packages currently attached to one offering."""
+        return list(
+            self._paginate(
+                f"/projects/{project_id}/offerings/{offering_id}/packages",
+                f"list packages in offering {offering_id}",
+            )
+        )
+
+    def list_package_products(self, project_id: str, package_id: str) -> list[dict]:
+        """Read the product relationships for one package."""
+        return list(
+            self._paginate(
+                f"/projects/{project_id}/packages/{package_id}/products",
+                f"list products attached to package {package_id}",
+            )
+        )
+
+    def inspect_wiring(self, project_id: str) -> dict[str, Any]:
+        """Return RevenueCat offering/package and entitlement/product wiring.
+
+        This intentionally favors explicit read-back over relying on creation responses.
+        It is used by agents before and after high-risk attachment mutations.
+        """
+        offerings = []
+        for offering in self.list_offerings(project_id):
+            packages = []
+            for package in self.list_packages(project_id, offering["id"]):
+                packages.append(
+                    {
+                        **package,
+                        "products": self.list_package_products(project_id, package["id"]),
+                    }
+                )
+            offerings.append({**offering, "packages": packages})
+
+        entitlements = []
+        for entitlement in self.list_entitlements(project_id):
+            entitlements.append(
+                {
+                    **entitlement,
+                    "products": self.list_entitlement_products(project_id, entitlement["id"]),
+                }
+            )
+
+        return {
+            "project_id": project_id,
+            "offerings": offerings,
+            "entitlements": entitlements,
+        }
 
     def create_offering(
         self,

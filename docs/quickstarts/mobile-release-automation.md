@@ -101,20 +101,39 @@ mra profile set --slug myapp \
 
 Bind the app's RevenueCat secret reference with `mra-agent profile bind-revenuecat` and bind the global Google credential references as documented in `SECURITY.md`.
 
+Agents should read profile identifiers with `profile_get` and reconcile verified non-secret IDs with `profile_update_identifiers`. Do not edit `~/.config/mobile-release-automation/profiles.json` directly.
+
 ### 6. Give the agent a task
 
 Fill in `prompts/implementation/mobile-release-automation-task.md`, or write a task document against `schemas/mobile-release-automation-task.schema.json`. `examples/mobile-release-automation-task.yaml` is a worked example.
 
 Before mutation-heavy work, the agent should call the MCP `approval_policy` tool so it can explain which actions are automatic and which will require local approval.
 
+For RevenueCat, read the complete offering/package/product and entitlement/product graph first:
+
+```text
+rc_inspect_wiring(profile="myapp")
+```
+
+Targeted read tools are also available:
+
+```text
+rc_list_packages
+rc_list_package_products
+rc_list_entitlement_products
+```
+
+Only invoke the high-risk attachment tools when read-back proves a relationship is missing. After an approved mutation, call `rc_inspect_wiring` again and verify the relationship exists.
+
 ## Use It For
 
 - Uploading an app bundle to internal testing
 - Promoting a qualified build to a wider track
 - Setting up a new app across Google Play, RevenueCat, and AdMob where APIs permit it
-- Creating RevenueCat products, entitlements, offerings, and packages
+- Creating and reconciling RevenueCat products, entitlements, offerings, packages, and their relationships
 - Creating AdMob apps and ad units where the account permits it
-- Diagnosing why a release, product, or ad unit did not appear
+- Diagnosing why a release, product, entitlement, package, or ad unit did not appear
+- Reconciling verified cross-platform identifiers into the MRA profile
 - Deciding whether a given platform task can be automated at all
 
 ## Do Not Use It For
@@ -127,8 +146,9 @@ Before mutation-heavy work, the agent should call the MCP `approval_policy` tool
 ## Permission Model
 
 ```text
-observe      read tracks, products, inventory; dry-run a Play edit
-contained    publish to internal testing; create individual RevenueCat or AdMob objects
+observe      read tracks, products, inventory, RevenueCat wiring; dry-run a Play edit
+contained    publish to internal testing; create individual RevenueCat or AdMob objects;
+             reconcile verified non-secret local profile identifiers
 high         non-internal Play releases/promotions; current-offering changes;
              live entitlement/package wiring; backing-store creation; future
              destructive, financial, or broad multi-app mutations
@@ -144,7 +164,7 @@ State these plainly rather than working around them:
 
 - Creating a brand-new app in Play Console, plus content rating, Data safety, and target audience declarations. The Play Developer API cannot do this.
 - AdMob app and ad unit creation on an account Google has not allowlisted.
-- Creating a RevenueCat project, which is a dashboard action.
+- RevenueCat dashboard-only ad monetization settings that are not exposed by the v2 API, such as rewarded entitlement-duration configuration where no supported API is available.
 
 Scripting a vendor console UI is not an approved workaround for any of these.
 
@@ -156,6 +176,12 @@ Before claiming a result, read it back from the platform:
 mra play tracks --profile myapp
 mra rc products --profile myapp
 mra admob adunits
+```
+
+For RevenueCat relationship changes, MCP read-back is mandatory:
+
+```text
+rc_inspect_wiring(profile="myapp")
 ```
 
 An HTTP 200 means the request was accepted. It is not proof the intent was achieved.

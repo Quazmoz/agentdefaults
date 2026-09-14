@@ -169,3 +169,53 @@ def save_profile(profile: Profile) -> Path:
     path.write_text(json.dumps(raw, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     path.chmod(0o600)
     return path
+
+
+def public_profile(profile: Profile) -> dict[str, str | None]:
+    """Return only non-secret cross-platform identifiers for agent-visible output."""
+    return {
+        "slug": profile.slug,
+        "package_name": profile.package_name,
+        "admob_app_id": profile.admob_app_id,
+        "admob_publisher_id": profile.admob_publisher_id,
+        "revenuecat_project_id": profile.revenuecat_project_id,
+        "revenuecat_app_id": profile.revenuecat_app_id,
+    }
+
+
+def update_profile_identifiers(
+    slug: str,
+    *,
+    package_name: str | None = None,
+    admob_app_id: str | None = None,
+    admob_publisher_id: str | None = None,
+    revenuecat_project_id: str | None = None,
+    revenuecat_app_id: str | None = None,
+) -> Profile:
+    """Safely reconcile non-secret identifiers for an existing profile.
+
+    This deliberately cannot accept secret values or secret-reference fields. It
+    preserves the existing RevenueCat secret binding while updating only the
+    identifiers an agent can verify from source/vendor read APIs.
+    """
+    load_profile(slug)  # refuse accidental creation of a partial profile
+    values = {
+        "package_name": package_name,
+        "admob_app_id": admob_app_id,
+        "admob_publisher_id": admob_publisher_id,
+        "revenuecat_project_id": revenuecat_project_id,
+        "revenuecat_app_id": revenuecat_app_id,
+    }
+    updates = {}
+    for field, value in values.items():
+        if value is None:
+            continue
+        normalized = value.strip()
+        if not normalized:
+            raise ConfigError(f"profile identifier {field} cannot be blank")
+        updates[field] = normalized
+    if not updates:
+        raise ConfigError("no profile identifiers supplied")
+
+    save_profile(Profile(slug=slug, **updates))
+    return load_profile(slug)

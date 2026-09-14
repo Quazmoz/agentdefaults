@@ -76,6 +76,7 @@ def approval_policy() -> dict[str, Any]:
             "internal Play releases",
             "single RevenueCat object creation that does not change live entitlement wiring",
             "single AdMob app or ad-unit creation where supported",
+            "local reconciliation of verified non-secret app identifiers",
         ],
         "high": [
             "non-internal Play releases or promotions",
@@ -86,6 +87,40 @@ def approval_policy() -> dict[str, Any]:
         ],
         "gate": human_approval.status(),
         "rule": "High-risk actions fail closed unless the local operator approves the exact action.",
+    }
+
+
+@server.tool()
+def profile_get(profile: str) -> dict[str, str | None]:
+    """Read only non-secret identifiers for one MRA app profile."""
+    return config.public_profile(config.load_profile(profile))
+
+
+@server.tool()
+def profile_update_identifiers(
+    profile: str,
+    package_name: str | None = None,
+    admob_app_id: str | None = None,
+    admob_publisher_id: str | None = None,
+    revenuecat_project_id: str | None = None,
+    revenuecat_app_id: str | None = None,
+) -> dict[str, Any]:
+    """Reconcile verified non-secret identifiers without exposing profile secrets.
+
+    This is a local contained mutation. It cannot change secret bindings and it
+    refuses to create a new partial profile accidentally.
+    """
+    updated = config.update_profile_identifiers(
+        profile,
+        package_name=package_name,
+        admob_app_id=admob_app_id,
+        admob_publisher_id=admob_publisher_id,
+        revenuecat_project_id=revenuecat_project_id,
+        revenuecat_app_id=revenuecat_app_id,
+    )
+    return {
+        "profile": config.public_profile(updated),
+        "_mra": {"risk": "contained-local", "human_approved": False},
     }
 
 
@@ -134,10 +169,42 @@ def rc_list_entitlements(profile: str) -> list[dict]:
 
 
 @server.tool()
+def rc_list_entitlement_products(profile: str, entitlement_id: str) -> list[dict]:
+    """List products currently attached to one RevenueCat entitlement."""
+    resolved = _profile(profile)
+    return _client(resolved).list_entitlement_products(
+        resolved.revenuecat_project_id, entitlement_id
+    )
+
+
+@server.tool()
 def rc_list_offerings(profile: str) -> list[dict]:
     """List offerings in the selected RevenueCat project."""
     resolved = _profile(profile)
     return _client(resolved).list_offerings(resolved.revenuecat_project_id)
+
+
+@server.tool()
+def rc_list_packages(profile: str, offering_id: str) -> list[dict]:
+    """List packages currently attached to one RevenueCat offering."""
+    resolved = _profile(profile)
+    return _client(resolved).list_packages(resolved.revenuecat_project_id, offering_id)
+
+
+@server.tool()
+def rc_list_package_products(profile: str, package_id: str) -> list[dict]:
+    """List products currently attached to one RevenueCat package."""
+    resolved = _profile(profile)
+    return _client(resolved).list_package_products(
+        resolved.revenuecat_project_id, package_id
+    )
+
+
+@server.tool()
+def rc_inspect_wiring(profile: str) -> dict[str, Any]:
+    """Read complete offering/package/product and entitlement/product wiring."""
+    resolved = _profile(profile)
+    return _client(resolved).inspect_wiring(resolved.revenuecat_project_id)
 
 
 mcp_play_mutations.register(server)

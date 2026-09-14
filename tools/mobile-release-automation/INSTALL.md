@@ -25,7 +25,7 @@ command -v mra-mcp
 command -v mra-agent-mcp
 ```
 
-The Bitwarden/Keychain AdMob build is version 1.4.0 or newer.
+The RevenueCat wiring-readback and safe profile-reconciliation build is version 1.5.0 or newer.
 
 ## Fresh install
 
@@ -53,7 +53,7 @@ The `pyproject.toml` script table must contain `mra`, `mra-agent`, `mra-mcp`, an
 
 ## Security defaults
 
-`mra-mcp` and `mra-agent-mcp` expose the risk-gated local server. Reads, dry-runs, and contained single-object mutations are available to agents. High-risk actions require a native local human approval and fail closed if approval is unavailable or declined.
+`mra-mcp` and `mra-agent-mcp` expose the risk-gated local server. Reads, dry-runs, contained single-object mutations, and local reconciliation of verified non-secret profile identifiers are available to agents. High-risk actions require a native local human approval and fail closed if approval is unavailable or declined.
 
 Static Google Play, RevenueCat, and AdMob OAuth client credentials should be stored in Bitwarden Secrets Manager and bound by UUID. The Bitwarden machine token and the dynamic AdMob OAuth refresh token remain in the OS credential store.
 
@@ -70,5 +70,7 @@ mra-agent auth bind-admob --secret-id YOUR_BITWARDEN_SECRET_UUID
 mra admob login
 mra admob probe
 ```
+
+For RevenueCat reconciliation, MCP 1.5.0+ can read package and entitlement wiring before changing it. Agents should use `rc_inspect_wiring` (or the targeted package/entitlement read tools), then invoke attachment mutations only when a verified relationship is missing. Profile IDs should be changed through `profile_update_identifiers`, not by editing `profiles.json` directly.
 
 Review `SECURITY.md` for the full credential and approval model.
