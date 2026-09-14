@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from . import admob_credentials, auth, config, human_approval, play_credentials
@@ -50,6 +51,51 @@ def _probe(probe) -> dict:
         return {"status": "not-ready", "detail": str(error)}
 
 
+def _error_payload(error: Exception, *, platform: str | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "status": "error",
+        "error_type": type(error).__name__,
+        "detail": str(error),
+    }
+    if platform:
+        payload["platform"] = platform
+    return payload
+
+
+def _safe_read(operation: Callable[[], Any]) -> Any:
+    """Keep expected read/config failures visible to MCP clients instead of opaque."""
+    try:
+        return operation()
+    except (config.ConfigError, ValueError) as error:
+        return _error_payload(error)
+
+
+def _rc_read(
+    profile: str,
+    operation: Callable[[rc_module.RevenueCatClient, config.Profile], Any],
+    *,
+    required_permissions: list[str],
+) -> Any:
+    """Run a RevenueCat read while preserving vendor error detail for agents.
+
+    Successful responses retain their historical shape. Expected configuration or
+    RevenueCat failures return a structured object so the MCP transport does not
+    collapse them into the generic ``Error executing tool`` message.
+    """
+    try:
+        resolved = _profile(profile)
+        return operation(_client(resolved), resolved)
+    except (config.ConfigError, ValueError, rc_module.RevenueCatError) as error:
+        payload = _error_payload(error, platform="revenuecat")
+        payload["required_permissions"] = required_permissions
+        if isinstance(error, rc_module.RevenueCatError) and "HTTP 403" in str(error):
+            payload["hint"] = (
+                "RevenueCat denied this API v2 operation. Check that the profile's "
+                "secret key includes the listed permission(s)."
+            )
+        return payload
+
+
 @server.tool()
 def doctor() -> dict[str, Any]:
     """Check credential bindings, approval capability, and secured profiles."""
@@ -91,9 +137,9 @@ def approval_policy() -> dict[str, Any]:
 
 
 @server.tool()
-def profile_get(profile: str) -> dict[str, str | None]:
+def profile_get(profile: str) -> Any:
     """Read only non-secret identifiers for one MRA app profile."""
-    return config.public_profile(config.load_profile(profile))
+    return _safe_read(lambda: config.public_profile(config.load_profile(profile)))
 
 
 @server.tool()
@@ -141,70 +187,103 @@ def play_list_products(profile: str) -> dict:
 
 
 @server.tool()
-def rc_list_projects(profile: str) -> list[dict]:
+def rc_list_projects(profile: str) -> Any:
     """List RevenueCat projects visible to the selected profile's key."""
-    resolved = _profile(profile)
-    return _client(resolved).list_projects()
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_projects(),
+        required_permissions=["project_configuration:projects:read"],
+    )
 
 
 @server.tool()
-def rc_list_apps(profile: str) -> list[dict]:
+def rc_list_apps(profile: str) -> Any:
     """List apps in the selected RevenueCat project."""
-    resolved = _profile(profile)
-    return _client(resolved).list_apps(resolved.revenuecat_project_id)
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_apps(resolved.revenuecat_project_id),
+        required_permissions=["project_configuration:apps:read"],
+    )
 
 
 @server.tool()
-def rc_list_products(profile: str) -> list[dict]:
+def rc_list_products(profile: str) -> Any:
     """List products in the selected RevenueCat project."""
-    resolved = _profile(profile)
-    return _client(resolved).list_products(resolved.revenuecat_project_id)
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_products(resolved.revenuecat_project_id),
+        required_permissions=["project_configuration:products:read"],
+    )
 
 
 @server.tool()
-def rc_list_entitlements(profile: str) -> list[dict]:
+def rc_list_entitlements(profile: str) -> Any:
     """List entitlements in the selected RevenueCat project."""
-    resolved = _profile(profile)
-    return _client(resolved).list_entitlements(resolved.revenuecat_project_id)
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_entitlements(resolved.revenuecat_project_id),
+        required_permissions=["project_configuration:entitlements:read"],
+    )
 
 
 @server.tool()
-def rc_list_entitlement_products(profile: str, entitlement_id: str) -> list[dict]:
+def rc_list_entitlement_products(profile: str, entitlement_id: str) -> Any:
     """List products currently attached to one RevenueCat entitlement."""
-    resolved = _profile(profile)
-    return _client(resolved).list_entitlement_products(
-        resolved.revenuecat_project_id, entitlement_id
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_entitlement_products(
+            resolved.revenuecat_project_id, entitlement_id
+        ),
+        required_permissions=["project_configuration:entitlements:read"],
     )
 
 
 @server.tool()
-def rc_list_offerings(profile: str) -> list[dict]:
+def rc_list_offerings(profile: str) -> Any:
     """List offerings in the selected RevenueCat project."""
-    resolved = _profile(profile)
-    return _client(resolved).list_offerings(resolved.revenuecat_project_id)
-
-
-@server.tool()
-def rc_list_packages(profile: str, offering_id: str) -> list[dict]:
-    """List packages currently attached to one RevenueCat offering."""
-    resolved = _profile(profile)
-    return _client(resolved).list_packages(resolved.revenuecat_project_id, offering_id)
-
-
-@server.tool()
-def rc_list_package_products(profile: str, package_id: str) -> list[dict]:
-    """List products currently attached to one RevenueCat package."""
-    resolved = _profile(profile)
-    return _client(resolved).list_package_products(
-        resolved.revenuecat_project_id, package_id
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_offerings(resolved.revenuecat_project_id),
+        required_permissions=["project_configuration:offerings:read"],
     )
 
 
 @server.tool()
-def rc_inspect_wiring(profile: str) -> dict[str, Any]:
+def rc_list_packages(profile: str, offering_id: str) -> Any:
+    """List packages currently attached to one RevenueCat offering."""
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_packages(
+            resolved.revenuecat_project_id, offering_id
+        ),
+        required_permissions=["project_configuration:packages:read"],
+    )
+
+
+@server.tool()
+def rc_list_package_products(profile: str, package_id: str) -> Any:
+    """List products currently attached to one RevenueCat package."""
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.list_package_products(
+            resolved.revenuecat_project_id, package_id
+        ),
+        required_permissions=["project_configuration:packages:read"],
+    )
+
+
+@server.tool()
+def rc_inspect_wiring(profile: str) -> Any:
     """Read complete offering/package/product and entitlement/product wiring."""
-    resolved = _profile(profile)
-    return _client(resolved).inspect_wiring(resolved.revenuecat_project_id)
+    return _rc_read(
+        profile,
+        lambda client, resolved: client.inspect_wiring(resolved.revenuecat_project_id),
+        required_permissions=[
+            "project_configuration:offerings:read",
+            "project_configuration:packages:read",
+            "project_configuration:entitlements:read",
+        ],
+    )
 
 
 mcp_play_mutations.register(server)
