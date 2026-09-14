@@ -52,7 +52,11 @@ class PaginationTest(unittest.TestCase):
 class WiringReadbackTest(unittest.TestCase):
     def test_lists_packages_for_offering(self) -> None:
         api, session = client(
-            {("GET", "/offerings/ofr_1/packages"): ok({"items": [{"id": "pkg_1"}], "next_page": None})}
+            {
+                ("GET", f"/projects/{PROJECT}/offerings/ofr_1/packages"): ok(
+                    {"items": [{"id": "pkg_1"}], "next_page": None}
+                )
+            }
         )
         result = api.list_packages(PROJECT, "ofr_1")
         self.assertEqual(result, [{"id": "pkg_1"}])
@@ -60,7 +64,11 @@ class WiringReadbackTest(unittest.TestCase):
 
     def test_lists_products_attached_to_package(self) -> None:
         api, session = client(
-            {("GET", "/packages/pkg_1/products"): ok({"items": [{"id": "prod_1"}], "next_page": None})}
+            {
+                ("GET", f"/projects/{PROJECT}/packages/pkg_1/products"): ok(
+                    {"items": [{"id": "prod_1"}], "next_page": None}
+                )
+            }
         )
         result = api.list_package_products(PROJECT, "pkg_1")
         self.assertEqual(result, [{"id": "prod_1"}])
@@ -68,7 +76,11 @@ class WiringReadbackTest(unittest.TestCase):
 
     def test_lists_products_attached_to_entitlement(self) -> None:
         api, session = client(
-            {("GET", "/entitlements/ent_1/products"): ok({"items": [{"id": "prod_1"}], "next_page": None})}
+            {
+                ("GET", f"/projects/{PROJECT}/entitlements/ent_1/products"): ok(
+                    {"items": [{"id": "prod_1"}], "next_page": None}
+                )
+            }
         )
         result = api.list_entitlement_products(PROJECT, "ent_1")
         self.assertEqual(result, [{"id": "prod_1"}])
@@ -80,16 +92,16 @@ class WiringReadbackTest(unittest.TestCase):
                 ("GET", f"/projects/{PROJECT}/offerings"): ok(
                     {"items": [{"id": "ofr_1", "lookup_key": "default"}], "next_page": None}
                 ),
-                ("GET", "/offerings/ofr_1/packages"): ok(
+                ("GET", f"/projects/{PROJECT}/offerings/ofr_1/packages"): ok(
                     {"items": [{"id": "pkg_1", "lookup_key": "$rc_lifetime"}], "next_page": None}
                 ),
-                ("GET", "/packages/pkg_1/products"): ok(
+                ("GET", f"/projects/{PROJECT}/packages/pkg_1/products"): ok(
                     {"items": [{"id": "prod_1", "store_identifier": "premium"}], "next_page": None}
                 ),
                 ("GET", f"/projects/{PROJECT}/entitlements"): ok(
                     {"items": [{"id": "ent_1", "lookup_key": "pro"}], "next_page": None}
                 ),
-                ("GET", "/entitlements/ent_1/products"): ok(
+                ("GET", f"/projects/{PROJECT}/entitlements/ent_1/products"): ok(
                     {"items": [{"id": "prod_1", "store_identifier": "premium"}], "next_page": None}
                 ),
             }
