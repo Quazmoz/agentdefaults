@@ -6,7 +6,7 @@ Provide a repeatable, low-friction first-pass editing workflow for long-form You
 
 The skill is optimized for technical creator footage: screen recordings, terminal/code demos, app walkthroughs, AI/DevOps workflows, product demonstrations, talking head plus screenshare, and proof/result-driven videos.
 
-The objective is not cinematic perfection. The objective is a safe, coherent, watchable first cut that removes obvious waste, preserves technical truth, keeps important screens readable, and is ready for fast human review.
+The objective is not cinematic perfection. The objective is a safe, coherent, watchable first cut that removes obvious waste, preserves technical truth, keeps important screens readable, preserves natural speech, and is ready for fast human review.
 
 ## Runtime Contract
 
@@ -39,6 +39,7 @@ and does not request a different style, use **Technical YouTube Fast Edit**:
 - long-form 16:9 unless the current project clearly says otherwise
 - proof/result-forward opening
 - balanced speech cleanup
+- speech cuts only at complete, natural phoneme/word/sentence boundaries
 - no burned-in captions by default
 - sparse titles/callouts only when they improve comprehension
 - screenshare/code/UI readability over visual novelty
@@ -122,6 +123,8 @@ Do not hard-code a 0.5-1 second cut. The boundary must come from inspection.
 
 Use a word-aligned edit when speech is part of the unwanted pre-roll. Use `ripple_delete_ranges` for visual-only/non-word-aligned ranges.
 
+Retain enough source handle before the first kept spoken word that its initial consonant/phoneme and first syllable are fully audible.
+
 ### Silence
 
 Use `remove_silence` for clear dead air when the user requested a cleanup pass and the selected clips represent one compatible A/V unit.
@@ -133,8 +136,11 @@ Keep pauses that viewers need to:
 - follow UI changes
 - understand a complex caveat
 - see an asynchronous operation complete
+- preserve natural speech cadence and breathing
 
 Do not remove every breath.
+
+After silence removal joins two spoken regions, verify the actual seam rather than assuming a transcript-safe boundary is an acoustically clean boundary.
 
 ### Filler and retakes
 
@@ -154,6 +160,47 @@ Rules:
 - Re-read `get_transcript` after every `remove_words` mutation because indices shift.
 - Preserve technical terms, commands, versions, model names, prices, compatibility limits, warnings, caveats, and uncertainty language.
 - Never create misleading speech through omission.
+- A harmless filler may remain when deleting it would create a clipped or unnatural seam.
+
+### Dialogue boundary invariant
+
+Transcript timestamps identify candidate edits; they are not guaranteed acoustic cut points.
+
+Every speech-affecting edit — including `remove_words`, `remove_silence`, range deletion, trim, clip removal, and retake replacement — must preserve:
+
+- the complete initial phoneme/syllable of the first kept word after the cut
+- the complete final phoneme/syllable and natural decay of the last kept word before the cut
+- complete sentence/clause meaning
+- natural cadence and breathing appropriate to long-form delivery
+- no duplicated syllable/word, overlap, click/pop, or accidental double speech
+
+Never knowingly leave a cut:
+
+- inside a word or syllable
+- before a final consonant finishes
+- after a word has begun but before its body is audible
+- in the middle of a sentence when the omitted remainder is required for grammatical or semantic completion
+- so tight that otherwise-correct speech sounds mechanically truncated
+
+Prefer, in order when practical:
+
+1. complete sentence boundary
+2. complete clause boundary
+3. natural thought pause
+4. clean breath/pause
+5. intentional J-cut/L-cut that preserves the full phrase
+
+For long-form YouTube, a small natural pause is better than a clipped phoneme.
+
+If a cleanup mutation creates a bad seam:
+
+1. undo when the latest action is safely attributable
+2. refresh timeline/transcript state
+3. retry with looser aggressiveness or a smaller target
+4. recover source handles/pre-roll/post-roll where possible
+5. use micro-fades only for clicks/noise-floor changes, never to smear overlapping speech
+
+If the available Palmier/client surface cannot validate the acoustic seam, leave a review marker or report the exact cut instead of claiming it is clean.
 
 ## Visual Pass
 
@@ -181,13 +228,16 @@ Use `add_captions` only when:
 Priorities:
 
 1. intelligible dialogue
-2. intact A/V sync
-3. no abrupt cut seams
-4. consistent enough level for review
+2. complete phonemes, words, and sentence boundaries at every edited speech seam
+3. intact A/V sync
+4. natural cut seams and cadence
+5. consistent enough level for review
 
 Use `denoise_audio` only when noise is actually present or the user requests cleanup. Do not apply audio processing by reflex.
 
 When independent audio/video trims are needed, respect current link state and use `manage_clip_links` deliberately rather than assuming clips are safe to separate.
+
+Do not use a crossfade to hide two overlapping spoken phonemes. Micro-fades are for clicks and room-tone discontinuities, not for repairing a fundamentally bad dialogue boundary.
 
 ## Transitions
 
@@ -208,6 +258,7 @@ Use `manage_markers` with an `open` marker for cases such as:
 - a section that may need a custom asset
 - a visual that needs the user's brand preference
 - a possible sponsor/legal/brand-sensitive removal
+- a speech seam that cannot be acoustically validated with the available tool surface
 
 Only move a marker to `review` after the requested edit has been applied and verified. Mark it `resolved` only after explicit user approval or instruction.
 
@@ -268,15 +319,18 @@ After `undo`, timeline copy/switch, or any operation documented to invalidate ID
 Before declaring the fast edit complete:
 
 1. `get_transcript` the edited timeline or relevant windows and check for dangling speech/meaning changes.
-2. `inspect_timeline` the opening/hook.
-3. `inspect_timeline` at least one representative technical/demo section.
-4. `inspect_timeline` every important text/layout change.
-5. Inspect the ending if it was modified.
-6. Confirm no unintended caption track was added to long-form.
-7. Confirm no paid generation occurred without approval.
-8. Confirm the original timeline remains available when this was a broad edit.
+2. Audit every speech-edit seam created by cleanup for complete word/phoneme boundaries, sentence continuity, and natural cadence; use actual audio/playback inspection where the connected surface supports it.
+3. `inspect_timeline` the opening/hook.
+4. `inspect_timeline` at least one representative technical/demo section.
+5. `inspect_timeline` every important text/layout change.
+6. Inspect the ending if it was modified.
+7. Confirm no unintended caption track was added to long-form.
+8. Confirm no paid generation occurred without approval.
+9. Confirm the original timeline remains available when this was a broad edit.
 
-Do not claim frame-perfect visual quality beyond what was actually inspected.
+Transcript text alone is not sufficient evidence that a dialogue seam is acoustically clean.
+
+Do not claim frame-perfect visual quality beyond what was actually inspected, or dialogue-seam correctness beyond what was actually validated.
 
 ## Stop Conditions
 
@@ -284,7 +338,7 @@ The default fast-edit task ends after:
 
 - one broad editing pass
 - one targeted verification/fix pass
-- unresolved subjective choices marked for review
+- unresolved subjective choices or acoustically unverifiable seams marked for review
 
 Do not keep micro-polishing indefinitely. Return control to the user for timeline review.
 
@@ -293,7 +347,7 @@ Do not keep micro-polishing indefinitely. Return control to the user for timelin
 Keep the completion message compact:
 
 ```text
-Done — created a YouTube Fast Cut, tightened the opening and retakes, removed verified dead air, kept the technical demo readable, and checked the hook plus key overlays. I left 2 review markers for subjective take choices. No paid generation or export was run.
+Done — created a YouTube Fast Cut, tightened the opening and retakes, removed verified dead air, preserved complete speech boundaries and natural cadence, kept the technical demo readable, and checked the hook plus key overlays. I left 2 review markers for subjective take choices. No paid generation or export was run.
 ```
 
 If export was requested, additionally report the returned export job/destination and current status.
@@ -306,10 +360,11 @@ A successful fast edit:
 - preserves the original for broad changes
 - uses current tool schemas and exact IDs
 - improves pacing without changing technical meaning
+- never leaves a known mid-word/mid-syllable or semantically incomplete dialogue cut
 - keeps code/UI/proof readable
-- preserves A/V sync
+- preserves A/V sync and natural speech cadence
 - avoids default long-form burned captions
-- uses review markers instead of guessing subjective decisions
+- uses review markers instead of guessing subjective decisions or unverified acoustic seams
 - performs no unapproved paid generation or source deletion
-- verifies representative viewer-visible output
+- verifies representative viewer-visible output and edited speech seams
 - terminates after a bounded first-pass workflow
