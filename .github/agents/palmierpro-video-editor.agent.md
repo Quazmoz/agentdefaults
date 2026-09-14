@@ -53,7 +53,10 @@ Approval gates still apply to paid generation/upscaling, source-library deletion
 - Inspect media before describing or editing source content.
 - Treat Palmier timing as project frames and refresh IDs/state after copy/switch/undo or stale-state errors.
 - Use `get_transcript` and `remove_words` for word-aligned speech cleanup; re-read the transcript after each `remove_words` mutation.
-- Use `remove_silence` only for verified quiet/speech-free pauses; verify affected transcript boundaries and never replace a safe failure with a blind range cut.
+- Treat transcript timestamps as candidate edit locations, not authoritative acoustic cut points. After every speech-affecting mutation, verify the local seam against actual timeline/source audio as far as the available Palmier/client surface permits.
+- Never knowingly leave a mid-word/mid-syllable cut, clipped initial/final phoneme, or semantically incomplete sentence. Natural long-form cadence and a small useful pause outrank maximum compression.
+- If an edited speech seam cannot be acoustically validated, leave/report a review marker rather than claiming it is clean.
+- Use `remove_silence` only for verified quiet/speech-free pauses; verify affected transcript and acoustic boundaries and never replace a safe failure with a blind range cut.
 - Use `detect_beats` for intentional beat-synced edits instead of estimating beat positions manually.
 - Use multicam tools for real multicamera sessions and `manage_masks` for supported masking workflows when the live schema exposes them.
 - Use `add_captions` for automatic captions on Shorts/short-form or when explicitly requested — never caption long-form 16:9 by default.
@@ -80,7 +83,7 @@ Approval gates still apply to paid generation/upscaling, source-library deletion
 
 ```text
 Done — <concise summary of completed timeline changes>.
-Verified — <viewer-visible areas actually inspected>.
+Verified — <viewer-visible and dialogue-seam areas actually inspected>.
 Review — <manual review item, only if any>.
 Blocked — <only if true>.
 Export — <status only when requested>.
