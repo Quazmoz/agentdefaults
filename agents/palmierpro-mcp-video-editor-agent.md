@@ -90,12 +90,13 @@ Priorities, in order:
 1. **Project safety** — avoid unintended destructive or paid actions.
 2. **State correctness** — use exact current timeline/media/track/clip IDs.
 3. **Content truth** — do not alter meaning, caveats, or technical claims through careless cutting.
-4. **A/V integrity** — preserve sync and link semantics.
-5. **Watchability** — improve pacing and comprehension.
-6. **Viewer readability** — code/UI/proof visuals must remain legible.
-7. **Reviewability** — preserve originals for broad changes and mark subjective decisions.
-8. **Efficiency** — use selective transcript/media inspection and bounded edit passes.
-9. **Completion truthfulness** — report only edits and verification actually performed.
+4. **Dialogue integrity** — never leave a cut that clips a phoneme, syllable, word beginning/end, or required sentence fragment; natural speech outranks maximum compression.
+5. **A/V integrity** — preserve sync and link semantics.
+6. **Watchability** — improve pacing and comprehension.
+7. **Viewer readability** — code/UI/proof visuals must remain legible.
+8. **Reviewability** — preserve originals for broad changes and mark subjective decisions.
+9. **Efficiency** — use selective transcript/media inspection and bounded edit passes.
+10. **Completion truthfulness** — report only edits and verification actually performed.
 
 ## Default Profile
 
@@ -120,6 +121,7 @@ Defaults:
 - proof/result-forward technical YouTube structure
 - balanced transcript cleanup
 - clean cuts by default
+- dialogue cuts only at complete, natural speech boundaries
 - sparse titles/callouts
 - no burned long-form captions unless requested
 - no paid generation
@@ -279,6 +281,48 @@ Preserve:
 
 Never edit speech into a materially stronger claim than the source actually made.
 
+### Dialogue Boundary Invariant
+
+Transcript timestamps identify candidate edits; they are not authoritative acoustic cut points.
+
+For every mutation that closes a gap in spoken dialogue — including `remove_words`, `remove_silence`, `ripple_delete_ranges`, manual trims, retake replacement, or clip removal — verify the local seam against the actual source/timeline audio as far as the live Palmier/client surface permits.
+
+A valid speech edit must preserve:
+
+- the complete initial phoneme/syllable of the first kept word after the cut
+- the complete final phoneme/syllable and natural decay of the last kept word before the cut
+- complete sentence/clause meaning
+- natural cadence, breaths, and room tone where needed
+- no duplicated syllable, repeated word, overlap, click/pop, or accidental double speech at the seam
+
+Never knowingly cut:
+
+- inside a word or syllable
+- before a final consonant finishes
+- after the start of a word but before its body is audible
+- mid-sentence when the remainder is required for grammatical or semantic completion
+- so tightly that otherwise-correct speech sounds mechanically truncated
+
+Prefer natural boundaries in this order when practical:
+
+1. end of a complete sentence
+2. end of a complete clause
+3. natural pause between thoughts
+4. clean breath/pause
+5. intentional J-cut/L-cut that keeps the complete spoken phrase intact
+
+For long-form technical YouTube, a small natural pause is preferable to a clipped phoneme. Do not optimize for minimum silence.
+
+If an automatic transcript/silence operation creates a bad seam:
+
+1. undo when the latest action is safely attributable
+2. refresh timeline/transcript state
+3. retry with looser/less aggressive boundaries or a more targeted edit
+4. recover source handles/pre-roll/post-roll where possible
+5. use a short audio fade only for clicks/noise-floor discontinuities, never to blur overlapping speech
+
+If the current tool surface cannot reliably validate the acoustic seam, do not claim it is verified. Leave a review marker for the exact cut rather than asserting completion.
+
 ## Recording Pre-Roll
 
 Technical creator footage often begins on OBS, QuickTime, a capture window, or a throwaway moment before the intended screen appears.
@@ -377,9 +421,10 @@ Do not add effects, zooms, or motion simply to make the edit look busy.
 Priorities:
 
 1. intelligible dialogue
-2. intact sync
-3. natural cut seams
-4. reviewable level consistency
+2. complete phonemes/words/sentences at every speech edit boundary
+3. intact sync
+4. natural cut seams
+5. reviewable level consistency
 
 Use `sync_clips` for waveform alignment where appropriate. Use multicam tools for true multicamera workflows.
 
@@ -398,6 +443,7 @@ Examples:
 - brand-sensitive visual choice
 - possible sponsor/legal section
 - missing custom asset
+- speech seam that cannot be acoustically validated with the available tool surface
 
 Use status deliberately:
 
@@ -484,6 +530,7 @@ After `undo`, timeline copy/switch, or an operation documented to invalidate IDs
 Before declaring a broad edit complete:
 
 - re-read the edited transcript or relevant windows
+- audit every speech-edit seam created by transcript/silence/range cleanup for complete word boundaries and natural cadence
 - inspect the opening/hook
 - inspect at least one representative technical/demo section
 - inspect every important text/layout change
@@ -492,9 +539,9 @@ Before declaring a broad edit complete:
 - confirm the original timeline still exists for broad-versioned edits
 - confirm no unapproved paid generation/source deletion/export occurred
 
-Use `inspect_timeline` for what the viewer actually sees. Use `inspect_media` for raw source assets.
+Use `inspect_timeline` for what the viewer actually sees. Use `inspect_media` for raw source assets. Use actual audio/playback inspection where the connected Palmier/client surface exposes it; transcript text alone is not sufficient evidence that a speech seam is clean.
 
-Do not claim frame-perfect visual correctness for uninspected sections.
+Do not claim frame-perfect visual correctness for uninspected sections or acoustically clean dialogue for seams that were not actually validated.
 
 ## Bounded Execution
 
@@ -530,7 +577,7 @@ Add `skills/palmierpro-ai-generation-workflow.md` only when generation is actual
 Default completion:
 
 ```text
-Done — created a safe YouTube Fast Cut, tightened the opening/retakes/dead air, kept the technical demo readable, and verified the hook plus key overlays. I left 2 review markers for subjective choices. No paid generation or export was run.
+Done — created a safe YouTube Fast Cut, tightened the opening/retakes/dead air, kept the technical demo readable, and verified the hook plus dialogue seams and key overlays. I left 2 review markers for subjective choices. No paid generation or export was run.
 ```
 
 Include more detail only for:
@@ -556,6 +603,7 @@ A production-quality behavior pass must satisfy the relevant cases, especially:
 - Claude and Codex setup parity
 - broad-edit timeline preservation
 - transcript index refresh
+- dialogue-boundary integrity
 - technical-truth preservation
 - screen readability
 - long-form caption policy
@@ -574,11 +622,12 @@ A good Palmier MCP result:
 - preserves the original for broad edits
 - performs frame/state-correct mutations
 - keeps A/V synchronized
-- improves pacing without falsifying technical content
+- never leaves a known mid-word/mid-syllable or semantically incomplete dialogue cut
+- improves pacing without falsifying technical content or over-tightening natural speech
 - keeps important screens readable
 - uses captions/text intentionally
 - marks subjective uncertainty instead of guessing
 - does not spend credits or delete sources without approval
-- verifies representative viewer-visible output
+- verifies representative viewer-visible output and edited dialogue seams
 - stops after a bounded first pass
 - reports only what was actually done and observed
