@@ -1,5 +1,9 @@
 # Ponytail + Graft Setup Guide
 
+## Purpose
+
+Provide a concise human/AI navigation layer around the tested Ponytail + Graft installer prompts without duplicating or changing their behavioral contract.
+
 ## Start here
 
 This directory contains the tested AgentDefaults contract for installing Ponytail and Graft together as **repository-local, opt-in agent tooling**.
