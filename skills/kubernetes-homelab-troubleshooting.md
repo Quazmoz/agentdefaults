@@ -11,10 +11,10 @@ Use for:
 - Flux Kustomization/HelmRelease/source errors
 - Pending, CrashLoopBackOff, ImagePullBackOff, OOMKilled, probe, or scheduling failures
 - PVC/PV/mount problems
-- Service/Ingress/load-balancer/DNS/CNI failures
+- Service/Ingress/MetalLB/DNS/Calico failures
 - node readiness or capacity problems
-- observability failures
-- AI, MCP, or workflow-automation runtime issues
+- Prometheus/Grafana/Loki/Alloy failures
+- MCP/OpenWebUI/n8n/OpenClaw/Hermes/Phoenix runtime issues
 
 Pair with `skills/kubernetes-gitops-change-management.md` when remediation requires a repo patch.
 
@@ -38,7 +38,7 @@ Use:
 4. general README/AGENT_CONTEXT/docs
 5. historical homelab assumptions
 
-Do not encode or trust cached node names, IPs, VPN/cloud topology, workload inventories, storage paths, account identifiers, or similar operator-specific infrastructure details in AgentDefaults. Re-discover them from current source/runtime when the task requires them.
+Current docs conflict on whether Oracle/WireGuard workers are active. Do not start an Oracle/WireGuard diagnosis unless current node/runtime/source evidence establishes those components.
 
 ## Cluster Context Safety
 
@@ -76,9 +76,9 @@ Do not replace the operator's kubeconfig or silently switch an unrelated cluster
 | Storage | PVC Pending, PV affinity, mount errors, RWO rollout conflict, disk capacity |
 | Service | selectors, EndpointSlice/endpoints, readiness, targetPort |
 | Ingress | host/path/class, backend endpoints, controller logs, 404/502/504 |
-| Load balancer | pool/advertisement/controller status, assigned address, network reachability |
-| DNS | DNS-controller readiness/logs, service lookup, upstream resolver behavior |
-| CNI | CNI status/logs, node addressing, encapsulation/MTU/interface evidence |
+| MetalLB | pool/advertisement/speaker status, assigned IP, L2 reachability |
+| DNS | CoreDNS readiness/logs, service lookup, upstream resolver behavior |
+| CNI | Calico status/logs, node addressing, VXLAN/MTU/interface evidence |
 | Node | Ready conditions, kubelet/container runtime/disk/memory/network |
 | App dependency | Secret/config/database/cache/MCP/external API connection evidence |
 
@@ -100,7 +100,30 @@ kubectl --context <homelab-context> get pv
 kubectl --context <homelab-context> get pvc -A
 ```
 
-Create temporary diagnostic pods only if runtime mutation authority permits it; remove them afterward and do not confuse them with desired GitOps state.
+### DNS
+
+```bash
+kubectl --context <homelab-context> get pods -n kube-system -l k8s-app=kube-dns -o wide
+kubectl --context <homelab-context> logs -n kube-system deploy/coredns --tail=100
+```
+
+Create a temporary DNS test pod only if runtime mutation authority permits it; remove it afterward and do not confuse it with desired GitOps state.
+
+### MetalLB
+
+```bash
+kubectl --context <homelab-context> get ipaddresspools -A
+kubectl --context <homelab-context> get l2advertisements -A
+kubectl --context <homelab-context> get pods -n metallb-system -o wide
+kubectl --context <homelab-context> get svc -A
+```
+
+### Calico
+
+```bash
+kubectl --context <homelab-context> get pods -n kube-system -l k8s-app=calico-node -o wide
+kubectl --context <homelab-context> logs -n kube-system -l k8s-app=calico-node --tail=100
+```
 
 ## Escalation Order
 
@@ -111,9 +134,9 @@ Create temporary diagnostic pods only if runtime mutation authority permits it; 
 5. reconcile the corrected desired state
 6. restart only the affected workload when evidence supports it
 7. node service restart only when node-level evidence supports it
-8. CNI/DNS/load-balancer/storage/control-plane change only with explicit approval and rollback/recovery plan
+8. CNI/DNS/MetalLB/storage/control-plane change only with explicit approval and rollback/recovery plan
 
-Never delete PVC/PV, reset kubeadm, reinstall CNI, rotate secret-encryption keys, or wipe storage as an early troubleshooting step.
+Never delete PVC/PV, reset kubeadm, reinstall CNI, rotate SOPS keys, or wipe storage as an early troubleshooting step.
 
 ## Timeout and Retry Rules
 
@@ -125,7 +148,7 @@ Never delete PVC/PV, reset kubeadm, reinstall CNI, rotate secret-encryption keys
 
 ## AI / MCP / Automation Failure Rules
 
-For tool-using AI, MCP, workflow automation, or similar systems, distinguish:
+For OpenClaw, Hermes Agent, MCP, n8n, OpenWebUI tools, or similar systems, distinguish:
 
 - Kubernetes transport/runtime failure
 - service configuration or credential reference failure

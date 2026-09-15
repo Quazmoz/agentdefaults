@@ -23,10 +23,9 @@ current target manifests/runtime evidence
 2. Read `AGENTS.md`.
 3. If working from a local checkout with Graft, run `graft map` when needed and `graft ask "<task>" --source` before broad source reading.
 4. Read only the task-relevant repo-local skill and exact manifests.
-5. Treat current source/runtime evidence as authoritative; flag documentation drift instead of inheriting cached topology assumptions.
-6. Do not copy personal hostnames, IPs, VPN/cloud topology, workload inventories, storage paths, or account identifiers back into AgentDefaults; keep those facts task-local.
-7. If live cluster access is needed, verify the homelab kube context and use explicit `--context`.
-8. Before a watched-branch push/merge, determine the current Flux pruning behavior because source deletion may become runtime deletion.
+5. Treat current source/runtime evidence as authoritative; flag documentation drift rather than inheriting stale Oracle/WireGuard assumptions.
+6. If live cluster access is needed, verify the homelab kube context and use explicit `--context`.
+7. Before a watched-branch push/merge, remember that Flux may deploy automatically and `prune: true` can turn a source deletion into runtime deletion.
 
 ## Common Modes
 
