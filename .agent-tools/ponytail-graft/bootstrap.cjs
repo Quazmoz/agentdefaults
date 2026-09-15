@@ -4,14 +4,16 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 
 const OWNER = 'multi-repo-ponytail-graft/v1';
 const SIDECAR = path.resolve(__dirname);
 const REPO = path.resolve(SIDECAR, '..', '..');
 const CORE = path.join(SIDECAR, 'bootstrap-core.cjs');
 const MODULES = path.join(SIDECAR, 'node_modules');
+const GRAFT_LAUNCHER = path.join(SIDECAR, 'bin', 'graft.cjs');
 const args = process.argv.slice(2);
 const modeArgs = args.filter((arg) => arg.startsWith('--mode='));
 const MODE = (modeArgs[0] || '--mode=repo').slice(7);
@@ -24,6 +26,7 @@ function fail(message) {
 if (modeArgs.length > 1) fail('pass at most one --mode argument');
 if (!['repo', 'workspace'].includes(MODE)) fail(`unsupported mode ${JSON.stringify(MODE)}; expected repo or workspace`);
 if (!fs.existsSync(CORE)) fail(`missing generated bootstrap core: ${CORE}`);
+if (!fs.existsSync(GRAFT_LAUNCHER)) fail(`missing repo-local Graft launcher: ${GRAFT_LAUNCHER}`);
 
 function relativeTarget(target) {
   const absolute = path.resolve(REPO, target);
@@ -56,7 +59,6 @@ function rejectSymlinkComponents(target) {
       fail(`${path.relative(REPO, current)} is a symlink; refusing repo-scoped mutation through it`);
     }
   }
-  // Keep the lexical containment check above even when the final target exists.
   void absolute;
 }
 
@@ -127,9 +129,8 @@ function installedVersion(name) {
   }
 }
 
-const stale = expectedPackages.some((name) => installedVersion(name) !== pins[name]);
-if (stale) {
-  process.stdout.write(`[${OWNER}] sidecar dependencies are absent/stale; repairing from the tracked lock with npm ci\n`);
+function runNpmCiRepair(reason) {
+  process.stdout.write(`[${OWNER}] ${reason}; repairing from the tracked lock with npm ci\n`);
   try {
     execFileSync('npm', ['ci', '--no-audit', '--no-fund'], {
       cwd: SIDECAR,
@@ -146,9 +147,77 @@ if (stale) {
     fail(`npm ci failed while repairing sidecar dependencies${error && error.status !== undefined ? ` (exit ${error.status})` : ''}`);
   }
 }
-for (const name of expectedPackages) {
-  const installed = installedVersion(name);
-  if (installed !== pins[name]) fail(`installed ${name}@${installed || 'missing'} does not match pinned ${pins[name]} after npm ci`);
+
+function verifyInstalledVersions() {
+  for (const name of expectedPackages) {
+    const installed = installedVersion(name);
+    if (installed !== pins[name]) fail(`installed ${name}@${installed || 'missing'} does not match pinned ${pins[name]}`);
+  }
+}
+
+function graftHealthCheck() {
+  const checks = [
+    ['--help'],
+    ['init', '--list-agents'],
+  ];
+  for (const checkArgs of checks) {
+    const result = spawnSync(process.execPath, [GRAFT_LAUNCHER, ...checkArgs], {
+      cwd: REPO,
+      encoding: 'utf8',
+      timeout: 60000,
+      env: {
+        ...process.env,
+        DO_NOT_TRACK: '1',
+      },
+    });
+    if (result.error || result.status !== 0) {
+      return {
+        ok: false,
+        args: checkArgs,
+        status: result.status,
+        signal: result.signal,
+        error: result.error ? result.error.message : null,
+        stderr: (result.stderr || '').trim(),
+        stdout: (result.stdout || '').trim(),
+      };
+    }
+  }
+  return { ok: true };
+}
+
+function runtimeDiagnostic(failure) {
+  const abi = process.versions && process.versions.modules ? process.versions.modules : 'unknown';
+  const command = `node .agent-tools/ponytail-graft/bin/graft.cjs ${failure.args.join(' ')}`;
+  const output = failure.stderr || failure.stdout || failure.error || 'no diagnostic output';
+  return [
+    'repo-local Graft runtime health check failed after clean repair',
+    `command=${JSON.stringify(command)}`,
+    `exit=${failure.status === null || failure.status === undefined ? 'unknown' : failure.status}`,
+    `signal=${failure.signal || 'none'}`,
+    `node=${process.version}`,
+    `platform=${process.platform}`,
+    `arch=${process.arch}`,
+    `abi=${abi}`,
+    `os=${os.release()}`,
+    `error=${JSON.stringify(output.slice(0, 2000))}`,
+  ].join('; ');
+}
+
+const stale = expectedPackages.some((name) => installedVersion(name) !== pins[name]);
+if (stale) {
+  runNpmCiRepair('sidecar dependencies are absent/stale');
+}
+verifyInstalledVersions();
+
+// Matching package versions do not prove native dependencies can load. A
+// previous noncanonical install may have suppressed required lifecycle scripts.
+// Prove the local runtime before bootstrap-core can mutate host integration.
+let health = graftHealthCheck();
+if (!health.ok) {
+  runNpmCiRepair('repo-local Graft runtime is unhealthy despite matching package pins');
+  verifyInstalledVersions();
+  health = graftHealthCheck();
+  if (!health.ok) fail(runtimeDiagnostic(health));
 }
 
 try {
