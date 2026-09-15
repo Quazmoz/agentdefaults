@@ -19,6 +19,7 @@ Canonical behavior belongs in [`../agents/`](../agents/) and [`../skills/`](../s
 | [`orchestration/`](orchestration/) | Start/resume/reset/escalate commands for formal orchestration workflows. |
 | [`token-efficiency/`](token-efficiency/) | Compression, benchmarking and model/token-efficiency tasks. |
 | [`palmierpro/`](palmierpro/) | Palmier Pro MCP video-editing workflows. |
+| [`ponytail-graft/`](ponytail-graft/) | Opt-in, repository-local Ponytail + Graft coexistence setup. Start with `ponytail-graft/ponytail-graft.md`. |
 
 ## How to Use a Prompt
 
@@ -48,6 +49,16 @@ prompts/implementation/codebase-de-slop-task.md
 + schemas/codebase-maintenance-task.schema.json
 + examples/codebase-maintenance-task.yaml
 ```
+
+For Ponytail + Graft, use the compatibility entrypoint rather than invoking an older machine-global install procedure directly:
+
+```text
+prompts/ponytail-graft/ponytail-graft.md
+→ prompts/ponytail-graft/multi-repo-ponytail-graft.md
++ prompts/ponytail-graft/HARDENING.md
+```
+
+The setup is opt-in. Do not install or bootstrap Ponytail/Graft merely because AgentDefaults is present in a repository.
 
 ## Formal Loop Prompts
 
