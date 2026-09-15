@@ -16,6 +16,7 @@ Canonical behavior still lives in the relevant [`../agents/`](../agents/), [`../
 | Choose a canonical agent | [`../agents/README.md`](../agents/README.md) |
 | Understand skill composition | [`../skills/README.md`](../skills/README.md) |
 | Find task prompts | [`../prompts/README.md`](../prompts/README.md) |
+| Install, repair, or understand repository-local Ponytail + Graft | [`../prompts/ponytail-graft/README.md`](../prompts/ponytail-graft/README.md) |
 | Use authenticated Comet browser research safely | [`quickstarts/comet-authenticated-research.md`](quickstarts/comet-authenticated-research.md) |
 | Reduce context/tool/output token waste | [`quickstarts/token-economy.md`](quickstarts/token-economy.md) |
 | Understand structured contracts/state | [`../schemas/README.md`](../schemas/README.md) |
@@ -58,6 +59,8 @@ Current quickstarts include:
 - [`quickstarts/repo-assistant.md`](quickstarts/repo-assistant.md)
 
 A quickstart should not duplicate the full canonical profile. If behavior conflicts, inspect the canonical artifact and runtime implementation before editing the quickstart.
+
+The Ponytail + Graft installer is intentionally documented next to its tested prompt contract rather than duplicated as a quickstart. Use [`../prompts/ponytail-graft/README.md`](../prompts/ponytail-graft/README.md).
 
 ## Agent Loops
 
@@ -126,6 +129,7 @@ Do not convert internal smoke-test results into stronger public claims than the 
 ## Tool and Integration Documentation
 
 - [`tool-integration-guide.md`](tool-integration-guide.md): how canonical content maps to Codex, Claude, Copilot, Gemini, Cursor, Windsurf and related runtimes.
+- [`../prompts/ponytail-graft/README.md`](../prompts/ponytail-graft/README.md): human/AI navigation for the opt-in repository-local Ponytail + Graft setup without duplicating the tested installer prompts.
 - [`../.claude/README.md`](../.claude/README.md): Claude Code project settings plus optional Graft hook/status-line adapter behavior.
 - [`../.github/agents/README.md`](../.github/agents/README.md): GitHub Copilot custom-agent adapters versus canonical agents.
 - [`../.github/prompts/README.md`](../.github/prompts/README.md): GitHub Copilot prompt adapters versus canonical prompts.

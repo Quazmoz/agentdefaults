@@ -4,6 +4,8 @@
 
 Explain the Claude-specific files under `.claude/`, especially the optional Graft status-line/hook integration that is separate from the canonical AgentDefaults instruction stack.
 
+For **installing, repairing, or bootstrapping the repository-local Ponytail + Graft setup**, start with [`../prompts/ponytail-graft/README.md`](../prompts/ponytail-graft/README.md). This file documents Claude runtime integration after the setup exists; it is not the installer entrypoint.
+
 Claude's canonical repository routing remains:
 
 ```text
@@ -90,6 +92,8 @@ When Claude routing is wrong, debug in this order:
 ```
 
 Do not blame Graft hooks for canonical routing defects before checking the instruction stack.
+
+For installer/bootstrap failures rather than Claude routing failures, use the troubleshooting map in [`../prompts/ponytail-graft/README.md`](../prompts/ponytail-graft/README.md).
 
 ## Editing Rules
 
