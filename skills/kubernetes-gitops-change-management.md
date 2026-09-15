@@ -10,7 +10,7 @@ This skill is the default implementation skill for `agents/kubernetes-homelab-en
 
 Use when the task changes or reviews:
 
-- `apps/base/` or `clusters/my-homelab/`
+- the active Flux/Kustomize reconciliation tree
 - Deployment, StatefulSet, DaemonSet, Job/CronJob, Service, Ingress, ConfigMap, Secret reference, PVC/PV, RBAC, NetworkPolicy, HelmRelease, HelmRepository, or Flux Kustomization resources
 - enabled/disabled app state in Kustomize
 - a GitOps rollback or removal
@@ -33,9 +33,9 @@ Remote GitHub-only runtimes must not fabricate Graft output; state the limitatio
 
 ## Evidence Rules
 
-Current manifests and runtime state outrank old topology documentation. If `README.md`, `AGENT_CONTEXT.md`, `docs/NETWORK.md`, app docs, or this skill disagree, report the drift and follow higher-authority/current evidence.
+Current manifests and runtime state outrank old topology documentation. If `README.md`, `AGENT_CONTEXT.md`, network docs, app docs, or this skill disagree, report the drift and follow higher-authority/current evidence.
 
-Do not rely on the old `apps/base/ORACLE_NODE_POLICY.md` path unless it exists on the target branch. Oracle/WireGuard behavior is conditional on current evidence.
+Do not encode historical node names, VPN/cloud topology, workload inventories, storage paths, account identifiers, or other operator-specific infrastructure details in AgentDefaults. Discover those from the current target repository/runtime when needed and keep them task-local.
 
 ## State and Side-Effect Model
 
@@ -99,7 +99,7 @@ Prefer explicit `--context <homelab-context>` on subsequent runtime commands. If
 |---|---|---|
 | Low | docs/comments/read-only diagnostics | targeted validation |
 | Medium | new app, version/resource/probe/config/ordinary ingress change | render + diff + rollback + post-deploy verification |
-| High | prune deletion, PVC/PV, CNI/DNS/MetalLB/ingress controller/Flux, SOPS keys, node/control-plane, broad RBAC, public auth exposure, backup/restore | explicit approval + recovery evidence + staged verification |
+| High | prune deletion, PVC/PV, CNI/DNS/load balancer/ingress controller/Flux, secret-encryption keys, node/control-plane, broad RBAC, public auth exposure, backup/restore | explicit approval + recovery evidence + staged verification |
 
 ## Manifest Safety Checks
 
@@ -121,13 +121,13 @@ Check as applicable:
 
 ## Secret Handling
 
-Never create or expose plaintext credentials. Use current repo SOPS/Age patterns and existing encrypted Secret references/templates.
+Never create or expose plaintext credentials. Use current repo encrypted-secret patterns and existing encrypted Secret references/templates.
 
 Do not decrypt secret files into model-visible context. Before finalizing, inspect changed lines for likely secret material. Redact sensitive runtime logs.
 
 ## AI / Automation Workloads
 
-For OpenClaw, Hermes Agent, MCP, n8n, OpenWebUI tools, or other tool-using automation, also verify:
+For tool-using AI, MCP, workflow automation, or other autonomous workloads, also verify:
 
 - least-privilege identity/RBAC
 - explicit allowed tools/endpoints
