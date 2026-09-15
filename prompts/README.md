@@ -19,7 +19,7 @@ Canonical behavior belongs in [`../agents/`](../agents/) and [`../skills/`](../s
 | [`orchestration/`](orchestration/) | Start/resume/reset/escalate commands for formal orchestration workflows. |
 | [`token-efficiency/`](token-efficiency/) | Compression, benchmarking and model/token-efficiency tasks. |
 | [`palmierpro/`](palmierpro/) | Palmier Pro MCP video-editing workflows. |
-| [`ponytail-graft/`](ponytail-graft/) | Opt-in, repository-local Ponytail + Graft coexistence setup. Start with `ponytail-graft/ponytail-graft.md`. |
+| [`ponytail-graft/`](ponytail-graft/) | Opt-in, repository-local Ponytail + Graft coexistence. Start with the [human/AI setup guide](ponytail-graft/README.md); the tested agent entrypoint remains [`ponytail-graft.md`](ponytail-graft/ponytail-graft.md). |
 
 ## How to Use a Prompt
 
@@ -50,7 +50,7 @@ prompts/implementation/codebase-de-slop-task.md
 + examples/codebase-maintenance-task.yaml
 ```
 
-For Ponytail + Graft, use the compatibility entrypoint rather than invoking an older machine-global install procedure directly:
+For Ponytail + Graft, humans and agents should start with [`ponytail-graft/README.md`](ponytail-graft/README.md) for navigation. The normal tested agent entrypoint is still:
 
 ```text
 prompts/ponytail-graft/ponytail-graft.md
@@ -58,7 +58,7 @@ prompts/ponytail-graft/ponytail-graft.md
 + prompts/ponytail-graft/HARDENING.md
 ```
 
-The setup is opt-in. Do not install or bootstrap Ponytail/Graft merely because AgentDefaults is present in a repository.
+Do not manually combine or rewrite those prompt bodies merely to make setup look simpler; the compatibility entrypoint already routes them in the required order. The setup is opt-in. Do not install or bootstrap Ponytail/Graft merely because AgentDefaults is present in a repository.
 
 ## Formal Loop Prompts
 
@@ -149,9 +149,16 @@ Do not create a new prompt merely to preserve one project's transient details.
 
 ## Validation
 
-After changing prompts:
+After changing prompts or prompt-adjacent documentation:
 
 ```bash
+python3 scripts/validate-agentdefaults.py
+```
+
+For Ponytail + Graft setup documentation or installer-adjacent changes, run the focused validator first:
+
+```bash
+python3 scripts/validate-ponytail-graft.py
 python3 scripts/validate-agentdefaults.py
 ```
 
@@ -161,4 +168,4 @@ For bounded-completion prompts also run the bounded-completion validator when an
 python3 scripts/validate-bounded-completion.py
 ```
 
-Report either command as passed only when it actually ran successfully.
+Report a command as passed only when it actually ran successfully.
