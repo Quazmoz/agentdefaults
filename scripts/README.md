@@ -24,6 +24,7 @@ Component validators exist for focused development and regression diagnosis:
 
 ```text
 validate-agentdefaults-core.py
+validate-ponytail-graft.py
 validate-engineering-contracts.py
 validate-cross-tool-routing.py
 validate-documentation-stack.py
@@ -34,6 +35,8 @@ validate-bounded-completion.py
 ```
 
 Use the relevant component while iterating, then run `validate-agentdefaults.py` before declaring repository validation complete.
+
+`validate-ponytail-graft.py` checks the repository-local Ponytail + Graft installer contract: exact sidecar pins, compatibility-prompt routing, hardening requirements, the repo-local Graft runtime-health gate, bounded dependency repair, and rejection of canonical global/floating install paths.
 
 `validate-github-actions-stack.py` checks the GitHub Actions specialist's manifest registration, authority/trust schema, canonical agent/skill/prompt/example/acceptance invariants, cross-tool routing, Copilot adapter references, and inclusion in the primary validation suite.
 
@@ -133,6 +136,13 @@ When modifying validators or control-plane code:
 3. run the focused validator;
 4. run `python3 scripts/validate-agentdefaults.py`;
 5. report anything not executable in the current environment as unverified.
+
+Ponytail + Graft installer or surrounding setup-documentation changes should run:
+
+```bash
+python3 scripts/validate-ponytail-graft.py
+python3 scripts/validate-agentdefaults.py
+```
 
 GitHub Actions stack changes should run:
 
