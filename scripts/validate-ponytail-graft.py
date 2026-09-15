@@ -46,10 +46,24 @@ def main() -> int:
         "package-lock.json",
         "['repo', 'workspace']",
         "DO_NOT_TRACK",
+        "graftHealthCheck",
+        "['--help']",
+        "['init', '--list-agents']",
+        "runNpmCiRepair",
+        "repo-local Graft runtime is unhealthy despite matching package pins",
     ]
     for fragment in required_bootstrap_fragments:
         if fragment not in bootstrap:
             return fail(f"bootstrap is missing hardening fragment {fragment!r}")
+
+    if "--ignore-scripts" in bootstrap:
+        return fail("bootstrap contains forbidden --ignore-scripts install behavior")
+
+    # The health check and bounded repair must execute before bootstrap-core is delegated to.
+    health_pos = bootstrap.find("let health = graftHealthCheck()")
+    core_exec_pos = bootstrap.find("execFileSync(process.execPath, [CORE")
+    if health_pos < 0 or core_exec_pos < 0 or health_pos > core_exec_pos:
+        return fail("runtime health gate does not execute before bootstrap-core delegation")
 
     forbidden_canonical_fragments = [
         "npm install -g @nanonets/graft",
@@ -66,6 +80,20 @@ def main() -> int:
     if "explicit repository choice" not in hardening or "must not automatically install" not in hardening:
         return fail("hardening contract does not preserve the opt-in boundary")
 
+    required_runtime_contract = [
+        "Do not use `--ignore-scripts`",
+        "Runtime health gate",
+        "graft.cjs --help",
+        "graft.cjs init --list-agents",
+        "one** clean `npm ci --no-audit --no-fund` repair",
+    ]
+    for fragment in required_runtime_contract:
+        if fragment not in hardening:
+            return fail(f"hardening contract is missing runtime-safety requirement {fragment!r}")
+
+    if "never use `--ignore-scripts`" not in router:
+        return fail("compatibility prompt does not forbid noncanonical --ignore-scripts sidecar installs")
+
     package = json.loads(PACKAGE.read_text(encoding="utf-8"))
     lock = json.loads(LOCK.read_text(encoding="utf-8"))
     dependencies = package.get("dependencies", {})
@@ -80,7 +108,7 @@ def main() -> int:
         if locked != version:
             return fail(f"lock mismatch for {name}: package.json={version}, package-lock.json={locked}")
 
-    print("PASS: Ponytail + Graft installer hardening and pin isolation")
+    print("PASS: Ponytail + Graft installer hardening, runtime health gate, and pin isolation")
     return 0
 
 
