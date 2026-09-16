@@ -13,6 +13,8 @@ BOOTSTRAP = SIDECAR / "bootstrap.cjs"
 CORE = SIDECAR / "bootstrap-core.cjs"
 PACKAGE = SIDECAR / "package.json"
 LOCK = SIDECAR / "package-lock.json"
+GUIDE = ROOT / "prompts" / "ponytail-graft" / "README.md"
+HANDOFF = ROOT / "prompts" / "ponytail-graft" / "CROSS_REPO_HANDOFF.md"
 ROUTER = ROOT / "prompts" / "ponytail-graft" / "ponytail-graft.md"
 BASELINE = ROOT / "prompts" / "ponytail-graft" / "multi-repo-ponytail-graft.md"
 HARDENING = ROOT / "prompts" / "ponytail-graft" / "HARDENING.md"
@@ -29,12 +31,24 @@ def fail(message: str) -> int:
 
 
 def main() -> int:
-    required = [BOOTSTRAP, CORE, PACKAGE, LOCK, ROUTER, BASELINE, HARDENING]
+    required = [
+        BOOTSTRAP,
+        CORE,
+        PACKAGE,
+        LOCK,
+        GUIDE,
+        HANDOFF,
+        ROUTER,
+        BASELINE,
+        HARDENING,
+    ]
     missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
     if missing:
         return fail(f"missing required files: {', '.join(missing)}")
 
     bootstrap = BOOTSTRAP.read_text(encoding="utf-8")
+    guide = GUIDE.read_text(encoding="utf-8")
+    handoff = HANDOFF.read_text(encoding="utf-8")
     router = ROUTER.read_text(encoding="utf-8")
     hardening = HARDENING.read_text(encoding="utf-8")
 
@@ -70,10 +84,19 @@ def main() -> int:
         "npm install -g @dietrichgebert/ponytail",
         "npx -y @nanonets/graft",
     ]
-    for path, text in [(BOOTSTRAP, bootstrap), (ROUTER, router), (HARDENING, hardening)]:
+    for path, text in [
+        (BOOTSTRAP, bootstrap),
+        (GUIDE, guide),
+        (HANDOFF, handoff),
+        (ROUTER, router),
+        (HARDENING, hardening),
+    ]:
         for fragment in forbidden_canonical_fragments:
             if fragment in text:
-                return fail(f"{path.relative_to(ROOT)} contains forbidden canonical global/floating install command {fragment!r}")
+                return fail(
+                    f"{path.relative_to(ROOT)} contains forbidden canonical "
+                    f"global/floating install command {fragment!r}"
+                )
 
     if "multi-repo-ponytail-graft.md" not in router or "HARDENING.md" not in router:
         return fail("compatibility prompt does not route to both portable baseline and hardening contract")
@@ -94,6 +117,39 @@ def main() -> int:
     if "never use `--ignore-scripts`" not in router:
         return fail("compatibility prompt does not forbid noncanonical --ignore-scripts sidecar installs")
 
+    # Cross-repository transport regression: a fresh target is allowed to start without
+    # AgentDefaults source files or the managed sidecar. The handoff must resolve one
+    # coherent AgentDefaults source snapshot rather than searching the target/its origin.
+    required_handoff_fragments = [
+        "https://github.com/Quazmoz/agentdefaults",
+        "TARGET_DIR",
+        "git rev-parse HEAD",
+        "prompts/ponytail-graft/ponytail-graft.md",
+        "prompts/ponytail-graft/multi-repo-ponytail-graft.md",
+        "prompts/ponytail-graft/HARDENING.md",
+        "Their absence in `TARGET_DIR` is **expected before installation and is not a blocker**",
+        "Do not search TARGET_DIR or the target repository's origin",
+        "Do not require .agent-tools/ponytail-graft to exist before the installer creates it.",
+        "Do not misdiagnose the situation as the target repository missing required setup artifacts.",
+        "one coherent AgentDefaults source snapshot",
+    ]
+    for fragment in required_handoff_fragments:
+        if fragment not in handoff:
+            return fail(f"cross-repo handoff is missing regression requirement {fragment!r}")
+
+    if "CROSS_REPO_HANDOFF.md" not in guide:
+        return fail("setup guide does not expose the cross-repository handoff")
+
+    required_guide_fragments = [
+        "relative links in `ponytail-graft.md` navigate the **AgentDefaults source tree**",
+        "They are not prerequisites that must already exist inside `TARGET_DIR`",
+        "This is normal on first install",
+        "do **not** search the target or its origin for AgentDefaults source files",
+    ]
+    for fragment in required_guide_fragments:
+        if fragment not in guide:
+            return fail(f"setup guide is missing cross-repo guidance {fragment!r}")
+
     package = json.loads(PACKAGE.read_text(encoding="utf-8"))
     lock = json.loads(LOCK.read_text(encoding="utf-8"))
     dependencies = package.get("dependencies", {})
@@ -108,7 +164,10 @@ def main() -> int:
         if locked != version:
             return fail(f"lock mismatch for {name}: package.json={version}, package-lock.json={locked}")
 
-    print("PASS: Ponytail + Graft installer hardening, runtime health gate, and pin isolation")
+    print(
+        "PASS: Ponytail + Graft installer hardening, runtime health gate, "
+        "cross-repo handoff, and pin isolation"
+    )
     return 0
 
 
