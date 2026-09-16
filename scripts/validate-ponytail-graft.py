@@ -13,6 +13,7 @@ BOOTSTRAP = SIDECAR / "bootstrap.cjs"
 CORE = SIDECAR / "bootstrap-core.cjs"
 PACKAGE = SIDECAR / "package.json"
 LOCK = SIDECAR / "package-lock.json"
+GENERATED_DOC = ROOT / "docs" / "AGENT_TOOLING.md"
 GUIDE = ROOT / "prompts" / "ponytail-graft" / "README.md"
 HANDOFF = ROOT / "prompts" / "ponytail-graft" / "CROSS_REPO_HANDOFF.md"
 ROUTER = ROOT / "prompts" / "ponytail-graft" / "ponytail-graft.md"
@@ -36,6 +37,7 @@ def main() -> int:
         CORE,
         PACKAGE,
         LOCK,
+        GENERATED_DOC,
         GUIDE,
         HANDOFF,
         ROUTER,
@@ -47,6 +49,8 @@ def main() -> int:
         return fail(f"missing required files: {', '.join(missing)}")
 
     bootstrap = BOOTSTRAP.read_text(encoding="utf-8")
+    core = CORE.read_text(encoding="utf-8")
+    generated_doc = GENERATED_DOC.read_text(encoding="utf-8")
     guide = GUIDE.read_text(encoding="utf-8")
     handoff = HANDOFF.read_text(encoding="utf-8")
     router = ROUTER.read_text(encoding="utf-8")
@@ -86,6 +90,7 @@ def main() -> int:
     ]
     for path, text in [
         (BOOTSTRAP, bootstrap),
+        (CORE, core),
         (GUIDE, guide),
         (HANDOFF, handoff),
         (ROUTER, router),
@@ -117,6 +122,20 @@ def main() -> int:
     if "never use `--ignore-scripts`" not in router:
         return fail("compatibility prompt does not forbid noncanonical --ignore-scripts sidecar installs")
 
+    # Generated operator documentation must stay compatible with the repository's
+    # Markdown contract after every bootstrap run, not only in the checked-in copy.
+    required_generated_doc_fragments = [
+        "const DOC_BODY",
+        "# Repository-local agent tooling",
+        "## Purpose",
+        "Document the repository-local Ponytail + Graft runtime",
+    ]
+    for fragment in required_generated_doc_fragments:
+        if fragment not in core:
+            return fail(f"bootstrap-core generated documentation is missing {fragment!r}")
+    if "## Purpose" not in generated_doc:
+        return fail("generated docs/AGENT_TOOLING.md is missing ## Purpose")
+
     # Cross-repository transport regression: a fresh target is allowed to start without
     # AgentDefaults source files or the managed sidecar. The handoff must resolve one
     # coherent AgentDefaults source snapshot rather than searching the target/its origin.
@@ -144,7 +163,7 @@ def main() -> int:
         "relative links in `ponytail-graft.md` navigate the **AgentDefaults source tree**",
         "They are not prerequisites that must already exist inside `TARGET_DIR`",
         "This is normal on first install",
-        "do **not** search the target or its origin for AgentDefaults source files",
+        "Do **not** search the target or its origin for AgentDefaults source files",
     ]
     for fragment in required_guide_fragments:
         if fragment not in guide:
@@ -166,7 +185,7 @@ def main() -> int:
 
     print(
         "PASS: Ponytail + Graft installer hardening, runtime health gate, "
-        "cross-repo handoff, and pin isolation"
+        "cross-repo handoff, generated-doc convergence, and pin isolation"
     )
     return 0
 
