@@ -2,6 +2,10 @@
 
 # Repository-local agent tooling
 
+## Purpose
+
+Document the repository-local Ponytail + Graft runtime, bootstrap procedure, ownership boundaries, host support, and recovery/update operations for this concrete checkout.
+
 Ponytail and Graft are pinned **inside this repository**, not installed globally.
 Every launch resolves `.agent-tools/ponytail-graft/node_modules`, so two repos can
 pin different versions and neither depends on a machine-wide install.
