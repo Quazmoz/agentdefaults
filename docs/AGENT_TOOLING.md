@@ -2,10 +2,6 @@
 
 # Repository-local agent tooling
 
-## Purpose
-
-Keep Ponytail and Graft pinned and isolated inside this repository so supported coding agents use the same reproducible, repo-local tooling without depending on machine-wide installs.
-
 Ponytail and Graft are pinned **inside this repository**, not installed globally.
 Every launch resolves `.agent-tools/ponytail-graft/node_modules`, so two repos can
 pin different versions and neither depends on a machine-wide install.
