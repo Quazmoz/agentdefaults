@@ -88,9 +88,11 @@ def main() -> int:
         "npm install -g @dietrichgebert/ponytail",
         "npx -y @nanonets/graft",
     ]
+    # Scan executable/bootstrap routing and authored setup instructions. bootstrap-core.cjs
+    # deliberately embeds the bad npx spelling in generated operator documentation as a
+    # warning/example, so a raw text scan of CORE would be a false positive.
     for path, text in [
         (BOOTSTRAP, bootstrap),
-        (CORE, core),
         (GUIDE, guide),
         (HANDOFF, handoff),
         (ROUTER, router),
