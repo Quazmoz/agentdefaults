@@ -18,6 +18,8 @@ from mra import auth, config, secure_cli, secrets  # noqa: E402
 
 
 SECRET_ID = "6f7c12c0-df7b-4a2b-9360-1539a4d13392"
+BOOTSTRAP_SECRET_ID = "00000000-0000-0000-0000-000000000099"
+PROFILE_SECRET_ID = "00000000-0000-0000-0000-000000000100"
 
 
 class BitwardenSecretProviderTest(unittest.TestCase):
@@ -85,6 +87,55 @@ class RevenueCatSecretResolutionTest(unittest.TestCase):
         os.environ["REVENUECAT_V2_SECRET_KEY"] = "sk_ci_override"
         self.assertEqual(auth.revenuecat_key(), "sk_ci_override")
 
+    def test_profile_without_key_inherits_global_bootstrap_reference_in_memory(self) -> None:
+        config.save_profile(
+            config.Profile(slug="webhookdeck", package_name="com.quazmoz.webhookdeck")
+        )
+        config.save_secret_refs(
+            config.SecretRefs(revenuecat_bootstrap_secret_id=BOOTSTRAP_SECRET_ID)
+        )
+
+        persisted = config.load_profiles()["webhookdeck"]
+        effective = config.load_profile("webhookdeck")
+
+        self.assertIsNone(persisted.revenuecat_secret_id)
+        self.assertEqual(effective.revenuecat_secret_id, BOOTSTRAP_SECRET_ID)
+        self.assertEqual(
+            auth.revenuecat_credential_source(effective),
+            "global-bootstrap-bitwarden",
+        )
+
+    def test_bootstrap_key_is_used_when_profile_has_no_project_specific_key(self) -> None:
+        config.save_profile(config.Profile(slug="webhookdeck"))
+        config.save_secret_refs(
+            config.SecretRefs(revenuecat_bootstrap_secret_id=BOOTSTRAP_SECRET_ID)
+        )
+        profile = config.load_profile("webhookdeck")
+        with mock.patch.object(
+            auth.secret_provider,
+            "bitwarden_secret",
+            return_value="sk_bootstrap",
+        ) as get:
+            self.assertEqual(auth.revenuecat_key(profile), "sk_bootstrap")
+        get.assert_called_once_with(BOOTSTRAP_SECRET_ID)
+
+    def test_project_specific_key_beats_global_bootstrap_key(self) -> None:
+        config.save_secret_refs(
+            config.SecretRefs(revenuecat_bootstrap_secret_id=BOOTSTRAP_SECRET_ID)
+        )
+        config.save_profile(
+            config.Profile(slug="motionguard", revenuecat_secret_id=PROFILE_SECRET_ID)
+        )
+        profile = config.load_profile("motionguard")
+        with mock.patch.object(
+            auth.secret_provider,
+            "bitwarden_secret",
+            return_value="sk_motionguard",
+        ) as get:
+            self.assertEqual(auth.revenuecat_key(profile), "sk_motionguard")
+        get.assert_called_once_with(PROFILE_SECRET_ID)
+        self.assertEqual(auth.revenuecat_credential_source(profile), "profile-bitwarden")
+
     def test_agent_cli_binds_secret_reference_without_value(self) -> None:
         config.save_profile(
             config.Profile(
@@ -101,6 +152,19 @@ class RevenueCatSecretResolutionTest(unittest.TestCase):
         self.assertEqual(result, 0)
         profile = config.load_profile("motionguard")
         self.assertEqual(profile.revenuecat_secret_id, SECRET_ID)
+        self.assertNotIn("sk_", stdout.getvalue())
+
+    def test_agent_cli_binds_global_bootstrap_reference_without_value(self) -> None:
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = secure_cli.main(
+                ["auth", "bind-revenuecat-bootstrap", "--secret-id", BOOTSTRAP_SECRET_ID]
+            )
+        self.assertEqual(result, 0)
+        self.assertEqual(
+            config.load_secret_refs().revenuecat_bootstrap_secret_id,
+            BOOTSTRAP_SECRET_ID,
+        )
         self.assertNotIn("sk_", stdout.getvalue())
 
 
