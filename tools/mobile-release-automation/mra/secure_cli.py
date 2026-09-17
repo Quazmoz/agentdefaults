@@ -1,8 +1,8 @@
-"""Agent-facing CLI with profile-bound secret resolution.
+"""Agent-facing CLI with local credential/profile diagnostics.
 
 This surface performs read-only platform calls plus local credential/profile
-binding. Secret values are never printed. Live platform changes belong to the
-risk-gated MCP surface or explicit operator CLI.
+binding. RevenueCat authentication is delegated to the official RevenueCat CLI
+and its browser OAuth session; MRA never prints or stores RevenueCat OAuth tokens.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import argparse
 import json
 import sys
 
-from . import admob_credentials, auth, config, play_credentials
+from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
 from . import revenuecat as rc_module
 from . import secrets as secret_provider
 
@@ -38,32 +38,26 @@ def _project_profile(slug: str) -> config.Profile:
 
 
 def _client(profile: config.Profile) -> rc_module.RevenueCatClient:
-    return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
+    del profile
+    return rc_module.RevenueCatClient()
 
 
 def _probe(probe) -> dict:
     try:
         return probe()
-    except config.ConfigError as error:
+    except (config.ConfigError, revenuecat_cli.RevenueCatCliError) as error:
         return {"status": "not-ready", "detail": str(error)}
 
 
 def _revenuecat_api_status() -> dict:
-    source = auth.revenuecat_credential_source()
-    auth.revenuecat_key()
-    return {"status": "ready", "source": source}
+    return revenuecat_cli.auth_status()
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
     profiles = config.load_profiles()
-    secured = {
-        slug: {
-            "revenuecat_project_id": profile.revenuecat_project_id,
-            "revenuecat_secret_id": profile.revenuecat_secret_id,
-        }
-        for slug, profile in profiles.items()
-        if profile.revenuecat_secret_id
-    }
+    legacy_bindings = sorted(
+        slug for slug, profile in profiles.items() if profile.revenuecat_secret_id
+    )
     return emit(
         {
             "bitwarden": secret_provider.bitwarden_status(),
@@ -71,22 +65,29 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
             "revenuecat_api": _probe(_revenuecat_api_status),
             "admob": _probe(admob_credentials.status),
-            "secured_profiles": secured,
+            "legacy_revenuecat_key_bindings": legacy_bindings,
             "platform_mutations": "risk-gated on MCP; explicit on operator mra CLI",
         }
     )
 
 
-def cmd_bind_revenuecat(args: argparse.Namespace) -> int:
-    path = config.save_profile(
-        config.Profile(slug=args.profile, revenuecat_secret_id=args.secret_id)
-    )
+def _deprecated_revenuecat_binding(kind: str) -> int:
     return emit(
         {
-            "saved": str(path),
-            "profile": vars(config.load_profile(args.profile)),
+            "status": "deprecated",
+            "binding": kind,
+            "detail": (
+                "RevenueCat API-key binding is no longer used by MRA. "
+                "Install the official RevenueCat CLI and run `rc auth login` "
+                "with browser OAuth instead. Existing stored key references are ignored."
+            ),
         }
     )
+
+
+def cmd_bind_revenuecat(args: argparse.Namespace) -> int:
+    del args
+    return _deprecated_revenuecat_binding("revenuecat-profile-api-key")
 
 
 def cmd_bind_play(args: argparse.Namespace) -> int:
@@ -116,16 +117,8 @@ def cmd_bind_revenuecat_play(args: argparse.Namespace) -> int:
 
 
 def cmd_bind_revenuecat_bootstrap(args: argparse.Namespace) -> int:
-    path = config.save_secret_refs(
-        config.SecretRefs(revenuecat_bootstrap_secret_id=args.secret_id)
-    )
-    return emit(
-        {
-            "saved": str(path),
-            "binding": "revenuecat-api-bootstrap",
-            "secret_id": config.load_secret_refs().revenuecat_bootstrap_secret_id,
-        }
-    )
+    del args
+    return _deprecated_revenuecat_binding("revenuecat-bootstrap-api-key")
 
 
 def cmd_bind_admob(args: argparse.Namespace) -> int:
@@ -163,11 +156,11 @@ def _add_profile(parser: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mra-agent",
-        description="Read-only platform surface plus local secret-reference binding.",
+        description="Read-only platform surface plus local credential-reference binding.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("doctor", help="check Bitwarden and credential bindings").set_defaults(
+    subparsers.add_parser("doctor", help="check OAuth and local credential bindings").set_defaults(
         func=cmd_doctor
     )
 
@@ -190,7 +183,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     bind_rc_bootstrap = auth_parser.add_parser(
         "bind-revenuecat-bootstrap",
-        help="bind the global RevenueCat v2 bootstrap key UUID used before per-app keys exist",
+        help="deprecated compatibility command; RevenueCat now uses official CLI OAuth",
     )
     bind_rc_bootstrap.add_argument("--secret-id", required=True)
     bind_rc_bootstrap.set_defaults(func=cmd_bind_revenuecat_bootstrap)
@@ -201,19 +194,22 @@ def build_parser() -> argparse.ArgumentParser:
     bind_admob.add_argument("--secret-id", required=True)
     bind_admob.set_defaults(func=cmd_bind_admob)
 
-    profile = subparsers.add_parser("profile", help="manage profile secret references").add_subparsers(
+    profile = subparsers.add_parser("profile", help="manage local app profiles").add_subparsers(
         dest="profile_command", required=True
     )
-    bind = profile.add_parser("bind-revenuecat", help="bind a Bitwarden secret UUID to a profile")
+    bind = profile.add_parser(
+        "bind-revenuecat",
+        help="deprecated compatibility command; RevenueCat now uses official CLI OAuth",
+    )
     _add_profile(bind)
     bind.add_argument("--secret-id", required=True)
     bind.set_defaults(func=cmd_bind_revenuecat)
 
-    rc = subparsers.add_parser("rc", help="RevenueCat API v2 read-only tools").add_subparsers(
+    rc = subparsers.add_parser("rc", help="RevenueCat OAuth-backed read-only tools").add_subparsers(
         dest="rc_command", required=True
     )
 
-    projects = rc.add_parser("projects", help="list projects visible to the resolved RevenueCat key")
+    projects = rc.add_parser("projects", help="list projects visible to the OAuth account")
     _add_profile(projects)
     projects.set_defaults(func=cmd_rc_projects)
 
@@ -235,7 +231,7 @@ def main(argv: list[str] | None = None) -> int:
     except config.ConfigError as error:
         note(f"configuration error: {error}")
         return 3
-    except rc_module.RevenueCatError as error:
+    except (rc_module.RevenueCatError, revenuecat_cli.RevenueCatCliError) as error:
         note(f"platform error: {error}")
         return 4
 
