@@ -20,6 +20,34 @@ class RevenueCatManagementClient:
             self.client._request("POST", "/projects", f"create project {normalized}", json={"name": normalized})  # noqa: SLF001
         )
 
+    def update_offering(
+        self,
+        project_id: str,
+        offering_id: str,
+        *,
+        display_name: str | None = None,
+        is_current: bool | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict:
+        """Update mutable offering properties, including the current offering."""
+        body: dict[str, Any] = {}
+        if display_name is not None:
+            body["display_name"] = display_name
+        if is_current is not None:
+            body["is_current"] = is_current
+        if metadata is not None:
+            body["metadata"] = metadata
+        if not body:
+            raise rc_module.RevenueCatError("no offering fields supplied for update")
+        return redaction.redact(
+            self.client._request(  # noqa: SLF001
+                "POST",
+                f"/projects/{project_id}/offerings/{offering_id}",
+                f"update offering {offering_id}",
+                json=body,
+            )
+        )
+
     def list_webhooks(self, project_id: str) -> list[dict]:
         return redaction.redact(
             list(
@@ -57,7 +85,6 @@ class RevenueCatManagementClient:
             environment=environment,
             event_types=event_types,
             app_id=app_id,
-            partial=False,
         )
         response = self.client._request(  # noqa: SLF001
             "POST",
@@ -141,13 +168,12 @@ class RevenueCatManagementClient:
         environment: str | None,
         event_types: list[str] | None,
         app_id: str | None,
-        partial: bool,
     ) -> dict[str, Any]:
         normalized_name = name.strip()
         normalized_url = url.strip()
-        if not partial and not normalized_name:
+        if not normalized_name:
             raise rc_module.RevenueCatError("webhook name cannot be blank")
-        if not partial and not normalized_url:
+        if not normalized_url:
             raise rc_module.RevenueCatError("webhook URL cannot be blank")
         cls._validate_environment(environment)
         body: dict[str, Any] = {"name": normalized_name, "url": normalized_url}
