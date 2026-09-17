@@ -62,6 +62,36 @@ def rc_create_project(profile: str, name: str) -> dict:
     return _tag(result, "contained")
 
 
+def rc_update_offering(
+    profile: str,
+    offering_id: str,
+    display_name: str | None = None,
+    is_current: bool | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> dict:
+    """Update an offering; changing current offering requires local approval."""
+    resolved = _project_profile(profile)
+    approved = False
+    risk = "contained"
+    if is_current is not None:
+        risk = "high"
+        approved, refusal = _gate(
+            "Approve RevenueCat current offering change",
+            f"Profile: {profile}\nProject: {resolved.revenuecat_project_id}\n"
+            f"Offering: {offering_id}\nSet current: {is_current}",
+        )
+        if not approved:
+            return refusal
+    result = _client(resolved).update_offering(
+        resolved.revenuecat_project_id,
+        offering_id,
+        display_name=display_name,
+        is_current=is_current,
+        metadata=metadata,
+    )
+    return _tag(result, risk, approved)
+
+
 def rc_list_webhooks(profile: str) -> list[dict]:
     """List webhook integrations without exposing signing secrets."""
     resolved = _project_profile(profile)
@@ -168,6 +198,7 @@ def rc_delete_webhook(profile: str, webhook_id: str) -> dict:
 def register(server) -> None:
     for tool in (
         rc_create_project,
+        rc_update_offering,
         rc_list_webhooks,
         rc_get_webhook,
         rc_create_webhook,
