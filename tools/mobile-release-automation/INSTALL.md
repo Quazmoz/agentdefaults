@@ -25,7 +25,7 @@ command -v mra-mcp
 command -v mra-agent-mcp
 ```
 
-The RevenueCat wiring-readback and safe profile-reconciliation build is version 1.5.0 or newer.
+The RevenueCat OAuth transport is MRA **1.7.0 or newer**.
 
 ## Fresh install
 
@@ -39,6 +39,23 @@ python -m pip install -e ".[mcp]"
 rehash
 mra-agent --help
 ```
+
+Install the official RevenueCat CLI separately:
+
+```bash
+brew install RevenueCat/tap/rc
+rc auth login
+rc auth status --scopes --json
+```
+
+Use browser OAuth. If the status reports `method: api_key`, replace that login with OAuth:
+
+```bash
+rc auth logout
+rc auth login
+```
+
+MRA 1.7.0 uses the official `rc` CLI as its RevenueCat API transport. It does not require a RevenueCat `sk_...` secret key in Bitwarden or in an MRA profile.
 
 ## If `mra-agent` is not found
 
@@ -55,13 +72,23 @@ The `pyproject.toml` script table must contain `mra`, `mra-agent`, `mra-mcp`, an
 
 `mra-mcp` and `mra-agent-mcp` expose the risk-gated local server. Reads, dry-runs, contained single-object mutations, and local reconciliation of verified non-secret profile identifiers are available to agents. High-risk actions require a native local human approval and fail closed if approval is unavailable or declined.
 
-Static Google Play, RevenueCat, and AdMob OAuth client credentials should be stored in Bitwarden Secrets Manager and bound by UUID. The Bitwarden machine token and the dynamic AdMob OAuth refresh token remain in the OS credential store.
+Static Google Play credentials and the AdMob OAuth client should be stored in Bitwarden Secrets Manager and bound by UUID. The Bitwarden machine token and dynamic AdMob OAuth refresh token remain in the OS credential store.
+
+RevenueCat OAuth is owned by the official RevenueCat CLI. MRA never asks the model for an access token or refresh token and strips `RC_API_KEY` and `REVENUECAT_V2_SECRET_KEY` before invoking `rc` so stale project-scoped API keys cannot override OAuth.
+
+The Google service account RevenueCat uses for Play purchase validation is still a separate static credential. Bind it through the existing Bitwarden-backed command:
+
+```bash
+mra-agent auth bind-revenuecat-play --secret-id YOUR_REVENUECAT_PLAY_SERVICE_ACCOUNT_UUID
+```
 
 After install, run:
 
 ```bash
 mra-agent doctor
 ```
+
+The RevenueCat entry should report `official-revenuecat-cli-oauth`.
 
 For AdMob, bind the Desktop OAuth client before browser consent:
 
@@ -71,6 +98,12 @@ mra admob login
 mra admob probe
 ```
 
-For RevenueCat reconciliation, MCP 1.5.0+ can read package and entitlement wiring before changing it. Agents should use `rc_inspect_wiring` (or the targeted package/entitlement read tools), then invoke attachment mutations only when a verified relationship is missing. Profile IDs should be changed through `profile_update_identifiers`, not by editing `profiles.json` directly.
+For RevenueCat reconciliation, use `rc_list_projects` before creating a project, then `rc_inspect_wiring` or targeted package/entitlement read tools before changing live wiring. Profile IDs should be changed through `profile_update_identifiers`, not by editing `profiles.json` directly.
+
+If multiple RevenueCat CLI profiles are configured, select the one MRA should use before launching the MCP server:
+
+```bash
+export MRA_REVENUECAT_CLI_PROFILE=<profile-name>
+```
 
 Review `SECURITY.md` for the full credential and approval model.
