@@ -22,13 +22,15 @@ tools/mobile-release-automation/
 
 ## Read This First: The Platforms Are Not Equal
 
-| Platform | Authentication | Creation via API | First-party MCP |
+| Platform | Authentication | Creation via API | First-party agent tooling |
 |---|---|---|---|
 | Google Play | GCP service account | Yes | None |
-| RevenueCat | API v2 secret key | Yes | Yes, `https://mcp.revenuecat.ai/mcp` |
+| RevenueCat | Browser OAuth through the official `rc` CLI | Yes | Official CLI and MCP |
 | AdMob | OAuth user credentials only | Gated per account by Google | None |
 
-Planning AdMob automation before probing access is the most common way this work goes wrong. Google documents that AdMob requires an authenticated user and supports no other authorization protocol, so service accounts do not work at all; and both AdMob creation methods are marked limited access, returning 403 unless Google has allowlisted the account.
+RevenueCat secret API keys are project-specific and are not the bootstrap mechanism for MRA. MRA uses the official RevenueCat CLI browser OAuth session for account-level project discovery and creation, then continues using that OAuth session for project configuration.
+
+Planning AdMob automation before probing access is the most common way this work goes wrong. Google documents that AdMob requires an authenticated user and supports no service-account authorization; creation methods remain limited access and may return 403 unless Google has enabled the account.
 
 ## Authoritative References
 
@@ -38,6 +40,7 @@ https://developers.google.com/admob/api/reference/rest
 https://developers.google.com/admob/api/v1/how-tos/authorizing
 https://www.revenuecat.com/docs/api-v2
 https://www.revenuecat.com/docs/tools/mcp
+https://www.revenuecat.com/docs/tools/cli
 ```
 
 ## Fast Start
@@ -50,21 +53,41 @@ python3 -m venv .venv
 .venv/bin/pip install -e ".[mcp]"
 ```
 
-### 2. Provision credentials
+Install the official RevenueCat CLI on macOS:
+
+```bash
+brew install RevenueCat/tap/rc
+```
+
+### 2. Provision credentials and OAuth
 
 Follow `tools/mobile-release-automation/SECURITY.md` and `INSTALL.md`.
 
-Static vendor credentials are resolved through Bitwarden Secrets Manager. The Bitwarden machine-account token remains in macOS Keychain. Profiles and local binding files contain secret references rather than secret values.
+Static Google credentials are resolved through Bitwarden Secrets Manager. The Bitwarden machine-account token remains in macOS Keychain. RevenueCat API authentication is different: the official RevenueCat CLI owns its browser OAuth session and token refresh.
 
-For a portfolio that creates new RevenueCat projects through MRA, bind one global RevenueCat API v2 bootstrap key by its Bitwarden UUID:
+Authenticate RevenueCat once:
 
 ```bash
-mra-agent auth bind-revenuecat-bootstrap --secret-id YOUR_BITWARDEN_SECRET_UUID
+rc auth login
+rc auth status --scopes --json
 ```
 
-The bootstrap key exists only to break the new-project circular dependency. It should have the minimum provisioning permissions required, typically project/app/entitlement read or read-write permissions. A narrower project-specific key remains preferred after a project exists.
+Use browser OAuth. If `rc auth status --json` reports `method: api_key`, log out and authenticate again with OAuth:
 
-For AdMob specifically:
+```bash
+rc auth logout
+rc auth login
+```
+
+MRA intentionally removes `RC_API_KEY` and `REVENUECAT_V2_SECRET_KEY` from RevenueCat child processes so a stale project-scoped key cannot silently override OAuth.
+
+The Google service account RevenueCat needs for Play purchase validation remains a separate credential and should still be bound through Bitwarden:
+
+```bash
+mra-agent auth bind-revenuecat-play --secret-id YOUR_REVENUECAT_PLAY_SERVICE_ACCOUNT_UUID
+```
+
+For AdMob:
 
 ```text
 Desktop OAuth client JSON -> Bitwarden Secrets Manager
@@ -88,7 +111,7 @@ mra admob apps
 mra admob adunits
 ```
 
-`mra-agent doctor` reports the RevenueCat API credential source class without exposing a secret value. A brand-new profile can report/use `global-bootstrap-bitwarden` before it has its own RevenueCat project-specific key.
+A healthy RevenueCat entry from `mra-agent doctor` reports the source as `official-revenuecat-cli-oauth`. No RevenueCat `sk_...` key or Bitwarden RevenueCat API-key binding is required.
 
 Record the AdMob probe result. It determines whether the monetization scope is accepted. App/ad-unit creation is separately gated by Google and can still return 403 even after the probe succeeds.
 
@@ -103,28 +126,24 @@ The local MCP server is risk-gated, not read-only. It can inspect state and perf
 
 ### 5. Create a profile
 
-A brand-new app profile does not need a RevenueCat project id or project-specific RevenueCat key yet:
+A brand-new app profile needs only the identifiers you already know. It does not need a RevenueCat project ID or RevenueCat secret key:
 
 ```bash
 mra profile set --slug myapp \
   --package-name com.example.myapp
 ```
 
-With the global bootstrap key bound, the RevenueCat MCP tools can list projects and create a missing project. Reconcile the returned project/app identifiers with `profile_update_identifiers` as they are verified.
+The RevenueCat MCP tools can list every project visible to the authenticated OAuth account, create a missing project, then reconcile the returned project/app IDs with `profile_update_identifiers`.
 
-After the RevenueCat project exists, bind a narrower project-specific RevenueCat secret reference when desired:
+If you maintain multiple official RevenueCat CLI profiles, select one for MRA before starting the MCP server:
 
 ```bash
-mra-agent profile bind-revenuecat \
-  --profile myapp \
-  --secret-id YOUR_PROJECT_SPECIFIC_REVENUECAT_V2_KEY_UUID
+export MRA_REVENUECAT_CLI_PROFILE=<revenuecat-cli-profile>
 ```
 
-A persisted per-app key takes precedence over the global bootstrap key. The bootstrap UUID is inherited in memory only and is not written into `profiles.json` for unbound profiles.
-
-Bind the global Google credential references as documented in `SECURITY.md`.
-
 Agents should read profile identifiers with `profile_get` and reconcile verified non-secret IDs with `profile_update_identifiers`. Do not edit `~/.config/mobile-release-automation/profiles.json` directly.
+
+The legacy commands `mra-agent profile bind-revenuecat` and `mra-agent auth bind-revenuecat-bootstrap` remain only as migration-safe deprecated no-ops. Do not use them for new setups.
 
 ### 6. Give the agent a task
 
@@ -132,7 +151,7 @@ Fill in `prompts/implementation/mobile-release-automation-task.md`, or write a t
 
 Before mutation-heavy work, the agent should call the MCP `approval_policy` tool so it can explain which actions are automatic and which will require local approval.
 
-For a brand-new RevenueCat app, first call/list projects through the bootstrap credential before creating one, so an existing project is not duplicated. After project creation, immediately reconcile the returned project id into the profile.
+For a brand-new RevenueCat app, list projects first through OAuth so an existing project is not duplicated. After project creation, immediately reconcile the returned project ID into the MRA profile.
 
 For an existing RevenueCat project, read the complete offering/package/product and entitlement/product graph first:
 
@@ -149,14 +168,14 @@ rc_list_package_products
 rc_list_entitlement_products
 ```
 
-Only invoke the high-risk attachment tools when read-back proves a relationship is missing. After an approved mutation, call `rc_inspect_wiring` again and verify the relationship exists.
+Only invoke high-risk attachment tools when read-back proves a relationship is missing. After an approved mutation, call `rc_inspect_wiring` again and verify the relationship exists.
 
 ## Use It For
 
 - Uploading an app bundle to internal testing
 - Promoting a qualified build to a wider track
 - Setting up a new app across Google Play, RevenueCat, and AdMob where APIs permit it
-- Bootstrapping a brand-new RevenueCat project without first requiring a project-specific API key
+- Creating a brand-new RevenueCat project through account-level OAuth without first creating a project-specific API key
 - Creating and reconciling RevenueCat products, entitlements, offerings, packages, and their relationships
 - Creating AdMob apps and ad units where the account permits it
 - Diagnosing why a release, product, entitlement, package, or ad unit did not appear
@@ -189,9 +208,9 @@ The operator CLI remains available for explicit local work and retains its `--ye
 
 State these plainly rather than working around them:
 
-- Creating a brand-new app in Play Console, plus content rating, Data safety, and target audience declarations. The Play Developer API cannot do this.
+- Creating a brand-new app in Play Console, plus content rating, Data Safety, and target audience declarations. The Play Developer API cannot do this.
 - AdMob app and ad unit creation on an account Google has not allowlisted.
-- RevenueCat dashboard-only ad monetization settings that are not exposed by the v2 API, such as rewarded entitlement-duration configuration where no supported API is available.
+- RevenueCat dashboard-only ad monetization settings that are not exposed by supported APIs, such as rewarded entitlement-duration configuration where no supported API is available.
 
 Scripting a vendor console UI is not an approved workaround for any of these.
 
@@ -211,7 +230,7 @@ For RevenueCat relationship changes, MCP read-back is mandatory:
 rc_inspect_wiring(profile="myapp")
 ```
 
-An HTTP 200 means the request was accepted. It is not proof the intent was achieved.
+An HTTP 2xx response means the request was accepted. It is not proof the intended state was achieved.
 
 ## Validation of This Stack
 
@@ -220,7 +239,7 @@ python3 scripts/validate-agentdefaults.py
 python3 scripts/validate-mobile-release-automation-stack.py
 ```
 
-Toolkit tests, which are fully offline:
+Toolkit tests are fully offline:
 
 ```bash
 cd tools/mobile-release-automation
@@ -244,4 +263,4 @@ HANDOFF
 USER ACTION
 ```
 
-`CAPABILITY` states what this account can and cannot automate, with evidence. `IDENTIFIERS` lists every generated id, flagging any AdMob ad unit id that must reach source control before the next build.
+`CAPABILITY` states what this account can and cannot automate, with evidence. `IDENTIFIERS` lists every generated ID, flagging any AdMob ad unit ID that must reach source control before the next build.
