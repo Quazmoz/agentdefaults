@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from . import admob_credentials, auth, config, human_approval, play_credentials
+from . import admob_credentials, auth, config, human_approval, play_credentials, redaction
 from . import mcp_admob_tools, mcp_play_mutations, mcp_revenuecat_mutations
 from . import play as play_module
 from . import revenuecat as rc_module
@@ -46,16 +46,16 @@ def _client(profile: config.Profile) -> rc_module.RevenueCatClient:
 
 def _probe(probe) -> dict:
     try:
-        return probe()
+        return redaction.redact(probe())
     except config.ConfigError as error:
-        return {"status": "not-ready", "detail": str(error)}
+        return {"status": "not-ready", "detail": redaction.redact_text(str(error))}
 
 
 def _error_payload(error: Exception, *, platform: str | None = None) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "status": "error",
         "error_type": type(error).__name__,
-        "detail": str(error),
+        "detail": redaction.redact_text(str(error)),
     }
     if platform:
         payload["platform"] = platform
@@ -65,7 +65,7 @@ def _error_payload(error: Exception, *, platform: str | None = None) -> dict[str
 def _safe_read(operation: Callable[[], Any]) -> Any:
     """Keep expected read/config failures visible to MCP clients instead of opaque."""
     try:
-        return operation()
+        return redaction.redact(operation())
     except (config.ConfigError, ValueError) as error:
         return _error_payload(error)
 
@@ -76,15 +76,10 @@ def _rc_read(
     *,
     required_permissions: list[str],
 ) -> Any:
-    """Run a RevenueCat read while preserving vendor error detail for agents.
-
-    Successful responses retain their historical shape. Expected configuration or
-    RevenueCat failures return a structured object so the MCP transport does not
-    collapse them into the generic ``Error executing tool`` message.
-    """
+    """Run a RevenueCat read while preserving useful, redacted vendor detail."""
     try:
         resolved = _profile(profile)
-        return operation(_client(resolved), resolved)
+        return redaction.redact(operation(_client(resolved), resolved))
     except (config.ConfigError, ValueError, rc_module.RevenueCatError) as error:
         payload = _error_payload(error, platform="revenuecat")
         payload["required_permissions"] = required_permissions
@@ -100,39 +95,54 @@ def _rc_read(
 def doctor() -> dict[str, Any]:
     """Check credential bindings, approval capability, and secured profiles."""
     profiles = config.load_profiles()
-    return {
-        "bitwarden": secret_provider.bitwarden_status(),
-        "google_play_publisher": _probe(play_credentials.publisher_status),
-        "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
-        "admob": _probe(admob_credentials.status),
-        "human_approval": human_approval.status(),
-        "secured_profiles": sorted(
-            slug for slug, profile in profiles.items() if profile.revenuecat_secret_id
-        ),
-        "platform_mutations": "risk-gated",
-    }
+    return redaction.redact(
+        {
+            "bitwarden": secret_provider.bitwarden_status(),
+            "google_play_publisher": _probe(play_credentials.publisher_status),
+            "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
+            "admob": _probe(admob_credentials.status),
+            "human_approval": human_approval.status(),
+            "secured_profiles": sorted(
+                slug for slug, profile in profiles.items() if profile.revenuecat_secret_id
+            ),
+            "platform_mutations": "capability-aware-risk-gated",
+        }
+    )
 
 
 @server.tool()
 def approval_policy() -> dict[str, Any]:
     """Describe the MCP risk policy before mutation-heavy work."""
     return {
-        "observe": ["reads", "diagnostics", "Play dry-runs"],
+        "observe": [
+            "reads and diagnostics",
+            "AdMob reports and capability discovery",
+            "Play dry-runs",
+            "plan/verify and portfolio audits",
+        ],
         "contained": [
             "internal Play releases",
-            "single RevenueCat object creation that does not change live entitlement wiring",
-            "single AdMob app or ad-unit creation where supported",
+            "single RevenueCat project/app/product/empty entitlement/package/offering creation",
+            "single unlinked AdMob app or ad-unit creation where supported",
             "local reconciliation of verified non-secret app identifiers",
         ],
         "high": [
             "non-internal Play releases or promotions",
+            "public Play Store listing/image/tester changes or review replies",
+            "irreversible AdMob app-store linking",
+            "AdMob mediation, mapping, or experiment mutations",
             "making a RevenueCat offering current",
-            "attaching products to entitlements or packages",
+            "attaching products to RevenueCat entitlements or packages",
+            "RevenueCat webhook create/update/delete",
             "creating RevenueCat products in the backing store",
-            "future destructive, financial, or broad multi-app mutations",
+            "destructive, financial, or broad multi-app mutations",
         ],
         "gate": human_approval.status(),
         "rule": "High-risk actions fail closed unless the local operator approves the exact action.",
+        "secret_rule": (
+            "Agent-visible desired state and tool output must not contain vendor secret values; "
+            "use immutable secret references and MCP-side resolution."
+        ),
     }
 
 
@@ -180,10 +190,12 @@ def play_list_tracks(profile: str) -> list[dict]:
 def play_list_products(profile: str) -> dict:
     """List Google Play subscriptions and one-time products for a profile."""
     client = play_module.PlayClient(_package(profile))
-    return {
-        "subscriptions": client.list_subscriptions(),
-        "in_app_products": client.list_in_app_products(),
-    }
+    return redaction.redact(
+        {
+            "subscriptions": client.list_subscriptions(),
+            "in_app_products": client.list_in_app_products(),
+        }
+    )
 
 
 @server.tool()

@@ -145,6 +145,35 @@ class CreateProductTest(unittest.TestCase):
         self.assertNotIn("display_name", session.body_for("POST", "/products"))
 
 
+class OfferingTest(unittest.TestCase):
+    def test_create_does_not_send_output_state_as_creation_field(self) -> None:
+        api, session = client({("POST", f"/projects/{PROJECT}/offerings"): ok({"id": "ofr_1"})})
+        result = api.create_offering(PROJECT, "default", "Default")
+        self.assertEqual(result["id"], "ofr_1")
+        body = session.body_for("POST", f"/projects/{PROJECT}/offerings")
+        self.assertEqual(body, {"lookup_key": "default", "display_name": "Default"})
+        self.assertNotIn("is_current", body)
+
+    def test_make_current_is_a_second_update_call(self) -> None:
+        routes = {
+            ("POST", f"/projects/{PROJECT}/offerings/ofr_1"): ok(
+                {"id": "ofr_1", "is_current": True}
+            ),
+            ("POST", f"/projects/{PROJECT}/offerings"): ok({"id": "ofr_1"}),
+        }
+        api, session = client(routes)
+        result = api.create_offering(PROJECT, "default", "Default", is_current=True)
+        self.assertTrue(result["is_current"])
+        create_body = session.body_for("POST", f"/projects/{PROJECT}/offerings")
+        self.assertNotIn("is_current", create_body)
+        update_call = next(
+            call
+            for call in session.calls
+            if call["method"] == "POST" and call["url"].endswith("/offerings/ofr_1")
+        )
+        self.assertEqual(update_call["json"], {"is_current": True})
+
+
 class AttachTest(unittest.TestCase):
     def test_entitlement_attach_uses_product_ids(self) -> None:
         api, session = client({("POST", "/actions/attach_products"): ok({})})
@@ -168,6 +197,20 @@ class ErrorTest(unittest.TestCase):
             api.list_products(PROJECT)
         self.assertIn("401", str(caught.exception))
         self.assertIn("bad key", str(caught.exception))
+
+    def test_http_error_redacts_bearer_canary(self) -> None:
+        api, _ = client(
+            {
+                ("GET", "/products"): fail(
+                    403,
+                    {"message": "Authorization: Bearer secret-canary-1234567890"},
+                )
+            }
+        )
+        with self.assertRaises(revenuecat.RevenueCatError) as caught:
+            api.list_products(PROJECT)
+        self.assertNotIn("secret-canary-1234567890", str(caught.exception))
+        self.assertIn("<redacted>", str(caught.exception))
 
 
 if __name__ == "__main__":

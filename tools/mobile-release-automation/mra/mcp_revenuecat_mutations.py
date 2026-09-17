@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from . import auth, config, human_approval, play_credentials
+from . import mcp_revenuecat_management
 from . import revenuecat as rc_module
 
 
@@ -192,3 +193,4 @@ def register(server) -> None:
         rc_create_product_in_store,
     ):
         server.tool()(tool)
+    mcp_revenuecat_management.register(server)

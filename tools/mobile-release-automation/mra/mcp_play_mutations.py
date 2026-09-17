@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from . import config, human_approval
+from . import mcp_play_management, mcp_reconcile
 from . import play as play_module
 
 
@@ -104,3 +105,5 @@ def play_promote(
 def register(server) -> None:
     server.tool()(play_publish_bundle)
     server.tool()(play_promote)
+    mcp_play_management.register(server)
+    mcp_reconcile.register(server)
