@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Iterator, Sequence
 import json
 
-from . import auth
+from . import auth, redaction
 
 BASE = "https://androidpublisher.googleapis.com/androidpublisher/v3"
 UPLOAD_BASE = "https://androidpublisher.googleapis.com/upload/androidpublisher/v3"
@@ -33,7 +33,10 @@ def _raise_for_status(response, action: str) -> None:
         detail = json.dumps(response.json(), indent=2)
     except ValueError:
         detail = response.text
-    raise PlayError(f"{action} failed with HTTP {response.status_code}:\n{detail}")
+    raise PlayError(
+        f"{action} failed with HTTP {response.status_code}:\n"
+        f"{redaction.redact_text(detail)}"
+    )
 
 
 class PlayClient:
@@ -180,13 +183,42 @@ class PlayClient:
 
     # ---- monetization ------------------------------------------------------
 
-    def create_subscription(self, product_id: str, body: dict, regions_version: str) -> dict:
+    def convert_region_prices(
+        self,
+        price: dict[str, Any],
+        product_tax_category_code: str | None = None,
+    ) -> dict:
+        """Convert one tax-exclusive price and return current regionVersion.
+
+        Besides localized prices, Google's response contains the RegionsVersion
+        required by subscription and one-time-product mutation APIs. This avoids
+        hard-coding a region-version value in automation.
+        """
+        body: dict[str, Any] = {"price": price}
+        if product_tax_category_code:
+            body["productTaxCategoryCode"] = product_tax_category_code
+        return self._request(
+            "POST",
+            "/pricing:convertRegionPrices",
+            "convert regional prices",
+            json=body,
+        )
+
+    def create_subscription(
+        self,
+        product_id: str,
+        body: dict[str, Any],
+        regions_version: str,
+    ) -> dict:
+        payload = dict(body)
+        payload["packageName"] = self.package_name
+        payload["productId"] = product_id
         return self._request(
             "POST",
             "/subscriptions",
             f"create subscription {product_id}",
             params={"productId": product_id, "regionsVersion.version": regions_version},
-            json=body,
+            json=payload,
         )
 
     def list_subscriptions(self) -> list[dict]:
@@ -194,16 +226,84 @@ class PlayClient:
             "/subscriptions", "subscriptions", "list subscriptions"
         )
 
-    def create_in_app_product(self, body: dict) -> dict:
-        """Legacy one-time-product creation path; retained for compatibility."""
+    def activate_base_plan(self, product_id: str, base_plan_id: str) -> dict:
         return self._request(
-            "POST", "/inappproducts", "create in-app product", json=body
+            "POST",
+            f"/subscriptions/{product_id}/basePlans/{base_plan_id}:activate",
+            f"activate base plan {product_id}:{base_plan_id}",
+            json={},
+        )
+
+    def upsert_one_time_product(
+        self,
+        product_id: str,
+        body: dict[str, Any],
+        regions_version: str,
+        *,
+        update_mask: str = "*",
+        allow_missing: bool = True,
+    ) -> dict:
+        """Create or update a modern OneTimeProduct with the current API."""
+        payload = dict(body)
+        payload["packageName"] = self.package_name
+        payload["productId"] = product_id
+        # This field is output-only on the resource; the query parameter carries
+        # the version used for the mutation.
+        payload.pop("regionsVersion", None)
+        return self._request(
+            "PATCH",
+            f"/onetimeproducts/{product_id}",
+            f"upsert one-time product {product_id}",
+            params={
+                "updateMask": update_mask,
+                "regionsVersion.version": regions_version,
+                "allowMissing": "true" if allow_missing else "false",
+            },
+            json=payload,
         )
 
     def list_in_app_products(self) -> list[dict]:
         """List one-time products using the current monetization publishing API."""
         return self._list_paginated(
             "/oneTimeProducts", "oneTimeProducts", "list one-time products"
+        )
+
+    def set_purchase_option_active(
+        self,
+        product_id: str,
+        purchase_option_id: str,
+        *,
+        active: bool,
+    ) -> dict:
+        transition = "activatePurchaseOptionRequest" if active else "deactivatePurchaseOptionRequest"
+        body = {
+            "requests": [
+                {
+                    transition: {
+                        "packageName": self.package_name,
+                        "productId": product_id,
+                        "purchaseOptionId": purchase_option_id,
+                    }
+                }
+            ]
+        }
+        verb = "activate" if active else "deactivate"
+        return self._request(
+            "POST",
+            f"/oneTimeProducts/{product_id}/purchaseOptions:batchUpdateStates",
+            f"{verb} purchase option {product_id}:{purchase_option_id}",
+            json=body,
+        )
+
+    def create_in_app_product(self, body: dict) -> dict:
+        """Legacy inappproducts path retained only for migration compatibility.
+
+        New automation must prefer ``upsert_one_time_product`` because the modern
+        OneTimeProduct model supports purchase options, offers, and current
+        regional pricing semantics.
+        """
+        return self._request(
+            "POST", "/inappproducts", "create legacy in-app product", json=body
         )
 
 
