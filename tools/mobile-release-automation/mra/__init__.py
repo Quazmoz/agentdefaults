@@ -5,4 +5,14 @@ public API. No vendor UI is scripted and no credential is ever transmitted
 anywhere except to the owning vendor's own API host.
 """
 
-__all__ = ["config", "auth", "play", "revenuecat", "admob"]
+__all__ = [
+    "config",
+    "auth",
+    "play",
+    "play_management",
+    "revenuecat",
+    "revenuecat_management",
+    "admob",
+    "reconcile",
+    "redaction",
+]
