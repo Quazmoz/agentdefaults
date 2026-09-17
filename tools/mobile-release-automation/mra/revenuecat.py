@@ -14,7 +14,7 @@ import json
 
 import requests
 
-from . import auth
+from . import auth, redaction
 
 BASE = "https://api.revenuecat.com/v2"
 REQUEST_TIMEOUT_SECONDS = 60
@@ -50,7 +50,7 @@ class RevenueCatClient:
                 "Authorization": f"Bearer {api_key or auth.revenuecat_key()}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "mobile-release-automation/1.5",
+                "User-Agent": "mobile-release-automation/1.6",
             }
         )
 
@@ -65,7 +65,8 @@ class RevenueCatClient:
             except ValueError:
                 detail = response.text
             raise RevenueCatError(
-                f"{action} failed with HTTP {response.status_code}:\n{detail}"
+                f"{action} failed with HTTP {response.status_code}:\n"
+                f"{redaction.redact_text(detail)}"
             )
         return response.json() if response.content else {}
 
@@ -252,15 +253,33 @@ class RevenueCatClient:
         display_name: str,
         is_current: bool = False,
     ) -> dict:
-        return self._request(
+        """Create an offering, optionally making it current with a second API call.
+
+        RevenueCat's create-offering schema does not accept ``is_current``. The
+        current flag is mutable state on the offering update endpoint, so callers
+        requesting it get an explicit create-then-update sequence.
+        """
+        created = self._request(
             "POST",
             f"/projects/{project_id}/offerings",
             f"create offering {lookup_key}",
             json={
                 "lookup_key": lookup_key,
                 "display_name": display_name,
-                "is_current": is_current,
             },
+        )
+        if not is_current:
+            return created
+        offering_id = created.get("id")
+        if not offering_id:
+            raise RevenueCatError(
+                f"create offering {lookup_key} succeeded but returned no offering id"
+            )
+        return self._request(
+            "POST",
+            f"/projects/{project_id}/offerings/{offering_id}",
+            f"make offering {lookup_key} current",
+            json={"is_current": True},
         )
 
     def create_package(
