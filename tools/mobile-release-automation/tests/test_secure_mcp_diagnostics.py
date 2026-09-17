@@ -68,6 +68,33 @@ class SecureMcpDiagnosticsTest(unittest.TestCase):
             ["project_configuration:packages:read"],
         )
 
+    def test_revenuecat_error_detail_redacts_canary_secret(self) -> None:
+        profile = config.Profile(
+            slug="motionguard",
+            revenuecat_project_id="proj_1",
+            revenuecat_secret_id="secret-ref",
+        )
+        client = Mock()
+        client.list_packages.side_effect = rc_module.RevenueCatError(
+            "failed with HTTP 403: Authorization: Bearer secret-canary-1234567890 "
+            "sk_1234567890abcdef"
+        )
+
+        with patch.object(secure_mcp, "_profile", return_value=profile), patch.object(
+            secure_mcp, "_client", return_value=client
+        ):
+            result = secure_mcp._rc_read(
+                "motionguard",
+                lambda resolved_client, resolved_profile: resolved_client.list_packages(
+                    resolved_profile.revenuecat_project_id, "ofrng_1"
+                ),
+                required_permissions=["project_configuration:packages:read"],
+            )
+
+        self.assertNotIn("secret-canary-1234567890", result["detail"])
+        self.assertNotIn("sk_1234567890abcdef", result["detail"])
+        self.assertIn("<redacted>", result["detail"])
+
     def test_successful_revenuecat_read_keeps_existing_result_shape(self) -> None:
         profile = config.Profile(
             slug="motionguard",
@@ -89,6 +116,19 @@ class SecureMcpDiagnosticsTest(unittest.TestCase):
             )
 
         self.assertEqual(result, [{"id": "pkge_1"}])
+
+    def test_successful_read_redacts_sensitive_fields_without_changing_shape(self) -> None:
+        result = secure_mcp._safe_read(
+            lambda: {
+                "id": "wh_1",
+                "signing_secret": "signing-canary",
+                "nested": {"client_secret": "client-canary"},
+            }
+        )
+
+        self.assertEqual(result["id"], "wh_1")
+        self.assertEqual(result["signing_secret"], "<redacted>")
+        self.assertEqual(result["nested"]["client_secret"], "<redacted>")
 
 
 if __name__ == "__main__":
