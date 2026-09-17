@@ -3,10 +3,11 @@
 Why local: driving Play and AdMob means handing over a Play Console service
 account and an AdMob refresh token. A third-party hosted MCP server would hold
 both. This server runs on your machine, reads credentials from your own
-credential directory, and talks only to Google's and RevenueCat's API hosts.
+credential directory, and uses documented vendor interfaces.
 
 RevenueCat publishes a first-party MCP server at https://mcp.revenuecat.ai/mcp.
-Prefer it. The RevenueCat tools here cover gaps and unattended scripting only.
+Prefer it. RevenueCat operations in this legacy local surface still route through
+the official RevenueCat CLI OAuth transport used by RevenueCatClient.
 
 Run:  python -m mra.mcp_server
 
@@ -22,9 +23,8 @@ from . import admob as admob_module
 from . import auth, config
 from . import play as play_module
 from . import revenuecat as rc_module
+from . import revenuecat_cli
 
-# The SDK renamed FastMCP to MCPServer in mcp 2.x. Both expose the same
-# name/tool/run surface this server uses, so support either.
 try:
     from mcp.server.mcpserver import MCPServer as _Server
 except ImportError:  # pragma: no cover - SDK version fallback
@@ -70,12 +70,12 @@ def _project(project_id: str | None, profile: str | None) -> str:
 
 @server.tool()
 def doctor() -> dict:
-    """Report which platform credentials are present and usable locally."""
+    """Report which platform credentials/OAuth sessions are usable locally."""
     probes = {
         "play_service_account": lambda: str(
             config.require_file(config.PLAY_SERVICE_ACCOUNT, auth.PLAY_HINT)
         ),
-        "revenuecat_key": lambda: f"present ({len(auth.revenuecat_key())} chars)",
+        "revenuecat_oauth": revenuecat_cli.auth_status,
         "admob_oauth_client": lambda: str(
             config.require_file(config.ADMOB_OAUTH_CLIENT, auth.ADMOB_CLIENT_HINT)
         ),
@@ -237,13 +237,13 @@ def admob_create_ad_unit(
 
 @server.tool()
 def rc_list_projects() -> list[dict]:
-    """List RevenueCat projects. Read-only. Prefer the first-party RevenueCat MCP."""
+    """List RevenueCat projects through the official CLI OAuth session."""
     return rc_module.RevenueCatClient().list_projects()
 
 
 @server.tool()
 def rc_list_apps(project_id: str | None = None, profile: str | None = None) -> list[dict]:
-    """List apps in a RevenueCat project. Read-only."""
+    """List apps in a RevenueCat project through OAuth. Read-only."""
     return rc_module.RevenueCatClient().list_apps(_project(project_id, profile))
 
 
@@ -255,10 +255,10 @@ def rc_create_play_app(
     profile: str | None = None,
     confirm: bool = False,
 ) -> dict:
-    """Create a Play app in RevenueCat, wired to the local Play service account.
+    """Create a Play app in RevenueCat through OAuth.
 
-    This sends the Play service account key to RevenueCat, which is the
-    documented way RevenueCat validates Play purchases.
+    This sends the Play service-account key to RevenueCat for Play purchase
+    validation. That Google credential is separate from RevenueCat API OAuth.
     """
     if not confirm:
         return {"status": "refused", "detail": UNCONFIRMED}
