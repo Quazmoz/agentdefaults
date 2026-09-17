@@ -32,14 +32,30 @@
     "entitlements": [
       {
         "lookup_key": "pro",
-        "display_name": "Pro"
+        "display_name": "Pro",
+        "products": [
+          "example_lifetime"
+        ]
       }
     ],
     "offerings": [
       {
         "lookup_key": "default",
         "display_name": "Default",
-        "is_current": true
+        "is_current": true,
+        "packages": [
+          {
+            "lookup_key": "$rc_lifetime",
+            "display_name": "Lifetime",
+            "position": 1,
+            "products": [
+              {
+                "store_identifier": "example_lifetime",
+                "eligibility_criteria": "all"
+              }
+            ]
+          }
+        ]
       }
     ],
     "webhooks": [
