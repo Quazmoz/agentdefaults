@@ -2,14 +2,15 @@
 
 ## Agent boundary
 
-Version 1.6 uses a risk-gated MCP surface with capability-aware reconciliation.
+Version 1.7 uses a risk-gated MCP surface with capability-aware reconciliation.
 
 Both `mra-mcp` and `mra-agent-mcp` expose the same local server. The agent may
 perform reads, diagnostics, dry-runs, planning/verification, portfolio audits,
 and contained mutations directly. High-risk mutations require a real local
 operator approval before the vendor API call occurs.
 
-The MCP boundary resolves vendor credentials internally. Secret values are not
+The MCP boundary resolves vendor credentials internally or delegates credential
+ownership to official vendor tooling. Secret values and OAuth tokens are not
 normal tool arguments and are not intentionally returned to the model.
 
 ## Risk classes
@@ -34,12 +35,51 @@ configuration stores only immutable secret references.
 
 Google Play publisher credentials and the separate Google credential used by
 RevenueCat remain distinct. The publisher credential is used for Play release
-and Store management; the RevenueCat credential is the only Google service
-account intended to cross into RevenueCat for Play purchase validation.
+and Store management; the RevenueCat Google credential is the only Google
+service account intended to cross into RevenueCat for Play purchase validation.
 
-Legacy owner-only local-file/environment fallbacks remain for migration
-compatibility. New installations should use the secret-manager bindings and OS
-credential store. Private credential files are rejected if group/world readable.
+RevenueCat API authentication itself does **not** use a Bitwarden `sk_...` key in
+MRA 1.7. The official RevenueCat CLI owns browser OAuth, refreshes its tokens, and
+stores its credential state in RevenueCat's own local profile. MRA invokes the
+CLI and consumes the resulting JSON without reading or copying OAuth tokens.
+
+Legacy RevenueCat secret-reference fields remain parseable for migration safety,
+but active RevenueCat authentication ignores them.
+
+## RevenueCat OAuth boundary
+
+Install and authenticate the official RevenueCat CLI locally:
+
+```bash
+brew install RevenueCat/tap/rc
+rc auth login
+rc auth status --scopes --json
+```
+
+MRA requires the active RevenueCat CLI method to be `oauth`. An `api_key` login is
+rejected because secret API keys are project-scoped and can silently restrict
+project discovery/provisioning.
+
+If the active method is `api_key`:
+
+```bash
+rc auth logout
+rc auth login
+```
+
+Choose browser OAuth.
+
+MRA also removes `RC_API_KEY` and `REVENUECAT_V2_SECRET_KEY` from the child
+process environment before invoking the RevenueCat CLI. This prevents a stale
+project-specific key from overriding the OAuth credential through CLI precedence.
+
+If multiple RevenueCat CLI profiles are in use, MRA can target one with:
+
+```bash
+export MRA_REVENUECAT_CLI_PROFILE=<profile-name>
+```
+
+The selected profile must still authenticate with OAuth.
 
 ## Desired-state boundary
 
@@ -60,9 +100,9 @@ api_key
 password
 ```
 
-When a workflow needs a secret, pass an immutable reference such as
-`authorization_header_secret_id`. The MCP process retrieves that one value from
-Bitwarden and sends it directly to the owning vendor API.
+When a workflow needs a non-RevenueCat secret, pass an immutable reference such
+as `authorization_header_secret_id`. The MCP process retrieves that one value
+from Bitwarden and sends it directly to the owning vendor API.
 
 Do not weaken the desired-state validator to make secret literals more
 convenient for an agent.
@@ -128,6 +168,9 @@ After changing local credential bindings or MRA itself, run:
 mra-agent doctor
 ```
 
+The RevenueCat portion should report `official-revenuecat-cli-oauth` when the
+local RevenueCat CLI is correctly authenticated.
+
 For MCP clients, `approval_policy` describes the current mutation policy. The
 cross-platform health path is:
 
@@ -153,10 +196,11 @@ The native approval gate protects the MCP path. It does **not** make unrestricte
 shell access safe.
 
 An agent with unrestricted execution under the same macOS user may be able to
-invoke `bws`, `security`, Python keyring, local credential files, or operator CLIs
-directly. Where this approval/credential boundary matters, expose the MCP server
-and restrict direct agent access to those facilities.
+invoke `bws`, `security`, the official RevenueCat CLI, Python keyring, local
+credential files, or operator CLIs directly. Where this approval/credential
+boundary matters, expose the MCP server and restrict direct agent access to those
+facilities.
 
-Similarly, environment-variable fallbacks such as a Bitwarden machine token or
-legacy RevenueCat key are unsafe if they are inherited by an unrestricted agent
-process. Prefer Keychain/Bitwarden resolution inside the MCP process.
+The RevenueCat CLI owns its OAuth token storage. MRA does not copy that token into
+Bitwarden, Keychain, environment variables, profiles, logs, or model-visible
+state.
