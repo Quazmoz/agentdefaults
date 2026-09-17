@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from . import admob_credentials, auth, config, human_approval, play_credentials, redaction
+from . import admob_credentials, config, human_approval, play_credentials, redaction
 from . import mcp_admob_tools, mcp_play_mutations, mcp_revenuecat_mutations
 from . import play as play_module
 from . import revenuecat as rc_module
+from . import revenuecat_cli
 from . import secrets as secret_provider
 
 try:
@@ -36,7 +37,7 @@ def _project_profile(slug: str) -> config.Profile:
 
 
 # Backward-compatible private helper used by diagnostics/tests and older local
-# integrations. Project-scoped reads still require a project; auth-only reads
+# integrations. Project-scoped reads still require a project; account-wide reads
 # such as rc_list_projects explicitly use _auth_profile instead.
 def _profile(slug: str) -> config.Profile:
     return _project_profile(slug)
@@ -50,20 +51,19 @@ def _package(slug: str) -> str:
 
 
 def _client(profile: config.Profile) -> rc_module.RevenueCatClient:
-    return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
+    del profile
+    return rc_module.RevenueCatClient()
 
 
 def _probe(probe) -> dict:
     try:
         return redaction.redact(probe())
-    except config.ConfigError as error:
+    except (config.ConfigError, revenuecat_cli.RevenueCatCliError) as error:
         return {"status": "not-ready", "detail": redaction.redact_text(str(error))}
 
 
 def _revenuecat_api_status() -> dict:
-    source = auth.revenuecat_credential_source()
-    auth.revenuecat_key()
-    return {"status": "ready", "source": source}
+    return revenuecat_cli.auth_status()
 
 
 def _error_payload(error: Exception, *, platform: str | None = None) -> dict[str, Any]:
@@ -92,24 +92,24 @@ def _rc_read(
     required_permissions: list[str],
     require_project: bool = True,
 ) -> Any:
-    """Run a RevenueCat read while preserving useful, redacted vendor detail."""
+    """Run a RevenueCat read through the official OAuth-authenticated CLI."""
     try:
         resolved = _profile(profile) if require_project else _auth_profile(profile)
         return redaction.redact(operation(_client(resolved), resolved))
     except (config.ConfigError, ValueError, rc_module.RevenueCatError) as error:
         payload = _error_payload(error, platform="revenuecat")
         payload["required_permissions"] = required_permissions
-        if isinstance(error, rc_module.RevenueCatError) and "HTTP 403" in str(error):
+        if "authorization" in str(error).lower() or "HTTP 403" in str(error):
             payload["hint"] = (
-                "RevenueCat denied this API v2 operation. Check that the resolved "
-                "profile/bootstrap key includes the listed permission(s)."
+                "RevenueCat denied this OAuth operation. Re-run `rc auth login` if the "
+                "session is stale, and confirm the OAuth connection has the listed permission(s)."
             )
         return payload
 
 
 @server.tool()
 def doctor() -> dict[str, Any]:
-    """Check credential bindings, approval capability, and secured profiles."""
+    """Check credential bindings, approval capability, and OAuth readiness."""
     profiles = config.load_profiles()
     return redaction.redact(
         {
@@ -119,7 +119,7 @@ def doctor() -> dict[str, Any]:
             "revenuecat_api": _probe(_revenuecat_api_status),
             "admob": _probe(admob_credentials.status),
             "human_approval": human_approval.status(),
-            "secured_profiles": sorted(
+            "legacy_revenuecat_key_bindings": sorted(
                 slug for slug, profile in profiles.items() if profile.revenuecat_secret_id
             ),
             "platform_mutations": "capability-aware-risk-gated",
@@ -157,8 +157,9 @@ def approval_policy() -> dict[str, Any]:
         "gate": human_approval.status(),
         "rule": "High-risk actions fail closed unless the local operator approves the exact action.",
         "secret_rule": (
-            "Agent-visible desired state and tool output must not contain vendor secret values; "
-            "use immutable secret references and MCP-side resolution."
+            "RevenueCat OAuth tokens stay inside the official RevenueCat CLI. Other vendor "
+            "secrets use immutable references and MCP-side resolution; agent-visible desired "
+            "state and tool output must not contain secret values."
         ),
     }
 
@@ -217,7 +218,7 @@ def play_list_products(profile: str) -> dict:
 
 @server.tool()
 def rc_list_projects(profile: str) -> Any:
-    """List RevenueCat projects using the profile key or global bootstrap key."""
+    """List RevenueCat projects visible to the authenticated OAuth account."""
     return _rc_read(
         profile,
         lambda client, resolved: client.list_projects(),
