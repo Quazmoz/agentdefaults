@@ -4,20 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import auth, config, human_approval
+from . import config, human_approval
 from . import revenuecat as rc_module
 from . import revenuecat_management
 from . import secrets as secret_provider
 
 
 def _auth_profile(slug: str) -> config.Profile:
-    """Load an app profile without requiring a project-specific RevenueCat key.
-
-    auth.revenuecat_key(profile) prefers the profile key when present and otherwise
-    falls back to the global Bitwarden-backed bootstrap key. This is what lets a
-    brand-new app profile create its RevenueCat project before a scoped project key
-    exists.
-    """
+    """Load an app profile; RevenueCat account auth is provided by CLI OAuth."""
     return config.load_profile(slug)
 
 
@@ -29,9 +23,8 @@ def _project_profile(slug: str) -> config.Profile:
 
 
 def _client(profile: config.Profile) -> revenuecat_management.RevenueCatManagementClient:
-    return revenuecat_management.RevenueCatManagementClient(
-        rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
-    )
+    del profile
+    return revenuecat_management.RevenueCatManagementClient(rc_module.RevenueCatClient())
 
 
 def _tag(result: dict, risk: str, approved: bool = False) -> dict:
@@ -60,7 +53,7 @@ def _authorization_header(secret_id: str | None) -> str | None:
 
 
 def rc_create_project(profile: str, name: str) -> dict:
-    """Create one RevenueCat project using the profile key or bootstrap credential."""
+    """Create one RevenueCat project using the authenticated account OAuth session."""
     resolved = _auth_profile(profile)
     result = _client(resolved).create_project(name)
     return _tag(result, "contained")
