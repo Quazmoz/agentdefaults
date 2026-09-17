@@ -35,6 +35,13 @@ def _project_profile(slug: str) -> config.Profile:
     return profile
 
 
+# Backward-compatible private helper used by diagnostics/tests and older local
+# integrations. Project-scoped reads still require a project; auth-only reads
+# such as rc_list_projects explicitly use _auth_profile instead.
+def _profile(slug: str) -> config.Profile:
+    return _project_profile(slug)
+
+
 def _package(slug: str) -> str:
     package_name = config.load_profile(slug).package_name
     if not package_name:
@@ -87,7 +94,7 @@ def _rc_read(
 ) -> Any:
     """Run a RevenueCat read while preserving useful, redacted vendor detail."""
     try:
-        resolved = _project_profile(profile) if require_project else _auth_profile(profile)
+        resolved = _profile(profile) if require_project else _auth_profile(profile)
         return redaction.redact(operation(_client(resolved), resolved))
     except (config.ConfigError, ValueError, rc_module.RevenueCatError) as error:
         payload = _error_payload(error, platform="revenuecat")
