@@ -29,18 +29,22 @@ mra_audit_portfolio
    private keys, passwords, and OAuth tokens are rejected.
 4. **High-risk writes fail closed.** Public Play listing/tester changes,
    irreversible AdMob linking, RevenueCat current-offering changes, webhooks,
-   and destructive/sensitive wiring require the native local approval gate.
+   and purchase-access wiring require the native local approval gate.
 5. **Read back after writing.** Apply re-plans after each mutation, and verify
    re-reads authoritative vendor state rather than trusting mutation responses.
 6. **Account-gated AdMob writes degrade gracefully.** If Google returns the
    documented limited-access denial, MRA returns `manual_required` with one
    precise console action and expects `mra_verify` afterward.
+7. **Relationship convergence is additive by default.** Desired RevenueCat
+   product links are attached when missing; unspecified existing links are not
+   silently detached. Destructive convergence requires a separate explicit
+   policy rather than treating omission as deletion.
 
 ## Desired-state shape
 
 Desired state is a JSON-shaped object passed directly to `mra_plan`,
-`mra_apply`, or `mra_verify`. The initial reconciler intentionally covers the
-highest-value setup state across all three vendors:
+`mra_apply`, or `mra_verify`. The reconciler covers the highest-value setup and
+wiring state across all three vendors:
 
 ```json
 {
@@ -69,10 +73,31 @@ highest-value setup state across all three vendors:
       }
     ],
     "entitlements": [
-      {"lookup_key": "pro", "display_name": "Pro"}
+      {
+        "lookup_key": "pro",
+        "display_name": "Pro",
+        "products": ["motionguard_lifetime"]
+      }
     ],
     "offerings": [
-      {"lookup_key": "default", "display_name": "Default", "is_current": true}
+      {
+        "lookup_key": "default",
+        "display_name": "Default",
+        "is_current": true,
+        "packages": [
+          {
+            "lookup_key": "$rc_lifetime",
+            "display_name": "Lifetime",
+            "position": 1,
+            "products": [
+              {
+                "store_identifier": "motionguard_lifetime",
+                "eligibility_criteria": "all"
+              }
+            ]
+          }
+        ]
+      }
     ],
     "webhooks": [
       {
@@ -104,6 +129,15 @@ The UUID above is only an example reference. Do not place a secret value in the
 object. Store webhook authorization material in Bitwarden Secrets Manager and
 pass its immutable secret UUID.
 
+For RevenueCat package product relationships, a string is shorthand for
+`{"store_identifier": "...", "eligibility_criteria": "all"}`. The explicit
+object form is useful when Google Play billing eligibility needs a narrower
+criterion. Entitlement `products` are store-identifier strings.
+
+For AdMob, omitting `linked_package` defaults to the profile's Android package.
+Setting `linked_package` explicitly to `null` requests a manual/unlinked AdMob
+app instead and avoids the irreversible store-link operation.
+
 ## Planning semantics
 
 Each action reports:
@@ -116,18 +150,46 @@ Each action reports:
 - `detail`: why the action is or is not required
 
 `mra_apply` executes only `needed` actions. It re-plans after every attempted
-mutation so a newly created RevenueCat project/app or AdMob app can unblock
-later resources in the same invocation. It will not repeatedly retry an action
-that was declined, denied, or failed in that invocation.
+mutation so a newly created RevenueCat project/app/offering/package or AdMob app
+can unblock later resources in the same invocation. It will not repeatedly
+retry an action that was declined, denied, or failed in that invocation.
 
 `mra_verify` performs a fresh read and returns only remaining drift. A run is
 converged only when all requested desired-state actions are satisfied and the
-relevant platform reads succeeded.
+relevant platform reads succeeded. An unrelated platform credential failure does
+not make a partial desired-state plan non-converged.
+
+## RevenueCat dependency order
+
+A typical full monetization graph converges in this dependency order:
+
+```text
+project
+  -> Play app
+  -> products
+  -> entitlements
+      -> entitlement/product attachments
+  -> offerings
+      -> packages
+          -> package/product attachments
+      -> current offering
+  -> webhooks
+```
+
+MRA derives RevenueCat object IDs from authoritative read-back; the desired state
+continues to use stable lookup keys and Play store identifiers. Product wiring is
+high-risk because it changes live purchase-access behavior, so entitlement and
+package attachments require native local approval.
+
+Making an offering current is also high-risk. RevenueCat models this as offering
+update state, so MRA creates a missing offering first and then performs the
+current-offering update rather than putting `is_current` into the creation
+payload.
 
 ## AdMob capabilities and reporting
 
-The AdMob MCP surface now separates ordinary auth/permission failures from
-Google's documented per-account limited-access gate.
+The AdMob MCP surface separates ordinary auth/permission failures from Google's
+documented per-account limited-access gate.
 
 Read/diagnostic tools include:
 
@@ -149,15 +211,15 @@ request/match/show funnel, clicks, earnings, RPM, app version, Google Mobile Ads
 SDK version, ad format, and serving-restriction dimensions so agents can detect
 monetization regressions without opening the AdMob UI.
 
-Conditional write tools are also implemented for app/ad-unit creation,
-mediation groups, mappings, mapping batches, and mediation experiments. They
-report the account gate honestly instead of recommending scope/IAM changes that
-cannot unlock a Google-side entitlement.
+Conditional write tools are implemented for app/ad-unit creation, mediation
+groups, mappings, mapping batches, and mediation experiments. They report the
+account gate honestly instead of recommending scope/IAM changes that cannot
+unlock a Google-side entitlement.
 
 ## Google Play management
 
 In addition to bundles, tracks, promotions, subscriptions, and one-time
-products, MCP can now manage/read:
+products, MCP can manage/read:
 
 - localized Store listings
 - Store images/screenshots
@@ -172,16 +234,17 @@ and then discarded.
 
 ## RevenueCat management
 
-MRA now adds project provisioning and webhook integration management to its
-existing app/product/entitlement/offering/package workflow.
+MRA adds project provisioning, complete entitlement/offering/package product
+wiring, current-offering management, and webhook integration management to the
+existing app/product workflow.
 
 Webhook authorization headers are never accepted as literal desired-state
 values. Supply `authorization_header_secret_id`; MRA resolves the value from
 Bitwarden only inside the MCP process. RevenueCat's returned webhook
 `signing_secret` is redacted before agent-visible output.
 
-Changing the current offering and creating/updating/deleting live webhooks are
-high-risk operations and require native local approval.
+Changing the current offering, attaching products, and creating/updating/deleting
+live webhooks are high-risk operations and require native local approval.
 
 ## Portfolio audit
 
