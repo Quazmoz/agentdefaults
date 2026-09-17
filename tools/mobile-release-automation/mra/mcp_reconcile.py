@@ -31,10 +31,7 @@ def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:
 
 
 def _rc_client(profile: config.Profile) -> rc_module.RevenueCatClient:
-    if not profile.revenuecat_secret_id:
-        raise reconcile.ReconcileError(
-            f"profile {profile.slug!r} has no RevenueCat secret binding"
-        )
+    """Resolve a project-specific RevenueCat key, falling back to bootstrap auth."""
     return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
 
 
