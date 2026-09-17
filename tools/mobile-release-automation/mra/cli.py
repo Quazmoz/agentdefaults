@@ -14,7 +14,7 @@ import json
 import sys
 
 from . import admob as admob_module
-from . import admob_credentials, auth, config, play_credentials
+from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
 from . import play as play_module
 from . import revenuecat as rc_module
 
@@ -63,12 +63,9 @@ def resolve_project(args: argparse.Namespace) -> str:
 
 
 def rc_client(args: argparse.Namespace) -> rc_module.RevenueCatClient:
-    """Bind a profile's project identity and RevenueCat credential together."""
+    """Return the OAuth-backed RevenueCat client; profile only supplies identity."""
     if getattr(args, "profile", None):
-        profile = config.load_profile(args.profile)
-        if not profile.revenuecat_secret_id:
-            raise config.ConfigError(f"profile {args.profile!r} has no revenuecat_secret_id")
-        return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
+        config.load_profile(args.profile)  # validate the local profile exists
     return rc_module.RevenueCatClient()
 
 
@@ -97,16 +94,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         except Exception as error:  # noqa: BLE001 - doctor reports, never raises
             report["checks"][name] = {"status": "fail", "detail": str(error)}
 
-    def revenuecat_status() -> Any:
-        secured = sorted(
-            slug for slug, profile in config.load_profiles().items() if profile.revenuecat_secret_id
-        )
-        if secured:
-            return {"profile_bound": secured}
-        return f"legacy key present ({len(auth.revenuecat_key())} chars)"
-
     record("play_service_account", play_credentials.publisher_status)
-    record("revenuecat_key", revenuecat_status)
+    record("revenuecat_oauth", revenuecat_cli.auth_status)
     record("admob", admob_credentials.status)
     record("profiles", lambda: sorted(config.load_profiles()))
 
@@ -306,7 +295,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("doctor", help="check local credentials").set_defaults(
+    subparsers.add_parser("doctor", help="check local credentials and OAuth").set_defaults(
         func=cmd_doctor
     )
 
@@ -403,7 +392,7 @@ def build_parser() -> argparse.ArgumentParser:
     create_adunit.set_defaults(func=cmd_admob_create_adunit)
 
     # revenuecat
-    rc = subparsers.add_parser("rc", help="RevenueCat API v2").add_subparsers(
+    rc = subparsers.add_parser("rc", help="RevenueCat API v2 via official CLI OAuth").add_subparsers(
         dest="rc_command", required=True
     )
 
