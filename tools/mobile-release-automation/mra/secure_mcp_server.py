@@ -24,12 +24,14 @@ except ImportError:  # pragma: no cover - SDK version fallback
 server = _Server("mobile-release-automation-agent")
 
 
-def _profile(slug: str) -> config.Profile:
-    profile = config.load_profile(slug)
+def _auth_profile(slug: str) -> config.Profile:
+    return config.load_profile(slug)
+
+
+def _project_profile(slug: str) -> config.Profile:
+    profile = _auth_profile(slug)
     if not profile.revenuecat_project_id:
         raise ValueError(f"profile {slug!r} has no revenuecat_project_id")
-    if not profile.revenuecat_secret_id:
-        raise ValueError(f"profile {slug!r} has no revenuecat_secret_id")
     return profile
 
 
@@ -49,6 +51,12 @@ def _probe(probe) -> dict:
         return redaction.redact(probe())
     except config.ConfigError as error:
         return {"status": "not-ready", "detail": redaction.redact_text(str(error))}
+
+
+def _revenuecat_api_status() -> dict:
+    source = auth.revenuecat_credential_source()
+    auth.revenuecat_key()
+    return {"status": "ready", "source": source}
 
 
 def _error_payload(error: Exception, *, platform: str | None = None) -> dict[str, Any]:
@@ -75,18 +83,19 @@ def _rc_read(
     operation: Callable[[rc_module.RevenueCatClient, config.Profile], Any],
     *,
     required_permissions: list[str],
+    require_project: bool = True,
 ) -> Any:
     """Run a RevenueCat read while preserving useful, redacted vendor detail."""
     try:
-        resolved = _profile(profile)
+        resolved = _project_profile(profile) if require_project else _auth_profile(profile)
         return redaction.redact(operation(_client(resolved), resolved))
     except (config.ConfigError, ValueError, rc_module.RevenueCatError) as error:
         payload = _error_payload(error, platform="revenuecat")
         payload["required_permissions"] = required_permissions
         if isinstance(error, rc_module.RevenueCatError) and "HTTP 403" in str(error):
             payload["hint"] = (
-                "RevenueCat denied this API v2 operation. Check that the profile's "
-                "secret key includes the listed permission(s)."
+                "RevenueCat denied this API v2 operation. Check that the resolved "
+                "profile/bootstrap key includes the listed permission(s)."
             )
         return payload
 
@@ -100,6 +109,7 @@ def doctor() -> dict[str, Any]:
             "bitwarden": secret_provider.bitwarden_status(),
             "google_play_publisher": _probe(play_credentials.publisher_status),
             "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
+            "revenuecat_api": _probe(_revenuecat_api_status),
             "admob": _probe(admob_credentials.status),
             "human_approval": human_approval.status(),
             "secured_profiles": sorted(
@@ -200,11 +210,12 @@ def play_list_products(profile: str) -> dict:
 
 @server.tool()
 def rc_list_projects(profile: str) -> Any:
-    """List RevenueCat projects visible to the selected profile's key."""
+    """List RevenueCat projects using the profile key or global bootstrap key."""
     return _rc_read(
         profile,
         lambda client, resolved: client.list_projects(),
         required_permissions=["project_configuration:projects:read"],
+        require_project=False,
     )
 
 
