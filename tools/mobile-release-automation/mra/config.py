@@ -19,9 +19,10 @@ DEFAULT_HOME = Path.home() / ".config" / "mobile-release-automation"
 PLAY_SERVICE_ACCOUNT = "play-service-account.json"
 ADMOB_OAUTH_CLIENT = "admob-oauth-client.json"
 ADMOB_TOKEN = "admob-token.json"
-REVENUECAT_KEY = "revenuecat-v2-secret.key"
+REVENUECAT_KEY = "revenuecat-v2-secret.key"  # legacy compatibility only
 PROFILES = "profiles.json"
 SECRET_REFS = "secret-refs.json"
+REVENUECAT_OAUTH_MARKER = "oauth-cli"
 
 
 class ConfigError(RuntimeError):
@@ -72,7 +73,12 @@ def ensure_home() -> Path:
 
 @dataclass(frozen=True)
 class SecretRefs:
-    """Global immutable references to externally stored credential material."""
+    """Global immutable references to externally stored credential material.
+
+    `revenuecat_bootstrap_secret_id` is retained only so existing local config
+    files from MRA 1.6.1 continue to load. It is ignored by current RevenueCat
+    automation, which uses the official RevenueCat CLI OAuth session instead.
+    """
 
     play_service_account_secret_id: str | None = None
     revenuecat_play_service_account_secret_id: str | None = None
@@ -120,7 +126,11 @@ def save_secret_refs(refs: SecretRefs) -> Path:
 
 @dataclass(frozen=True)
 class Profile:
-    """A single app's identity across all three platforms."""
+    """A single app's identity across all three platforms.
+
+    `revenuecat_secret_id` is a deprecated compatibility field. MRA no longer
+    resolves RevenueCat API keys from it, but old profile files remain readable.
+    """
 
     slug: str
     package_name: str | None = None
@@ -140,7 +150,7 @@ class Profile:
 
 
 def load_profiles() -> dict[str, Profile]:
-    """Load persisted profiles exactly as stored, without inherited credentials."""
+    """Load persisted profiles exactly as stored."""
     path = path_for(PROFILES)
     if not path.is_file():
         return {}
@@ -149,13 +159,12 @@ def load_profiles() -> dict[str, Profile]:
 
 
 def load_profile(slug: str) -> Profile:
-    """Load one profile with the effective RevenueCat credential reference.
+    """Load one profile with an in-memory RevenueCat OAuth compatibility marker.
 
-    A persisted per-app RevenueCat key remains authoritative. When one is not yet
-    bound, a configured global bootstrap key is inherited in memory only. The
-    inherited reference is never written into ``profiles.json`` by this read.
-    This preserves legacy/profile-gated call sites while allowing new projects to
-    be created before their narrower project-specific keys exist.
+    Several older reconciliation call sites use `revenuecat_secret_id` only as a
+    boolean "RevenueCat auth is configured" marker. New MRA versions authenticate
+    through the official RevenueCat CLI, so profiles without a legacy key receive
+    the non-secret `oauth-cli` marker in memory. It is never persisted.
     """
     profiles = load_profiles()
     if slug not in profiles:
@@ -164,10 +173,7 @@ def load_profile(slug: str) -> Profile:
     profile = profiles[slug]
     if profile.revenuecat_secret_id:
         return profile
-    bootstrap_secret_id = load_secret_refs().revenuecat_bootstrap_secret_id
-    if bootstrap_secret_id:
-        return replace(profile, revenuecat_secret_id=bootstrap_secret_id)
-    return profile
+    return replace(profile, revenuecat_secret_id=REVENUECAT_OAUTH_MARKER)
 
 
 def save_profile(profile: Profile) -> Path:
@@ -179,7 +185,7 @@ def save_profile(profile: Profile) -> Path:
     updates = {
         field: value
         for field, value in vars(profile).items()
-        if field != "slug" and value is not None
+        if field != "slug" and value is not None and value != REVENUECAT_OAUTH_MARKER
     }
     raw[profile.slug] = {**existing, **updates}
     path.write_text(json.dumps(raw, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -208,12 +214,7 @@ def update_profile_identifiers(
     revenuecat_project_id: str | None = None,
     revenuecat_app_id: str | None = None,
 ) -> Profile:
-    """Safely reconcile non-secret identifiers for an existing profile.
-
-    This deliberately cannot accept secret values or secret-reference fields. It
-    preserves the existing RevenueCat secret binding while updating only the
-    identifiers an agent can verify from source/vendor read APIs.
-    """
+    """Safely reconcile non-secret identifiers for an existing profile."""
     load_profile(slug)  # refuse accidental creation of a partial profile
     values = {
         "package_name": package_name,
