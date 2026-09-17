@@ -7,8 +7,8 @@ auditable way to automate repetitive Google Play, RevenueCat, and AdMob work
 without placing vendor credentials in Git, prompts, model context, or normal
 command output.
 
-Every vendor operation uses a documented public API. MRA does not scrape vendor
-consoles or rely on private browser endpoints.
+Every vendor operation uses a documented public API or an official vendor CLI.
+MRA does not scrape vendor consoles or rely on private browser endpoints.
 
 For the cross-platform desired-state workflow, start with
 [`AUTOMATION.md`](AUTOMATION.md) and
@@ -19,12 +19,17 @@ For the cross-platform desired-state workflow, start with
 | Platform | Authentication | Automation status |
 |---|---|---|
 | Google Play | Google Cloud service account | Releases, tracks, products, listings, images, tester groups, reviews/replies, country availability, and deobfuscation artifacts are API-driven. |
-| RevenueCat | API v2 secret key | Projects, apps, products, entitlements, offerings, packages, product wiring, and webhook integrations are API-driven. |
+| RevenueCat | Browser OAuth through the official RevenueCat CLI | Projects, apps, products, entitlements, offerings, packages, product wiring, and webhook integrations are automatable across projects authorized to the RevenueCat account. |
 | AdMob | OAuth user credentials | Inventory and reporting are broadly automatable. App/ad-unit and mediation writes exist in the public API but are limited-access per AdMob account. |
 
 AdMob service accounts do not work. A monetization OAuth scope also does not
 bypass Google's account-level limited-access gate. MRA exposes those capabilities
 conditionally and returns an explicit manual handoff when Google denies them.
+
+RevenueCat is intentionally different from the old MRA design. MRA no longer
+uses project-scoped RevenueCat `sk_...` keys for agent workflows. The official
+RevenueCat CLI owns browser OAuth, token refresh, and local credential storage,
+and MRA calls RevenueCat through that CLI's `rc api` surface.
 
 ## Install
 
@@ -36,6 +41,17 @@ python3 -m venv .venv
 
 Install Bitwarden's official Secrets Manager CLI (`bws`) separately and ensure it
 is on `PATH`.
+
+Install the official RevenueCat CLI and authenticate once:
+
+```bash
+brew install RevenueCat/tap/rc
+rc auth login
+rc auth status --json
+```
+
+Use the browser OAuth path. MRA rejects RevenueCat CLI profiles whose active
+method is `api_key`.
 
 Entry points:
 
@@ -63,8 +79,9 @@ claude mcp add mobile-release-automation-agent -- \
 ## Secret architecture
 
 Static credentials belong in **Bitwarden Secrets Manager**. Machine-local
-rotating credentials belong in the **OS credential store**. App profiles contain
-only identifiers and immutable secret references.
+rotating credentials belong in the vendor/OS credential store. App profiles
+contain non-secret identifiers and, for backward compatibility, may still contain
+old secret-reference fields that current RevenueCat automation ignores.
 
 Recommended Bitwarden project:
 
@@ -77,12 +94,14 @@ Example secret names:
 ```text
 mra/google-play/publisher-service-account
 mra/google-play/revenuecat-service-account
-mra/revenuecat/bootstrap/v2-secret
 mra/admob/oauth-client
-mra/revenuecat/motionguard/v2-secret
-mra/revenuecat/pressdeck/v2-secret
 mra/webhooks/backend/authorization-header
 ```
+
+Do not create a RevenueCat bootstrap API key for MRA. Do not create one
+RevenueCat secret key per app merely to let Claude or another coding agent manage
+RevenueCat. Browser OAuth is the account-level authorization mechanism for this
+workflow.
 
 ### Bitwarden machine account
 
@@ -119,7 +138,6 @@ Bind immutable Bitwarden UUIDs, never secret values:
 ```bash
 mra-agent auth bind-play --secret-id <PLAY_PUBLISHER_SERVICE_ACCOUNT_UUID>
 mra-agent auth bind-revenuecat-play --secret-id <RC_PLAY_SERVICE_ACCOUNT_UUID>
-mra-agent auth bind-revenuecat-bootstrap --secret-id <RC_BOOTSTRAP_V2_KEY_UUID>
 mra-agent auth bind-admob --secret-id <ADMOB_DESKTOP_OAUTH_CLIENT_UUID>
 ```
 
@@ -132,46 +150,37 @@ Google Play uses separate service-account material for:
 
 Keep those bindings distinct.
 
-The RevenueCat bootstrap key solves a different problem: a brand-new MRA profile
-may not have a RevenueCat project yet, so it cannot already have that project's
-narrow project-specific API key. The bootstrap key is a RevenueCat v2 secret key
-with only the provisioning permissions the portfolio needs, such as project,
-app, and entitlement read/read-write access. Its value stays in Bitwarden and is
-resolved only inside MRA.
+### RevenueCat OAuth
 
-### Per-app RevenueCat key
-
-Each independently monetized app/app family should normally have its own
-RevenueCat project and scoped V2 secret key after the project exists.
-
-Bind the key by Bitwarden secret UUID:
+RevenueCat account authorization is owned by the official `rc` CLI:
 
 ```bash
-mra-agent profile bind-revenuecat \
-  --profile motionguard \
-  --secret-id <REVENUECAT_V2_KEY_UUID>
+rc auth login
+rc auth status --json
 ```
 
-A persisted project-specific profile key always takes precedence over the global
-bootstrap key. For a profile that does not have one yet, `load_profile()` inherits
-the bootstrap UUID in memory only. `load_profiles()` and `profiles.json` continue
-to represent the real persisted state, so the bootstrap reference is not copied
-into every app profile.
+The browser OAuth session is account-level and can reach the projects and scopes
+granted to that RevenueCat account. MRA does not read or copy the OAuth access or
+refresh token. Instead it runs `rc api` as a child process and consumes only the
+JSON response.
 
-The normal secret flow is:
+MRA removes these environment variables from the RevenueCat child process:
 
 ```text
-agent/operator
-    -> profile slug
-    -> project-specific Bitwarden UUID if bound
-       else global RevenueCat bootstrap Bitwarden UUID
-    -> bws secret get <UUID>
-    -> credential held in MCP process memory
-    -> RevenueCat API
+RC_API_KEY
+REVENUECAT_V2_SECRET_KEY
 ```
 
-MRA retrieves one secret by UUID. It does not list a Bitwarden project and does
-not return the secret value to the model.
+That prevents a stale project-scoped API key from silently taking precedence over
+the OAuth session.
+
+If you use multiple RevenueCat CLI profiles, select one for MRA with:
+
+```bash
+export MRA_REVENUECAT_CLI_PROFILE=<profile-name>
+```
+
+The selected CLI profile still must report `method: oauth`.
 
 ### AdMob OAuth
 
@@ -190,34 +199,35 @@ user JSON needs to be persisted.
 
 ## Profiles
 
-A profile maps one app across the vendors. Example conceptual shape after
-project-specific RevenueCat binding:
+A profile maps one app across the vendors. Example conceptual shape:
 
 ```json
 {
-  "motionguard": {
-    "package_name": "com.quazmoz.motionguard",
+  "webhookdeck": {
+    "package_name": "com.quazmoz.webhookdeck",
     "admob_app_id": "ca-app-pub-...~...",
     "admob_publisher_id": "pub-...",
     "revenuecat_project_id": "proj_...",
-    "revenuecat_app_id": "app_...",
-    "revenuecat_secret_id": "6f7c12c0-df7b-4a2b-9360-1539a4d13392"
+    "revenuecat_app_id": "app_..."
   }
 }
 ```
 
-A new profile may initially contain only `package_name` and vendor identifiers
-that are already known. It does not need a RevenueCat project id or per-app
-RevenueCat key before `rc_list_projects`/`rc_create_project` can run, provided the
-global bootstrap key is bound.
+A new profile can begin with only the Android package name. It does not need a
+RevenueCat project id or RevenueCat API key before `rc_list_projects` or
+`rc_create_project` can run. The OAuth account is the authorization boundary.
 
-`revenuecat_secret_id` is a Bitwarden object UUID, not an `sk_...` secret value.
-Agent-visible `profile_get` output intentionally excludes secret-reference fields.
+Older `profiles.json` files may contain `revenuecat_secret_id`, and older
+`secret-refs.json` files may contain `revenuecat_bootstrap_secret_id`. MRA keeps
+those fields parseable for migration safety but does not resolve or use them.
+The old `mra-agent profile bind-revenuecat` and
+`mra-agent auth bind-revenuecat-bootstrap` commands return a deprecation notice
+and do not persist new bindings.
 
 ## MCP risk model
 
 The agent chooses an operation and non-secret parameters. The local MCP process
-resolves credentials and enforces the action boundary.
+enforces the action boundary.
 
 ### Observe
 
@@ -273,7 +283,8 @@ mra_verify(profile, desired_state)
 
 Desired state is secret-free JSON. Literal fields such as `api_key`,
 `private_key`, `authorization_header`, OAuth tokens, or passwords are rejected.
-Where a secret is needed, use an immutable `*_secret_id` reference.
+Where a non-RevenueCat secret is needed, use an immutable `*_secret_id`
+reference.
 
 `mra_apply` re-plans after each attempted write. That allows a newly created
 RevenueCat project/app or AdMob app to unblock later resources in the same run.
@@ -328,7 +339,7 @@ validated and discarded. A committed public-facing change is approval-gated.
 
 MRA automates the project/app/catalog setup needed for Android monetization:
 
-- project list/create, including new-project bootstrap through the global Bitwarden key
+- account-wide project list/create through RevenueCat OAuth
 - Play app creation using the dedicated Google Play validation credential
 - products and backing-store creation
 - entitlements and product attachment
@@ -336,42 +347,21 @@ MRA automates the project/app/catalog setup needed for Android monetization:
 - current-offering changes
 - webhook list/get/create/update/delete
 
-For a global bootstrap key, grant only the provisioning permissions the portfolio
-needs. A typical project/app/entitlement bootstrap may require:
+The transport is the official RevenueCat CLI `rc api` command. That keeps OAuth
+client registration, browser consent, access-token refresh, and refresh-token
+rotation inside RevenueCat's maintained tooling rather than duplicating them in
+MRA.
 
-```text
-project_configuration:projects:read
-project_configuration:projects:read_write
-project_configuration:apps:read
-project_configuration:apps:read_write
-project_configuration:entitlements:read
-project_configuration:entitlements:read_write
+If a RevenueCat operation is denied, first inspect:
+
+```bash
+rc auth status --scopes --json
 ```
 
-Add products/offerings/packages/integrations permissions only if the bootstrap
-workflow really needs those resources. After the project exists, prefer a
-narrower project-specific v2 key for ongoing automation.
+Re-authenticate with browser OAuth if needed. Do not work around an OAuth scope
+problem by pasting an `sk_...` key into MRA.
 
-For keys that only need read access, grant only the corresponding
-`project_configuration:*:read` permissions. Add `read_write` only for resources
-an automation path actually mutates.
-
-Typical broader mutation permissions may include:
-
-```text
-project_configuration:projects:read_write
-project_configuration:apps:read_write
-project_configuration:products:read_write
-project_configuration:entitlements:read_write
-project_configuration:offerings:read_write
-project_configuration:packages:read_write
-project_configuration:integrations:read_write
-```
-
-Do not grant customer/refund/promotional-entitlement permissions unless a
-specific workflow genuinely requires them.
-
-RevenueCat webhook authorization material is passed as a Bitwarden UUID.
+RevenueCat webhook authorization material is still passed as a Bitwarden UUID.
 RevenueCat may return a webhook `signing_secret`; MRA redacts that field before it
 reaches agent-visible output.
 
@@ -401,9 +391,9 @@ Where Google enables the account, MRA also implements:
 `admob_capabilities` reports observed/documented capability state. MRA does not
 create dummy objects just to probe write access.
 
-If an actual required write receives Google's limited-access denial, reconciliation
-returns `manual_required` with the exact remaining console action. Complete that
-single step and run `mra_verify` again.
+If an actual required write receives Google's limited-access denial,
+reconciliation returns `manual_required` with the exact remaining console action.
+Complete that single step and run `mra_verify` again.
 
 Do not add private Console APIs, cookie replay, or browser automation to bypass
 Google's account gate.
@@ -411,12 +401,13 @@ Google's account gate.
 ## Defensive redaction
 
 Secret isolation is the primary control; redaction is defense in depth. Vendor
-responses handled by the new management/reconciliation paths are recursively
-scrubbed for common sensitive fields and credential formats such as bearer
-tokens, RevenueCat `sk_...` keys, private keys, refresh tokens, client secrets,
-and webhook signing secrets.
+responses handled by the management/reconciliation paths are recursively scrubbed
+for common sensitive fields and credential formats such as bearer tokens,
+RevenueCat `sk_...` keys, private keys, refresh tokens, client secrets, and
+webhook signing secrets.
 
 Provider retrieval failures also avoid echoing secret-provider stdout/stderr.
+RevenueCat OAuth tokens never enter MRA command arguments or model-visible output.
 
 ## Trust boundary
 
@@ -424,16 +415,16 @@ The native approval gate protects the MCP path. It does **not** make unrestricte
 shell execution under the same OS user safe.
 
 An unrestricted local agent running as the same macOS user may be able to invoke
-`bws`, `security`, Python keyring, or operator CLIs directly. Where the credential
-and approval boundary matters, expose the MCP surface while restricting direct
-agent access to those facilities.
+`bws`, `security`, the RevenueCat CLI, Python keyring, or operator CLIs directly.
+Where the credential and approval boundary matters, expose the MCP surface while
+restricting direct agent access to those facilities.
 
 ## Legacy compatibility
 
-Some credential loaders retain owner-only local-file/environment fallbacks for
-migration compatibility. New installations should use Bitwarden bindings and the
-OS credential store. Private credential files are rejected if group/world
-accessible.
+MRA 1.7.0 keeps old RevenueCat key-reference fields parseable so upgrading does
+not break an existing local profile file. Those fields are ignored by active
+RevenueCat authentication. The official RevenueCat CLI OAuth session is now the
+only supported agent authentication path.
 
 ## Tests
 
@@ -442,7 +433,7 @@ accessible.
 ```
 
 The suite is offline and covers vendor request shapes, edit cleanup, risk gates,
-secret-provider behavior, RevenueCat bootstrap credential inheritance, AdMob
-access classification/reporting, webhook redaction, and desired-state planning.
-Repository CI also runs the full AgentDefaults contract validation before the MRA
-unit suite.
+secret-provider behavior, RevenueCat OAuth transport and API-key override
+suppression, AdMob access classification/reporting, webhook redaction, and
+desired-state planning. Repository CI also runs the full AgentDefaults contract
+validation before the MRA unit suite.
