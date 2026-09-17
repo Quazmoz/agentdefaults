@@ -13,8 +13,6 @@ def _profile(slug: str) -> config.Profile:
     profile = config.load_profile(slug)
     if not profile.revenuecat_project_id:
         raise ValueError(f"profile {slug!r} has no revenuecat_project_id")
-    if not profile.revenuecat_secret_id:
-        raise ValueError(f"profile {slug!r} has no revenuecat_secret_id")
     return profile
 
 
