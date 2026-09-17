@@ -1,0 +1,71 @@
+{
+  "play": {
+    "listing": {
+      "language": "en-US",
+      "title": "Example App",
+      "short_description": "Short Play Store description.",
+      "full_description": "Long Play Store description."
+    },
+    "testers": [
+      {
+        "track": "internal",
+        "google_groups": [
+          "android-testers@example.com"
+        ]
+      }
+    ]
+  },
+  "revenuecat": {
+    "project": {
+      "name": "Example App"
+    },
+    "app": {
+      "name": "Example App Android"
+    },
+    "products": [
+      {
+        "store_identifier": "example_lifetime",
+        "type": "non_consumable",
+        "display_name": "Lifetime"
+      }
+    ],
+    "entitlements": [
+      {
+        "lookup_key": "pro",
+        "display_name": "Pro"
+      }
+    ],
+    "offerings": [
+      {
+        "lookup_key": "default",
+        "display_name": "Default",
+        "is_current": true
+      }
+    ],
+    "webhooks": [
+      {
+        "name": "Production events",
+        "url": "https://example.com/revenuecat",
+        "environment": "production",
+        "authorization_header_secret_id": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  "admob": {
+    "app": {
+      "display_name": "Example App",
+      "platform": "ANDROID",
+      "linked_package": "com.example.app"
+    },
+    "ad_units": [
+      {
+        "display_name": "rewarded_unlock",
+        "format": "REWARDED",
+        "ad_types": [
+          "RICH_MEDIA",
+          "VIDEO"
+        ]
+      }
+    ]
+  }
+}
