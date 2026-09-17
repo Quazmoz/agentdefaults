@@ -110,10 +110,13 @@ def _execute(profile_slug: str, action: dict[str, Any]) -> dict[str, Any]:
         management = revenuecat_management.RevenueCatManagementClient(client)
 
         if operation == "create_play_app":
+            package_name = params.get("package_name") or profile.package_name
+            if not package_name:
+                raise reconcile.ReconcileError("RevenueCat Play app requires package_name")
             result = client.create_play_app(
                 project_id,
                 params["name"],
-                params.get("package_name") or profile.package_name,
+                package_name,
                 play_credentials.revenuecat_json(),
             )
             app_id = result.get("id")
@@ -143,33 +146,23 @@ def _execute(profile_slug: str, action: dict[str, Any]) -> dict[str, Any]:
             )
             return _tag(result, "contained")
 
-        if operation == "create_offering":
-            existing = next(
-                (
-                    item
-                    for item in client.list_offerings(project_id)
-                    if item.get("lookup_key") == params.get("lookup_key")
-                ),
-                None,
+        if operation == "attach_products_to_entitlement":
+            approved, refusal = _gate(
+                "Approve reconciled RevenueCat entitlement wiring",
+                f"Profile: {profile_slug}\nProject: {project_id}\n"
+                f"Entitlement: {params.get('entitlement_id')}\n"
+                f"Products: {', '.join(params.get('store_identifiers', []))}",
             )
-            if existing:
-                if params.get("is_current") and not existing.get("is_current"):
-                    approved, refusal = _gate(
-                        "Approve reconciled current RevenueCat offering",
-                        f"Profile: {profile_slug}\nProject: {project_id}\n"
-                        f"Offering: {params.get('lookup_key')}\nSet current: yes",
-                    )
-                    if not approved:
-                        return refusal
-                    result = management.update_offering(
-                        project_id,
-                        existing["id"],
-                        display_name=params.get("display_name"),
-                        is_current=True,
-                    )
-                    return _tag(result, "high", True)
-                return _tag(existing, "observe")
+            if not approved:
+                return refusal
+            result = client.attach_products_to_entitlement(
+                project_id,
+                params["entitlement_id"],
+                params["product_ids"],
+            )
+            return _tag(result, "high", True)
 
+        if operation == "create_offering":
             is_current = bool(params.get("is_current"))
             approved = False
             if is_current:
@@ -187,6 +180,54 @@ def _execute(profile_slug: str, action: dict[str, Any]) -> dict[str, Any]:
                 is_current=is_current,
             )
             return _tag(result, "high" if is_current else "contained", approved)
+
+        if operation == "update_offering":
+            approved, refusal = _gate(
+                "Approve reconciled current RevenueCat offering",
+                f"Profile: {profile_slug}\nProject: {project_id}\n"
+                f"Offering: {params.get('lookup_key')}\nSet current: {params.get('is_current')}",
+            )
+            if not approved:
+                return refusal
+            result = management.update_offering(
+                project_id,
+                params["offering_id"],
+                display_name=params.get("display_name"),
+                is_current=params.get("is_current"),
+            )
+            return _tag(result, "high", True)
+
+        if operation == "create_package":
+            offering_id = params.get("offering_id")
+            if not offering_id:
+                return {
+                    "status": "blocked",
+                    "detail": "RevenueCat package creation needs offering_id; reconcile the offering first.",
+                }
+            result = client.create_package(
+                project_id,
+                offering_id,
+                params["lookup_key"],
+                params["display_name"],
+                params.get("position"),
+            )
+            return _tag(result, "contained")
+
+        if operation == "attach_products_to_package":
+            approved, refusal = _gate(
+                "Approve reconciled RevenueCat package wiring",
+                f"Profile: {profile_slug}\nProject: {project_id}\n"
+                f"Package: {params.get('package_id')}\n"
+                f"Products: {', '.join(params.get('store_identifiers', []))}",
+            )
+            if not approved:
+                return refusal
+            result = client.attach_products_to_package(
+                project_id,
+                params["package_id"],
+                params["products"],
+            )
+            return _tag(result, "high", True)
 
         if operation == "create_or_update_webhook":
             existing = next(
@@ -309,8 +350,8 @@ def mra_apply(profile: str, desired_state: dict[str, Any]) -> dict[str, Any]:
     attempted: set[str] = set()
     results: list[dict[str, Any]] = []
 
-    # Re-plan after every successful or failed action because creates may unblock
-    # later resources and may reconcile newly returned vendor identifiers locally.
+    # Re-plan after every attempted action because creates may unblock later
+    # resources and may reconcile newly returned vendor identifiers locally.
     for _ in range(100):
         plan = reconcile.plan_profile(profile, desired_state)
         candidate = next(
