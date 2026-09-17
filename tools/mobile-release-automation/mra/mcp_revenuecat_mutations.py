@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import auth, config, human_approval, play_credentials
+from . import config, human_approval, play_credentials
 from . import mcp_revenuecat_management
 from . import revenuecat as rc_module
 
@@ -17,7 +17,8 @@ def _profile(slug: str) -> config.Profile:
 
 
 def _client(profile: config.Profile) -> rc_module.RevenueCatClient:
-    return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
+    del profile
+    return rc_module.RevenueCatClient()
 
 
 def _tag(result: dict, risk: str, approved: bool = False) -> dict:
