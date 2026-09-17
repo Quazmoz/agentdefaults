@@ -29,6 +29,28 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual(session.body_for("POST", "/projects"), {"name": "New App"})
 
 
+class OfferingTest(unittest.TestCase):
+    def test_current_offering_update_uses_offering_resource(self) -> None:
+        api, session = management(
+            {
+                ("POST", "/offerings/ofr_1"): ok(
+                    {"id": "ofr_1", "is_current": True}
+                )
+            }
+        )
+        result = api.update_offering(PROJECT, "ofr_1", is_current=True)
+        self.assertTrue(result["is_current"])
+        self.assertEqual(
+            session.body_for("POST", "/offerings/ofr_1"), {"is_current": True}
+        )
+
+    def test_empty_offering_update_is_rejected(self) -> None:
+        api, session = management({})
+        with self.assertRaises(revenuecat.RevenueCatError):
+            api.update_offering(PROJECT, "ofr_1")
+        self.assertEqual(session.calls, [])
+
+
 class WebhookTest(unittest.TestCase):
     def test_create_never_returns_signing_secret(self) -> None:
         api, session = management(
