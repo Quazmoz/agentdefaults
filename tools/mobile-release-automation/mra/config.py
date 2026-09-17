@@ -8,7 +8,7 @@ secret values.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 import json
 import os
@@ -140,6 +140,7 @@ class Profile:
 
 
 def load_profiles() -> dict[str, Profile]:
+    """Load persisted profiles exactly as stored, without inherited credentials."""
     path = path_for(PROFILES)
     if not path.is_file():
         return {}
@@ -148,11 +149,25 @@ def load_profiles() -> dict[str, Profile]:
 
 
 def load_profile(slug: str) -> Profile:
+    """Load one profile with the effective RevenueCat credential reference.
+
+    A persisted per-app RevenueCat key remains authoritative. When one is not yet
+    bound, a configured global bootstrap key is inherited in memory only. The
+    inherited reference is never written into ``profiles.json`` by this read.
+    This preserves legacy/profile-gated call sites while allowing new projects to
+    be created before their narrower project-specific keys exist.
+    """
     profiles = load_profiles()
     if slug not in profiles:
         known = ", ".join(sorted(profiles)) or "(none defined)"
         raise ConfigError(f"unknown profile {slug!r}. known profiles: {known}")
-    return profiles[slug]
+    profile = profiles[slug]
+    if profile.revenuecat_secret_id:
+        return profile
+    bootstrap_secret_id = load_secret_refs().revenuecat_bootstrap_secret_id
+    if bootstrap_secret_id:
+        return replace(profile, revenuecat_secret_id=bootstrap_secret_id)
+    return profile
 
 
 def save_profile(profile: Profile) -> Path:
