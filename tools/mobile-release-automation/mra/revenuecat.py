@@ -1,10 +1,11 @@
-"""RevenueCat API v2 operations.
+"""RevenueCat API v2 operations through the official OAuth-authenticated CLI.
 
 Reference: https://www.revenuecat.com/docs/api-v2
 
-RevenueCat ships a first-party MCP server at https://mcp.revenuecat.ai/mcp, which
-is the preferred agent surface. This module exists for the gaps: anything the MCP
-server does not expose, and any step that must run unattended in a script.
+Production MRA calls do not carry RevenueCat secret API keys. They delegate to
+the official RevenueCat CLI, which owns browser OAuth, token refresh, and secure
+credential storage. A custom HTTP session is still accepted for offline unit
+tests so request-shape coverage remains deterministic.
 """
 
 from __future__ import annotations
@@ -12,9 +13,7 @@ from __future__ import annotations
 from typing import Any, Iterator
 import json
 
-import requests
-
-from . import auth, redaction
+from . import redaction, revenuecat_cli
 
 BASE = "https://api.revenuecat.com/v2"
 REQUEST_TIMEOUT_SECONDS = 60
@@ -44,19 +43,42 @@ class RevenueCatError(RuntimeError):
 
 class RevenueCatClient:
     def __init__(self, api_key: str | None = None, session=None) -> None:
-        self.session = session or requests.Session()
-        self.session.headers.update(
-            {
-                "Authorization": f"Bearer {api_key or auth.revenuecat_key()}",
+        """Create a client.
+
+        `api_key` is retained only for source compatibility with older callers and
+        offline tests. When no explicit test session is supplied, production calls
+        always use the official RevenueCat CLI OAuth session and ignore API keys.
+        """
+        self.session = session
+        self._legacy_test_api_key = api_key if session is not None else None
+        if self.session is not None and hasattr(self.session, "headers"):
+            headers = {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "mobile-release-automation/1.6",
+                "User-Agent": "mobile-release-automation/1.7",
             }
-        )
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+            self.session.headers.update(headers)
 
     # ---- plumbing ----------------------------------------------------------
 
     def _request(self, method: str, path: str, action: str, **kwargs) -> Any:
+        if self.session is None:
+            try:
+                return revenuecat_cli.api_call(
+                    method,
+                    path,
+                    params=kwargs.get("params"),
+                    body=kwargs.get("json"),
+                    timeout=int(kwargs.get("timeout", REQUEST_TIMEOUT_SECONDS)),
+                )
+            except (revenuecat_cli.RevenueCatCliError, RuntimeError) as error:
+                raise RevenueCatError(
+                    f"{action} failed through RevenueCat OAuth CLI:\n"
+                    f"{redaction.redact_text(str(error))}"
+                ) from error
+
         kwargs.setdefault("timeout", REQUEST_TIMEOUT_SECONDS)
         response = self.session.request(method, f"{BASE}{path}", **kwargs)
         if not response.ok:
