@@ -6,19 +6,15 @@ Each platform authenticates differently and the differences are load-bearing:
 * AdMob        - OAuth user credentials only. The static Desktop OAuth client is
                  resolved from Bitwarden and the refresh token lives in the OS
                  credential store; no authorized-user JSON is persisted locally.
-* RevenueCat   - a v2 secret API key sent as a bearer token. App profiles may
-                 reference a project-specific key in Bitwarden Secrets Manager,
-                 with a separate global bootstrap key available before a new
-                 project's scoped key exists.
+* RevenueCat   - OAuth owned by the official RevenueCat CLI. MRA never needs a
+                 RevenueCat secret API key for agent-driven setup or management.
 """
 
 from __future__ import annotations
 
-import os
 from typing import Sequence
 
-from . import admob_credentials, config, keychain, play_credentials
-from . import secrets as secret_provider
+from . import admob_credentials, config, keychain, play_credentials, revenuecat_cli
 
 PLAY_SCOPES = ("https://www.googleapis.com/auth/androidpublisher",)
 
@@ -37,11 +33,8 @@ ADMOB_CLIENT_HINT = (
     "`mra-agent auth bind-admob --secret-id <UUID>`"
 )
 REVENUECAT_HINT = (
-    "bind a global RevenueCat bootstrap v2 key from Bitwarden with "
-    "`mra-agent auth bind-revenuecat-bootstrap --secret-id <UUID>`, configure "
-    "the app profile with a project-specific Bitwarden UUID, export "
-    "REVENUECAT_V2_SECRET_KEY for an unprofiled invocation, or write a legacy "
-    f"fallback key to {config.path_for(config.REVENUECAT_KEY)} with chmod 600"
+    "install the official RevenueCat CLI with `brew install RevenueCat/tap/rc`, "
+    "then run `rc auth login` and choose browser OAuth"
 )
 
 
@@ -49,7 +42,7 @@ def _authorized_session(credentials):
     from google.auth.transport.requests import AuthorizedSession
 
     session = AuthorizedSession(credentials)
-    session.headers["User-Agent"] = "mobile-release-automation/1.4"
+    session.headers["User-Agent"] = "mobile-release-automation/1.7"
     return session
 
 
@@ -135,61 +128,22 @@ def _run_admob_consent(scopes: Sequence[str]):
 
 
 def revenuecat_credential_source(profile: config.Profile | None = None) -> str | None:
-    """Return the configured RevenueCat credential source without reading a secret value."""
-    refs = config.load_secret_refs()
-    if profile and profile.revenuecat_secret_id:
-        if (
-            refs.revenuecat_bootstrap_secret_id
-            and profile.revenuecat_secret_id == refs.revenuecat_bootstrap_secret_id
-        ):
-            return "global-bootstrap-bitwarden"
-        return "profile-bitwarden"
-
-    if refs.revenuecat_bootstrap_secret_id:
-        return "global-bootstrap-bitwarden"
-
-    if os.environ.get("REVENUECAT_V2_SECRET_KEY", "").strip():
-        return "environment"
-
-    if config.path_for(config.REVENUECAT_KEY).is_file():
-        return "legacy-file"
-
-    return None
+    """Return the active RevenueCat credential class without exposing tokens."""
+    del profile
+    try:
+        revenuecat_cli.require_oauth()
+    except (config.ConfigError, revenuecat_cli.RevenueCatCliError):
+        return None
+    return "official-revenuecat-cli-oauth"
 
 
 def revenuecat_key(profile: config.Profile | None = None) -> str:
-    """Return the RevenueCat API v2 key for a profile or bootstrap invocation.
+    """Compatibility shim for older MRA call sites.
 
-    Project-specific profile keys always win. A global Bitwarden-backed bootstrap
-    key is the preferred fallback for creating and wiring a brand-new RevenueCat
-    project before that project's narrower key exists. Environment and legacy-file
-    fallbacks remain for trusted operator/CI compatibility.
+    RevenueCatClient no longer consumes this value in production. Calling this
+    function only proves that the official RevenueCat CLI has a browser-OAuth
+    session and returns a non-secret marker for legacy constructors.
     """
-    refs = config.load_secret_refs()
-    if profile and profile.revenuecat_secret_id:
-        value = secret_provider.bitwarden_secret(profile.revenuecat_secret_id).strip()
-        if not value:
-            if (
-                refs.revenuecat_bootstrap_secret_id
-                and profile.revenuecat_secret_id == refs.revenuecat_bootstrap_secret_id
-            ):
-                raise config.ConfigError("global RevenueCat bootstrap Bitwarden secret is empty")
-            raise config.ConfigError(
-                f"Bitwarden secret for profile {profile.slug!r} is empty"
-            )
-        return value
-
-    bootstrap_secret_id = refs.revenuecat_bootstrap_secret_id
-    if bootstrap_secret_id:
-        value = secret_provider.bitwarden_secret(bootstrap_secret_id).strip()
-        if not value:
-            raise config.ConfigError("global RevenueCat bootstrap Bitwarden secret is empty")
-        return value
-
-    environment_value = os.environ.get("REVENUECAT_V2_SECRET_KEY", "").strip()
-    if environment_value:
-        return environment_value
-
-    return config.require_file(config.REVENUECAT_KEY, REVENUECAT_HINT).read_text(
-        encoding="utf-8"
-    ).strip()
+    del profile
+    revenuecat_cli.require_oauth()
+    return "oauth-cli"
