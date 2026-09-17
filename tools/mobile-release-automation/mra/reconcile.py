@@ -67,6 +67,11 @@ def _rc_client(profile: config.Profile) -> rc_module.RevenueCatClient:
     return rc_module.RevenueCatClient(api_key=auth.revenuecat_key(profile))
 
 
+def _play_package(app: dict[str, Any]) -> str | None:
+    play_store = app.get("play_store") or {}
+    return play_store.get("package_name") or app.get("package_name")
+
+
 def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dict[str, Any]:
     """Collect authoritative current state without mutating any vendor."""
     profile = config.load_profile(profile_slug)
@@ -90,6 +95,7 @@ def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dic
             if include_reviews:
                 state["reviews"] = management.list_reviews(max_results=100)
             return state
+
         snapshot["play"] = _safe(play_state)
 
     if profile.revenuecat_secret_id:
@@ -111,8 +117,11 @@ def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dic
                     }
                 )
             return state
+
         snapshot["revenuecat"] = _safe(rc_state)
 
+    # A package name is enough to attempt account discovery. Audit mode wants
+    # that diagnostic even before an AdMob ID has been stored in the profile.
     if profile.admob_publisher_id or profile.admob_app_id or profile.package_name:
         def admob_state() -> dict[str, Any]:
             client = admob.AdMobClient(profile.admob_publisher_id)
@@ -122,6 +131,7 @@ def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dic
                 "approval": client.app_approval_summary(),
                 "capabilities": client.capability_matrix(),
             }
+
         snapshot["admob"] = _safe(admob_state)
 
     return snapshot
@@ -155,13 +165,33 @@ def _action(
     }
 
 
+def _desired_product_ref(value: Any) -> tuple[str | None, str]:
+    """Normalize a package product reference to store id + eligibility criteria."""
+    if isinstance(value, str):
+        return value, "all"
+    if isinstance(value, dict):
+        store_id = value.get("store_identifier")
+        eligibility = value.get("eligibility_criteria", "all")
+        if eligibility not in ("all", "google_sdk_lt_6", "google_sdk_ge_6"):
+            raise ReconcileError(
+                f"invalid package eligibility_criteria {eligibility!r} for {store_id!r}"
+            )
+        return store_id, eligibility
+    raise ReconcileError("product references must be store-identifier strings or objects")
+
+
 def plan_profile(
     profile_slug: str,
     desired: dict[str, Any],
     *,
     snapshot: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Compare desired state with vendor state and return a deterministic plan."""
+    """Compare desired state with vendor state and return a deterministic plan.
+
+    RevenueCat relationship reconciliation is additive: desired product links are
+    attached when missing, but unspecified existing links are not detached.
+    Destructive convergence belongs behind a separate explicit policy.
+    """
     validate_desired_state(desired)
     profile = config.load_profile(profile_slug)
     current = snapshot or snapshot_profile(profile_slug)
@@ -196,13 +226,14 @@ def plan_profile(
                 "satisfied" if matches else ("needed" if play_current else "blocked"),
                 "high",
                 dict(listing),
-                "localized store listing already matches" if matches else "localized store listing differs or is missing",
+                "localized store listing already matches"
+                if matches
+                else "localized store listing differs or is missing",
             )
         )
 
     for tester in play_desired.get("testers", []):
         track = tester.get("track", "internal")
-        # Tester state is fetched lazily because it is not part of the base snapshot.
         if profile.package_name and play_current:
             tester_read = _safe(
                 lambda track=track: play_management.PlayManagementClient(
@@ -219,43 +250,47 @@ def plan_profile(
                 f"play.testers.{track}",
                 "play",
                 "update_testers",
-                "satisfied" if matches else ("needed" if tester_read.get("status") == "ready" else "blocked"),
+                "satisfied"
+                if matches
+                else ("needed" if tester_read.get("status") == "ready" else "blocked"),
                 "high",
                 {"track": track, "google_groups": desired_groups},
-                "tester groups already match" if matches else "tester groups differ or could not be read",
+                "tester groups already match"
+                if matches
+                else "tester groups differ or could not be read",
             )
         )
 
     # RevenueCat -------------------------------------------------------------
     rc_desired = desired.get("revenuecat") or {}
     rc_current = _data(current, "revenuecat")
+    project_ready = bool(profile.revenuecat_project_id and rc_current)
+
     project_spec = rc_desired.get("project")
     if project_spec:
-        project_name = project_spec.get("name")
         project_exists = bool(profile.revenuecat_project_id)
         actions.append(
             _action(
                 "revenuecat.project",
                 "revenuecat",
                 "create_project",
-                "satisfied" if project_exists else ("needed" if profile.revenuecat_secret_id else "blocked"),
+                "satisfied"
+                if project_exists
+                else ("needed" if profile.revenuecat_secret_id else "blocked"),
                 "contained",
-                {"name": project_name},
-                "profile already has a RevenueCat project" if project_exists else "profile has no RevenueCat project id",
+                {"name": project_spec.get("name")},
+                "profile already has a RevenueCat project"
+                if project_exists
+                else "profile has no RevenueCat project id",
             )
         )
 
     rc_apps = (rc_current or {}).get("apps", [])
     app_spec = rc_desired.get("app")
-    if app_spec and profile.revenuecat_project_id:
+    if app_spec:
         package_name = app_spec.get("package_name") or profile.package_name
         existing_app = next(
-            (
-                app
-                for app in rc_apps
-                if app.get("play_store", {}).get("package_name") == package_name
-                or app.get("package_name") == package_name
-            ),
+            (app for app in rc_apps if _play_package(app) == package_name),
             None,
         )
         actions.append(
@@ -263,69 +298,216 @@ def plan_profile(
                 "revenuecat.app",
                 "revenuecat",
                 "create_play_app",
-                "satisfied" if existing_app else ("needed" if rc_current else "blocked"),
+                "satisfied"
+                if existing_app
+                else ("needed" if project_ready else "blocked"),
                 "contained",
                 {"name": app_spec.get("name"), "package_name": package_name},
-                "RevenueCat Play app exists" if existing_app else "RevenueCat Play app is missing",
+                "RevenueCat Play app exists"
+                if existing_app
+                else "RevenueCat Play app is missing or the project is not ready",
             )
         )
 
     rc_products = (rc_current or {}).get("products", [])
+    product_by_store = {
+        item.get("store_identifier"): item
+        for item in rc_products
+        if item.get("store_identifier")
+    }
     for product in rc_desired.get("products", []):
         store_id = product.get("store_identifier")
-        existing = next(
-            (item for item in rc_products if item.get("store_identifier") == store_id), None
-        )
+        existing = product_by_store.get(store_id)
         actions.append(
             _action(
                 f"revenuecat.product.{store_id}",
                 "revenuecat",
                 "create_product",
-                "satisfied" if existing else ("needed" if rc_current else "blocked"),
+                "satisfied" if existing else ("needed" if project_ready else "blocked"),
                 "contained",
                 dict(product),
-                "RevenueCat product exists" if existing else "RevenueCat product is missing",
+                "RevenueCat product exists"
+                if existing
+                else "RevenueCat product is missing or the project is not ready",
             )
         )
 
     rc_entitlements = (rc_current or {}).get("entitlements", [])
+    entitlement_by_key = {
+        item.get("lookup_key"): item for item in rc_entitlements if item.get("lookup_key")
+    }
+    wiring = (rc_current or {}).get("wiring", {}) or {}
+    wiring_entitlements = {
+        item.get("lookup_key"): item
+        for item in wiring.get("entitlements", [])
+        if item.get("lookup_key")
+    }
+
     for entitlement in rc_desired.get("entitlements", []):
         lookup_key = entitlement.get("lookup_key")
-        existing = next(
-            (item for item in rc_entitlements if item.get("lookup_key") == lookup_key), None
-        )
+        existing = entitlement_by_key.get(lookup_key)
         actions.append(
             _action(
                 f"revenuecat.entitlement.{lookup_key}",
                 "revenuecat",
                 "create_entitlement",
-                "satisfied" if existing else ("needed" if rc_current else "blocked"),
+                "satisfied" if existing else ("needed" if project_ready else "blocked"),
                 "contained",
-                dict(entitlement),
-                "RevenueCat entitlement exists" if existing else "RevenueCat entitlement is missing",
+                {
+                    "lookup_key": lookup_key,
+                    "display_name": entitlement.get("display_name"),
+                },
+                "RevenueCat entitlement exists"
+                if existing
+                else "RevenueCat entitlement is missing or the project is not ready",
             )
         )
 
+        desired_store_ids = [str(item) for item in entitlement.get("products", [])]
+        if desired_store_ids:
+            resolved_products = [product_by_store.get(store_id) for store_id in desired_store_ids]
+            all_products_ready = all(resolved_products)
+            wiring_entitlement = wiring_entitlements.get(lookup_key) or {}
+            current_product_ids = {
+                item.get("id") for item in wiring_entitlement.get("products", []) if item.get("id")
+            }
+            desired_product_ids = [
+                item.get("id") for item in resolved_products if item and item.get("id")
+            ]
+            attached = bool(existing) and all_products_ready and set(desired_product_ids).issubset(
+                current_product_ids
+            )
+            ready = bool(existing and all_products_ready and project_ready)
+            actions.append(
+                _action(
+                    f"revenuecat.entitlement.{lookup_key}.products",
+                    "revenuecat",
+                    "attach_products_to_entitlement",
+                    "satisfied" if attached else ("needed" if ready else "blocked"),
+                    "high",
+                    {
+                        "entitlement_id": existing.get("id") if existing else None,
+                        "product_ids": desired_product_ids,
+                        "store_identifiers": desired_store_ids,
+                    },
+                    "desired products are attached to the entitlement"
+                    if attached
+                    else "entitlement/product dependencies are missing or desired products are not attached",
+                )
+            )
+
     rc_offerings = (rc_current or {}).get("offerings", [])
+    offering_by_key = {
+        item.get("lookup_key"): item for item in rc_offerings if item.get("lookup_key")
+    }
+    wiring_offerings = {
+        item.get("lookup_key"): item
+        for item in wiring.get("offerings", [])
+        if item.get("lookup_key")
+    }
+
     for offering in rc_desired.get("offerings", []):
         lookup_key = offering.get("lookup_key")
-        existing = next(
-            (item for item in rc_offerings if item.get("lookup_key") == lookup_key), None
-        )
-        current_match = not offering.get("is_current") or bool(existing and existing.get("is_current"))
+        existing = offering_by_key.get(lookup_key)
+        wants_current = bool(offering.get("is_current"))
+        current_match = not wants_current or bool(existing and existing.get("is_current"))
         satisfied = existing is not None and current_match
-        risk = "high" if offering.get("is_current") else "contained"
+        operation = "update_offering" if existing and not current_match else "create_offering"
+        risk = "high" if wants_current else "contained"
         actions.append(
             _action(
                 f"revenuecat.offering.{lookup_key}",
                 "revenuecat",
-                "create_offering",
-                "satisfied" if satisfied else ("needed" if rc_current else "blocked"),
+                operation,
+                "satisfied" if satisfied else ("needed" if project_ready else "blocked"),
                 risk,
-                dict(offering),
-                "RevenueCat offering matches" if satisfied else "RevenueCat offering is missing or not current",
+                {
+                    "offering_id": existing.get("id") if existing else None,
+                    "lookup_key": lookup_key,
+                    "display_name": offering.get("display_name"),
+                    "is_current": wants_current,
+                },
+                "RevenueCat offering matches"
+                if satisfied
+                else "RevenueCat offering is missing or its current state differs",
             )
         )
+
+        wiring_offering = wiring_offerings.get(lookup_key) or {}
+        package_by_key = {
+            item.get("lookup_key"): item
+            for item in wiring_offering.get("packages", [])
+            if item.get("lookup_key")
+        }
+        for package in offering.get("packages", []):
+            package_key = package.get("lookup_key")
+            existing_package = package_by_key.get(package_key)
+            offering_ready = bool(existing and project_ready)
+            actions.append(
+                _action(
+                    f"revenuecat.offering.{lookup_key}.package.{package_key}",
+                    "revenuecat",
+                    "create_package",
+                    "satisfied"
+                    if existing_package
+                    else ("needed" if offering_ready else "blocked"),
+                    "contained",
+                    {
+                        "offering_id": existing.get("id") if existing else None,
+                        "lookup_key": package_key,
+                        "display_name": package.get("display_name"),
+                        "position": package.get("position"),
+                    },
+                    "RevenueCat package exists"
+                    if existing_package
+                    else "package is missing or its offering is not ready",
+                )
+            )
+
+            desired_refs = [
+                _desired_product_ref(item) for item in package.get("products", [])
+            ]
+            if desired_refs:
+                associations: list[dict[str, str]] = []
+                all_products_ready = True
+                for store_id, eligibility in desired_refs:
+                    product = product_by_store.get(store_id)
+                    if not store_id or not product or not product.get("id"):
+                        all_products_ready = False
+                        continue
+                    associations.append(
+                        {
+                            "product_id": str(product["id"]),
+                            "eligibility_criteria": eligibility,
+                        }
+                    )
+                current_product_ids = {
+                    item.get("id")
+                    for item in (existing_package or {}).get("products", [])
+                    if item.get("id")
+                }
+                desired_product_ids = {item["product_id"] for item in associations}
+                attached = bool(existing_package) and all_products_ready and desired_product_ids.issubset(
+                    current_product_ids
+                )
+                ready = bool(existing_package and all_products_ready and project_ready)
+                actions.append(
+                    _action(
+                        f"revenuecat.offering.{lookup_key}.package.{package_key}.products",
+                        "revenuecat",
+                        "attach_products_to_package",
+                        "satisfied" if attached else ("needed" if ready else "blocked"),
+                        "high",
+                        {
+                            "package_id": existing_package.get("id") if existing_package else None,
+                            "products": associations,
+                            "store_identifiers": [item[0] for item in desired_refs],
+                        },
+                        "desired products are attached to the package"
+                        if attached
+                        else "package/product dependencies are missing or desired products are not attached",
+                    )
+                )
 
     rc_webhooks = (rc_current or {}).get("webhooks", [])
     for webhook in rc_desired.get("webhooks", []):
@@ -333,17 +515,20 @@ def plan_profile(
         existing = next((item for item in rc_webhooks if item.get("name") == name), None)
         comparable = ("url", "environment", "app_id")
         matches = existing is not None and all(
-            webhook.get(key) is None or existing.get(key) == webhook.get(key) for key in comparable
+            webhook.get(key) is None or existing.get(key) == webhook.get(key)
+            for key in comparable
         )
         actions.append(
             _action(
                 f"revenuecat.webhook.{name}",
                 "revenuecat",
                 "create_or_update_webhook",
-                "satisfied" if matches else ("needed" if rc_current else "blocked"),
+                "satisfied" if matches else ("needed" if project_ready else "blocked"),
                 "high",
                 dict(webhook),
-                "RevenueCat webhook matches" if matches else "RevenueCat webhook is missing or differs",
+                "RevenueCat webhook matches"
+                if matches
+                else "RevenueCat webhook is missing, differs, or the project is not ready",
             )
         )
 
@@ -354,7 +539,11 @@ def plan_profile(
     app_spec = admob_desired.get("app")
     matched_admob_app = None
     if app_spec:
-        linked_package = app_spec.get("linked_package") or profile.package_name
+        linked_package = (
+            app_spec.get("linked_package")
+            if "linked_package" in app_spec
+            else profile.package_name
+        )
         display_name = app_spec.get("display_name")
         matched_admob_app = next(
             (
@@ -371,14 +560,18 @@ def plan_profile(
                 "admob.app",
                 "admob",
                 "create_app",
-                "satisfied" if matched_admob_app else ("needed" if admob_current else "blocked"),
+                "satisfied"
+                if matched_admob_app
+                else ("needed" if admob_current else "blocked"),
                 "high" if linked_package else "contained",
                 {
                     "display_name": display_name,
                     "platform": app_spec.get("platform", "ANDROID"),
                     "app_store_id": linked_package,
                 },
-                "AdMob app exists" if matched_admob_app else "AdMob app is missing; API creation will be attempted and may be account-gated",
+                "AdMob app exists"
+                if matched_admob_app
+                else "AdMob app is missing; API creation will be attempted and may be account-gated",
             )
         )
 
@@ -390,11 +583,16 @@ def plan_profile(
             (
                 item
                 for item in admob_units
-                if item.get("displayName") == name and (not app_id or item.get("appId") == app_id)
+                if item.get("displayName") == name
+                and (not app_id or item.get("appId") == app_id)
             ),
             None,
         )
-        status = "satisfied" if existing else ("needed" if admob_current and app_id else "blocked")
+        status = (
+            "satisfied"
+            if existing
+            else ("needed" if admob_current and app_id else "blocked")
+        )
         actions.append(
             _action(
                 f"admob.ad_unit.{name}",
@@ -403,9 +601,12 @@ def plan_profile(
                 status,
                 "contained",
                 {**dict(unit), "app_id": app_id},
-                "AdMob ad unit exists" if existing else (
+                "AdMob ad unit exists"
+                if existing
+                else (
                     "AdMob ad unit is missing; API creation may be account-gated"
-                    if app_id else "AdMob app id is required before the ad unit can be created"
+                    if app_id
+                    else "AdMob app id is required before the ad unit can be created"
                 ),
             )
         )
@@ -413,21 +614,27 @@ def plan_profile(
     counts: dict[str, int] = {}
     for item in actions:
         counts[item["status"]] = counts.get(item["status"], 0) + 1
+
+    requested_platforms = {
+        platform for platform in ("play", "revenuecat", "admob") if platform in desired
+    }
+    snapshot_errors = {
+        platform: current[platform]
+        for platform in requested_platforms
+        if current.get(platform, {}).get("status") == "error"
+    }
     return {
         "profile": profile_slug,
         "actions": actions,
         "summary": counts,
-        "converged": all(item["status"] == "satisfied" for item in actions),
-        "snapshot_errors": {
-            platform: entry
-            for platform, entry in current.items()
-            if platform in ("play", "revenuecat", "admob") and entry.get("status") == "error"
-        },
+        "converged": not snapshot_errors
+        and all(item["status"] == "satisfied" for item in actions),
+        "snapshot_errors": snapshot_errors,
     }
 
 
 def verify_profile(profile_slug: str, desired: dict[str, Any]) -> dict[str, Any]:
-    """Re-read all vendors and report whether desired state has converged."""
+    """Re-read all relevant vendors and report whether desired state has converged."""
     plan = plan_profile(profile_slug, desired)
     remaining = [item for item in plan["actions"] if item["status"] != "satisfied"]
     return {
@@ -451,7 +658,12 @@ def audit_profile(profile_slug: str) -> dict[str, Any]:
         )
 
     if not profile.package_name:
-        finding("error", "profile_missing_package", "profile", "No Android package name is configured.")
+        finding(
+            "error",
+            "profile_missing_package",
+            "profile",
+            "No Android package name is configured.",
+        )
 
     for platform in ("play", "revenuecat", "admob"):
         entry = snapshot.get(platform, {})
@@ -466,9 +678,13 @@ def audit_profile(profile_slug: str) -> dict[str, Any]:
     play_state = _data(snapshot, "play") or {}
     for review in play_state.get("reviews", []):
         comments = review.get("comments", [])
-        user_comments = [item.get("userComment") for item in comments if item.get("userComment")]
+        user_comments = [
+            item.get("userComment") for item in comments if item.get("userComment")
+        ]
         developer_comments = [
-            item.get("developerComment") for item in comments if item.get("developerComment")
+            item.get("developerComment")
+            for item in comments
+            if item.get("developerComment")
         ]
         if user_comments:
             rating = user_comments[-1].get("starRating")
@@ -486,12 +702,7 @@ def audit_profile(profile_slug: str) -> dict[str, Any]:
     if profile.revenuecat_project_id and rc_state:
         package = profile.package_name
         apps = rc_state.get("apps", [])
-        matching = [
-            app
-            for app in apps
-            if app.get("play_store", {}).get("package_name") == package
-            or app.get("package_name") == package
-        ]
+        matching = [app for app in apps if _play_package(app) == package]
         if package and not matching:
             finding(
                 "warning",
@@ -544,7 +755,11 @@ def audit_profile(profile_slug: str) -> dict[str, Any]:
             )
         if matching_apps:
             app_ids = {item.get("appId") for item in matching_apps}
-            units = [u for u in admob_state.get("ad_units", []) if u.get("appId") in app_ids]
+            units = [
+                unit
+                for unit in admob_state.get("ad_units", [])
+                if unit.get("appId") in app_ids
+            ]
             if not units:
                 finding(
                     "info",
