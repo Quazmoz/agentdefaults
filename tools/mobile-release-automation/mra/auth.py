@@ -136,10 +136,15 @@ def _run_admob_consent(scopes: Sequence[str]):
 
 def revenuecat_credential_source(profile: config.Profile | None = None) -> str | None:
     """Return the configured RevenueCat credential source without reading a secret value."""
+    refs = config.load_secret_refs()
     if profile and profile.revenuecat_secret_id:
+        if (
+            refs.revenuecat_bootstrap_secret_id
+            and profile.revenuecat_secret_id == refs.revenuecat_bootstrap_secret_id
+        ):
+            return "global-bootstrap-bitwarden"
         return "profile-bitwarden"
 
-    refs = config.load_secret_refs()
     if refs.revenuecat_bootstrap_secret_id:
         return "global-bootstrap-bitwarden"
 
@@ -160,15 +165,21 @@ def revenuecat_key(profile: config.Profile | None = None) -> str:
     project before that project's narrower key exists. Environment and legacy-file
     fallbacks remain for trusted operator/CI compatibility.
     """
+    refs = config.load_secret_refs()
     if profile and profile.revenuecat_secret_id:
         value = secret_provider.bitwarden_secret(profile.revenuecat_secret_id).strip()
         if not value:
+            if (
+                refs.revenuecat_bootstrap_secret_id
+                and profile.revenuecat_secret_id == refs.revenuecat_bootstrap_secret_id
+            ):
+                raise config.ConfigError("global RevenueCat bootstrap Bitwarden secret is empty")
             raise config.ConfigError(
                 f"Bitwarden secret for profile {profile.slug!r} is empty"
             )
         return value
 
-    bootstrap_secret_id = config.load_secret_refs().revenuecat_bootstrap_secret_id
+    bootstrap_secret_id = refs.revenuecat_bootstrap_secret_id
     if bootstrap_secret_id:
         value = secret_provider.bitwarden_secret(bootstrap_secret_id).strip()
         if not value:
