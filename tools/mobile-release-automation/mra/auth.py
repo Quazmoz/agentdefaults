@@ -7,7 +7,9 @@ Each platform authenticates differently and the differences are load-bearing:
                  resolved from Bitwarden and the refresh token lives in the OS
                  credential store; no authorized-user JSON is persisted locally.
 * RevenueCat   - a v2 secret API key sent as a bearer token. App profiles may
-                 reference that key in Bitwarden Secrets Manager by UUID.
+                 reference a project-specific key in Bitwarden Secrets Manager,
+                 with a separate global bootstrap key available before a new
+                 project's scoped key exists.
 """
 
 from __future__ import annotations
@@ -35,7 +37,9 @@ ADMOB_CLIENT_HINT = (
     "`mra-agent auth bind-admob --secret-id <UUID>`"
 )
 REVENUECAT_HINT = (
-    "configure the app profile with a Bitwarden Secrets Manager UUID, export "
+    "bind a global RevenueCat bootstrap v2 key from Bitwarden with "
+    "`mra-agent auth bind-revenuecat-bootstrap --secret-id <UUID>`, configure "
+    "the app profile with a project-specific Bitwarden UUID, export "
     "REVENUECAT_V2_SECRET_KEY for an unprofiled invocation, or write a legacy "
     f"fallback key to {config.path_for(config.REVENUECAT_KEY)} with chmod 600"
 )
@@ -130,14 +134,45 @@ def _run_admob_consent(scopes: Sequence[str]):
     )
 
 
+def revenuecat_credential_source(profile: config.Profile | None = None) -> str | None:
+    """Return the configured RevenueCat credential source without reading a secret value."""
+    if profile and profile.revenuecat_secret_id:
+        return "profile-bitwarden"
+
+    refs = config.load_secret_refs()
+    if refs.revenuecat_bootstrap_secret_id:
+        return "global-bootstrap-bitwarden"
+
+    if os.environ.get("REVENUECAT_V2_SECRET_KEY", "").strip():
+        return "environment"
+
+    if config.path_for(config.REVENUECAT_KEY).is_file():
+        return "legacy-file"
+
+    return None
+
+
 def revenuecat_key(profile: config.Profile | None = None) -> str:
-    """Return the RevenueCat API v2 key for a profile or legacy invocation."""
+    """Return the RevenueCat API v2 key for a profile or bootstrap invocation.
+
+    Project-specific profile keys always win. A global Bitwarden-backed bootstrap
+    key is the preferred fallback for creating and wiring a brand-new RevenueCat
+    project before that project's narrower key exists. Environment and legacy-file
+    fallbacks remain for trusted operator/CI compatibility.
+    """
     if profile and profile.revenuecat_secret_id:
         value = secret_provider.bitwarden_secret(profile.revenuecat_secret_id).strip()
         if not value:
             raise config.ConfigError(
                 f"Bitwarden secret for profile {profile.slug!r} is empty"
             )
+        return value
+
+    bootstrap_secret_id = config.load_secret_refs().revenuecat_bootstrap_secret_id
+    if bootstrap_secret_id:
+        value = secret_provider.bitwarden_secret(bootstrap_secret_id).strip()
+        if not value:
+            raise config.ConfigError("global RevenueCat bootstrap Bitwarden secret is empty")
         return value
 
     environment_value = os.environ.get("REVENUECAT_V2_SECRET_KEY", "").strip()
