@@ -38,11 +38,13 @@ TOOLKIT_FILES = [
     "tools/mobile-release-automation/mra/play.py",
     "tools/mobile-release-automation/mra/admob.py",
     "tools/mobile-release-automation/mra/revenuecat.py",
+    "tools/mobile-release-automation/mra/revenuecat_cli.py",
     "tools/mobile-release-automation/mra/cli.py",
     "tools/mobile-release-automation/mra/mcp_server.py",
     "tools/mobile-release-automation/tests/test_play.py",
     "tools/mobile-release-automation/tests/test_admob.py",
     "tools/mobile-release-automation/tests/test_revenuecat.py",
+    "tools/mobile-release-automation/tests/test_revenuecat_cli.py",
     "tools/mobile-release-automation/tests/test_safety.py",
     "tools/mobile-release-automation/tests/test_mcp_server.py",
 ]
@@ -59,12 +61,16 @@ MODES = ["assess", "setup", "release", "monetize", "inventory", "diagnose"]
 PLATFORMS = ["google_play", "revenuecat", "admob"]
 PROBE_STATES = ["denied", "likely", "unknown", "not_probed"]
 
-# Platform constraints an agent must never silently lose. Each is documented by
-# the vendor and the stack is wrong if it stops stating them.
 ADMOB_INVARIANTS = [
     "limited access",
     "account manager",
     "OAuth",
+]
+
+REVENUECAT_INVARIANTS = [
+    "OAuth",
+    "official RevenueCat CLI",
+    "project-scoped",
 ]
 
 
@@ -107,7 +113,6 @@ def check_manifest(failures: list[str]) -> None:
 
     for key, expected in STACK.items():
         if key == "prompt":
-            # The manifest convention is a "prompts" list, not a scalar key.
             if expected not in stack.get("prompts", []):
                 failures.append(f"manifest {STACK_NAME}.prompts should include {expected}")
             continue
@@ -154,7 +159,6 @@ def check_schema(failures: list[str]) -> None:
     if sorted(probe.get("enum", [])) != sorted(PROBE_STATES):
         failures.append(f"task schema admob_access_probed should be {PROBE_STATES}")
 
-    # A staged rollout without a fraction is a silent full release.
     release = properties.get("release", {})
     if not any(
         rule.get("if", {}).get("properties", {}).get("status", {}).get("const") == "inProgress"
@@ -163,7 +167,6 @@ def check_schema(failures: list[str]) -> None:
     ):
         failures.append("task schema must require user_fraction when status is inProgress")
 
-    # AdMob work must not be planned before access is probed.
     if not any(
         "admob" in json.dumps(rule.get("if", {}))
         and "execution" in json.dumps(rule.get("then", {}))
@@ -187,6 +190,10 @@ def check_agent_contract(failures: list[str]) -> None:
         if invariant not in agent:
             failures.append(f"agent must state the AdMob constraint: {invariant}")
 
+    for invariant in REVENUECAT_INVARIANTS:
+        if invariant not in agent:
+            failures.append(f"agent must state the RevenueCat auth constraint: {invariant}")
+
     for term, label in (
         ("Tool availability is not authorization", "authorization boundary"),
         ("promote", "promotion semantics"),
@@ -208,9 +215,11 @@ def check_skill_contracts(failures: list[str]) -> None:
             failures.append(f"Play skill must cover {term}")
 
     revenuecat = read("skills/revenuecat-monetization-automation.md")
-    for term in ("mcp.revenuecat.ai", "entitlement", "store_identifier"):
+    for term in ("mcp.revenuecat.ai", "entitlement", "store_identifier", "rc auth login"):
         if term not in revenuecat:
             failures.append(f"RevenueCat skill must cover {term}")
+    if "bootstrap key" not in revenuecat.lower() or "do not" not in revenuecat.lower():
+        failures.append("RevenueCat skill must explicitly reject an sk_ bootstrap-key design")
 
     admob = read("skills/admob-inventory-automation.md")
     for invariant in ADMOB_INVARIANTS:
@@ -245,6 +254,15 @@ def check_toolkit_safety(failures: list[str]) -> None:
     play = read("tools/mobile-release-automation/mra/play.py")
     if "_delete_edit_quietly" not in play:
         failures.append("Play client must clean up edits that are not committed")
+
+    rc_cli = read("tools/mobile-release-automation/mra/revenuecat_cli.py")
+    for term in ("RC_API_KEY", "REVENUECAT_V2_SECRET_KEY", "method != OAUTH_METHOD", "rc auth login"):
+        if term not in rc_cli:
+            failures.append(f"RevenueCat OAuth transport must enforce {term!r}")
+
+    rc_client = read("tools/mobile-release-automation/mra/revenuecat.py")
+    if "revenuecat_cli.api_call" not in rc_client:
+        failures.append("RevenueCat client must route production calls through official CLI OAuth")
 
 
 def check_routing(failures: list[str]) -> None:
@@ -299,7 +317,7 @@ def main() -> int:
     print("PASS: required stack, skill, and toolkit files")
     print("PASS: manifest registration")
     print("PASS: structured task schema contract")
-    print("PASS: agent permission, mode, and AdMob constraint invariants")
+    print("PASS: agent permission, mode, and platform auth invariants")
     print("PASS: per-platform skill contracts")
     print("PASS: toolkit confirmation gates and credential hygiene")
     print("PASS: routing and wrapper references")
