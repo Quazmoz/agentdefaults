@@ -11,10 +11,14 @@ from . import secrets as secret_provider
 
 
 def _auth_profile(slug: str) -> config.Profile:
-    profile = config.load_profile(slug)
-    if not profile.revenuecat_secret_id:
-        raise ValueError(f"profile {slug!r} has no revenuecat_secret_id")
-    return profile
+    """Load an app profile without requiring a project-specific RevenueCat key.
+
+    auth.revenuecat_key(profile) prefers the profile key when present and otherwise
+    falls back to the global Bitwarden-backed bootstrap key. This is what lets a
+    brand-new app profile create its RevenueCat project before a scoped project key
+    exists.
+    """
+    return config.load_profile(slug)
 
 
 def _project_profile(slug: str) -> config.Profile:
@@ -56,7 +60,7 @@ def _authorization_header(secret_id: str | None) -> str | None:
 
 
 def rc_create_project(profile: str, name: str) -> dict:
-    """Create one RevenueCat project using the selected profile's credential."""
+    """Create one RevenueCat project using the profile key or bootstrap credential."""
     resolved = _auth_profile(profile)
     result = _client(resolved).create_project(name)
     return _tag(result, "contained")
