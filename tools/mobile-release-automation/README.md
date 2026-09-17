@@ -77,6 +77,7 @@ Example secret names:
 ```text
 mra/google-play/publisher-service-account
 mra/google-play/revenuecat-service-account
+mra/revenuecat/bootstrap/v2-secret
 mra/admob/oauth-client
 mra/revenuecat/motionguard/v2-secret
 mra/revenuecat/pressdeck/v2-secret
@@ -118,6 +119,7 @@ Bind immutable Bitwarden UUIDs, never secret values:
 ```bash
 mra-agent auth bind-play --secret-id <PLAY_PUBLISHER_SERVICE_ACCOUNT_UUID>
 mra-agent auth bind-revenuecat-play --secret-id <RC_PLAY_SERVICE_ACCOUNT_UUID>
+mra-agent auth bind-revenuecat-bootstrap --secret-id <RC_BOOTSTRAP_V2_KEY_UUID>
 mra-agent auth bind-admob --secret-id <ADMOB_DESKTOP_OAUTH_CLIENT_UUID>
 ```
 
@@ -130,10 +132,17 @@ Google Play uses separate service-account material for:
 
 Keep those bindings distinct.
 
+The RevenueCat bootstrap key solves a different problem: a brand-new MRA profile
+may not have a RevenueCat project yet, so it cannot already have that project's
+narrow project-specific API key. The bootstrap key is a RevenueCat v2 secret key
+with only the provisioning permissions the portfolio needs, such as project,
+app, and entitlement read/read-write access. Its value stays in Bitwarden and is
+resolved only inside MRA.
+
 ### Per-app RevenueCat key
 
 Each independently monetized app/app family should normally have its own
-RevenueCat project and scoped V2 secret key.
+RevenueCat project and scoped V2 secret key after the project exists.
 
 Bind the key by Bitwarden secret UUID:
 
@@ -143,15 +152,22 @@ mra-agent profile bind-revenuecat \
   --secret-id <REVENUECAT_V2_KEY_UUID>
 ```
 
-A profile stores only the UUID. The secret flow is:
+A persisted project-specific profile key always takes precedence over the global
+bootstrap key. For a profile that does not have one yet, `load_profile()` inherits
+the bootstrap UUID in memory only. `load_profiles()` and `profiles.json` continue
+to represent the real persisted state, so the bootstrap reference is not copied
+into every app profile.
+
+The normal secret flow is:
 
 ```text
 agent/operator
     -> profile slug
-    -> immutable Bitwarden UUID
+    -> project-specific Bitwarden UUID if bound
+       else global RevenueCat bootstrap Bitwarden UUID
     -> bws secret get <UUID>
     -> credential held in MCP process memory
-    -> owning vendor API
+    -> RevenueCat API
 ```
 
 MRA retrieves one secret by UUID. It does not list a Bitwarden project and does
@@ -174,7 +190,8 @@ user JSON needs to be persisted.
 
 ## Profiles
 
-A profile maps one app across the vendors. Example conceptual shape:
+A profile maps one app across the vendors. Example conceptual shape after
+project-specific RevenueCat binding:
 
 ```json
 {
@@ -188,6 +205,11 @@ A profile maps one app across the vendors. Example conceptual shape:
   }
 }
 ```
+
+A new profile may initially contain only `package_name` and vendor identifiers
+that are already known. It does not need a RevenueCat project id or per-app
+RevenueCat key before `rc_list_projects`/`rc_create_project` can run, provided the
+global bootstrap key is bound.
 
 `revenuecat_secret_id` is a Bitwarden object UUID, not an `sk_...` secret value.
 Agent-visible `profile_get` output intentionally excludes secret-reference fields.
@@ -306,7 +328,7 @@ validated and discarded. A committed public-facing change is approval-gated.
 
 MRA automates the project/app/catalog setup needed for Android monetization:
 
-- project list/create
+- project list/create, including new-project bootstrap through the global Bitwarden key
 - Play app creation using the dedicated Google Play validation credential
 - products and backing-store creation
 - entitlements and product attachment
@@ -314,11 +336,27 @@ MRA automates the project/app/catalog setup needed for Android monetization:
 - current-offering changes
 - webhook list/get/create/update/delete
 
+For a global bootstrap key, grant only the provisioning permissions the portfolio
+needs. A typical project/app/entitlement bootstrap may require:
+
+```text
+project_configuration:projects:read
+project_configuration:projects:read_write
+project_configuration:apps:read
+project_configuration:apps:read_write
+project_configuration:entitlements:read
+project_configuration:entitlements:read_write
+```
+
+Add products/offerings/packages/integrations permissions only if the bootstrap
+workflow really needs those resources. After the project exists, prefer a
+narrower project-specific v2 key for ongoing automation.
+
 For keys that only need read access, grant only the corresponding
 `project_configuration:*:read` permissions. Add `read_write` only for resources
 an automation path actually mutates.
 
-Typical mutation permissions may include:
+Typical broader mutation permissions may include:
 
 ```text
 project_configuration:projects:read_write
@@ -404,6 +442,7 @@ accessible.
 ```
 
 The suite is offline and covers vendor request shapes, edit cleanup, risk gates,
-secret-provider behavior, AdMob access classification/reporting, webhook
-redaction, and desired-state planning. Repository CI also runs the full
-AgentDefaults contract validation before the MRA unit suite.
+secret-provider behavior, RevenueCat bootstrap credential inheritance, AdMob
+access classification/reporting, webhook redaction, and desired-state planning.
+Repository CI also runs the full AgentDefaults contract validation before the MRA
+unit suite.
