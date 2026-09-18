@@ -108,12 +108,19 @@ def auth_status() -> dict[str, Any]:
     data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
     authenticated = bool(data.get("authenticated"))
     method = str(data.get("method") or "").strip().lower()
+    credential_source = str(data.get("credential_source") or "").strip().lower()
+    # RevenueCat CLI 0.1.2 decorates the human-readable method with expiry,
+    # e.g. "oauth (expires 2026-09-18 19:04)", while credential_source remains
+    # the stable machine-readable discriminator. Accept either representation.
+    is_oauth = credential_source == OAUTH_METHOD or method == OAUTH_METHOD or method.startswith(
+        f"{OAUTH_METHOD} ("
+    )
     if not authenticated:
         raise config.ConfigError(
             "RevenueCat CLI is not authenticated.\n"
             "  fix: run `rc auth login` and complete the browser OAuth flow"
         )
-    if method != OAUTH_METHOD:
+    if not is_oauth:
         raise config.ConfigError(
             "RevenueCat CLI is authenticated with an API key, not OAuth.\n"
             "  fix: run `rc auth logout` and then `rc auth login`; choose browser OAuth"
