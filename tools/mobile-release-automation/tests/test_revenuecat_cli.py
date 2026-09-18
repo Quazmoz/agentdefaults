@@ -44,6 +44,30 @@ class RevenueCatCliOAuthTest(unittest.TestCase):
         self.assertIn("auth", run.call_args.args[0])
         self.assertIn("status", run.call_args.args[0])
 
+    def test_auth_status_accepts_cli_decorated_oauth_method(self) -> None:
+        payload = {
+            "data": {
+                "authenticated": True,
+                "auth_origin": "oauth_login",
+                "credential_source": "oauth",
+                "method": "oauth (expires 2026-09-18 19:04)",
+                "profile": "default",
+                "token_can_refresh": True,
+                "token_status": "valid",
+            }
+        }
+        with mock.patch.object(revenuecat_cli.shutil, "which", return_value="/opt/homebrew/bin/rc"), \
+             mock.patch.object(
+                 revenuecat_cli.subprocess,
+                 "run",
+                 return_value=self.completed(payload),
+             ):
+            status = revenuecat_cli.auth_status()
+
+        self.assertEqual(status["status"], "ready")
+        self.assertEqual(status["method"], "oauth")
+        self.assertEqual(status["source"], "official-revenuecat-cli-oauth")
+
     def test_api_key_login_is_rejected(self) -> None:
         payload = {"data": {"authenticated": True, "method": "api_key"}}
         with mock.patch.object(revenuecat_cli.shutil, "which", return_value="/usr/local/bin/rc"), \
