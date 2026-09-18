@@ -27,6 +27,15 @@ Use it to:
 - keep behavior consistent across Codex, Claude Code, GitHub Copilot, Gemini, Cursor, Windsurf, local models, and MCP-connected tools;
 - validate reusable agent stacks and their cross-tool routing.
 
+## Related videos
+
+These walkthroughs cover practical workflows and design concerns represented in AgentDefaults. They are companion demos, not version-specific release documentation.
+
+| Token-efficient AI workflows | Autonomous DevOps agent workflow |
+| :---: | :---: |
+| [![Stop Burning Copilot Credits: 6 Ways to Cut AI Token Usage](https://img.youtube.com/vi/ctt0fKDYvRM/0.jpg)](https://www.youtube.com/watch?v=ctt0fKDYvRM) | [![I Built an AI DevOps Engineer That Writes, Reviews, and Merges Code](https://img.youtube.com/vi/H24JClpjhNo/0.jpg)](https://www.youtube.com/watch?v=H24JClpjhNo) |
+| **[6 Ways to Cut AI Token Usage](https://www.youtube.com/watch?v=ctt0fKDYvRM)** | **[AI DevOps Engineer Workflow](https://www.youtube.com/watch?v=H24JClpjhNo)** |
+
 ## Start in 60 Seconds
 
 ```bash
