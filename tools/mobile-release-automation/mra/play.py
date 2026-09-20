@@ -26,30 +26,91 @@ class PlayError(RuntimeError):
     pass
 
 
+def _publisher_identity() -> str | None:
+    """Return the active non-secret service-account email, or None.
+
+    Only the client_email is read. It is an identity, not a credential, and it
+    is the fastest way to rule an identity mismatch in or out.
+    """
+    try:
+        from . import play_credentials
+
+        return play_credentials.publisher_info().get("client_email")
+    except Exception:  # noqa: BLE001 - diagnostics must not mask the real error
+        return None
+
+
+def classify_play_failure(status_code: int, api_status: str | None = None) -> tuple[str, list[str]]:
+    """Name the failure class and the checks that would separate its causes.
+
+    This deliberately does not assert a cause. A Play 403 is consistent with
+    several distinct conditions, including a transient or still-propagating
+    authorization state, and naming one of them as "the" reason sends the reader
+    to the wrong fix. Report the class, then the checks that discriminate.
+    """
+    if status_code == 400:
+        return "malformed_request", [
+            "the request was rejected on its contents, not on the caller's access",
+            "for a one-time product, updateMask must be explicit field paths and"
+            " every masked field must be present in the body",
+        ]
+    if status_code == 401:
+        return "credential_not_accepted", [
+            "the service-account credential was not accepted at all",
+            "confirm which binding is active and that its key is current",
+        ]
+    if status_code == 403:
+        return "authorization_denied", [
+            "confirm the active publisher identity reported above is the same Play"
+            " Console user that holds the grant you are relying on",
+            "confirm that user's Play Console permissions cover this operation",
+            "retry: Play authorization can be transient or still propagating, so a"
+            " single 403 is not evidence of a permanently missing grant",
+            "if reads succeed and only this operation fails, run the same call"
+            " against another package to separate an account-level cause from a"
+            " package-level one",
+        ]
+    if status_code == 404:
+        return "resource_absent", [
+            "the caller was authorized; the addressed resource does not exist",
+            "an upsert with allowMissing=false refuses to create it",
+        ]
+    return "play_api_error", []
+
+
 def _raise_for_status(response, action: str) -> None:
     if response.ok:
         return
     try:
-        detail = json.dumps(response.json(), indent=2)
+        payload = response.json()
     except ValueError:
-        detail = response.text
-    hint = ""
-    if response.status_code == 403:
-        # The Play service account can hold read/release access while lacking
-        # monetization write access, so a bare "caller does not have permission"
-        # is ambiguous until someone checks the Play Console grant.
-        hint = (
-            "\nhint: the Play service account may lack the required Play Console"
-            " permission for this operation. Check Play Console -> Users and"
-            " permissions -> the service account -> app permissions (monetization"
-            " writes and pricing need their own grant, separate from release"
-            " and read access). Newly granted permissions can take up to 24"
-            " hours to propagate."
+        payload = None
+    detail = json.dumps(payload, indent=2) if payload is not None else response.text
+    api_status = None
+    if isinstance(payload, dict) and isinstance(payload.get("error"), dict):
+        api_status = payload["error"].get("status")
+
+    classification, checks = classify_play_failure(response.status_code, api_status)
+    lines = [
+        f"{action} failed with HTTP {response.status_code}:",
+        redaction.redact_text(detail),
+        f"classification: {classification}",
+    ]
+    if response.status_code in (401, 403):
+        identity = _publisher_identity()
+        lines.append(
+            f"active publisher identity: {identity}"
+            if identity
+            else "active publisher identity: could not be read"
         )
-    raise PlayError(
-        f"{action} failed with HTTP {response.status_code}:\n"
-        f"{redaction.redact_text(detail)}{hint}"
-    )
+    if checks:
+        lines.append("distinguish before concluding a cause:")
+        lines.extend(f"  - {check}" for check in checks)
+    error = PlayError("\n".join(lines))
+    error.status_code = response.status_code
+    error.api_status = api_status
+    error.classification = classification
+    raise error
 
 
 class PlayClient:

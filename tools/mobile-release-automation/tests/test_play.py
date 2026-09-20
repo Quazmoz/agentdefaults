@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -164,18 +165,70 @@ if __name__ == "__main__":
 
 
 class PlayErrorClassificationTest(unittest.TestCase):
-    def test_403_explains_the_play_console_permission_split(self) -> None:
-        # Read/release access and monetization-write access are granted
-        # separately, so a bare PERMISSION_DENIED is not actionable on its own.
-        response = FakeResponse(403, {"error": {"code": 403, "status": "PERMISSION_DENIED"}})
-        with self.assertRaises(play.PlayError) as caught:
-            play._raise_for_status(response, "upsert one-time product pro")
-        message = str(caught.exception)
-        self.assertIn("HTTP 403", message)
-        self.assertIn("Users and permissions", message)
+    """A Play failure must be classified without asserting an unproven cause.
 
-    def test_other_errors_do_not_get_the_permission_hint(self) -> None:
-        response = FakeResponse(400, {"error": {"code": 400, "status": "INVALID_ARGUMENT"}})
+    An earlier revision told the reader a 403 meant the service account was
+    missing a separate monetization grant. Live probing disproved that: the
+    same account/identity later returned 200 on convertRegionPrices and 404 on
+    the one-time product upsert, so the 403 had been a transient or propagating
+    authorization state. Naming one cause sent the reader to the wrong fix.
+    """
+
+    def raise_for(self, status_code: int, api_status: str):
+        response = FakeResponse(
+            status_code, {"error": {"code": status_code, "status": api_status}}
+        )
         with self.assertRaises(play.PlayError) as caught:
             play._raise_for_status(response, "upsert one-time product pro")
-        self.assertNotIn("Users and permissions", str(caught.exception))
+        return caught.exception
+
+    def test_each_status_gets_its_own_classification(self) -> None:
+        for status_code, api_status, expected in (
+            (400, "INVALID_ARGUMENT", "malformed_request"),
+            (401, "UNAUTHENTICATED", "credential_not_accepted"),
+            (403, "PERMISSION_DENIED", "authorization_denied"),
+            (404, "NOT_FOUND", "resource_absent"),
+            (500, "INTERNAL", "play_api_error"),
+        ):
+            error = self.raise_for(status_code, api_status)
+            self.assertEqual(error.classification, expected)
+            self.assertEqual(error.status_code, status_code)
+            self.assertEqual(error.api_status, api_status)
+            self.assertIn(f"classification: {expected}", str(error))
+
+    def test_authorization_failures_name_the_active_identity(self) -> None:
+        # An identity mismatch is the cheapest cause to rule out, so the
+        # non-secret client_email must be in the message itself.
+        with patch.object(play, "_publisher_identity", return_value="sa@example.iam.gserviceaccount.com"):
+            for status_code, api_status in ((401, "UNAUTHENTICATED"), (403, "PERMISSION_DENIED")):
+                message = str(self.raise_for(status_code, api_status))
+                self.assertIn("active publisher identity: sa@example.iam.gserviceaccount.com", message)
+
+    def test_unreadable_identity_does_not_mask_the_real_error(self) -> None:
+        with patch.object(play, "_publisher_identity", return_value=None):
+            message = str(self.raise_for(403, "PERMISSION_DENIED"))
+        self.assertIn("HTTP 403", message)
+        self.assertIn("could not be read", message)
+
+    def test_403_offers_checks_and_never_asserts_a_missing_grant(self) -> None:
+        message = str(self.raise_for(403, "PERMISSION_DENIED"))
+        self.assertIn("distinguish before concluding a cause", message)
+        # A 403 must be presented as ambiguous, including the transient case.
+        self.assertIn("propagating", message)
+        for claim in ("may lack", "Users and permissions", "need their own grant"):
+            self.assertNotIn(claim, message)
+
+    def test_non_authorization_failures_omit_identity_and_permission_language(self) -> None:
+        for status_code, api_status in ((400, "INVALID_ARGUMENT"), (404, "NOT_FOUND")):
+            message = str(self.raise_for(status_code, api_status))
+            self.assertNotIn("active publisher identity", message)
+            self.assertNotIn("permission", message.lower())
+
+    def test_404_states_the_caller_was_authorized(self) -> None:
+        self.assertIn("authorized", str(self.raise_for(404, "NOT_FOUND")))
+
+    def test_detail_is_still_redacted(self) -> None:
+        response = FakeResponse(403, {"error": {"message": "denied for Bearer ya29.CANARYTOKEN"}})
+        with self.assertRaises(play.PlayError) as caught:
+            play._raise_for_status(response, "read tracks")
+        self.assertNotIn("ya29.CANARYTOKEN", str(caught.exception))

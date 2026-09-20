@@ -117,10 +117,35 @@ After a product action, list the products and confirm the identifier, type, and 
 A Data safety write has no read-back, so report it as accepted-by-API and never
 as verified.
 
-Play Console permissions are granular, and monetization writes and pricing are
-granted separately from read and release access. `onetimeproducts.patch` and
-`pricing:convertRegionPrices` returning 403 while product reads succeed means
-the service account is missing that grant, not that the call is malformed.
+## Reading a Play Failure
+
+Classify a Play failure; do not infer a cause it does not prove.
+
+| HTTP | Class | What it establishes |
+|---|---|---|
+| 400 `INVALID_ARGUMENT` | `malformed_request` | the body or field mask was rejected, not the caller's access |
+| 401 `UNAUTHENTICATED` | `credential_not_accepted` | the credential was not accepted at all |
+| 403 `PERMISSION_DENIED` | `authorization_denied` | authorization failed, and nothing more |
+| 404 `NOT_FOUND` | `resource_absent` | the caller **was** authorized and the resource does not exist |
+
+A 403 is ambiguous. It is consistent with an identity mismatch, a missing Play
+Console grant, a package-level condition, and a transient or still-propagating
+authorization state. Report the class and the active non-secret publisher
+`client_email`, then discriminate:
+
+1. Compare the active `client_email` against the Play Console user holding the
+   grant. This is the cheapest cause to eliminate and the easiest to get wrong
+   when a project holds more than one service account.
+2. Re-run the call. A single 403 is not evidence of a permanently missing grant.
+3. Run the same operation against another package. Identical failures point at
+   the account or credential; differing results point at package state.
+
+Observed on 2026-09-20: `pricing:convertRegionPrices` returned 403 for one
+package, and later returned 200 for that same package and four others under the
+same unchanged identity, while `onetimeproducts.patch` returned 404 for absent
+products and 400 for an existing one. The 403 had been transient. Concluding a
+missing monetization grant from the first 403 would have sent the operator to
+change permissions that were already correct.
 
 ## Failure Handling
 
