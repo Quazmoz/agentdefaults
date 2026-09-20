@@ -80,6 +80,25 @@ class RevenueCatCliOAuthTest(unittest.TestCase):
                 revenuecat_cli.auth_status()
         self.assertIn("API key, not OAuth", str(caught.exception))
 
+    def test_credential_source_outranks_oauth_looking_method(self) -> None:
+        """credential_source is the stable discriminator, so it must decide."""
+        payload = {
+            "data": {
+                "authenticated": True,
+                "credential_source": "api_key",
+                "method": "oauth (expires 2026-09-18 19:04)",
+            }
+        }
+        with mock.patch.object(revenuecat_cli.shutil, "which", return_value="/usr/local/bin/rc"), \
+             mock.patch.object(
+                 revenuecat_cli.subprocess,
+                 "run",
+                 return_value=self.completed(payload),
+             ):
+            with self.assertRaises(config.ConfigError) as caught:
+                revenuecat_cli.auth_status()
+        self.assertIn("API key, not OAuth", str(caught.exception))
+
     def test_environment_api_key_overrides_are_removed(self) -> None:
         payload = {"data": {"authenticated": True, "method": "oauth"}}
         api_payload = {"items": []}

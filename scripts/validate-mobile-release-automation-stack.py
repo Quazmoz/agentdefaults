@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
+from unittest import mock
 import json
 import sys
 
@@ -256,13 +258,76 @@ def check_toolkit_safety(failures: list[str]) -> None:
         failures.append("Play client must clean up edits that are not committed")
 
     rc_cli = read("tools/mobile-release-automation/mra/revenuecat_cli.py")
-    for term in ("RC_API_KEY", "REVENUECAT_V2_SECRET_KEY", "method != OAUTH_METHOD", "rc auth login"):
+    for term in ("RC_API_KEY", "REVENUECAT_V2_SECRET_KEY", "rc auth login"):
         if term not in rc_cli:
             failures.append(f"RevenueCat OAuth transport must enforce {term!r}")
+    check_revenuecat_oauth_enforcement(failures)
 
     rc_client = read("tools/mobile-release-automation/mra/revenuecat.py")
     if "revenuecat_cli.api_call" not in rc_client:
         failures.append("RevenueCat client must route production calls through official CLI OAuth")
+
+def check_revenuecat_oauth_enforcement(failures: list[str]) -> None:
+    """Prove the production RevenueCat path rejects API-key authentication.
+
+    This is asserted behaviorally, not by grepping for an implementation shape:
+    the CLI's `auth status` payload format has already changed once, and a source
+    string that stops matching says nothing about whether the invariant holds.
+    """
+    sys.path.insert(0, str(ROOT / "tools/mobile-release-automation"))
+    try:
+        from mra import config as mra_config, revenuecat_cli
+    except Exception as exc:  # noqa: BLE001 - import failure is itself a contract break
+        failures.append(f"RevenueCat OAuth transport is not importable: {exc}")
+        return
+
+    def auth_status_for(data: dict[str, Any]) -> Any:
+        completed = SimpleNamespace(
+            returncode=0, stdout=json.dumps({"data": data}), stderr=""
+        )
+        with mock.patch.object(revenuecat_cli.shutil, "which", return_value="/usr/bin/rc"), \
+             mock.patch.object(revenuecat_cli.subprocess, "run", return_value=completed):
+            return revenuecat_cli.auth_status()
+
+    must_reject = {
+        "api-key method": {"authenticated": True, "method": "api_key"},
+        # credential_source is the stable discriminator and must outrank a
+        # decorated method string that merely looks like OAuth.
+        "api-key credential_source": {
+            "authenticated": True,
+            "credential_source": "api_key",
+            "method": "oauth (expires 2026-09-18 19:04)",
+        },
+        "unauthenticated session": {"authenticated": False, "method": "oauth"},
+    }
+    for label, data in must_reject.items():
+        try:
+            auth_status_for(data)
+        except mra_config.ConfigError:
+            continue
+        except Exception as exc:  # noqa: BLE001
+            failures.append(
+                f"RevenueCat {label} must raise ConfigError, raised {type(exc).__name__}: {exc}"
+            )
+        else:
+            failures.append(f"RevenueCat OAuth transport accepted {label}")
+
+    must_accept = {
+        "plain oauth": {"authenticated": True, "method": "oauth"},
+        "cli-decorated oauth": {
+            "authenticated": True,
+            "credential_source": "oauth",
+            "method": "oauth (expires 2026-09-18 19:04)",
+        },
+    }
+    for label, data in must_accept.items():
+        try:
+            status = auth_status_for(data)
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"RevenueCat OAuth transport rejected {label}: {exc}")
+            continue
+        if status.get("status") != "ready" or status.get("method") != revenuecat_cli.OAUTH_METHOD:
+            failures.append(f"RevenueCat OAuth transport did not report {label} as ready OAuth")
 
 
 def check_routing(failures: list[str]) -> None:

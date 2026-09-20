@@ -110,11 +110,13 @@ def auth_status() -> dict[str, Any]:
     method = str(data.get("method") or "").strip().lower()
     credential_source = str(data.get("credential_source") or "").strip().lower()
     # RevenueCat CLI 0.1.2 decorates the human-readable method with expiry,
-    # e.g. "oauth (expires 2026-09-18 19:04)", while credential_source remains
-    # the stable machine-readable discriminator. Accept either representation.
-    is_oauth = credential_source == OAUTH_METHOD or method == OAUTH_METHOD or method.startswith(
-        f"{OAUTH_METHOD} ("
-    )
+    # e.g. "oauth (expires 2026-09-18 19:04)". credential_source is the stable
+    # machine-readable discriminator, so it decides whenever the CLI reports it;
+    # the decorated method string is only a fallback for CLIs that omit it.
+    if credential_source:
+        is_oauth = credential_source == OAUTH_METHOD
+    else:
+        is_oauth = method == OAUTH_METHOD or method.startswith(f"{OAUTH_METHOD} (")
     if not authenticated:
         raise config.ConfigError(
             "RevenueCat CLI is not authenticated.\n"
