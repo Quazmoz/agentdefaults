@@ -151,6 +151,30 @@ def play_update_testers(
     return _tag(result, "observe" if dry_run else "high", approved)
 
 
+def play_set_data_safety_labels(
+    profile: str,
+    csv_path: str,
+    dry_run: bool = True,
+) -> dict:
+    """Write the Play Data safety declaration from a CSV; no API read-back exists."""
+    text = Path(csv_path).read_text(encoding="utf-8")
+    if not dry_run:
+        approved, refusal = _gate(
+            "Approve Google Play Data safety declaration",
+            f"Profile: {profile}\nPackage: {_package(profile)}\n"
+            f"CSV: {csv_path}\nBytes: {len(text.encode('utf-8'))}\n"
+            "This replaces the app's public Data safety declaration. Google "
+            "publishes no read method for safety labels, so this cannot be "
+            "verified by reading it back.",
+        )
+        if not approved:
+            return refusal
+    else:
+        approved = False
+    result = _client(profile).set_data_safety_labels(text, dry_run=dry_run)
+    return _tag(result, "observe" if dry_run else "high", approved)
+
+
 def play_reply_review(profile: str, review_id: str, reply_text: str) -> dict:
     """Reply publicly to a Play review after local human approval."""
     approved, refusal = _gate(
@@ -193,5 +217,6 @@ def register(server) -> None:
         play_update_testers,
         play_reply_review,
         play_upload_deobfuscation_file,
+        play_set_data_safety_labels,
     ):
         server.tool()(tool)

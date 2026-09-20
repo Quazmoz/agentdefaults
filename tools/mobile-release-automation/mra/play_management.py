@@ -109,6 +109,26 @@ class PlayManagementClient:
 
     # ---- testers and availability -----------------------------------------
 
+    def set_data_safety_labels(self, csv_text: str, *, dry_run: bool = True) -> dict:
+        """Submit a Data safety CSV declaration.
+
+        Unlike every other write here, this one has no corresponding read, so a
+        dry run can only validate locally and the result never claims the state
+        was verified.
+        """
+        if not csv_text.strip():
+            raise play_module.PlayError("data safety CSV content is empty")
+        summary = {
+            "bytes": len(csv_text.encode("utf-8")),
+            "rows": csv_text.strip().count("\n") + 1,
+            "dry_run": dry_run,
+            "read_back": "unsupported_by_api",
+        }
+        if dry_run:
+            return {"submitted": False, **summary}
+        self.client.set_data_safety_labels(csv_text)
+        return {"submitted": True, **summary}
+
     def get_testers(self, track: str) -> dict:
         with self.client.edit(commit=False, validate=False) as edit_id:
             return self.client._request(  # noqa: SLF001

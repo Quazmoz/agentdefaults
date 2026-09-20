@@ -290,6 +290,19 @@ class PlayClient:
             json=payload,
         )
 
+    def set_data_safety_labels(self, safety_labels_csv: str) -> dict:
+        """Write the app's Safety Labels declaration from Data safety CSV content.
+
+        Google publishes no read method for safety labels, so a successful write
+        cannot be confirmed by reading it back through this API.
+        """
+        return self._request(
+            "POST",
+            "/dataSafety",
+            "write data safety labels",
+            json={"safetyLabels": safety_labels_csv},
+        )
+
     def list_in_app_products(self) -> list[dict]:
         """List one-time products using the current monetization publishing API."""
         return self._list_paginated(

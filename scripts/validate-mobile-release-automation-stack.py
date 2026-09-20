@@ -262,10 +262,50 @@ def check_toolkit_safety(failures: list[str]) -> None:
         if term not in rc_cli:
             failures.append(f"RevenueCat OAuth transport must enforce {term!r}")
     check_revenuecat_oauth_enforcement(failures)
+    check_data_safety_is_never_claimed_verified(failures)
 
     rc_client = read("tools/mobile-release-automation/mra/revenuecat.py")
     if "revenuecat_cli.api_call" not in rc_client:
         failures.append("RevenueCat client must route production calls through official CLI OAuth")
+
+def check_data_safety_is_never_claimed_verified(failures: list[str]) -> None:
+    """Google publishes no read for safety labels, so this write is unverifiable.
+
+    Asserted behaviorally: a result that omitted this marker would let an agent
+    report a compliance declaration as platform verified when nothing can read
+    it back.
+    """
+    sys.path.insert(0, str(ROOT / "tools/mobile-release-automation"))
+    try:
+        from mra import play as play_module, play_management
+    except Exception as exc:  # noqa: BLE001
+        failures.append(f"Play management surface is not importable: {exc}")
+        return
+
+    manager = play_management.PlayManagementClient(
+        "com.example.app", client=play_module.PlayClient("com.example.app", session=object())
+    )
+    for dry_run in (True, False):
+        try:
+            result = manager.set_data_safety_labels("", dry_run=dry_run)
+        except play_module.PlayError:
+            continue  # an empty declaration must be refused, never submitted
+        except Exception as exc:  # noqa: BLE001
+            failures.append(
+                f"empty data safety CSV raised {type(exc).__name__}, expected PlayError"
+            )
+            continue
+        failures.append(f"empty data safety CSV was accepted (dry_run={dry_run}): {result}")
+
+    probe = manager.set_data_safety_labels("field,value\n", dry_run=True)
+    if probe.get("read_back") != "unsupported_by_api":
+        failures.append(
+            "data safety result must report read_back 'unsupported_by_api', "
+            f"got {probe.get('read_back')!r}"
+        )
+    if probe.get("submitted") is not False:
+        failures.append("a data safety dry run must not report itself as submitted")
+
 
 def check_revenuecat_oauth_enforcement(failures: list[str]) -> None:
     """Prove the production RevenueCat path rejects API-key authentication.

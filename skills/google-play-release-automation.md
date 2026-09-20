@@ -24,7 +24,7 @@ authorization       the operator's approval naming this track
 
 - The Google Play Android Developer API is enabled on the Cloud project.
 - The service account is invited in Play Console with the permissions this task needs, and no more.
-- The app already exists in Play Console. The API cannot create a new app listing, complete content rating, declare data safety, or set target audience. A brand-new app requires those steps in the Console first.
+- The app already exists in Play Console. The API cannot create a new app listing, complete content rating, or set target audience. A brand-new app requires those steps in the Console first. Data safety is the exception among these: `applications.dataSafety` does accept a declaration, but it is write-only, so treat the Console form as the only place the resulting state can be read.
 - The bundle is signed consistently with what Play expects for this package.
 
 ## Authentication
@@ -78,9 +78,28 @@ If the artifact would change, it is not a promotion. Preserve package name, vers
 ## Monetization Products
 
 - Subscriptions: `POST /applications/{package}/subscriptions` requires both `productId` and `regionsVersion.version` as query parameters.
+- One-time products: `PATCH /applications/{package}/onetimeproducts/{productId}` needs `updateMask` as a comma-separated list of fully qualified field names. `*` is rejected with `400 Invalid update_mask: [*]`. Mask exactly the fields being sent: a field outside the mask is ignored, and a masked field that was not sent is cleared.
 - Base plans and offers are separate resources under a subscription. Only auto-renewing base plans can carry offers.
 - A new offer is created in `DRAFT` and must be activated before new subscribers see it.
 - Price and billing terms are user-visible and constrained after activation. Creating or activating any of these is `mutate_irreversible`.
+
+## Data Safety Declarations
+
+`POST /applications/{package}/dataSafety` writes the app's Safety Labels from
+the contents of the Data safety CSV, in the `safetyLabels` field. Scope is the
+ordinary `androidpublisher` scope, and the response body is empty on success.
+
+Rules:
+
+- There is no matching GET. Nothing can read safety labels back through the API,
+  so a successful write is never `PLATFORM VERIFIED`; say the write was accepted
+  and point at the Console form for the authoritative state.
+- The CSV is the operator's exported declaration. Do not synthesise one. A
+  fabricated compliance answer is worse than an absent one, and this call
+  replaces the whole declaration rather than merging into it.
+- A dry run is local only, because Google offers no validate mode here.
+- `Contains ads` is a separate advertising declaration and is **not** part of
+  this CSV or any other current public endpoint. It stays a Console action.
 
 ## Verification
 
@@ -94,6 +113,14 @@ release notes are attached where the track displays them
 ```
 
 After a product action, list the products and confirm the identifier, type, and state.
+
+A Data safety write has no read-back, so report it as accepted-by-API and never
+as verified.
+
+Play Console permissions are granular, and monetization writes and pricing are
+granted separately from read and release access. `onetimeproducts.patch` and
+`pricing:convertRegionPrices` returning 403 while product reads succeed means
+the service account is missing that grant, not that the call is malformed.
 
 ## Failure Handling
 

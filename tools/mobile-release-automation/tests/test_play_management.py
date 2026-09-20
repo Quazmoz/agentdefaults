@@ -123,3 +123,49 @@ class AssetTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DataSafetyLabelsTest(unittest.TestCase):
+    """applications.dataSafety is write-only: there is no GET to verify it."""
+
+    CSV = "field,value\ndata_collected,none\n"
+
+    def manager(self):
+        session = FakeSession(
+            {("POST", "/dataSafety"): ok({})}
+        )
+        return play_management.PlayManagementClient(
+            PACKAGE, client=play.PlayClient(PACKAGE, session=session)
+        ), session
+
+    def test_dry_run_sends_nothing(self) -> None:
+        manager, session = self.manager()
+        result = manager.set_data_safety_labels(self.CSV, dry_run=True)
+        self.assertEqual(session.calls, [])
+        self.assertFalse(result["submitted"])
+        self.assertTrue(result["dry_run"])
+
+    def test_real_write_posts_the_csv_as_safety_labels(self) -> None:
+        manager, session = self.manager()
+        result = manager.set_data_safety_labels(self.CSV, dry_run=False)
+        self.assertEqual(len(session.calls), 1)
+        call = session.calls[0]
+        self.assertEqual(call["method"], "POST")
+        self.assertTrue(call["url"].endswith(f"/applications/{PACKAGE}/dataSafety"))
+        self.assertEqual(call["json"], {"safetyLabels": self.CSV})
+        self.assertTrue(result["submitted"])
+
+    def test_result_never_claims_the_write_was_verified(self) -> None:
+        # Reporting this as verified would be false: Google exposes no read.
+        manager, _ = self.manager()
+        for dry_run in (True, False):
+            self.assertEqual(
+                manager.set_data_safety_labels(self.CSV, dry_run=dry_run)["read_back"],
+                "unsupported_by_api",
+            )
+
+    def test_empty_csv_is_refused_before_any_request(self) -> None:
+        manager, session = self.manager()
+        with self.assertRaises(play.PlayError):
+            manager.set_data_safety_labels("   \n ", dry_run=False)
+        self.assertEqual(session.calls, [])

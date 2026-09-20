@@ -227,10 +227,20 @@ products, MCP can manage/read:
 - country availability
 - reviews and developer replies
 - ProGuard/R8 or native deobfuscation artifacts
+- Data safety declarations, from Data safety CSV content
 
 Committed public listing/image/tester changes and review replies are approval
 gated. Dry-run listing/image/tester operations use a Play edit that is validated
 and then discarded.
+
+`play_set_data_safety_labels` is the one write here with no corresponding read:
+Google publishes no GET for safety labels, so its result reports
+`read_back: unsupported_by_api` and must never be described as platform
+verified. Its dry run is local only, since the API has no validate mode. Supply
+the operator's exported CSV; MRA does not synthesise a compliance declaration,
+and the call replaces the whole declaration rather than merging into it.
+`Contains ads` is a separate advertising declaration with no public endpoint and
+remains a Console action.
 
 ## RevenueCat management
 
