@@ -33,9 +33,22 @@ def _raise_for_status(response, action: str) -> None:
         detail = json.dumps(response.json(), indent=2)
     except ValueError:
         detail = response.text
+    hint = ""
+    if response.status_code == 403:
+        # The Play service account can hold read/release access while lacking
+        # monetization write access, so a bare "caller does not have permission"
+        # is ambiguous until someone checks the Play Console grant.
+        hint = (
+            "\nhint: the Play service account may lack the required Play Console"
+            " permission for this operation. Check Play Console -> Users and"
+            " permissions -> the service account -> app permissions (monetization"
+            " writes and pricing need their own grant, separate from release"
+            " and read access). Newly granted permissions can take up to 24"
+            " hours to propagate."
+        )
     raise PlayError(
         f"{action} failed with HTTP {response.status_code}:\n"
-        f"{redaction.redact_text(detail)}"
+        f"{redaction.redact_text(detail)}{hint}"
     )
 
 
@@ -240,7 +253,7 @@ class PlayClient:
         body: dict[str, Any],
         regions_version: str,
         *,
-        update_mask: str = "*",
+        update_mask: str | None = None,
         allow_missing: bool = True,
     ) -> dict:
         """Create or update a modern OneTimeProduct with the current API."""
@@ -250,6 +263,21 @@ class PlayClient:
         # This field is output-only on the resource; the query parameter carries
         # the version used for the mutation.
         payload.pop("regionsVersion", None)
+        if not update_mask:
+            # Google requires fully qualified field names here and rejects "*"
+            # with 400 "Invalid update_mask: [*]". Derive the mask from the
+            # fields actually supplied, so a caller can neither send a field
+            # that is silently ignored nor mask a field it never sent, which
+            # would clear it.
+            update_mask = ",".join(
+                key
+                for key in body
+                if key not in ("packageName", "productId", "regionsVersion")
+            )
+        if not update_mask:
+            raise PlayError(
+                f"upsert one-time product {product_id} needs at least one updatable field"
+            )
         return self._request(
             "PATCH",
             f"/onetimeproducts/{product_id}",

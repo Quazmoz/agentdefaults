@@ -10,7 +10,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mra import play  # noqa: E402
-from tests.fakes import FakeSession, ok  # noqa: E402
+from tests.fakes import FakeResponse, FakeSession, ok  # noqa: E402
 
 PACKAGE = "com.example.app"
 
@@ -161,3 +161,21 @@ class ReadOnlyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PlayErrorClassificationTest(unittest.TestCase):
+    def test_403_explains_the_play_console_permission_split(self) -> None:
+        # Read/release access and monetization-write access are granted
+        # separately, so a bare PERMISSION_DENIED is not actionable on its own.
+        response = FakeResponse(403, {"error": {"code": 403, "status": "PERMISSION_DENIED"}})
+        with self.assertRaises(play.PlayError) as caught:
+            play._raise_for_status(response, "upsert one-time product pro")
+        message = str(caught.exception)
+        self.assertIn("HTTP 403", message)
+        self.assertIn("Users and permissions", message)
+
+    def test_other_errors_do_not_get_the_permission_hint(self) -> None:
+        response = FakeResponse(400, {"error": {"code": 400, "status": "INVALID_ARGUMENT"}})
+        with self.assertRaises(play.PlayError) as caught:
+            play._raise_for_status(response, "upsert one-time product pro")
+        self.assertNotIn("Users and permissions", str(caught.exception))

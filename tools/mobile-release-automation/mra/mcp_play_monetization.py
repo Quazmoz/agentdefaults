@@ -89,14 +89,14 @@ def play_upsert_one_time_product(
     product_id: str,
     body: dict,
     regions_version: str,
-    update_mask: str = "*",
+    update_mask: str | None = None,
     allow_missing: bool = True,
 ) -> dict:
     """Create/update a modern Play OneTimeProduct after local approval."""
     approved, refusal = _gate(
         "Approve Google Play one-time-product upsert",
         f"Profile: {profile}\nPackage: {_package(profile)}\nProduct: {product_id}\n"
-        f"Update mask: {update_mask}\nAllow create if missing: {allow_missing}\n"
+        f"Update mask: {update_mask or 'derived from supplied fields'}\nAllow create if missing: {allow_missing}\n"
         f"Regions version: {regions_version}",
     )
     if not approved:

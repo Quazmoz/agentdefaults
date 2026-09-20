@@ -81,3 +81,41 @@ class CatalogReadTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OneTimeProductUpsertTest(unittest.TestCase):
+    """Google rejects updateMask "*" with 400 Invalid update_mask: [*]."""
+
+    def upsert(self, body: dict, **kwargs):
+        session = FakeSession(
+            {("PATCH", "/onetimeproducts/pro"): lambda **_: FakeResponse(200, {"productId": "pro"})}
+        )
+        client = play.PlayClient(PACKAGE, session=session)
+        client.upsert_one_time_product("pro", body, "2025/03", **kwargs)
+        return session.calls[-1]
+
+    def test_mask_is_derived_from_supplied_fields_not_a_wildcard(self) -> None:
+        call = self.upsert({"listings": [], "purchaseOptions": []})
+        self.assertEqual(call["params"]["updateMask"], "listings,purchaseOptions")
+        self.assertEqual(call["params"]["regionsVersion.version"], "2025/03")
+
+    def test_identity_fields_never_enter_the_mask(self) -> None:
+        # packageName/productId are identity and regionsVersion is output-only;
+        # masking any of them would be rejected or would clear real state.
+        call = self.upsert(
+            {"listings": [], "packageName": "x", "productId": "y", "regionsVersion": {"version": "z"}}
+        )
+        self.assertEqual(call["params"]["updateMask"], "listings")
+        self.assertNotIn("regionsVersion", call["json"])
+
+    def test_explicit_mask_is_preserved(self) -> None:
+        call = self.upsert({"listings": []}, update_mask="listings,taxAndComplianceSettings")
+        self.assertEqual(call["params"]["updateMask"], "listings,taxAndComplianceSettings")
+
+    def test_body_with_no_updatable_field_is_refused_before_the_request(self) -> None:
+        with self.assertRaises(play.PlayError):
+            self.upsert({})
+
+
+if __name__ == "__main__":  # pragma: no cover
+    unittest.main()
