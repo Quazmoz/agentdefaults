@@ -692,7 +692,7 @@ def should_check_link(target: str) -> bool:
 def check_links() -> int:
     failures: list[str] = []
     for md in ROOT.rglob("*.md"):
-        if ".git" in md.parts:
+        if ".git" in md.parts or "node_modules" in md.parts:
             continue
         text = md.read_text(encoding="utf-8")
         for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
