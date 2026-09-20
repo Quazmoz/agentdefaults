@@ -481,14 +481,25 @@ def plan_profile(
                             "eligibility_criteria": eligibility,
                         }
                     )
-                current_product_ids = {
-                    item.get("id")
-                    for item in (existing_package or {}).get("products", [])
-                    if item.get("id")
+                current_associations: set[tuple[str, str]] = set()
+                for item in (existing_package or {}).get("products", []):
+                    # RevenueCat returns a package product as a wrapper,
+                    # {eligibility_criteria, product: {...}}, unlike an entitlement
+                    # product, which is a flat product object. Reading item["id"]
+                    # here always missed, so this action could never be satisfied.
+                    source = item.get("product") if isinstance(item.get("product"), dict) else item
+                    identifier = source.get("id")
+                    if identifier:
+                        current_associations.add(
+                            (str(identifier), item.get("eligibility_criteria", "all"))
+                        )
+                desired_associations = {
+                    (item["product_id"], item["eligibility_criteria"]) for item in associations
                 }
-                desired_product_ids = {item["product_id"] for item in associations}
-                attached = bool(existing_package) and all_products_ready and desired_product_ids.issubset(
-                    current_product_ids
+                attached = (
+                    bool(existing_package)
+                    and all_products_ready
+                    and desired_associations.issubset(current_associations)
                 )
                 ready = bool(existing_package and all_products_ready and project_ready)
                 actions.append(

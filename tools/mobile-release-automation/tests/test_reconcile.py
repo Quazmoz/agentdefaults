@@ -6,6 +6,7 @@ from pathlib import Path
 import os
 import sys
 import tempfile
+import json
 import unittest
 from unittest.mock import patch
 
@@ -241,9 +242,13 @@ class ReconcilePlanTest(unittest.TestCase):
             {"id": "legacy-product"},
             {"id": "prod-1"},
         ]
+        # RevenueCat returns package products as wrappers, not flat product objects.
         snapshot["revenuecat"]["data"]["wiring"]["offerings"][0]["packages"][0][
             "products"
-        ] = [{"id": "legacy-product"}, {"id": "prod-1"}]
+        ] = [
+            {"eligibility_criteria": "all", "product": {"id": "legacy-product"}},
+            {"eligibility_criteria": "all", "product": {"id": "prod-1"}},
+        ]
         desired = {
             "revenuecat": {
                 "entitlements": [
@@ -272,6 +277,59 @@ class ReconcilePlanTest(unittest.TestCase):
         self.assertEqual(
             actions["revenuecat.offering.default.package.$rc_lifetime.products"]["status"],
             "satisfied",
+        )
+
+    def test_attached_package_product_in_real_wrapper_shape_is_satisfied(self) -> None:
+        """RevenueCat wraps a package product as {eligibility_criteria, product}.
+
+        Reading a flat item["id"] never matched, so attach_products_to_package
+        stayed "needed" forever: a fully wired project never converged and every
+        mra_apply re-fired a high-risk approval to re-attach what was there.
+        """
+        snapshot = self.wired_snapshot()
+        snapshot["revenuecat"]["data"]["wiring"]["offerings"][0]["packages"][0][
+            "products"
+        ] = [{"eligibility_criteria": "google_sdk_ge_6", "product": {"id": "prod-1"}}]
+        desired = {
+            "revenuecat": {
+                "offerings": [
+                    {
+                        "lookup_key": "default",
+                        "display_name": "Default",
+                        "packages": [
+                            {
+                                "lookup_key": "$rc_lifetime",
+                                "display_name": "Lifetime",
+                                "products": [
+                                    {
+                                        "store_identifier": "lifetime",
+                                        "eligibility_criteria": "google_sdk_ge_6",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+        actions = {
+            item["id"]: item
+            for item in reconcile.plan_profile("example", desired, snapshot=snapshot)["actions"]
+        }
+        self.assertEqual(
+            actions["revenuecat.offering.default.package.$rc_lifetime.products"]["status"],
+            "satisfied",
+        )
+
+        # A genuine eligibility difference must still be reported, not absorbed.
+        drifted = json.loads(json.dumps(desired).replace("google_sdk_ge_6", "all"))
+        drifted_actions = {
+            item["id"]: item
+            for item in reconcile.plan_profile("example", drifted, snapshot=snapshot)["actions"]
+        }
+        self.assertEqual(
+            drifted_actions["revenuecat.offering.default.package.$rc_lifetime.products"]["status"],
+            "needed",
         )
 
     def test_invalid_package_eligibility_is_rejected(self) -> None:
