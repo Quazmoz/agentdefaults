@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest import mock
+import os
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from mra import admob  # noqa: E402
+from mra import admob, human_approval, mcp_admob_tools  # noqa: E402
 from tests.fakes import FakeSession, fail, ok  # noqa: E402
 
 PUB = "pub-1234567890123456"
@@ -187,6 +190,76 @@ class AmbiguousAccountTest(unittest.TestCase):
         with self.assertRaises(admob.AdMobError) as caught:
             _ = api.publisher_id
         self.assertIn("admob login", str(caught.exception))
+
+
+class ConfigurationFailureReportingTest(unittest.TestCase):
+    """A local setup mistake must reach the agent as a structured AdMob payload.
+
+    Every AdMob MCP tool resolves its client through `_client`, where both the
+    profile lookup and credential loading raise `ConfigError`. When that escaped,
+    the MCP host reported only "Error executing tool <name>" with no detail, so the
+    actionable message ("unknown profile 'x'. known profiles: ...") was lost.
+    """
+
+    def setUp(self) -> None:
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.previous_home = os.environ.get("MRA_HOME")
+        os.environ["MRA_HOME"] = self.tempdir.name
+
+    def tearDown(self) -> None:
+        if self.previous_home is None:
+            os.environ.pop("MRA_HOME", None)
+        else:
+            os.environ["MRA_HOME"] = self.previous_home
+        self.tempdir.cleanup()
+
+    def assert_configuration_payload(self, result: object) -> dict:
+        self.assertIsInstance(result, dict, "config failure must not escape as an exception")
+        assert isinstance(result, dict)
+        self.assertEqual(result["status"], "configuration_error")
+        self.assertEqual(result["platform"], "admob")
+        self.assertIn("unknown profile", result["detail"])
+        self.assertIn("nonexistent-profile", result["detail"])
+        return result
+
+    def test_read_tool_returns_structured_configuration_error(self) -> None:
+        self.assert_configuration_payload(
+            mcp_admob_tools.admob_list_apps(profile="nonexistent-profile")
+        )
+
+    def test_probe_access_returns_structured_configuration_error(self) -> None:
+        # probe_access was the one read tool that bypassed the shared handler.
+        self.assert_configuration_payload(
+            mcp_admob_tools.admob_probe_access(profile="nonexistent-profile")
+        )
+
+    def test_configuration_error_is_not_reported_as_an_account_gate(self) -> None:
+        result = mcp_admob_tools.admob_list_ad_units(profile="nonexistent-profile")
+        self.assertNotEqual(result["status"], "denied_by_account")
+        self.assertNotEqual(result["status"], "permission_denied")
+        self.assertIn("never called", result["hint"])
+
+    def test_unapproved_mutation_reports_configuration_error_without_calling_admob(self) -> None:
+        result = mcp_admob_tools.admob_create_app(
+            display_name="Example", platform="ANDROID", profile="nonexistent-profile"
+        )
+        self.assert_configuration_payload(result)
+        self.assertIs(result["_mra"]["human_approved"], False)
+
+    def test_configuration_failure_preserves_operator_approval_evidence(self) -> None:
+        # A local approval of an irreversible action is audit evidence; a later
+        # failure must not erase it, whatever the failure's cause.
+        approved = {"approved": True, "status": "approved", "mode": "macos-native-dialog"}
+        with mock.patch.object(human_approval, "request", return_value=approved):
+            result = mcp_admob_tools.admob_create_app(
+                display_name="Example",
+                platform="ANDROID",
+                app_store_id="com.example.app",
+                profile="nonexistent-profile",
+            )
+        self.assert_configuration_payload(result)
+        self.assertIs(result["_mra"]["human_approved"], True)
+        self.assertEqual(result["_mra"]["risk"], "high")
 
 
 if __name__ == "__main__":

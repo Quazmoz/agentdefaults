@@ -52,6 +52,14 @@ class AdMobError(RuntimeError):
     pass
 
 
+class AdMobConfigurationError(AdMobError):
+    """Local MRA profile/credential configuration is missing or unusable.
+
+    AdMob was never contacted. This is an operator-fixable setup mistake, not a
+    vendor response, and it must not be reported as an AdMob permission problem.
+    """
+
+
 class AdMobAuthenticationError(AdMobError):
     """The OAuth credential was rejected or is no longer usable."""
 

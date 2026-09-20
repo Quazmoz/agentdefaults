@@ -17,7 +17,14 @@ def _publisher_id(profile: str | None, publisher_id: str | None) -> str | None:
 
 
 def _client(profile: str | None, publisher_id: str | None) -> admob_module.AdMobClient:
-    return admob_module.AdMobClient(_publisher_id(profile, publisher_id))
+    # Profile lookup and credential loading both raise ConfigError, and every AdMob
+    # tool resolves its client here. Converting once keeps an operator-fixable setup
+    # mistake inside the structured, redacted AdMobError payload instead of reaching
+    # the MCP host as an unexplained tool crash with no actionable detail.
+    try:
+        return admob_module.AdMobClient(_publisher_id(profile, publisher_id))
+    except config.ConfigError as error:
+        raise admob_module.AdMobConfigurationError(str(error)) from error
 
 
 def _tag(result: dict, risk: str = "contained", approved: bool = False) -> dict:
@@ -29,7 +36,10 @@ def _access_payload(
     risk: str = "observe",
     approved: bool = False,
 ) -> dict:
-    if isinstance(error, admob_module.AdMobAccessDenied):
+    if isinstance(error, admob_module.AdMobConfigurationError):
+        status = "configuration_error"
+        hint = "Fix the local MRA profile/credential configuration; AdMob was never called."
+    elif isinstance(error, admob_module.AdMobAccessDenied):
         status = "denied_by_account"
         hint = "Google documents this method as limited-access; use the manual handoff path."
     elif isinstance(error, admob_module.AdMobAuthenticationError):
@@ -71,9 +81,9 @@ def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:
     }
 
 
-def admob_probe_access(profile: str | None = None, publisher_id: str | None = None) -> dict:
+def admob_probe_access(profile: str | None = None, publisher_id: str | None = None) -> Any:
     """Probe limited-access mediation reads without creating anything."""
-    return _client(profile, publisher_id).probe_monetization_access()
+    return _read(lambda: _client(profile, publisher_id).probe_monetization_access())
 
 
 def admob_capabilities(profile: str | None = None, publisher_id: str | None = None) -> Any:
