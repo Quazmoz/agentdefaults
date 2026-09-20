@@ -6,7 +6,8 @@ from collections.abc import Callable
 from typing import Any
 
 from . import admob_credentials, config, human_approval, play_credentials, redaction
-from . import mcp_admob_tools, mcp_play_mutations, mcp_revenuecat_mutations
+from . import mcp_admob_tools, mcp_play_monetization, mcp_play_mutations
+from . import mcp_revenuecat_mutations
 from . import play as play_module
 from . import revenuecat as rc_module
 from . import revenuecat_cli
@@ -318,6 +319,7 @@ def rc_inspect_wiring(profile: str) -> Any:
 
 
 mcp_play_mutations.register(server)
+mcp_play_monetization.register(server)
 mcp_revenuecat_mutations.register(server)
 mcp_admob_tools.register(server)
 

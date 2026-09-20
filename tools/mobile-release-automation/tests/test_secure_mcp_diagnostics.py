@@ -19,6 +19,44 @@ except SystemExit:  # pragma: no cover - optional MCP dependency
 
 @unittest.skipIf(secure_mcp is None, "the optional 'mcp' package is not installed")
 class SecureMcpDiagnosticsTest(unittest.TestCase):
+    def test_every_mcp_tool_module_reaches_the_served_surface(self) -> None:
+        """An mcp_* module with register() but no call site silently drops its tools.
+
+        mcp_play_monetization was orphaned this way: Play one-time product upsert
+        and purchase-option activation were implemented and risk-gated but
+        unreachable from every agent surface.
+        """
+        import asyncio
+        import importlib
+        import pkgutil
+
+        from mra import __path__ as mra_path
+
+        served = {tool.name for tool in asyncio.run(secure_mcp.server.list_tools())}
+        unreachable: dict[str, list[str]] = {}
+        for info in pkgutil.iter_modules(list(mra_path)):
+            if not info.name.startswith("mcp_"):
+                continue
+            register = getattr(importlib.import_module(f"mra.{info.name}"), "register", None)
+            if register is None:
+                continue
+            declared: list[str] = []
+
+            class Recorder:
+                def tool(self):
+                    def decorate(fn):
+                        declared.append(fn.__name__)
+                        return fn
+
+                    return decorate
+
+            register(Recorder())
+            gap = sorted(set(declared) - served)
+            if gap:
+                unreachable[info.name] = gap
+
+        self.assertEqual(unreachable, {}, f"mcp modules whose tools are not served: {unreachable}")
+
     def test_profile_read_returns_structured_configuration_error(self) -> None:
         with patch.object(
             secure_mcp.config,
