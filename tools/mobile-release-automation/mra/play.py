@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, Sequence
 import json
+import re
 
 from . import auth, redaction
 
@@ -40,19 +41,50 @@ def _publisher_identity() -> str | None:
         return None
 
 
-def classify_play_failure(status_code: int, api_status: str | None = None) -> tuple[str, list[str]]:
+# Play states an authorization problem in prose, and not only on a 403. A
+# monetization create can come back as 400 INVALID_ARGUMENT carrying
+# "To fix, request billing permission.", so the status code alone cannot
+# separate authorization from a malformed request.
+_PERMISSION_LANGUAGE = re.compile(
+    r"(?i)(request\s+\w*\s*permission|billing permission|does not have permission"
+    r"|no(?:t)? authori[sz]ed|permission denied|insufficient permission)"
+)
+
+
+def classify_play_failure(
+    status_code: int,
+    api_status: str | None = None,
+    api_message: str | None = None,
+) -> tuple[str, list[str]]:
     """Name the failure class and the checks that would separate its causes.
 
     This deliberately does not assert a cause. A Play 403 is consistent with
-    several distinct conditions, including a transient or still-propagating
-    authorization state, and naming one of them as "the" reason sends the reader
-    to the wrong fix. Report the class, then the checks that discriminate.
+    several distinct conditions, and naming one of them as "the" reason sends the
+    reader to the wrong fix. Report the class, then the checks that discriminate.
+
+    The API message outranks the status code, because Play reports at least one
+    authorization failure as 400 INVALID_ARGUMENT.
     """
+    if api_message and _PERMISSION_LANGUAGE.search(api_message):
+        return "authorization_denied", [
+            f"Play returned HTTP {status_code}"
+            + (f"/{api_status}" if api_status else "")
+            + " but its message names a permission, so treat this as an"
+            " authorization failure rather than a malformed request",
+            "read the message verbatim: it usually names the permission Play wants",
+            "confirm the active publisher identity reported above is the Play"
+            " Console user that holds that permission",
+            "a monetization write and a read can differ in what they require, so"
+            " succeeding reads do not establish that this write is permitted",
+        ]
     if status_code == 400:
         return "malformed_request", [
-            "the request was rejected on its contents, not on the caller's access",
+            "no permission wording was found in the message, so this most likely"
+            " concerns the request contents rather than the caller's access",
             "for a one-time product, updateMask must be explicit field paths and"
             " every masked field must be present in the body",
+            "re-read the verbatim message before ruling access out: Play can"
+            " report an authorization problem as 400 INVALID_ARGUMENT",
         ]
     if status_code == 401:
         return "credential_not_accepted", [
@@ -90,13 +122,19 @@ def _raise_for_status(response, action: str) -> None:
     if isinstance(payload, dict) and isinstance(payload.get("error"), dict):
         api_status = payload["error"].get("status")
 
-    classification, checks = classify_play_failure(response.status_code, api_status)
+    api_message = None
+    if isinstance(payload, dict) and isinstance(payload.get("error"), dict):
+        api_message = payload["error"].get("message")
+
+    classification, checks = classify_play_failure(
+        response.status_code, api_status, api_message
+    )
     lines = [
         f"{action} failed with HTTP {response.status_code}:",
         redaction.redact_text(detail),
         f"classification: {classification}",
     ]
-    if response.status_code in (401, 403):
+    if classification in ("authorization_denied", "credential_not_accepted"):
         identity = _publisher_identity()
         lines.append(
             f"active publisher identity: {identity}"
@@ -109,6 +147,7 @@ def _raise_for_status(response, action: str) -> None:
     error = PlayError("\n".join(lines))
     error.status_code = response.status_code
     error.api_status = api_status
+    error.api_message = api_message
     error.classification = classification
     raise error
 

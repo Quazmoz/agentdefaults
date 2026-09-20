@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import config, human_approval
+from . import config, human_approval, redaction
 from . import play as play_module
 
 
@@ -21,6 +21,25 @@ def _client(profile: str) -> play_module.PlayClient:
 
 def _tag(result: dict, risk: str, approved: bool = False) -> dict:
     return {**result, "_mra": {"risk": risk, "human_approved": approved}}
+
+
+def _failure(error: play_module.PlayError, risk: str, approved: bool) -> dict:
+    """Return a structured refusal instead of raising past the MCP boundary.
+
+    Letting the exception escape discards the fact that a local operator
+    approved the action, which is exactly the record an audit needs when the
+    vendor then refuses. Mirrors the AdMob tools' behaviour.
+    """
+    return {
+        "status": "error",
+        "platform": "play",
+        "error_type": "PlayError",
+        "classification": getattr(error, "classification", None),
+        "http_status": getattr(error, "status_code", None),
+        "api_status": getattr(error, "api_status", None),
+        "detail": redaction.redact_text(str(error)),
+        "_mra": {"risk": risk, "human_approved": approved},
+    }
 
 
 def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:
@@ -62,7 +81,10 @@ def play_create_subscription(
     )
     if not approved:
         return refusal
-    result = _client(profile).create_subscription(product_id, body, regions_version)
+    try:
+        result = _client(profile).create_subscription(product_id, body, regions_version)
+    except play_module.PlayError as error:
+        return _failure(error, "high", True)
     return _tag(result, "high", True)
 
 
@@ -80,7 +102,10 @@ def play_activate_base_plan(
     )
     if not approved:
         return refusal
-    result = _client(profile).activate_base_plan(product_id, base_plan_id)
+    try:
+        result = _client(profile).activate_base_plan(product_id, base_plan_id)
+    except play_module.PlayError as error:
+        return _failure(error, "high", True)
     return _tag(result, "high", True)
 
 
@@ -101,13 +126,16 @@ def play_upsert_one_time_product(
     )
     if not approved:
         return refusal
-    result = _client(profile).upsert_one_time_product(
-        product_id,
-        body,
-        regions_version,
-        update_mask=update_mask,
-        allow_missing=allow_missing,
-    )
+    try:
+        result = _client(profile).upsert_one_time_product(
+            product_id,
+            body,
+            regions_version,
+            update_mask=update_mask,
+            allow_missing=allow_missing,
+        )
+    except play_module.PlayError as error:
+        return _failure(error, "high", True)
     return _tag(result, "high", True)
 
 
@@ -127,9 +155,12 @@ def play_set_purchase_option_active(
     )
     if not approved:
         return refusal
-    result = _client(profile).set_purchase_option_active(
-        product_id, purchase_option_id, active=active
-    )
+    try:
+        result = _client(profile).set_purchase_option_active(
+            product_id, purchase_option_id, active=active
+        )
+    except play_module.PlayError as error:
+        return _failure(error, "high", True)
     return _tag(result, "high", True)
 
 

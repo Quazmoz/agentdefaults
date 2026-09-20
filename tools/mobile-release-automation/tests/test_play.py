@@ -210,6 +210,50 @@ class PlayErrorClassificationTest(unittest.TestCase):
         self.assertIn("HTTP 403", message)
         self.assertIn("could not be read", message)
 
+    def test_permission_wording_outranks_the_status_code(self) -> None:
+        """Play returns a real authorization failure as 400 INVALID_ARGUMENT.
+
+        Observed verbatim from the live API when creating a one-time product:
+        'Can\'t create product. To fix, request billing permission.' Trusting the
+        status code alone classified that as malformed_request and told the
+        reader access was not involved, which is the opposite of the truth.
+        """
+        response = FakeResponse(400, {"error": {
+            "code": 400,
+            "status": "INVALID_ARGUMENT",
+            "message": 'Product "pro": Can\'t create product. To fix, request billing permission.',
+        }})
+        with self.assertRaises(play.PlayError) as caught:
+            play._raise_for_status(response, "upsert one-time product pro")
+        error = caught.exception
+        self.assertEqual(error.classification, "authorization_denied")
+        self.assertEqual(error.status_code, 400)
+        message = str(error)
+        self.assertIn("names a permission", message)
+        self.assertIn("active publisher identity", message)
+        self.assertNotIn("not the caller's access", message)
+
+    def test_a_400_without_permission_wording_stays_malformed(self) -> None:
+        response = FakeResponse(400, {"error": {
+            "code": 400, "status": "INVALID_ARGUMENT", "message": "Invalid update_mask: [*]."
+        }})
+        with self.assertRaises(play.PlayError) as caught:
+            play._raise_for_status(response, "upsert one-time product pro")
+        self.assertEqual(caught.exception.classification, "malformed_request")
+        # It must still refuse to declare access irrelevant.
+        self.assertIn("before ruling access out", str(caught.exception))
+
+    def test_permission_phrasings_are_recognized(self) -> None:
+        for message in (
+            "To fix, request billing permission.",
+            "The caller does not have permission",
+            "Caller is not authorized to perform this action",
+            "permission denied for this package",
+            "insufficient permission for monetization",
+        ):
+            classification, _ = play.classify_play_failure(400, "INVALID_ARGUMENT", message)
+            self.assertEqual(classification, "authorization_denied", message)
+
     def test_403_offers_checks_and_never_asserts_a_missing_grant(self) -> None:
         message = str(self.raise_for(403, "PERMISSION_DENIED"))
         self.assertIn("distinguish before concluding a cause", message)
@@ -218,11 +262,10 @@ class PlayErrorClassificationTest(unittest.TestCase):
         for claim in ("may lack", "Users and permissions", "need their own grant"):
             self.assertNotIn(claim, message)
 
-    def test_non_authorization_failures_omit_identity_and_permission_language(self) -> None:
+    def test_non_authorization_failures_omit_the_identity_line(self) -> None:
         for status_code, api_status in ((400, "INVALID_ARGUMENT"), (404, "NOT_FOUND")):
             message = str(self.raise_for(status_code, api_status))
             self.assertNotIn("active publisher identity", message)
-            self.assertNotIn("permission", message.lower())
 
     def test_404_states_the_caller_was_authorized(self) -> None:
         self.assertIn("authorized", str(self.raise_for(404, "NOT_FOUND")))
@@ -232,3 +275,46 @@ class PlayErrorClassificationTest(unittest.TestCase):
         with self.assertRaises(play.PlayError) as caught:
             play._raise_for_status(response, "read tracks")
         self.assertNotIn("ya29.CANARYTOKEN", str(caught.exception))
+
+
+class PlayMutationFailureEvidenceTest(unittest.TestCase):
+    """An approved mutation that the vendor refuses must keep its approval record."""
+
+    def refuse(self, payload: dict, status_code: int = 400):
+        from mra import mcp_play_monetization as monetization
+
+        session = FakeSession(
+            {("PATCH", "/onetimeproducts/pro"): lambda **_: FakeResponse(status_code, payload)}
+        )
+        with patch.object(monetization, "_package", return_value="com.example.app"), \
+             patch.object(
+                 monetization, "_client",
+                 return_value=play.PlayClient("com.example.app", session=session),
+             ), \
+             patch.object(
+                 monetization.human_approval, "request",
+                 return_value={"approved": True, "status": "approved"},
+             ):
+            return monetization.play_upsert_one_time_product(
+                "example", "pro", {"listings": []}, "2025/03"
+            )
+
+    def test_vendor_refusal_returns_structured_evidence_not_an_exception(self) -> None:
+        result = self.refuse({"error": {
+            "code": 400, "status": "INVALID_ARGUMENT",
+            "message": "Can't create product. To fix, request billing permission.",
+        }})
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["http_status"], 400)
+        self.assertEqual(result["api_status"], "INVALID_ARGUMENT")
+        self.assertEqual(result["classification"], "authorization_denied")
+        # The operator did approve; a vendor refusal must not erase that.
+        self.assertTrue(result["_mra"]["human_approved"])
+        self.assertEqual(result["_mra"]["risk"], "high")
+
+    def test_refusal_detail_is_redacted(self) -> None:
+        result = self.refuse({"error": {
+            "code": 403, "status": "PERMISSION_DENIED",
+            "message": "denied for Bearer ya29.CANARYTOKEN",
+        }}, status_code=403)
+        self.assertNotIn("ya29.CANARYTOKEN", result["detail"])

@@ -141,11 +141,18 @@ authorization state. Report the class and the active non-secret publisher
    the account or credential; differing results point at package state.
 
 Observed on 2026-09-20: `pricing:convertRegionPrices` returned 403 for one
-package, and later returned 200 for that same package and four others under the
-same unchanged identity, while `onetimeproducts.patch` returned 404 for absent
-products and 400 for an existing one. The 403 had been transient. Concluding a
-missing monetization grant from the first 403 would have sent the operator to
-change permissions that were already correct.
+package, and later returned 200 for that package and four others under the same
+service-account identity, while `onetimeproducts.patch` returned 404 for absent
+products and 400 for an existing one, which together establish that the caller
+was authorized at that point.
+
+The cause of the original 403 was **not isolated**: an operator permission change
+(adding Create/edit/delete draft apps) occurred between the failing and the
+succeeding probe, so neither propagation, that specific grant, nor any other
+single factor was demonstrated. Record that authorization works now, and do not
+back-fill a cause. The first diagnosis here asserted a missing monetization
+grant from one 403 and was wrong; the second asserted transience and was also
+unproven.
 
 ## Failure Handling
 
