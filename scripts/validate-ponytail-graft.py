@@ -107,6 +107,43 @@ def main() -> int:
 
     if "multi-repo-ponytail-graft.md" not in router or "HARDENING.md" not in router:
         return fail("compatibility prompt does not route to both portable baseline and hardening contract")
+
+    # Standalone-paste regression: source-contract files are allowed to be absent from
+    # a fresh target. The router itself must redirect discovery through the canonical
+    # handoff and fail before target mutation if one coherent source cannot be verified.
+    required_standalone_router_fragments = [
+        "`TARGET_DIR` is required",
+        "ask for it instead of guessing",
+        "A new target is not expected to contain",
+        "`multi-repo-ponytail-graft.md`;",
+        "`HARDENING.md`;",
+        "`.agent-tools/ponytail-graft/`.",
+        "do not search `TARGET_DIR`, its parents, or the target's Git origin",
+        "https://github.com/Quazmoz/agentdefaults/blob/main/prompts/ponytail-graft/CROSS_REPO_HANDOFF.md",
+        "prefer an existing verified AgentDefaults checkout visible to the session",
+        "fresh temporary checkout of `https://github.com/Quazmoz/agentdefaults`",
+        "record its exact commit SHA",
+        "from that same commit",
+        "do not mutate the target",
+        "stop before target mutation and report a source-resolution failure, not a missing-target-file failure",
+        "do not route back into the handoff",
+    ]
+    for fragment in required_standalone_router_fragments:
+        if fragment not in router:
+            return fail(f"standalone-paste router regression is missing requirement {fragment!r}")
+
+    source_resolution_pos = router.find("## Source resolution")
+    baseline_pos = router.find("[`multi-repo-ponytail-graft.md`](multi-repo-ponytail-graft.md)")
+    hardening_pos = router.find("[`HARDENING.md`](HARDENING.md)")
+    if (
+        source_resolution_pos < 0
+        or baseline_pos < 0
+        or hardening_pos < 0
+        or source_resolution_pos > baseline_pos
+        or baseline_pos > hardening_pos
+    ):
+        return fail("compatibility prompt does not resolve source before reading baseline then hardening")
+
     if "explicit repository choice" not in hardening or "must not automatically install" not in hardening:
         return fail("hardening contract does not preserve the opt-in boundary")
 
