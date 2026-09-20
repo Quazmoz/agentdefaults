@@ -35,6 +35,12 @@ _PATTERNS = (
     re.compile(
         r'(?i)("(?:access_token|refresh_token|client_secret|private_key|signing_secret|api_key)"\s*:\s*")[^"]*(")'
     ),
+    # Same keys in bare key=value form. An OAuth token endpoint echoing its
+    # form-encoded request body is the realistic leak shape here, and the
+    # JSON-quoted pattern above does not match it.
+    re.compile(
+        r"(?i)\b((?:access_token|refresh_token|client_secret|private_key|signing_secret|api_key)\s*=\s*)[^\s&,;}\]]+"
+    ),
 )
 
 

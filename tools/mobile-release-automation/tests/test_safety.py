@@ -124,6 +124,52 @@ class ConfirmationGateTest(unittest.TestCase):
                 pass
 
 
+class AdMobErrorEvidenceTest(unittest.TestCase):
+    """A failed vendor call must stay both redacted and audit-truthful."""
+
+    def payload(self, message: str, approved: bool = True) -> dict:
+        from mra import admob, mcp_admob_tools
+
+        return mcp_admob_tools._access_payload(
+            admob.AdMobAccessDenied(message), "high", approved
+        )
+
+    def test_operator_approval_survives_a_vendor_failure(self) -> None:
+        # The approval of an irreversible action is the audit trail; a later
+        # 403 must not rewrite it into "nobody approved this".
+        self.assertTrue(self.payload("denied")["_mra"]["human_approved"])
+        self.assertFalse(self.payload("denied", approved=False)["_mra"]["human_approved"])
+
+    def test_error_detail_is_redacted_but_still_diagnostic(self) -> None:
+        detail = self.payload(
+            "403 denied; refresh_token=1//0gCANARY&client_secret=GOCSPX-canary; "
+            "Bearer ya29.CANARYTOKEN"
+        )["detail"]
+        for canary in ("1//0gCANARY", "GOCSPX-canary", "ya29.CANARYTOKEN"):
+            self.assertNotIn(canary, detail)
+        self.assertIn("403 denied", detail)
+
+
+class RedactionPatternTest(unittest.TestCase):
+    def test_bare_key_value_credentials_are_redacted(self) -> None:
+        from mra import redaction
+
+        # Form-encoded/query-string shape, as an OAuth token endpoint echoes it.
+        redacted = redaction.redact_text(
+            "grant_type=refresh_token&refresh_token=1//0gCANARY&client_secret=GOCSPX-canary"
+        )
+        self.assertNotIn("1//0gCANARY", redacted)
+        self.assertNotIn("GOCSPX-canary", redacted)
+        self.assertIn("grant_type=refresh_token", redacted)
+
+    def test_json_quoted_credentials_are_still_redacted(self) -> None:
+        from mra import redaction
+
+        redacted = redaction.redact_text('{"refresh_token": "1//0gCANARY", "ok": true}')
+        self.assertNotIn("1//0gCANARY", redacted)
+        self.assertIn('"ok": true', redacted)
+
+
 class NotesParsingTest(unittest.TestCase):
     def test_parses_language_assignments(self) -> None:
         self.assertEqual(
