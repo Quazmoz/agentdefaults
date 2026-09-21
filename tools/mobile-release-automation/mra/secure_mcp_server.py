@@ -172,6 +172,21 @@ def profile_get(profile: str) -> Any:
 
 
 @server.tool()
+def profile_create(profile: str, package_name: str) -> dict[str, Any]:
+    """Create a new package-only MRA profile as a contained local mutation."""
+    try:
+        created = config.create_profile(profile, package_name)
+    except (config.ConfigError, ValueError) as error:
+        payload = _error_payload(error)
+        payload["_mra"] = {"risk": "contained-local", "human_approved": False}
+        return payload
+    return {
+        "profile": config.public_profile(created),
+        "_mra": {"risk": "contained-local", "human_approved": False},
+    }
+
+
+@server.tool()
 def profile_update_identifiers(
     profile: str,
     package_name: str | None = None,
