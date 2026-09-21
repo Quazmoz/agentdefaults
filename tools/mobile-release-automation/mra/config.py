@@ -193,6 +193,21 @@ def save_profile(profile: Profile) -> Path:
     return path
 
 
+def create_profile(slug: str, package_name: str) -> Profile:
+    """Create one package-bound profile without overwriting an existing slug."""
+    normalized_slug = slug.strip()
+    normalized_package = package_name.strip()
+    if not normalized_slug:
+        raise ConfigError("profile slug cannot be blank")
+    if not normalized_package:
+        raise ConfigError("profile package_name cannot be blank")
+    if normalized_slug in load_profiles():
+        raise ConfigError(f"profile {normalized_slug!r} already exists")
+
+    save_profile(Profile(slug=normalized_slug, package_name=normalized_package))
+    return load_profile(normalized_slug)
+
+
 def public_profile(profile: Profile) -> dict[str, str | None]:
     """Return only non-secret cross-platform identifiers for agent-visible output."""
     return {
