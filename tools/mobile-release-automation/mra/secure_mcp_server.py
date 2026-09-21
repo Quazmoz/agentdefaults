@@ -142,7 +142,7 @@ def approval_policy() -> dict[str, Any]:
             "internal Play releases",
             "single RevenueCat project/app/product/empty entitlement/package/offering creation",
             "single unlinked AdMob app or ad-unit creation where supported",
-            "local reconciliation of verified non-secret app identifiers",
+            "local creation/reconciliation of non-secret app profiles and identifiers",
         ],
         "high": [
             "non-internal Play releases or promotions",
