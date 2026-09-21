@@ -72,9 +72,39 @@ def _play_package(app: dict[str, Any]) -> str | None:
     return play_store.get("package_name") or app.get("package_name")
 
 
-def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dict[str, Any]:
-    """Collect authoritative current state without mutating any vendor."""
+def _configured_platforms(profile: config.Profile) -> set[str]:
+    """Return vendors explicitly represented by persisted profile identifiers."""
+    platforms: set[str] = set()
+    if profile.package_name:
+        platforms.add("play")
+    if (
+        profile.revenuecat_project_id
+        or profile.revenuecat_app_id
+        or (
+            profile.revenuecat_secret_id
+            and profile.revenuecat_secret_id != config.REVENUECAT_OAUTH_MARKER
+        )
+    ):
+        platforms.add("revenuecat")
+    if profile.admob_publisher_id or profile.admob_app_id:
+        platforms.add("admob")
+    return platforms
+
+
+def snapshot_profile(
+    profile_slug: str,
+    *,
+    include_reviews: bool = False,
+    platforms: set[str] | None = None,
+) -> dict[str, Any]:
+    """Collect authoritative current state without mutating any vendor.
+
+    With no explicit platform set, audit only vendors represented by persisted
+    profile identifiers. Desired-state planning passes its requested vendors so
+    an unbound RevenueCat or AdMob setup can still perform discovery.
+    """
     profile = config.load_profile(profile_slug)
+    selected_platforms = set(platforms) if platforms is not None else _configured_platforms(profile)
     snapshot: dict[str, Any] = {
         "profile": config.public_profile(profile),
         "play": {"status": "not_configured"},
@@ -82,7 +112,7 @@ def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dic
         "admob": {"status": "not_configured"},
     }
 
-    if profile.package_name:
+    if "play" in selected_platforms and profile.package_name:
         def play_state() -> dict[str, Any]:
             base = play.PlayClient(profile.package_name)
             management = play_management.PlayManagementClient(profile.package_name, client=base)
@@ -98,7 +128,7 @@ def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dic
 
         snapshot["play"] = _safe(play_state)
 
-    if profile.revenuecat_secret_id:
+    if "revenuecat" in selected_platforms:
         def rc_state() -> dict[str, Any]:
             client = _rc_client(profile)
             state: dict[str, Any] = {"projects": client.list_projects()}
@@ -120,9 +150,9 @@ def snapshot_profile(profile_slug: str, *, include_reviews: bool = False) -> dic
 
         snapshot["revenuecat"] = _safe(rc_state)
 
-    # A package name is enough to attempt account discovery. Audit mode wants
-    # that diagnostic even before an AdMob ID has been stored in the profile.
-    if profile.admob_publisher_id or profile.admob_app_id or profile.package_name:
+    # Desired-state setup may explicitly request AdMob discovery before IDs are
+    # bound, but ordinary audits must not infer AdMob usage from a Play package.
+    if "admob" in selected_platforms:
         def admob_state() -> dict[str, Any]:
             client = admob.AdMobClient(profile.admob_publisher_id)
             return {
@@ -194,7 +224,10 @@ def plan_profile(
     """
     validate_desired_state(desired)
     profile = config.load_profile(profile_slug)
-    current = snapshot or snapshot_profile(profile_slug)
+    requested_platforms = {
+        platform for platform in ("play", "revenuecat", "admob") if platform in desired
+    }
+    current = snapshot or snapshot_profile(profile_slug, platforms=requested_platforms)
     actions: list[dict[str, Any]] = []
 
     # Google Play ------------------------------------------------------------
@@ -626,9 +659,6 @@ def plan_profile(
     for item in actions:
         counts[item["status"]] = counts.get(item["status"], 0) + 1
 
-    requested_platforms = {
-        platform for platform in ("play", "revenuecat", "admob") if platform in desired
-    }
     snapshot_errors = {
         platform: current[platform]
         for platform in requested_platforms
