@@ -126,12 +126,20 @@ The local MCP server is risk-gated, not read-only. It can inspect state and perf
 
 ### 5. Create a profile
 
-A brand-new app profile needs only the identifiers you already know. It does not need a RevenueCat project ID or RevenueCat secret key:
+A brand-new app profile needs only the identifiers you already know. It does not need a RevenueCat project ID or RevenueCat secret key. Operators can use the CLI:
 
 ```bash
-mra profile set --slug myapp \
+mra profile set --slug myapp \\
   --package-name com.example.myapp
 ```
+
+Agents connected to the risk-gated local MCP can create the same package-only profile without shell access:
+
+```text
+profile_create(profile="myapp", package_name="com.example.myapp")
+```
+
+Do not edit `~/.config/mobile-release-automation/profiles.json` directly. Profile creation is a contained local mutation and refuses to overwrite an existing slug.
 
 The RevenueCat MCP tools can list every project visible to the authenticated OAuth account, create a missing project, then reconcile the returned project/app IDs with `profile_update_identifiers`.
 
