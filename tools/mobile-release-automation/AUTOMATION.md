@@ -259,7 +259,12 @@ live webhooks are high-risk operations and require native local approval.
 ## Portfolio audit
 
 `mra_audit_portfolio` isolates failures per profile so one broken vendor binding
-does not abort the entire portfolio scan. Current findings include:
+does not abort the entire portfolio scan. Audit scope follows persisted vendor
+identity: a package name enables Play reads, while RevenueCat and AdMob reads
+require their own stored identifiers. This prevents Play-only apps from producing
+false vendor-auth findings. Desired-state planning is different by design: when a
+requested platform is not bound yet, it may explicitly probe that vendor for
+bootstrap discovery. Current findings include:
 
 - missing package/profile identity
 - Play/RevenueCat/AdMob read failures
