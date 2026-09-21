@@ -242,6 +242,32 @@ and the call replaces the whole declaration rather than merging into it.
 `Contains ads` is a separate advertising declaration with no public endpoint and
 remains a Console action.
 
+## Play analytics and reporting freshness
+
+`play_reporting_freshness(profile)` reports how current each official Play
+reporting surface is. It is observe-only and never enters a plan or apply cycle.
+
+Two surfaces exist, and they carry different things. The Play Developer
+Reporting API publishes Android vitals metric sets only; it has no installs,
+acquisition, store-listing, purchase, refund, or subscription metric set, so an
+acquisition question cannot be answered from it at any scope. Installs,
+uninstalls, store performance, acquisition, subscriptions, estimated sales, and
+earnings arrive only as monthly CSV/ZIP objects in the developer's Play
+bulk-report Cloud Storage bucket.
+
+The bucket id is per developer account, is not a secret, and no public API
+exposes it, so it is operator-supplied through the non-secret profile field
+`play_reporting_bucket` or `MRA_PLAY_REPORTING_BUCKET`. Without it the bulk and
+financial sources fail closed as `bucket_not_configured` and name the Console
+step; the vitals surface still answers, because it needs no bucket.
+
+Report dates are stated in different Google time zones, so each source carries
+its `timezone` and whether that zone is `documented` or `assumed`, and lag is
+measured from the end of the data day in that zone. Financial sources return
+aggregates only. MRA cannot read the Console UI, so `console_visible_through` is
+always `operator_input_required` and the operator supplies the Console cutoff
+that any "fresher than Console" claim depends on.
+
 ## RevenueCat management
 
 MRA adds project provisioning, complete entitlement/offering/package product

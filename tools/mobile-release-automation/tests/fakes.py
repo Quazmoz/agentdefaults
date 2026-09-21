@@ -7,10 +7,19 @@ import json
 
 
 class FakeResponse:
-    def __init__(self, status_code: int = 200, payload: Any = None, text: str = "") -> None:
+    def __init__(
+        self,
+        status_code: int = 200,
+        payload: Any = None,
+        text: str = "",
+        body: bytes | None = None,
+    ) -> None:
         self.status_code = status_code
         self._payload = payload
         self.text = text or json.dumps(payload or {})
+        # Play bulk reports are UTF-16 CSV and zipped financial exports, so a
+        # double for them has to be able to carry bytes that are not UTF-8 text.
+        self._body = body
 
     @property
     def ok(self) -> bool:
@@ -18,7 +27,7 @@ class FakeResponse:
 
     @property
     def content(self) -> bytes:
-        return self.text.encode("utf-8")
+        return self.text.encode("utf-8") if self._body is None else self._body
 
     def json(self) -> Any:
         if self._payload is None:
@@ -76,3 +85,8 @@ def ok(payload: Any) -> Callable[..., FakeResponse]:
 
 def fail(status_code: int, payload: Any = None) -> Callable[..., FakeResponse]:
     return lambda **_: FakeResponse(status_code, payload or {"error": {"message": "denied"}})
+
+
+def raw(body: bytes) -> Callable[..., FakeResponse]:
+    """Serve bytes verbatim, for UTF-16 CSV and zipped Play report objects."""
+    return lambda **_: FakeResponse(200, None, text=" ", body=body)

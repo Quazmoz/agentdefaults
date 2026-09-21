@@ -139,6 +139,9 @@ class Profile:
     revenuecat_project_id: str | None = None
     revenuecat_app_id: str | None = None
     revenuecat_secret_id: str | None = None
+    # The Play bulk-report Cloud Storage bucket id. It identifies a developer
+    # account, is shown in Play Console, and is not a secret.
+    play_reporting_bucket: str | None = None
 
     @classmethod
     def from_dict(cls, slug: str, data: dict) -> "Profile":
@@ -217,6 +220,7 @@ def public_profile(profile: Profile) -> dict[str, str | None]:
         "admob_publisher_id": profile.admob_publisher_id,
         "revenuecat_project_id": profile.revenuecat_project_id,
         "revenuecat_app_id": profile.revenuecat_app_id,
+        "play_reporting_bucket": profile.play_reporting_bucket,
     }
 
 
@@ -228,6 +232,7 @@ def update_profile_identifiers(
     admob_publisher_id: str | None = None,
     revenuecat_project_id: str | None = None,
     revenuecat_app_id: str | None = None,
+    play_reporting_bucket: str | None = None,
 ) -> Profile:
     """Safely reconcile non-secret identifiers for an existing profile."""
     load_profile(slug)  # refuse accidental creation of a partial profile
@@ -237,6 +242,7 @@ def update_profile_identifiers(
         "admob_publisher_id": admob_publisher_id,
         "revenuecat_project_id": revenuecat_project_id,
         "revenuecat_app_id": revenuecat_app_id,
+        "play_reporting_bucket": play_reporting_bucket,
     }
     updates = {}
     for field, value in values.items():

@@ -18,6 +18,14 @@ from . import admob_credentials, config, keychain, play_credentials, revenuecat_
 
 PLAY_SCOPES = ("https://www.googleapis.com/auth/androidpublisher",)
 
+# Read-only analytics scopes. They are deliberately separate from the publisher
+# scope: a freshness probe needs neither the ability to publish nor a token that
+# could. Play grants bucket access to the service account through Play Console,
+# so devstorage.read_only alone reaches no other project's data.
+PLAY_DEVELOPER_REPORTING_SCOPE = "https://www.googleapis.com/auth/playdeveloperreporting"
+GCS_READ_SCOPE = "https://www.googleapis.com/auth/devstorage.read_only"
+PLAY_REPORTING_SCOPES = (PLAY_DEVELOPER_REPORTING_SCOPE, GCS_READ_SCOPE)
+
 ADMOB_READ_SCOPES = (
     "https://www.googleapis.com/auth/admob.readonly",
     "https://www.googleapis.com/auth/admob.report",
@@ -46,12 +54,17 @@ def _authorized_session(credentials):
     return session
 
 
-def play_session():
-    """Return an authorized session for the Google Play Developer API."""
+def play_session(scopes: Sequence[str] = PLAY_SCOPES):
+    """Return an authorized session for a Google Play surface.
+
+    The same publisher service account backs the Android Publisher API, the Play
+    Developer Reporting API, and the Play bulk-report bucket; only the requested
+    scopes differ, so read-only callers ask for read-only scopes.
+    """
     from google.oauth2 import service_account
 
     credentials = service_account.Credentials.from_service_account_info(
-        play_credentials.publisher_info(), scopes=list(PLAY_SCOPES)
+        play_credentials.publisher_info(), scopes=list(scopes)
     )
     return _authorized_session(credentials)
 

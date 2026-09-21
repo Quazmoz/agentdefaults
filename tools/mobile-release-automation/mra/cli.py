@@ -16,6 +16,7 @@ import sys
 from . import admob as admob_module
 from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
 from . import play as play_module
+from . import play_reporting
 from . import revenuecat as rc_module
 
 MUTATING = "mutating"
@@ -148,6 +149,15 @@ def cmd_play_promote(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_play_freshness(args: argparse.Namespace) -> int:
+    """Read-only: how current each official Play reporting surface actually is."""
+    return emit(
+        play_reporting.freshness(
+            args.profile, include_financial=not args.skip_financial
+        )
+    )
+
+
 def cmd_play_products(args: argparse.Namespace) -> int:
     client = play_module.PlayClient(resolve_package(args))
     return emit(
@@ -270,6 +280,7 @@ def cmd_profile_set(args: argparse.Namespace) -> int:
         admob_publisher_id=args.admob_publisher_id,
         revenuecat_project_id=args.revenuecat_project_id,
         revenuecat_app_id=args.revenuecat_app_id,
+        play_reporting_bucket=args.play_reporting_bucket,
     )
     path = config.save_profile(profile)
     return emit({"saved": str(path), "profile": vars(config.load_profile(args.slug))})
@@ -334,6 +345,17 @@ def build_parser() -> argparse.ArgumentParser:
     promote.add_argument("--notes", action="append", metavar="LANG=TEXT")
     promote.add_argument("--dry-run", action="store_true")
     promote.set_defaults(func=cmd_play_promote)
+
+    freshness = play.add_parser(
+        "freshness", help="report how current each official Play reporting surface is"
+    )
+    freshness.add_argument("--profile", required=True, help="profile slug from profiles.json")
+    freshness.add_argument(
+        "--skip-financial",
+        action="store_true",
+        help="skip the estimated-sales and earnings exports",
+    )
+    freshness.set_defaults(func=cmd_play_freshness)
 
     products = play.add_parser("products", help="list Play monetization products")
     add_target(products)
@@ -443,6 +465,10 @@ def build_parser() -> argparse.ArgumentParser:
     profile_set.add_argument("--admob-publisher-id")
     profile_set.add_argument("--revenuecat-project-id")
     profile_set.add_argument("--revenuecat-app-id")
+    profile_set.add_argument(
+        "--play-reporting-bucket",
+        help="Play bulk-report Cloud Storage bucket id from Play Console; not a secret",
+    )
     profile_set.set_defaults(func=cmd_profile_set)
 
     return parser
@@ -453,7 +479,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
-    except config.ConfigError as error:
+    except (config.ConfigError, play_reporting.ReportingError) as error:
         note(f"configuration error: {error}")
         return 3
     except (play_module.PlayError, admob_module.AdMobError, rc_module.RevenueCatError) as error:

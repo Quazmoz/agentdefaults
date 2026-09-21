@@ -342,6 +342,159 @@ MRA currently automates:
 Read-only operations discard their temporary edit. Dry-run edit mutations are
 validated and discarded. A committed public-facing change is approval-gated.
 
+## Play analytics and reporting freshness
+
+Play Console appears to lag. `play freshness` answers how much of that lag is
+Google's data pipeline and how much is only the Console UI, using official
+Google surfaces alone. It is observe-only: it mutates nothing, needs no
+approval, and never scrapes the Console.
+
+```bash
+mra play freshness --profile motionguard
+mra play freshness --profile motionguard --skip-financial
+```
+
+```text
+play_reporting_freshness(profile, include_financial=true)
+```
+
+### Which surface carries which dataset
+
+| Dataset | Official source | Available? |
+|---|---|---|
+| Daily installs / user acquisitions | bulk report `stats/installs/` | yes |
+| Daily uninstalls | bulk report `stats/installs/` (uninstall columns) | yes |
+| Store-listing visitors / clicks | bulk report `stats/store_performance/` | yes |
+| Acquisitions / installers | bulk report `acquisition/retained_installers/` | only where Play generates it for the account |
+| Store conversion rate | `Store listing conversion rate` in `stats/store_performance/` | published, plus a derived aggregate |
+| In-app purchases / sales | bulk report `sales/salesreport_YYYYMM.zip` | yes |
+| Refunds | `Financial Status` in estimated sales; `Refund Type` in earnings | yes |
+| Subscriptions | bulk report `financial-stats/subscriptions/` | only where Play generates it for the account |
+| ANRs, crashes, errors, memory, wakeups, startup | Play Developer Reporting API | yes |
+
+The Play Developer Reporting API is the only one of these that is a real API.
+Its entire published surface is Android vitals metric sets. It exposes **no**
+installs, uninstalls, acquisitions, store-listing, purchase, refund, or
+subscription metric set, so no scope, role, or service account can obtain
+acquisition data from it. The Android Publisher API used for releases exposes no
+analytics at all. Everything except vitals arrives as monthly CSV/ZIP objects in
+the developer's Play bulk-report Cloud Storage bucket.
+
+### Reporting bucket configuration
+
+The bucket id is per developer account, is shown in Play Console under
+**Download reports** as a Cloud Storage URI, and is not a secret. No public API
+exposes it, so it is operator-supplied. Copy the id Console shows rather than
+constructing one: older accounts use `pubsite_prod_rev_<developer account id>`
+and newer accounts use `pubsite_prod_<developer account id>`.
+
+```bash
+mra profile set --slug motionguard --play-reporting-bucket pubsite_prod_0123456789
+export MRA_PLAY_REPORTING_BUCKET=pubsite_prod_0123456789   # account-wide default
+```
+
+The per-profile value wins over the environment default, which matters only if
+you publish under more than one developer account. It is stored with the other
+non-secret profile identifiers, never in the secret-reference file, and a value
+that is not a valid bucket name is refused rather than sent.
+
+### Required scopes and permissions
+
+| Surface | OAuth scope | Google-side requirement |
+|---|---|---|
+| Play Developer Reporting API | `.../auth/playdeveloperreporting` | Play Developer Reporting API enabled in the service account's Cloud project |
+| Bulk and financial reports | `.../auth/devstorage.read_only` | Play Console user "View app information" set to **Global**; financial exports also need "View financial data" |
+
+Both are read-only and are requested separately from the `androidpublisher`
+publishing scope, so a freshness probe never holds a token that could publish.
+MRA does not change Google permissions. A denial is reported with the exact
+manual Console step instead.
+
+Listing the bucket and reading an object are separate grants, and Play
+enforces them separately: a service account with "View app information" can
+enumerate every report yet receive 403 `storage.objects.get` on
+`sales/` and `earnings/` until "View financial data" is also Global. The probe
+reports that as `permission_denied` against the named object rather than as a
+missing report.
+
+Failures are classified rather than merged: `authentication_failed`,
+`permission_denied`, `api_not_enabled`, `not_found`, `rate_limited`,
+`server_error`, `bucket_not_configured`, `report_not_generated`,
+`report_not_generated_for_recent_months`, `empty_report`, `no_date_column`,
+`no_parsable_dates`, `malformed_report`, and `report_too_large`.
+
+### Time-zone semantics
+
+Google states report dates in different zones, so a date is never compared
+against a bare UTC clock. Each report carries its `timezone` and a
+`timezone_basis` of `documented` or `assumed`:
+
+| Report | Zone | Basis |
+|---|---|---|
+| Subscriptions | UTC | documented |
+| Earnings | America/Los_Angeles | documented |
+| Retained installers, buyers | America/Los_Angeles | documented |
+| Installs, store performance, ratings, crashes | America/Los_Angeles | assumed |
+| Estimated sales | UTC | assumed |
+| Developer Reporting metric sets | whatever `latestEndTime.timeZone` states | returned by Google |
+
+A daily row dated D is complete only once D has ended in the report's own zone,
+so `lag_hours` is measured from the end of D, and `lag_days` compares D against
+today in that same zone. Metric-set freshness needs no such reconstruction
+because `latestEndTime` is already an exclusive instant.
+
+### Store-listing conversion rate
+
+Google changed this model on 10 July 2026. Store-listing acquisitions, store
+listing visitors, and the legacy conversion rate were replaced by unique
+install/open/pre-registration clicks and a click-through rate: intent, not
+outcome.
+
+The bulk export and the Console are not on the same schedule: as of September
+2026 data this account's `store_performance` CSVs still carry the legacy
+`Store listing acquisitions`, `Store listing visitors`, and
+`Store listing conversion rate` columns. So MRA reads the report's actual header
+rather than assuming either schema:
+
+- legacy columns present: Google's own `Store listing conversion rate` is echoed
+  for a single row, and for a breakdown MRA reports
+  `sum(acquisitions) ÷ sum(visitors)` across **all rows of the newest date**.
+  Play writes no dimensionless overview for store performance, only `_country`
+  and `_traffic_source` breakdowns, so one row is one country and a per-row rate
+  is not the app's rate. Summing the counts is correct where the breakdown
+  partitions the population; averaging the per-row rates would weight a country
+  with five visitors like one with five thousand, so MRA never does that.
+- 2026 click columns present: the available columns are reported and no rate is
+  computed, because clicks and installs are different events and combining them
+  with anything from the retired model would manufacture a number.
+
+### Expected Google-side latency
+
+Google documents bulk report data as "captured daily and posted within 3 to 7
+days", and the earnings report as monthly, typically available by the fifth of
+the following month. Measured lag is reported per source so the documented
+figure never has to be trusted on its own.
+
+### Known limitations
+
+- API availability does not imply fresher data than Play Console. Both the
+  Console and these surfaces read the same Google pipeline, so a dataset that is
+  delayed upstream is delayed in both. Measure before claiming otherwise.
+- MRA cannot read the Play Console UI. `console_visible_through` is always
+  `operator_input_required`, and the probe prints exactly which Console values
+  to read for the comparison.
+- The bulk reports are monthly files of daily rows. There is no intraday
+  official surface for installs or revenue.
+- Report families are generated per account, not guaranteed. An account can
+  legitimately have no `acquisition/` or `financial-stats/` directory at all,
+  which MRA reports as `report_not_generated` rather than as a failure.
+- Bulk report families do not advance together. Measured on this account,
+  ratings were two days behind while the installs export had not been rewritten
+  in eight and its newest row was thirteen days old. Probe each family; do not
+  infer one from another.
+- Financial reports are summarized, never returned. Buyer rows carry location
+  data and do not cross the agent boundary.
+
 ## RevenueCat
 
 MRA automates the project/app/catalog setup needed for Android monetization:

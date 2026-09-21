@@ -81,6 +81,41 @@ export MRA_REVENUECAT_CLI_PROFILE=<profile-name>
 
 The selected profile must still authenticate with OAuth.
 
+## Play reporting and analytics boundary
+
+`play_reporting_freshness` and `mra play freshness` are observe-only. They
+mutate no Play state, require no approval, and are the only MRA capability that
+uses read-only Google scopes distinct from the publishing scope:
+
+```text
+https://www.googleapis.com/auth/playdeveloperreporting
+https://www.googleapis.com/auth/devstorage.read_only
+```
+
+The publisher service account is reused, but a freshness probe never mints a
+token carrying `androidpublisher`, so this path cannot publish even if misused.
+
+The Play bulk-report Cloud Storage bucket id is configuration, not a credential.
+It is stored with non-secret profile identifiers or supplied through
+`MRA_PLAY_REPORTING_BUCKET`, never in the secret-reference file. Because the
+bucket id and the package name are interpolated into request paths, both are
+validated against a strict pattern and a value outside it is refused rather
+than sent.
+
+Estimated-sales and earnings rows contain buyer city, region, postal code, and
+order identifiers. That is purchaser PII and must not cross the agent boundary.
+Financial sources return only the newest transaction date, a row count, column
+names, and transaction-class counts such as charged versus refunded. Report
+content is held in memory for the duration of the probe and is never written to
+disk. Do not add a raw-row or "export" mode to this path.
+
+If Google denies a reporting surface, the failure is classified
+(`authentication_failed`, `permission_denied`, `api_not_enabled`,
+`not_found`, `bucket_not_configured`) and the exact manual Console step is
+reported. MRA does not change Google permissions, and a missing bulk-report
+grant must not be worked around with Console scraping, cookie replay, browser
+automation, or an undocumented endpoint.
+
 ## Desired-state boundary
 
 `mra_plan`, `mra_apply`, and `mra_verify` accept JSON-shaped desired state.

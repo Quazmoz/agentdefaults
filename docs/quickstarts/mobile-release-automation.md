@@ -187,6 +187,8 @@ Only invoke high-risk attachment tools when read-back proves a relationship is m
 - Creating and reconciling RevenueCat products, entitlements, offerings, packages, and their relationships
 - Creating AdMob apps and ad units where the account permits it
 - Diagnosing why a release, product, entitlement, package, or ad unit did not appear
+- Measuring how current each official Play reporting surface is, and which Play datasets
+  have no public API at all, with `play_reporting_freshness` / `mra play freshness`
 - Reconciling verified cross-platform identifiers into the MRA profile
 - Deciding whether a given platform task can be automated at all
 
@@ -219,6 +221,8 @@ State these plainly rather than working around them:
 - Creating a brand-new app in Play Console, plus content rating, Data Safety, and target audience declarations. The Play Developer API cannot do this.
 - AdMob app and ad unit creation on an account Google has not allowlisted.
 - RevenueCat dashboard-only ad monetization settings that are not exposed by supported APIs, such as rewarded entitlement-duration configuration where no supported API is available.
+- Reading Play installs, uninstalls, acquisitions, store-listing performance, purchases, refunds, or subscriptions from an API. The Play Developer Reporting API publishes Android vitals metric sets only; those datasets exist solely as monthly CSV/ZIP exports in the developer's Play bulk-report Cloud Storage bucket, whose id no public API exposes.
+- Reading what the Play Console UI currently shows. Any "the API is fresher than Console" claim needs a Console cutoff the operator supplies.
 
 Scripting a vendor console UI is not an approved workaround for any of these.
 
@@ -228,6 +232,7 @@ Before claiming a result, read it back from the platform:
 
 ```bash
 mra play tracks --profile myapp
+mra play freshness --profile myapp
 mra rc products --profile myapp
 mra admob adunits
 ```

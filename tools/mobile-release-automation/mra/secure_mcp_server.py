@@ -9,6 +9,7 @@ from . import admob_credentials, config, human_approval, play_credentials, redac
 from . import mcp_admob_tools, mcp_play_monetization, mcp_play_mutations
 from . import mcp_revenuecat_mutations
 from . import play as play_module
+from . import play_reporting
 from . import revenuecat as rc_module
 from . import revenuecat_cli
 from . import secrets as secret_provider
@@ -194,6 +195,7 @@ def profile_update_identifiers(
     admob_publisher_id: str | None = None,
     revenuecat_project_id: str | None = None,
     revenuecat_app_id: str | None = None,
+    play_reporting_bucket: str | None = None,
 ) -> dict[str, Any]:
     """Reconcile verified non-secret identifiers without exposing profile secrets.
 
@@ -207,6 +209,7 @@ def profile_update_identifiers(
         admob_publisher_id=admob_publisher_id,
         revenuecat_project_id=revenuecat_project_id,
         revenuecat_app_id=revenuecat_app_id,
+        play_reporting_bucket=play_reporting_bucket,
     )
     return {
         "profile": config.public_profile(updated),
@@ -229,6 +232,21 @@ def play_list_products(profile: str) -> dict:
             "subscriptions": client.list_subscriptions(),
             "in_app_products": client.list_in_app_products(),
         }
+    )
+
+
+@server.tool()
+def play_reporting_freshness(profile: str, include_financial: bool = True) -> Any:
+    """Report how current each official Play reporting surface is. Read-only.
+
+    Covers the Play Developer Reporting API (Android vitals only) and the Play
+    bulk-report Cloud Storage bucket (installs, store performance, acquisition,
+    subscriptions, and financial exports). It mutates nothing, returns financial
+    data only as aggregates, and cannot read the Play Console UI, so the console
+    cutoff it compares against must come from the operator.
+    """
+    return _safe_read(
+        lambda: play_reporting.freshness(profile, include_financial=include_financial)
     )
 
 
