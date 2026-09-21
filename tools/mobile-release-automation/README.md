@@ -216,6 +216,9 @@ A profile maps one app across the vendors. Example conceptual shape:
 A new profile can begin with only the Android package name. It does not need a
 RevenueCat project id or RevenueCat API key before `rc_list_projects` or
 `rc_create_project` can run. The OAuth account is the authorization boundary.
+Agents using the risk-gated MCP can create that package-only mapping with
+`profile_create(profile, package_name)`; operators can use `mra profile set`.
+Neither path requires direct editing of `profiles.json`.
 
 Older `profiles.json` files may contain `revenuecat_secret_id`, and older
 `secret-refs.json` files may contain `revenuecat_bootstrap_secret_id`. MRA keeps
@@ -303,7 +306,11 @@ mra_audit_portfolio()
 ```
 
 The audit reads each configured vendor independently so one broken credential or
-vendor binding does not abort every app. It can surface, among other things:
+vendor binding does not abort every app. A Play package configures Play; RevenueCat
+and AdMob are audited only when their own profile identifiers are present. Merely
+having an Android package does not opt an app into those vendors. Desired-state
+setup can still request unbound RevenueCat or AdMob discovery explicitly. It can
+surface, among other things:
 
 - vendor read/auth failures
 - unanswered one- or two-star Play reviews

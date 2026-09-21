@@ -380,6 +380,51 @@ class ReconcilePlanTest(unittest.TestCase):
         self.assertTrue(result["converged"])
         self.assertEqual(result["snapshot_errors"], {})
 
+    def test_package_only_snapshot_does_not_probe_unconfigured_vendors(self) -> None:
+        config.save_profile(
+            config.Profile(slug="play-only", package_name="com.example.playonly")
+        )
+        with patch.object(
+            reconcile,
+            "_safe",
+            return_value={"status": "ready", "data": {}},
+        ) as safe:
+            snapshot = reconcile.snapshot_profile("play-only")
+
+        self.assertEqual(safe.call_count, 1)
+        self.assertEqual(snapshot["play"]["status"], "ready")
+        self.assertEqual(snapshot["revenuecat"]["status"], "not_configured")
+        self.assertEqual(snapshot["admob"]["status"], "not_configured")
+
+    def test_requested_unbound_vendors_can_still_be_discovered(self) -> None:
+        config.save_profile(
+            config.Profile(slug="bootstrap", package_name="com.example.bootstrap")
+        )
+        with patch.object(
+            reconcile,
+            "_safe",
+            return_value={"status": "ready", "data": {}},
+        ) as safe:
+            snapshot = reconcile.snapshot_profile(
+                "bootstrap", platforms={"revenuecat", "admob"}
+            )
+
+        self.assertEqual(safe.call_count, 2)
+        self.assertEqual(snapshot["play"]["status"], "not_configured")
+        self.assertEqual(snapshot["revenuecat"]["status"], "ready")
+        self.assertEqual(snapshot["admob"]["status"], "ready")
+
+    def test_plan_requests_only_vendors_named_in_desired_state(self) -> None:
+        desired = {"play": {}}
+        with patch.object(
+            reconcile,
+            "snapshot_profile",
+            return_value=self.snapshot(),
+        ) as snapshot_profile:
+            reconcile.plan_profile("example", desired)
+
+        snapshot_profile.assert_called_once_with("example", platforms={"play"})
+
     def test_explicit_null_admob_linking_requests_manual_app(self) -> None:
         snapshot = self.snapshot()
         snapshot["admob"]["data"]["apps"] = []

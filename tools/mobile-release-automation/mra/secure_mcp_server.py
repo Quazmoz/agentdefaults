@@ -142,7 +142,7 @@ def approval_policy() -> dict[str, Any]:
             "internal Play releases",
             "single RevenueCat project/app/product/empty entitlement/package/offering creation",
             "single unlinked AdMob app or ad-unit creation where supported",
-            "local reconciliation of verified non-secret app identifiers",
+            "local creation/reconciliation of non-secret app profiles and identifiers",
         ],
         "high": [
             "non-internal Play releases or promotions",
@@ -169,6 +169,21 @@ def approval_policy() -> dict[str, Any]:
 def profile_get(profile: str) -> Any:
     """Read only non-secret identifiers for one MRA app profile."""
     return _safe_read(lambda: config.public_profile(config.load_profile(profile)))
+
+
+@server.tool()
+def profile_create(profile: str, package_name: str) -> dict[str, Any]:
+    """Create a new package-only MRA profile as a contained local mutation."""
+    try:
+        created = config.create_profile(profile, package_name)
+    except (config.ConfigError, ValueError) as error:
+        payload = _error_payload(error)
+        payload["_mra"] = {"risk": "contained-local", "human_approved": False}
+        return payload
+    return {
+        "profile": config.public_profile(created),
+        "_mra": {"risk": "contained-local", "human_approved": False},
+    }
 
 
 @server.tool()
