@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import sys
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -56,6 +58,37 @@ class SecureMcpDiagnosticsTest(unittest.TestCase):
                 unreachable[info.name] = gap
 
         self.assertEqual(unreachable, {}, f"mcp modules whose tools are not served: {unreachable}")
+
+    def test_profile_create_persists_only_package_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir, patch.dict(
+            os.environ, {"MRA_HOME": tempdir}
+        ):
+            result = secure_mcp.profile_create(
+                "fidgetdrop-wear", "com.quazmoz.fidgetdrop.wear"
+            )
+            persisted = config.load_profiles()["fidgetdrop-wear"]
+
+        self.assertEqual(result["profile"]["slug"], "fidgetdrop-wear")
+        self.assertEqual(
+            result["profile"]["package_name"], "com.quazmoz.fidgetdrop.wear"
+        )
+        self.assertIsNone(persisted.revenuecat_project_id)
+        self.assertIsNone(persisted.revenuecat_app_id)
+        self.assertIsNone(persisted.admob_app_id)
+        self.assertIsNone(persisted.admob_publisher_id)
+        self.assertEqual(result["_mra"]["risk"], "contained-local")
+
+    def test_profile_create_refuses_to_overwrite_existing_slug(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir, patch.dict(
+            os.environ, {"MRA_HOME": tempdir}
+        ):
+            secure_mcp.profile_create("example", "com.example.one")
+            result = secure_mcp.profile_create("example", "com.example.two")
+            persisted = config.load_profiles()["example"]
+
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["error_type"], "ConfigError")
+        self.assertEqual(persisted.package_name, "com.example.one")
 
     def test_profile_read_returns_structured_configuration_error(self) -> None:
         with patch.object(
