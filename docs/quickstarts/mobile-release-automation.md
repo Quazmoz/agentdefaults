@@ -129,7 +129,7 @@ The local MCP server is risk-gated, not read-only. It can inspect state and perf
 A brand-new app profile needs only the identifiers you already know. It does not need a RevenueCat project ID or RevenueCat secret key. Operators can use the CLI:
 
 ```bash
-mra profile set --slug myapp \\
+mra profile set --slug myapp \
   --package-name com.example.myapp
 ```
 
