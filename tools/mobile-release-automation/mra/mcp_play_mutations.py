@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from . import config, human_approval
-from . import mcp_play_management, mcp_reconcile
+from . import mcp_play_management, mcp_play_monetization, mcp_reconcile
 from . import play as play_module
 
 
@@ -59,14 +59,17 @@ def play_publish_bundle(
         if not approved:
             return refusal
 
-    result = play_module.publish_bundle(
-        package_name,
-        Path(aab_path).expanduser(),
-        track=track,
-        status=status,
-        release_notes={"en-US": release_notes_en_us} if release_notes_en_us else None,
-        dry_run=dry_run,
-    )
+    try:
+        result = play_module.publish_bundle(
+            package_name,
+            Path(aab_path).expanduser(),
+            track=track,
+            status=status,
+            release_notes={"en-US": release_notes_en_us} if release_notes_en_us else None,
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return mcp_play_monetization._failure(error, risk, approved)
     return _tag(result, risk, approved)
 
 
@@ -91,14 +94,17 @@ def play_promote(
         if not approved:
             return refusal
 
-    result = play_module.promote(
-        package_name,
-        from_track=source_track,
-        to_track=target_track,
-        status=status,
-        user_fraction=user_fraction,
-        dry_run=dry_run,
-    )
+    try:
+        result = play_module.promote(
+            package_name,
+            from_track=source_track,
+            to_track=target_track,
+            status=status,
+            user_fraction=user_fraction,
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return mcp_play_monetization._failure(error, risk, approved)
     return _tag(result, risk, approved)
 
 

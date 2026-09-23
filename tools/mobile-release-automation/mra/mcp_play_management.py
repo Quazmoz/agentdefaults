@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from . import config, human_approval
+from . import play as play_module
 from . import play_management
+from .mcp_play_monetization import _failure
 
 
 def _package(profile: str) -> str:
@@ -24,6 +27,18 @@ def _tag(result: dict, risk: str, approved: bool = False) -> dict:
     return {**result, "_mra": {"risk": risk, "human_approved": approved}}
 
 
+def _read(action: Callable[[], Any]) -> Any:
+    """Run a Play read, returning the redacted vendor failure instead of raising.
+
+    An escaping PlayError reaches the MCP host only as "Error executing tool",
+    which hides Play's actionable message.
+    """
+    try:
+        return action()
+    except play_module.PlayError as error:
+        return _failure(error, "observe", False)
+
+
 def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:
     decision = human_approval.request(title, detail)
     if decision.get("approved"):
@@ -38,27 +53,27 @@ def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:
 
 def play_list_listings(profile: str) -> list[dict]:
     """List every localized Play Store listing for a profile."""
-    return _client(profile).list_listings()
+    return _read(lambda: _client(profile).list_listings())
 
 
 def play_get_listing(profile: str, language: str = "en-US") -> dict:
     """Read one localized Play Store listing."""
-    return _client(profile).get_listing(language)
+    return _read(lambda: _client(profile).get_listing(language))
 
 
 def play_list_images(profile: str, language: str, image_type: str) -> list[dict]:
     """List Play Store images/screenshots for one locale and image type."""
-    return _client(profile).list_images(language, image_type)
+    return _read(lambda: _client(profile).list_images(language, image_type))
 
 
 def play_get_testers(profile: str, track: str = "internal") -> dict:
     """Read Google Groups configured as testers for a Play track."""
-    return _client(profile).get_testers(track)
+    return _read(lambda: _client(profile).get_testers(track))
 
 
 def play_country_availability(profile: str, track: str = "production") -> dict:
     """Read country availability for a Play track."""
-    return _client(profile).get_country_availability(track)
+    return _read(lambda: _client(profile).get_country_availability(track))
 
 
 def play_list_reviews(
@@ -67,9 +82,11 @@ def play_list_reviews(
     translation_language: str | None = None,
 ) -> list[dict]:
     """List Play reviews with rating, app version, language and device metadata."""
-    return _client(profile).list_reviews(
-        max_results=max_results,
-        translation_language=translation_language,
+    return _read(
+        lambda: _client(profile).list_reviews(
+            max_results=max_results,
+            translation_language=translation_language,
+        )
     )
 
 
@@ -93,14 +110,17 @@ def play_update_listing(
             return refusal
     else:
         approved = False
-    result = _client(profile).update_listing(
-        language,
-        title=title,
-        short_description=short_description,
-        full_description=full_description,
-        video=video,
-        dry_run=dry_run,
-    )
+    try:
+        result = _client(profile).update_listing(
+            language,
+            title=title,
+            short_description=short_description,
+            full_description=full_description,
+            video=video,
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return _failure(error, "observe" if dry_run else "high", approved)
     return _tag(result, "observe" if dry_run else "high", approved)
 
 
@@ -122,12 +142,15 @@ def play_upload_image(
             return refusal
     else:
         approved = False
-    result = _client(profile).upload_image(
-        language,
-        image_type,
-        Path(image_path),
-        dry_run=dry_run,
-    )
+    try:
+        result = _client(profile).upload_image(
+            language,
+            image_type,
+            Path(image_path),
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return _failure(error, "observe" if dry_run else "high", approved)
     return _tag(result, "observe" if dry_run else "high", approved)
 
 
@@ -147,7 +170,10 @@ def play_update_testers(
             return refusal
     else:
         approved = False
-    result = _client(profile).update_testers(track, google_groups, dry_run=dry_run)
+    try:
+        result = _client(profile).update_testers(track, google_groups, dry_run=dry_run)
+    except play_module.PlayError as error:
+        return _failure(error, "observe" if dry_run else "high", approved)
     return _tag(result, "observe" if dry_run else "high", approved)
 
 
@@ -171,7 +197,10 @@ def play_set_data_safety_labels(
             return refusal
     else:
         approved = False
-    result = _client(profile).set_data_safety_labels(text, dry_run=dry_run)
+    try:
+        result = _client(profile).set_data_safety_labels(text, dry_run=dry_run)
+    except play_module.PlayError as error:
+        return _failure(error, "observe" if dry_run else "high", approved)
     return _tag(result, "observe" if dry_run else "high", approved)
 
 
@@ -183,7 +212,10 @@ def play_reply_review(profile: str, review_id: str, reply_text: str) -> dict:
     )
     if not approved:
         return refusal
-    result = _client(profile).reply_review(review_id, reply_text)
+    try:
+        result = _client(profile).reply_review(review_id, reply_text)
+    except play_module.PlayError as error:
+        return _failure(error, "high", True)
     return _tag(result, "high", True)
 
 
@@ -195,12 +227,15 @@ def play_upload_deobfuscation_file(
     dry_run: bool = True,
 ) -> dict:
     """Attach ProGuard/R8 mapping or native symbols to a Play artifact."""
-    result = _client(profile).upload_deobfuscation_file(
-        version_code,
-        file_type,
-        Path(file_path),
-        dry_run=dry_run,
-    )
+    try:
+        result = _client(profile).upload_deobfuscation_file(
+            version_code,
+            file_type,
+            Path(file_path),
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return _failure(error, "observe" if dry_run else "contained", False)
     return _tag(result, "observe" if dry_run else "contained")
 
 
