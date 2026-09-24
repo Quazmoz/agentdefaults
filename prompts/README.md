@@ -19,6 +19,7 @@ Canonical behavior belongs in [`../agents/`](../agents/) and [`../skills/`](../s
 | [`orchestration/`](orchestration/) | Start/resume/reset/escalate commands for formal orchestration workflows. |
 | [`token-efficiency/`](token-efficiency/) | Compression, benchmarking and model/token-efficiency tasks. |
 | [`palmierpro/`](palmierpro/) | Palmier Pro MCP video-editing workflows. |
+| [`marketing/`](marketing/) | App marketing production, such as rendered promo videos built from repository evidence. |
 | [`ponytail-graft/`](ponytail-graft/) | Opt-in, repository-local Ponytail + Graft coexistence. Start with the [human/AI setup guide](ponytail-graft/README.md); the tested agent entrypoint remains [`ponytail-graft.md`](ponytail-graft/ponytail-graft.md). |
 
 ## How to Use a Prompt
