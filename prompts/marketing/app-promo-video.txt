@@ -23,12 +23,20 @@ Look at the actual repo layout; do not assume standard paths. Find:
 - The core value proposition and the features that are actually implemented and reachable from the UI. A feature behind a disabled flag, a TODO, a stub, or dead code does not count.
 - Brand: launcher icon (prefer app/src/main/ic_launcher-playstore.png or the Play listing icon; adaptive icons are foreground/background layers that must be rendered, never redrawn), colors (res/values*/colors.xml, themes.xml, Compose ui/theme/Color.kt / Theme.kt), and fonts (res/font, Compose Typography). If the app uses Material You dynamic color, use its fallback/seed scheme, not the colors of whatever wallpaper was set when the screenshots were taken.
 - Existing visuals: screenshots, screen recordings, feature graphics, fastlane/metadata/android/*/images, store-listing copy, README and docs.
+- The story a screenshot cannot tell. Trace the code for:
+  - The problem: what the user is struggling with before they open the app, taken from README, store copy, onboarding text, or empty-state strings.
+  - The category: what kind of app this is, in plain words a stranger would understand.
+  - How it works: the real user flow from input to outcome, in 2–4 steps, traced through the UI code.
+  - Invisible value: behavior the code proves but no screen shows. Examples: works offline (no INTERNET permission, or no network calls on the core path); no account or sign-in; data stays on the device (local Room/DataStore/files, no sync or upload code); no ads or third-party analytics (none in the Gradle dependencies or version catalog); background automation (WorkManager, alarms, receivers); surfaces outside the app (widgets, Tiles, complications, shortcuts, notifications, share targets); integrations (Health Connect, Calendar, intents); locale count (values-xx directories with real translations); accessibility (content descriptions, font scaling); dark theme.
+  - Countable facts: numbers you can count in the source, such as presets, templates, or languages. Record the count, how you counted it, and the commit.
+  Claims about something being absent need stronger proof than claims about something being present. Check the manifest, every module's dependencies, and the network code before you claim "offline", "no ads", or "no tracking". Use the exact behavior ("No account needed", "Works offline") and never broader words like "secure", "private", "100% safe", or "fastest", which the code cannot prove.
 
 Write marketing/promo-video/BRIEF.md containing:
 1. App identity: name, applicationId, form factors, brand hex colors, fonts, icon path.
-2. Claims ledger: every on-screen claim you might use → the file:line that proves it → VERIFIED or REJECTED. Only VERIFIED claims may appear in the video.
+2. Claims ledger: every on-screen claim you might use → its type (SHOWN: visible on a real screen; EXPLAINED: proven by code but not visible) → the file:line that proves it → VERIFIED or REJECTED. Only VERIFIED claims may appear in the video.
 3. Asset inventory: each screenshot/recording → path, resolution, which screen/feature it shows, and whether it is usable (current UI, right app, no personal data, not a placeholder).
-4. Creative direction: target viewer, the single core promise, hook concept, scene plan with timecodes.
+4. Message ladder, one line each: problem → what it is (category + who it is for) → how it works (the steps) → why this app (the strongest EXPLAINED claim) → CTA.
+5. Creative direction: target viewer, the single core promise, hook concept, scene plan with timecodes, and for each scene the claim it proves and how it proves it (shown, called out on the UI, or explained with a diagram).
 Keep writing it and move on; do not wait for my approval.
 
 PHASE 2 — SCREEN CAPTURE (only if repo visuals are missing, stale, or static where motion would sell the feature better)
@@ -48,11 +56,22 @@ Retention rules:
 - One idea per scene. It must make sense with the sound off.
 - Make the final frame close to the first frame's composition so replays loop smoothly.
 
+Explain, don't just show:
+A viewer who has never heard of the app, watching with the sound off, should come away knowing what it is, how it is used, and why to pick it. Screens alone rarely manage that, so add an explanation layer built only from VERIFIED claims:
+- By about 4 s, say what the app is in plain words (the category and who it is for). A feature list without that context loses people.
+- Every feature scene answers "so what?": the headline names the benefit, and at most one supporting line (8 words or fewer) says why it matters or what it replaces.
+- Callouts: a highlight ring, a focus dim, or a leader line pointing at the real control or value being explained, with a short label. Attach callouts in screenshot pixel coordinates and pass them through the device and camera transforms so they stay locked on during moves. They must never cover the element they explain, change what the UI says, or look like part of the app.
+- Steps: show a multi-step flow as numbered beats (1 → 2 → 3) across real screens, with a tap or gesture indicator only where that interaction really happens.
+- Diagrams: show EXPLAINED claims as simple, clearly stylized motion graphics made of shapes, icons, and arrows, never fake UI. For example, data staying inside the phone outline, a crossed-out cloud for offline use, phone ↔ watch arrows only where the Data Layer code proves sync, or a widget or Tile appearing on a generic home screen or watch face.
+- Proof chips: small badges for invisible value ("No account", "Works offline", "12 languages") set as supporting text next to the device. Use no more than 3 in the whole video and never stack them on top of a feature headline.
+- Before → after: show the viewer's problem in a generic way (a messy notes list, a pile of alarms), then the real app screen that fixes it. The "before" must never look like a real competitor's product or like an app screen that does not exist.
+Keep it to one idea per scene: an explanation replaces a line of copy, it doesn't add a second one.
+
 Default timing budget (scale it to your chosen duration):
 - 0.0–2.0 s HOOK: device or UI detail pulls in fast; problem/payoff headline.
-- 2.0–7.0 s REVEAL: hero device with the main screen; the core benefit.
-- 7.0–20.0 s FEATURES: 3–4 VERIFIED features, each with its own move (a three-device perspective stack, a rotation that swaps screens, a macro push-in on one UI element, a UI card lifted off the display, a masked wipe between real screens). Never reuse the same move twice in a row.
-- 20.0–27.0 s VALUE: the single strongest workflow or outcome, the most memorable shot.
+- 2.0–7.0 s REVEAL: hero device with the main screen; what the app is and the core benefit.
+- 7.0–19.0 s FEATURES: 3–4 VERIFIED features, each with its own move (a three-device perspective stack, a rotation that swaps screens, a macro push-in with a callout on one UI element, a UI card lifted off the display, a masked wipe between real screens, numbered steps across screens). Never reuse the same move twice in a row. Each one carries its "so what?" line or callout.
+- 19.0–27.0 s WHY THIS APP: the strongest workflow or outcome plus the strongest EXPLAINED claim (a how-it-works diagram, a before → after, or up to 3 proof chips), the most memorable shot.
 - 27.0–end HERO: the exact icon, the exact app name, a tagline, the CTA, and a restrained brand animation that resolves into the loop point.
 
 Devices:
@@ -75,7 +94,7 @@ Avoid: slideshow wipes, repeated zooms, particle spam, lens flares, crowded fram
 
 PHASE 4 — BUILD
 Use a programmatic, deterministic pipeline with pinned dependency versions and a lockfile. Recommended: Remotion (React), plus @remotion/three / Three.js for real 3D devices where it adds realism, and FFmpeg for muxing and checks. Plain FFmpeg, Python, or another tool is fine if it gives a better or more reliable result here. If you use Remotion, note its license terms in the README.
-Keep the app-specific data in one config file (identity, colors, fonts, claims, asset paths, scene copy), separate from the reusable scene, device, camera, typography, and transition components, so the same project can render my other Android and Wear OS apps. This app's quality comes first; do not flatten it into a generic template.
+Keep the app-specific data in one config file (identity, colors, fonts, claims, asset paths, scene copy, callout anchors, steps, diagram and proof-chip content), separate from the reusable scene, device, camera, typography, callout, diagram, and transition components, so the same project can render my other Android and Wear OS apps. This app's quality comes first; do not flatten it into a generic template.
 
 Audio:
 - Use only audio you can prove the rights to (generated locally, a royalty-free track already in the repo with its license, or procedurally synthesized). Record the source and license in ASSETS.md. Never download or use unlicensed commercial music.
@@ -97,14 +116,16 @@ After each render:
 1. Probe it with ffprobe: resolution, fps, codec/profile, pix_fmt, duration, audio stream. If any value is off-spec, fix it and render again.
 2. Extract frames at 0.0 s, at every scene boundary, and every 2 s in between, build a contact sheet, and actually look at the images. Check: the right app; real screens only; nothing stretched or clipped; text readable and inside the safe zones; the correct icon, name, and colors; no glitch frames, blank frames, or flicker at transitions; a strong frame 0; a polished hero shot.
 3. With audio, measure loudness (e.g. ffmpeg ebur128) and confirm the beat-synced cuts land.
-4. Fix what you find and render again. After 3 iterations, ship the best version and list the issues that remain.
+4. Explanation test: using only the contact sheet and forgetting what you know from the code, write three sentences in BRIEF.md: what the app is, how you use it, and why you would pick it. If any of them is vague, wrong, or impossible to write from the frames, fix the copy, callouts, or diagrams. Also check that every callout stays on its target in the frames where it appears.
+5. Fix what you find and render again. After 3 iterations, ship the best version and list the issues that remain.
 
 BLOCKERS
 If a required capability is genuinely unavailable (no Node/FFmpeg and no way to install them, no usable visuals and no way to capture any, no rendering capability), finish everything that does not depend on it, then report the specific blocker and the exact command or input that would clear it. Installing dev tooling inside the output dir is allowed; system-wide installs need my permission.
 
 FINAL RESPONSE (short, no production tutorial)
 - The app: name, applicationId, and form factors.
-- The VERIFIED features used, and any claims you rejected with the reason.
+- The VERIFIED features used (SHOWN and EXPLAINED), and any claims you rejected with the reason.
+- The explanation-test sentences from the last render.
 - Paths: MP4, poster, source project, BRIEF.md, ASSETS.md.
 - The render command.
 - QC results: the ffprobe summary, loudness if there is audio, how many iterations ran, and any known remaining issues.
