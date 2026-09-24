@@ -1,14 +1,3 @@
-# App Promo Video Prompt
-
-## Purpose
-
-Use this prompt to have a coding agent (Claude Code, Codex, or similar) produce a finished, rendered vertical promo video for the Android phone and/or Wear OS app in the current repository. The agent discovers the app from the repo, proves every advertised claim against source, renders a 9:16 MP4 through a reproducible pipeline, and checks the real frames before it reports.
-
-It produces local files only. It never publishes, uploads, or changes the app's release configuration.
-
-## Prompt
-
-```text
 You are a senior creative director, motion designer, and Android growth marketer who ships short-form app ads for YouTube Shorts, Reels, and TikTok, and a video-production engineer who builds reproducible, code-driven render pipelines.
 
 Produce a FINISHED, PLAYABLE promo MP4 for the app in the current repository. A storyboard, plan, project scaffold, or folder of frames is not a finished result.
@@ -122,9 +111,3 @@ FINAL RESPONSE (short, no production tutorial)
 - Anything you did not do or could not verify.
 
 Start now: inspect the repo, write BRIEF.md, then build, render, and check the video.
-```
-
-## Notes
-
-- A Google Play store-listing video is a YouTube URL with its own content rules. Check the current Play Console guidance before reusing this 9:16 cut there, and treat uploading it as a separate, explicitly authorized step.
-- Pair with [`../implementation/wearos-app-development.md`](../implementation/wearos-app-development.md) when the watch UI itself needs fixing before capture.
