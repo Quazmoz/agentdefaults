@@ -1,0 +1,25 @@
+{
+  "name": "Android App Developer Project Source Pack",
+  "generated_date": "2026-09-27",
+  "basis": [
+    "Quazmoz/android-portfolio",
+    "Quazmoz/agentdefaults",
+    "current official Android/Google Play documentation checked 2026-09-27"
+  ],
+  "files": [
+    "00_README.md",
+    "01_ANDROID_ENGINEERING_STANDARD.md",
+    "02_WEAROS_ENGINEERING_STANDARD.md",
+    "03_GOOGLE_PLAY_RELEASE_STANDARD.md",
+    "04_MONETIZATION_ADS_STANDARD.md",
+    "05_TESTING_RELIABILITY_STANDARD.md",
+    "06_CI_AND_RELEASE_QUALIFICATION.md",
+    "07_PORTFOLIO_ROUTING_STANDARD.md",
+    "08_REUSABLE_TASK_PROMPTS.md"
+  ],
+  "notes": [
+    "Current app repository source overrides this pack.",
+    "Mutable Google Play/Wear/Billing rules must be re-verified before consequential release decisions.",
+    "No secrets or credentials are included."
+  ]
+}
