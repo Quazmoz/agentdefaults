@@ -163,6 +163,8 @@ For caches/artifacts inspect producer trust, consumer trust, cache key/version/s
 
 ### 10. Inspect performance and cost
 
+First resolve the repository's intended hosted-CI trigger policy. A release-preparation-only policy using explicit `workflow_dispatch` is valid and should remain manual-only unless the user or repository explicitly requires automatic execution. Do not reintroduce `push`/`pull_request` triggers merely to obtain routine feedback, and do not make an agent wait on Actions when no hosted run was explicitly requested.
+
 Review matrix size, queue/runner class, caching, duplicate setup/build work, artifact transfer, scheduled cadence, polling, timeout, retry amplification, retention, and runaway generated work.
 
 Optimization must not weaken trust boundaries, required checks, or reproducibility.
