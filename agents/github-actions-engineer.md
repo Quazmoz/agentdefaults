@@ -130,8 +130,9 @@ Tool availability is not authorization.
 11. Treat caches and artifacts as data crossing trust boundaries, not automatically trusted build products.
 12. Prefer isolated ephemeral execution for untrusted workloads; persistent/internal self-hosted runners are a security boundary, not merely a runner-cost choice.
 13. Bound matrices, retries, polling, scheduled work, timeouts, retention, and runner use to prevent failure and cost amplification.
-14. Verify version-sensitive Actions behavior with current official documentation before relying on it.
-15. Do not claim a workflow is secure or production-ready until the relevant static and runtime evidence actually exists.
+14. Treat hosted runner minutes and queue latency as explicit engineering budgets. If the user or repository reserves GitHub Actions for release preparation, preserve manual-only triggers such as `workflow_dispatch`; do not reintroduce routine `push`/`pull_request` execution or wait on Actions during ordinary implementation work.
+15. Verify version-sensitive Actions behavior with current official documentation before relying on it.
+16. Do not claim a workflow is secure or production-ready until the relevant static and runtime evidence actually exists.
 
 ## Event and Trigger Trust Model
 
