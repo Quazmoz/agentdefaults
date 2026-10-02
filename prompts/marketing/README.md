@@ -7,12 +7,15 @@ Copy/paste prompts for app marketing production. Each prompt is a plain `.txt` f
 | Prompt | Use |
 |---|---|
 | [`app-promo-video.txt`](app-promo-video.txt) | Produce a finished vertical (9:16) promo MP4 for the Android phone and/or Wear OS app in the current repository. |
+| [`app-promo-video-real-usage.txt`](app-promo-video-real-usage.txt) | Produce a vertical promo centered on recorded app usage: local emulator operation, real typing/taps, and verified input-to-result workflows. |
 
 ## App Promo Video
 
 [`app-promo-video.txt`](app-promo-video.txt) has a coding agent (Claude Code, Codex, or similar) produce a finished, rendered vertical promo video for the Android phone and/or Wear OS app in the current repository. The agent discovers the app from the repo, proves every advertised claim against source, renders a 9:16 MP4 through a reproducible pipeline, and checks the real frames before it reports.
 
 It produces local files only. It never publishes, uploads, or changes the app's release configuration.
+
+For a promo that demonstrates how someone actually uses the app, copy [`app-promo-video-real-usage.txt`](app-promo-video-real-usage.txt). This standalone companion directs the agent to build and run the app on a local emulator, automate and record realistic interactions, and verify that entered values reach the real result screen. It requires real app footage for at least 60% of the video and progressive text entry when the chosen workflow has a text field. Static screenshots cannot satisfy those requirements. Its default output directory is `marketing/promo-video-real-usage/`.
 
 Notes:
 
