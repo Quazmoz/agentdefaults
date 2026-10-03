@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "graft": {
-      "command": "node",
+      "command": "graft",
       "args": [
-        ".agent-tools/ponytail-graft/bin/graft.cjs",
         "mcp"
       ]
     }
