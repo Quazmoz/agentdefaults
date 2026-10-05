@@ -168,3 +168,15 @@ Also manually/playback-check:
 - final 20-30 seconds
 
 Machine checks supplement playback review; they do not replace it.
+
+
+## Repository Validation
+
+After changing this stack, run:
+
+```bash
+python3 scripts/validate-claude-video-editing-stack.py
+python3 scripts/validate-agentdefaults.py
+```
+
+These repository validators check stack structure and invariants. They do not prove that local NeMo/Parakeet, HyperFrames, browser automation, Tella, or licensed-audio integrations are installed and operational on a particular workstation.
