@@ -1,5 +1,9 @@
 # Claude Code Video Editing Acceptance Tests
 
+## Purpose
+
+Define deterministic behavioral expectations for the local Claude Code video-editing stack and prevent regressions in source preservation, transcription truthfulness, evidence sourcing, licensing, graphics validation, and QC.
+
 ## AC-01: Raw Media Is Preserved
 
 Given a raw recording, the stack writes intermediates/renders elsewhere and never overwrites the source.
