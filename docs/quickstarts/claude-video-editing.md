@@ -57,7 +57,21 @@ AgentDefaults includes:
 
 `tools/video/parakeet_transcribe.py`
 
-It expects a NeMo ASR installation. A typical isolated environment is:
+The helper supports two Parakeet runtimes and normalizes both to the same transcript JSON:
+
+- **Apple Silicon:** prefer `parakeet-mlx`, which uses MLX and exposes aligned sentence/token timestamps.
+- **Other supported systems / NVIDIA-oriented environments:** use NVIDIA NeMo ASR.
+
+Apple Silicon setup:
+
+```bash
+python3 -m venv .venv-video
+source .venv-video/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -U parakeet-mlx
+```
+
+NeMo setup:
 
 ```bash
 python3 -m venv .venv-video
@@ -73,11 +87,16 @@ ffmpeg -i raw/input.mp4 -vn -ac 1 -ar 16000 -c:a pcm_s16le work/transcript.wav
 python3 tools/video/parakeet_transcribe.py work/transcript.wav -o work/transcript.json
 ```
 
-Default model:
+Default models:
 
-`nvidia/parakeet-tdt-0.6b-v3`
+```text
+MLX:  mlx-community/parakeet-tdt-0.6b-v3
+NeMo: nvidia/parakeet-tdt-0.6b-v3
+```
 
-The helper writes transcript text plus word/segment timestamps.
+`--backend auto` is the default: it selects MLX on Apple Silicon and NeMo elsewhere. Use `--backend mlx` or `--backend nemo` to force one explicitly.
+
+The helper writes a normalized JSON object with full text, segment timestamps, and word/token timestamps.
 
 If the local OS/hardware cannot support the chosen Parakeet runtime, stop and report the environment issue rather than pretending transcription succeeded.
 
