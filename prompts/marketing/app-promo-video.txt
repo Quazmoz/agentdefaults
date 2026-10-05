@@ -15,6 +15,7 @@ AUTHORITY AND BOUNDARIES
 - Do not upload, publish, or post anything (YouTube, Google Play, social), and do not commit or push unless I ask.
 - Never fabricate UI, screenshots, features, ratings, download counts, awards, reviews, or store availability.
 - Never claim you rendered, watched, or checked something you did not.
+- Use any free tool you need, including open-source tools, models, and assets from the internet (for example HyperFrames, Remotion, Playwright, Kokoro, faster-whisper, librosa, CC0 sound libraries). Never incur a cost: no paid APIs, plans, credits, purchases, or trials that need payment details, and no service that can bill. When a tool is free only under conditions (such as Remotion's company-size terms), confirm they are met. Every tool, model, and asset must permit commercial use; record its license in ASSETS.md.
 - Only stop to ask me when you are genuinely blocked (see BLOCKERS). Make every creative and technical call yourself.
 
 PHASE 1 — DISCOVERY AND CLAIMS LEDGER
@@ -65,6 +66,8 @@ A viewer who has never heard of the app, watching with the sound off, should com
 - Diagrams: show EXPLAINED claims as simple, clearly stylized motion graphics made of shapes, icons, and arrows, never fake UI. For example, data staying inside the phone outline, a crossed-out cloud for offline use, phone ↔ watch arrows only where the Data Layer code proves sync, or a widget or Tile appearing on a generic home screen or watch face.
 - Proof chips: small badges for invisible value ("No account", "Works offline", "12 languages") set as supporting text next to the device. Use no more than 3 in the whole video and never stack them on top of a feature headline.
 - Before → after: show the viewer's problem in a generic way (a messy notes list, a pile of alarms), then the real app screen that fixes it. The "before" must never look like a real competitor's product or like an app screen that does not exist.
+- Counters: when the before → after is countable (taps, steps, seconds) and you measured both sides on the emulator, show a running counter that ends on each total. Never show an unmeasured number.
+- Reading line: put the input being used (the value typed, the option chosen) as a small chip directly under the headline, where the viewer is already reading.
 Keep it to one idea per scene: an explanation replaces a line of copy, it doesn't add a second one.
 
 Default timing budget (scale it to your chosen duration):
@@ -90,20 +93,28 @@ Safe zones (a conservative union of the Shorts, Reels, and TikTok overlays at 10
 
 Screenshots: keep the aspect ratio; scale, crop, and mask only; no stretching, no relabeling, no painted-in UI. If an interaction cannot be reconstructed from real frames or recordings, cut between real screens instead.
 
+Motion system (one vocabulary for the whole video):
+- One role per easing curve: expo-out for entrances, expo-in or back-in for exits, expo-in-out for travel and camera moves. Chips, callouts, and cards use a few named springs (pop, snappy, ui, move) defined once in config.
+- No hard cuts between scenes: each scene hands off through a shared element (a callout ring grows into the next mask, the device travels into the next composition, a card becomes the next screen).
+- Give each scene a subtle camera breath (scale 1 → 1.03 → 1) so short holds never freeze.
+- Reveal headlines word by word: each word rises a few pixels, unblurs, and fades in, staggered, then the line settles into a still, readable hold. Use tight display tracking (about −0.02 to −0.035 em).
+
 Avoid: slideshow wipes, repeated zooms, particle spam, lens flares, crowded frames, spinning for its own sake, effects that cover the UI, and any brand identity other than the app's.
 
 PHASE 4 — BUILD
 Use a programmatic, deterministic pipeline with pinned dependency versions and a lockfile. Recommended: Remotion (React), plus @remotion/three / Three.js for real 3D devices where it adds realism, and FFmpeg for muxing and checks. Plain FFmpeg, Python, or another tool is fine if it gives a better or more reliable result here. If you use Remotion, note its license terms in the README.
+Make every frame a pure function of time, render(t): no wall-clock timers, unseeded randomness, or free-running CSS/JS animation, and wait for fonts, images, and WebGL before capture, so any frame renders identically, alone, and out of order. That allows parallel rendering by frame range and re-rendering a single scene's time range to splice in at frame-exact boundaries.
+For motion blur, render at 4× the output rate, blend 3 consecutive sub-frames (FFmpeg tmix=frames=3, about a 270° shutter), and keep every 4th frame (framestep=4), or use the renderer's own sub-frame motion blur. Text in holds must stay crisp.
 Keep the app-specific data in one config file (identity, colors, fonts, claims, asset paths, scene copy, callout anchors, steps, diagram and proof-chip content), separate from the reusable scene, device, camera, typography, callout, diagram, and transition components, so the same project can render my other Android and Wear OS apps. This app's quality comes first; do not flatten it into a generic template.
 
 Audio:
 - Use only audio you can prove the rights to (generated locally, a royalty-free track already in the repo with its license, or procedurally synthesized). Record the source and license in ASSETS.md. Never download or use unlicensed commercial music.
-- Cut on the beat for the major transitions. Keep sound effects sparse. No voiceover required.
+- Find the real tempo and beat times from the audio (e.g., librosa beat tracking checked against the waveform) and cut the major transitions on that grid. Keep sound effects sparse and tune tonal ones (chip and card notes) to the track's key. No voiceover required.
 - Master to about −14 LUFS integrated with a true peak ≤ −1 dBTP.
 - If you cannot get acceptable audio, ship a polished silent video and say so.
 
 Output specification:
-- 1080×1920, 9:16, 30 fps constant frame rate, H.264 High profile, yuv420p, BT.709, AAC 48 kHz stereo when there is audio, MP4 with +faststart, duration inside the target range.
+- 1080×1920, 9:16, 60 fps constant frame rate, H.264 High profile, yuv420p, BT.709, AAC 48 kHz stereo when there is audio, MP4 with +faststart, duration inside the target range.
 
 Deliverables (named after the app, e.g. <app-slug>-promo-9x16.mp4):
 - out/<app-slug>-promo-9x16.mp4
@@ -112,6 +123,7 @@ Deliverables (named after the app, e.g. <app-slug>-promo-9x16.mp4):
 - Intermediates live in a separate build/ or tmp/ directory, not out/.
 
 PHASE 5 — RENDER, INSPECT, FIX (at most 3 full render iterations)
+Before the first full render and after every change, render stills at the key moments (frame 0, each scene's settle, transition midpoints, the hero), look at them, and fix overlaps, clipped text, safe-zone breaks, and timing first. Full renders are for checking motion, not layout.
 After each render:
 1. Probe it with ffprobe: resolution, fps, codec/profile, pix_fmt, duration, audio stream. If any value is off-spec, fix it and render again.
 2. Extract frames at 0.0 s, at every scene boundary, and every 2 s in between, build a contact sheet, and actually look at the images. Check: the right app; real screens only; nothing stretched or clipped; text readable and inside the safe zones; the correct icon, name, and colors; no glitch frames, blank frames, or flicker at transitions; a strong frame 0; a polished hero shot.

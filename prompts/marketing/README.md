@@ -8,6 +8,7 @@ Copy/paste prompts for app marketing production. Each prompt is a plain `.txt` f
 |---|---|
 | [`app-promo-video.txt`](app-promo-video.txt) | Produce a finished vertical (9:16) promo MP4 for the Android phone and/or Wear OS app in the current repository. |
 | [`app-promo-video-real-usage.txt`](app-promo-video-real-usage.txt) | Produce a polished launch film with real emulator-recorded typing/taps, bespoke motion graphics, coherent scene flow, and a synchronized musical soundtrack. |
+| [`app-launch-film.txt`](app-launch-film.txt) | Produce a 75–90 s narrated 16:9 YouTube launch film built entirely in code: rebuilt app UI on a 3D phone, local-TTS voiceover driving a word clock, locally composed music on a beat grid, and supersampled motion-blur rendering. |
 
 ## App Promo Video
 
@@ -30,6 +31,14 @@ Regression cases for agent runs using the real-usage prompt:
 | Four different promo videos requested | Four creative edits with different hooks, featured workflows/benefits, and scene sequences. |
 | Four exports show the same visuals despite different filenames, encodings, metadata, or music | Duplicate edits fail QC and cannot count toward delivery. |
 | Requested differences cannot be produced within the budget | Preserve passing unique edits and report partial delivery with the missing count and reason. |
+
+## App Launch Film
+
+[`app-launch-film.txt`](app-launch-film.txt) is the long-form, landscape companion. The agent rebuilds the app's screens in HTML/CSS from source and maps them onto a Three.js phone. It tells a "the old way → the app way → breadth → outro" story with narration, and renders a deterministic `render(t)` page through Playwright at 240 fps, blended with FFmpeg to 60 fps with motion blur. Everything is free: an open-weight, commercially licensed TTS for the voice, and music and sound effects synthesized in code. Text and events follow a faster-whisper word clock, and cards follow a librosa beat grid.
+
+Because the UI is rebuilt rather than recorded, the prompt adds fidelity gates. Every rebuilt screen is compared side by side with an emulator screenshot of the same state, UI text comes from `strings.xml`, and other apps or people in the story are fictional, with no real brands or trade dress. It delivers one MP4, captions (`.srt`/`.vtt`), a 1280×720 thumbnail, audio stems, and a `COPY.md` with chapters.
+
+The motion system (easing roles, named springs, morph handoffs, camera breath, word-by-word reveals), the `render(t)` purity rule, supersampled motion blur, scene-range re-render, and the stills-after-every-change loop are shared with the two vertical prompts. All three prompts allow any free tool from the internet (HyperFrames, Remotion, open-weight models, CC0 assets) but forbid anything that incurs a cost: paid APIs, plans, credits, purchases, or trials that need payment details.
 
 Notes:
 
