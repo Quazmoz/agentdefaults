@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 import json
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +21,8 @@ STACK = {
     "wrapper": ".claude/skills/youtube-edit/SKILL.md",
     "style": "config/video-editing/channel-style.md",
     "transcriber": "tools/video/parakeet_transcribe.py",
+    "edl": "tools/video/edl.py",
+    "tests": "tools/video/test_video_tools.py",
 }
 
 ROUTING_FILES = [
@@ -151,15 +154,20 @@ def check_agent_and_skill(failures: list[str]) -> None:
             "HyperFrames",
             "FFmpeg",
             "ffprobe",
-            "source-manifest.md",
+            "tools/video/edl.py",
+            "work/edit.json",
             "browser",
             "Tella",
             "Epidemic Sound",
-            "raw media immutable",
-            "timestamp",
-            "explicitly ask",
-            "black-frame",
-            "silence",
+            "Raw media is immutable",
+            "Never render merely because checks pass",
+            "unapproved drafts",
+            "license note",
+            "Never silently substitute another ASR",
+            "learn, save, remember, or apply next time",
+            "exited 0",
+            "black and silence ranges",
+            "review-notes.md",
         ],
         STACK["agent"],
         failures,
@@ -167,19 +175,56 @@ def check_agent_and_skill(failures: list[str]) -> None:
     require_terms(
         skill,
         [
-            "Parakeet timestamp transcript",
-            "HyperFrames",
-            "FFmpeg",
-            "source URL",
-            "licensed",
+            "Parakeet transcripts",
+            "parakeet_transcribe.py",
+            "edl.py plan",
+            "cuts inside word",
+            "lands in active audio",
+            "check --snapshots",
+            "preview --background",
+            "do not run a standalone lint right before it",
+            "--format mov",
+            "\"kind\": \"evidence\"",
+            "url",
+            "captured",
+            "license",
             "channel-style.md",
             "explicitly asks",
-            "raw footage",
-            "black sections",
+            "immutable",
+            "Resume",
+            "Shorts (only when requested)",
+            "Stop Rule",
         ],
         STACK["skill"],
         failures,
     )
+
+
+def check_style_profile(failures: list[str]) -> None:
+    require_terms(
+        read(STACK["style"]),
+        [
+            "R-NNN",
+            "scope",
+            "source:",
+            "superseded by",
+            "40 active rules",
+            "explicitly asks",
+            "Approved Motion Patterns",
+            "Do not invent brand colors",
+        ],
+        STACK["style"],
+        failures,
+    )
+
+
+def check_helper_tests(failures: list[str]) -> None:
+    """Run the behavioral helper tests; FFmpeg cases self-skip when FFmpeg is absent."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / STACK["tests"])], cwd=ROOT, capture_output=True, text=True, check=False
+    )
+    if result.returncode != 0:
+        failures.append(f"{STACK['tests']} failed:\n{result.stderr[-3000:]}")
 
 
 def check_transcriber(failures: list[str]) -> None:
@@ -195,8 +240,18 @@ def check_transcriber(failures: list[str]) -> None:
             "--backend",
             '"segments"',
             '"words"',
+            "merge_subword_tokens",
+            "chunk_duration",
+            "rel_pos_local_attn",
+            "check_model",
         ],
         STACK["transcriber"],
+        failures,
+    )
+    require_terms(
+        read(STACK["edl"]),
+        ["probe", "silences", "plan", "render", "captions", "qc", "evidence", "license", "refusing to overwrite an input"],
+        STACK["edl"],
         failures,
     )
 
@@ -204,9 +259,9 @@ def check_transcriber(failures: list[str]) -> None:
 def check_acceptance_tests(failures: list[str]) -> None:
     text = read(STACK["acceptance_tests"])
     case_count = text.count("\n## AC-")
-    if case_count < 12:
+    if case_count < 19:
         failures.append(
-            f"{STACK['acceptance_tests']}: expected at least 12 acceptance cases, found {case_count}"
+            f"{STACK['acceptance_tests']}: expected at least 19 acceptance cases, found {case_count}"
         )
     require_terms(
         text,
@@ -219,6 +274,13 @@ def check_acceptance_tests(failures: list[str]) -> None:
             "Licensed Audio Boundary",
             "Feedback Persistence Requires Explicit Intent",
             "Final QC Is Truthful",
+            "Unattended Runs Respect Gates",
+            "Feedback Maps Through The Render's Timeline",
+            "Captions Follow The Cut",
+            "Mixed Sources Render Consistently",
+            "Style Profile Stays Maintainable",
+            "Shorts Are Opt-In",
+            "Interrupted Work Resumes",
         ],
         STACK["acceptance_tests"],
         failures,
@@ -236,7 +298,9 @@ def main() -> int:
             check_native_skill(failures)
             check_agent_and_skill(failures)
             check_transcriber(failures)
+            check_style_profile(failures)
             check_acceptance_tests(failures)
+            check_helper_tests(failures)
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
             failures.append(str(exc))
 
@@ -253,7 +317,9 @@ def main() -> int:
     print("PASS: Claude and repository routing")
     print("PASS: native /youtube-edit skill contract")
     print("PASS: Parakeet, HyperFrames, FFmpeg, evidence, licensing, and style-learning invariants")
-    print("PASS: timestamped Parakeet helper contract")
+    print("PASS: timestamped Parakeet helper and EDL helper contracts")
+    print("PASS: channel-style rule format and pruning contract")
+    print("PASS: behavioral helper tests (tools/video/test_video_tools.py)")
     print("PASS: acceptance-test coverage")
     print("\nResult: PASS")
     return 0
