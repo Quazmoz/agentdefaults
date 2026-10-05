@@ -25,6 +25,20 @@ For engineering tasks, use `ENGINEERING_AGENTS_INDEX.md` and select exactly one 
 
 Preserve specialist routing from `ENGINEERING_AGENTS_INDEX.md`, including `agents/github-actions-engineer.md`, `agents/devsecops-security-engineer.md`, `agents/devops-documentation-engineer.md`, `agents/codebase-maintenance-engineer.md`, `agents/mobile-release-automation-engineer.md`, `agents/agent-architect-builder.md`, and `agents/automation-platform-selection-advisor.md`.
 
+## Creative Routing
+
+For local file-based YouTube editing, route to:
+
+```text
+agents/claude-code-video-editor-agent.md
++ skills/claude-code-video-editing.md
++ config/video-editing/channel-style.md
+```
+
+The native Claude Code entrypoint is `/youtube-edit`, defined by `.claude/skills/youtube-edit/SKILL.md`. Use [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) for setup and workflow details.
+
+Do not route Palmier timeline work through this local stack. Palmier project/timeline editing remains owned by `agents/palmierpro-mcp-video-editor-agent.md` and its Palmier skills.
+
 ## Claude Code Working Rules
 
 - Treat `@AGENTS.md` as the shared repository instruction import, not as a cue to copy its text into this file.
