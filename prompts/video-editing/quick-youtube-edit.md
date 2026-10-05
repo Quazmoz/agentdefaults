@@ -26,7 +26,7 @@ WORKFLOW
 4. Build a transcript-driven story/edit plan before cutting.
 5. Create a reproducible rough cut with FFmpeg.
 6. When I make externally verifiable claims, use available browser tooling to capture primary-source proof/b-roll and record the source URL in work/source-manifest.md.
-7. Use HyperFrames for meaningful motion graphics. Preview, lint, and check before final graphics renders.
+7. Use HyperFrames for meaningful motion graphics. Lint during authoring; for the final gate run `check --snapshots`, inspect those snapshots, then open the final Studio preview. Satisfy the active HyperFrames review/approval requirement before rendering graphics.
 8. Use Tella only if it is actually connected and useful for a Tella-native source.
 9. Use music/SFX only from a licensed source I have access to. Keep sound design restrained.
 10. Assemble and QC the review render with FFmpeg/ffprobe plus targeted playback review.
