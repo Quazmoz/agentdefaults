@@ -1,5 +1,9 @@
 # Claude Code Local Video Editing Quickstart
 
+## Purpose
+
+Provide the operator setup and invocation path for the AgentDefaults local Claude Code YouTube editing stack.
+
 ## Goal
 
 Edit a local YouTube recording with Claude Code using the same role-based pattern demonstrated in Christian Peverelli's Claude Code editing workflow:
