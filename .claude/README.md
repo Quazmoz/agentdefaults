@@ -23,7 +23,14 @@ The files in `.claude/` configure **Claude Code runtime behavior**. They do not 
 .claude/settings.json
 .claude/helpers/graft-hooks.cjs
 .claude/helpers/graft-statusline.cjs
+.claude/skills/youtube-edit/SKILL.md
 ```
+
+### `skills/youtube-edit/SKILL.md`
+
+Defines the native Claude Code `/youtube-edit` entrypoint for local file-based video editing. It is a thin router to the canonical video-editor agent/skill and mutable channel-style profile; it does not duplicate the full workflow.
+
+Use [`../docs/quickstarts/claude-video-editing.md`](../docs/quickstarts/claude-video-editing.md) for setup, Parakeet/HyperFrames requirements, feedback learning, and QC.
 
 ### `settings.json`
 
