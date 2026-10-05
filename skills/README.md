@@ -181,6 +181,16 @@ Load setup/safety plus only the editing capabilities needed for the requested wo
 
 Operator guide: [`../docs/quickstarts/palmierpro-mcp.md`](../docs/quickstarts/palmierpro-mcp.md)
 
+### Claude Code local video editing
+
+- [`claude-code-video-editing.md`](claude-code-video-editing.md)
+
+Use it with [`../agents/claude-code-video-editor-agent.md`](../agents/claude-code-video-editor-agent.md) for local file-based YouTube editing coordinated by Claude Code. The native Claude skill is [`../.claude/skills/youtube-edit/SKILL.md`](../.claude/skills/youtube-edit/SKILL.md), and reusable channel taste lives in [`../config/video-editing/channel-style.md`](../config/video-editing/channel-style.md).
+
+This stack is separate from Palmier: route Palmier timeline work to the Palmier MCP stack; route raw/local file editing with Parakeet, HyperFrames, browser evidence, and FFmpeg here.
+
+Operator guide: [`../docs/quickstarts/claude-video-editing.md`](../docs/quickstarts/claude-video-editing.md)
+
 ### Wear OS and travel
 
 - [`wearos-screen-edge-safety.md`](wearos-screen-edge-safety.md): Wear OS UI edge/safe-layout behavior.
