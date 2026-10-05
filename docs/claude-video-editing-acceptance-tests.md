@@ -28,9 +28,17 @@ Given a narration claim about a release, benchmark, paper, repository, or produc
 
 Fail if the editor fabricates an announcement screenshot or substitutes unrelated generic imagery as proof.
 
-## AC-06: HyperFrames Validation Runs
+## AC-06: HyperFrames Validation And Review Gate
 
-Given generated motion graphics, `npx hyperframes lint` and `npx hyperframes check` pass or the remaining failure is reported before final render.
+Given generated motion graphics:
+
+- use `lint` during authoring when useful
+- run `npx hyperframes check --snapshots` as the final automated gate
+- inspect generated snapshots
+- open the final Studio preview
+- satisfy the active HyperFrames review/approval requirement before render
+
+Fail if the editor redundantly treats standalone `lint` plus `check` as two required final gates, skips snapshot inspection, or renders before required final review.
 
 ## AC-07: UI/Code Remains Readable
 
