@@ -58,11 +58,13 @@ def _transcribe_mlx(audio: Path, model_name: str) -> dict[str, Any]:
     words = []
     for sentence in getattr(result, "sentences", []):
         segment = _normalize_mlx_item(sentence)
-        segment.pop("confidence", None) if segment["confidence"] is None else None
+        if segment["confidence"] is None:
+            segment.pop("confidence")
         segments.append(segment)
         for token in getattr(sentence, "tokens", []):
             word = _normalize_mlx_item(token)
-            word.pop("confidence", None) if word["confidence"] is None else None
+            if word["confidence"] is None:
+                word.pop("confidence")
             words.append(word)
 
     return {
