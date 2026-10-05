@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Explain repository-owned runtime configuration under `config/`. Configuration files set bounded control-plane defaults; they do not replace canonical agent/skill contracts or grant runtime authority.
+Explain repository-owned runtime configuration under `config/`. Configuration files set bounded control-plane defaults or mutable non-authoritative preference profiles; they do not replace canonical agent/skill contracts or grant runtime authority.
 
 ## Current Configuration
 
@@ -10,9 +10,12 @@ The directory currently contains:
 
 ```text
 bounded-completion.json
+video-editing/channel-style.md
 ```
 
-It configures default behavior for the persisted Bounded Completion control plane implemented by `scripts/bounded-completion.py`.
+`bounded-completion.json` configures default behavior for the persisted Bounded Completion control plane implemented by `scripts/bounded-completion.py`.
+
+`video-editing/channel-style.md` stores reusable creative preferences for the Claude Code local video-editing stack. It is intentionally mutable, but it cannot override the canonical video-editor safety, truthfulness, licensing, or authority boundaries.
 
 Operator guides:
 
@@ -50,6 +53,17 @@ Task-specific overrides may only tighten limits where the control plane permits 
 Preferred model labels are human/operator routing hints. They are **not qualified provider model identifiers** and are not proof that a runtime used that model.
 
 Distinct-model evidence counts only when the operator or runtime actually confirms reviewer identity according to the control-plane contract.
+
+## `video-editing/channel-style.md`
+
+This profile holds durable pacing, graphics, b-roll, caption, and sound preferences learned from explicit user feedback. Ordinary one-off review notes should affect the current edit only. Persist them here only when the user explicitly asks to learn, save, remember, or reuse the preference.
+
+The canonical behavior remains:
+
+```text
+agents/claude-code-video-editor-agent.md
+skills/claude-code-video-editing.md
+```
 
 ## Editing Rules
 
