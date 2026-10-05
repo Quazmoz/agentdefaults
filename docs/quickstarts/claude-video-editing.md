@@ -23,7 +23,7 @@ Core:
 - Claude Code with local project/file access
 - Node.js 22+
 - FFmpeg / ffprobe
-- Python environment capable of running NVIDIA NeMo ASR / Parakeet
+- Python environment capable of running a supported Parakeet backend (MLX on Apple Silicon or NeMo elsewhere)
 - enough disk space for intermediate renders
 
 Verify:
@@ -117,16 +117,28 @@ Make this a tight 6-8 minute technical YouTube video. Keep the real app/demo foo
 
 ## 5. HyperFrames review loop
 
-Inside each HyperFrames project:
+Inside each HyperFrames project, use lint while iterating, then the final gate/review flow:
 
 ```bash
-npx hyperframes preview
+# Fast iteration check after the first pass and structural edits
 npx hyperframes lint
-npx hyperframes check
-npx hyperframes render --output ../../renders/graphics-section.mp4
+
+# Final automated gate; includes lint
+npx hyperframes check --snapshots
+
+# Inspect the generated snapshots, then review the final Studio project
+npx hyperframes preview --background
 ```
 
-Do not skip `check` on final graphics.
+Do not run a redundant `lint` immediately before `check`. After the final Studio preview has received the approval required by the installed HyperFrames review workflow, render:
+
+```bash
+npx hyperframes render --quality looks --output ../../renders/graphics-section.mp4
+test -s ../../renders/graphics-section.mp4
+ffprobe -v error -show_format -show_streams ../../renders/graphics-section.mp4
+```
+
+Use `--quality delivery` for the final delivery encode when appropriate. Treat the installed HyperFrames skill as runtime truth if its CLI/review contract changes.
 
 ## 6. Optional integrations
 
