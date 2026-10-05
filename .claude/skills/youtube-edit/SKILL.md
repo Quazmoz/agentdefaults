@@ -30,10 +30,11 @@ When the user runs `/youtube-edit`:
 5. build a transcript-driven edit plan
 6. rough cut with FFmpeg
 7. use primary-source browser b-roll only where it adds real proof/context
-8. use HyperFrames for motion graphics and validate with lint/check
-9. use Tella/Epidemic Sound only if connected and appropriate
-10. finish/QC with FFmpeg and targeted playback review
-11. return the review render and concise notes
+8. use HyperFrames for motion graphics: lint during authoring, run `check --snapshots` as the final gate, inspect snapshots, then open the final Studio preview
+9. satisfy the active HyperFrames review/approval requirement before rendering those graphics
+10. use Tella/Epidemic Sound only if connected and appropriate
+11. finish/QC with FFmpeg and targeted playback review
+12. return the review render and concise notes
 
 Do not merely write an editing plan when the user asked for an edit and the required local tools/files are available.
 
