@@ -67,6 +67,7 @@ Then choose what you are trying to do:
 | Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Route principal/specialist engineering work | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
 | Build or release Wear OS software | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
+| Edit local YouTube footage with Claude Code | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
 | Browse every featured stack | [`INDEX.md`](INDEX.md) |
 
 ## Mental Model
@@ -211,6 +212,7 @@ This table is a routing map, not a preload list. Load the smallest coherent stac
 | Google Play Growth | ASO, conversion, quality, web/entity and growth experiments | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
 | Mobile Release and Monetization Automation | Play releases and tracks, RevenueCat products/entitlements/offerings, AdMob apps and ad units | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) |
 | Palmier Pro MCP | Agent-driven video editing through Palmier Pro MCP | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
+| Claude Code Local Video Editing | File-based YouTube editing with Parakeet, HyperFrames, evidence-backed browser b-roll, and FFmpeg | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
 | Wear OS Development / Release | Wear OS implementation and Play readiness | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
 | Token Economy | Context/output/token-cost reduction and measurement | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | US-Europe Travel Prep | Current-source travel preparation | [`TRAVEL_INDEX.md`](TRAVEL_INDEX.md) |
