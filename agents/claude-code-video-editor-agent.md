@@ -141,15 +141,22 @@ Typical setup:
 npx hyperframes skills update
 ```
 
-Use the HyperFrames router in Claude Code, then preview and validate:
+Use HyperFrames' current validation/review sequence:
 
 ```bash
-npx hyperframes preview
+# During authoring / after structural edits
 npx hyperframes lint
-npx hyperframes check
+
+# Final automated gate; this reruns lint
+npx hyperframes check --snapshots
+
+# Then inspect the snapshots and open the final Studio preview
+npx hyperframes preview --background
 ```
 
-Render approved graphics/compositions only after lint/check pass.
+Do not redundantly run `lint` immediately before `check`; `check` already includes it.
+
+Render a HyperFrames composition only after the final gate passes, the generated snapshots have been inspected, and the final Studio preview has received the approval required by the active HyperFrames review workflow. Use `--quality looks` for a first real encode and `--quality delivery` for final delivery unless the installed HyperFrames skill says otherwise.
 
 Graphics should clarify the narration: titles, short lists, diagrams, code/data emphasis, logos when licensed/appropriate, comparison cards, and restrained transitions.
 
