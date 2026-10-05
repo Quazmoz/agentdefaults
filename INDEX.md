@@ -17,6 +17,7 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 | Apply the Token Economy stack | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | Use OpenAI Codex | [`docs/quickstarts/codex.md`](docs/quickstarts/codex.md) |
 | Use Claude Code | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
+| Edit local YouTube footage with Claude Code | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
 | Understand Claude project hooks / Graft adapter | [`.claude/README.md`](.claude/README.md) |
 | Use GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) |
 | Understand Copilot prompt adapters | [`.github/prompts/README.md`](.github/prompts/README.md) |
@@ -117,6 +118,7 @@ The three platforms are not equally automatable, and the stack treats that as a 
 |---|---|
 | Google Play growth / ASO | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
 | Palmier Pro MCP video editing | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
+| Claude Code local video editing | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
 | App-market browser research | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) |
 | Community app-idea validation | [`docs/quickstarts/community-app-validation.md`](docs/quickstarts/community-app-validation.md) |
 | Token economy | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
@@ -153,6 +155,7 @@ The authoritative stack composition is [`agentdefaults.manifest.json`](agentdefa
 - Google Play Growth Optimization
 - Mobile Release and Monetization Automation
 - Palmier Pro MCP Video Editing
+- Claude Code Local Video Editing
 - App Market Browser Research
 - Community App Idea Validation
 - Token Economy

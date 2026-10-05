@@ -37,6 +37,12 @@ Do not copy the contents of `AGENTS.md` or canonical agents into `CLAUDE.md`.
 
 Use `ENGINEERING_AGENTS_INDEX.md` for specialist routing such as Agent Architect and Builder or Automation Platform Selection Advisor.
 
+## Creative / Video Editing
+
+For local file-based YouTube editing, use [`claude-video-editing.md`](claude-video-editing.md) or invoke `/youtube-edit`. That stack coordinates Parakeet timestamp transcription, FFmpeg cutting/finishing, HyperFrames motion graphics, evidence-backed browser b-roll, and optional Tella/licensed audio integrations.
+
+Palmier timeline editing remains a separate stack at [`palmierpro-mcp.md`](palmierpro-mcp.md).
+
 ## Practical Scoped Tasks
 
 ### DevOps-only

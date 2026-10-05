@@ -1,7 +1,7 @@
 {
   "name": "AgentDefaults",
-  "version": "0.19.0",
-  "description": "Reusable defaults for AI agent architecture and construction, bounded two-agent completion, codebase maintenance and de-slop refactoring, combined and scoped production AI/DevOps engineering, GitHub Actions engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
+  "version": "0.20.0",
+  "description": "Reusable defaults for AI agent architecture and construction, bounded two-agent completion, codebase maintenance and de-slop refactoring, combined and scoped production AI/DevOps engineering, GitHub Actions engineering, Kubernetes homelab engineering, DevSecOps security engineering, evidence-backed DevOps documentation-as-code, skills, prompts, wrappers, examples, automation platform selection, browser research, app growth, Palmier Pro and local Claude Code YouTube video editing, Wear OS development and release, travel prep, MCP workflows, and benchmark artifacts.",
   "primary_entrypoint": "AGENTS.md",
   "validation": "scripts/validate-agentdefaults.py",
   "featured_stacks": [
@@ -240,6 +240,19 @@
       ],
       "example": "examples/palmierpro-mcp-workflow.md",
       "acceptance_tests": "docs/palmierpro-mcp-acceptance-tests.md"
+    },
+    {
+      "name": "Claude Code Local Video Editing",
+      "quickstart": "docs/quickstarts/claude-video-editing.md",
+      "agent": "agents/claude-code-video-editor-agent.md",
+      "skills": [
+        "skills/claude-code-video-editing.md"
+      ],
+      "prompts": [
+        "prompts/video-editing/quick-youtube-edit.md"
+      ],
+      "acceptance_tests": "docs/claude-video-editing-acceptance-tests.md",
+      "wrapper": ".claude/skills/youtube-edit/SKILL.md"
     },
     {
       "name": "App Market Browser Research",

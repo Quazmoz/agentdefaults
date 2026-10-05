@@ -31,6 +31,7 @@ validate-documentation-stack.py
 validate-devsecops-security-stack.py
 validate-github-actions-stack.py
 validate-codebase-maintenance-stack.py
+validate-claude-video-editing-stack.py
 validate-bounded-completion.py
 ```
 
@@ -39,6 +40,8 @@ Use the relevant component while iterating, then run `validate-agentdefaults.py`
 `validate-ponytail-graft.py` checks the repository-local Ponytail + Graft installer contract: exact sidecar pins, compatibility-prompt routing, hardening requirements, the repo-local Graft runtime-health gate, bounded dependency repair, and rejection of canonical global/floating install paths.
 
 `validate-github-actions-stack.py` checks the GitHub Actions specialist's manifest registration, authority/trust schema, canonical agent/skill/prompt/example/acceptance invariants, cross-tool routing, Copilot adapter references, and inclusion in the primary validation suite.
+
+`validate-claude-video-editing-stack.py` checks the local Claude Code video-editing stack's manifest/routing, native `/youtube-edit` skill, Parakeet timestamp helper, HyperFrames/FFmpeg/evidence/licensing/style-learning invariants, and acceptance-test coverage.
 
 A repository-level validator does not replace build/lint/type/test/e2e/security checks or actual GitHub Actions runtime qualification in a target repository being operated by one of the agents.
 
@@ -155,5 +158,12 @@ Bounded-completion control-plane changes should run:
 
 ```bash
 python3 scripts/validate-bounded-completion.py
+python3 scripts/validate-agentdefaults.py
+```
+
+Claude Code local video-editing stack changes should run:
+
+```bash
+python3 scripts/validate-claude-video-editing-stack.py
 python3 scripts/validate-agentdefaults.py
 ```
