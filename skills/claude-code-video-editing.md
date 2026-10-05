@@ -78,16 +78,18 @@ Do not commit private raw footage unless the user explicitly wants it versioned.
 
 Use HyperFrames for meaningful editorial graphics, not filler.
 
-Before final render:
+During authoring, use `npx hyperframes lint` for fast static feedback after the first HTML pass and structural changes.
+
+For the final graphics gate:
 
 ```bash
-npx hyperframes lint
-npx hyperframes check
+npx hyperframes check --snapshots
+npx hyperframes preview --background
 ```
 
-Preview targeted changes instead of repeatedly rendering the entire finished video when a partial/isolated render is sufficient.
+`check` reruns lint, so do not chain a redundant standalone `lint` immediately before it. Inspect the generated overview/finding snapshots, then review the final Studio project. Render only after the review/approval requirement defined by the installed HyperFrames skill is satisfied.
 
-Use the current HyperFrames skill router and CLI semantics as runtime truth.
+Use the current HyperFrames skill router and CLI semantics as runtime truth. Prefer its current quality names (for example `looks` for a first real encode and `delivery` for final delivery) over stale examples.
 
 ## Evidence B-roll Rules
 
