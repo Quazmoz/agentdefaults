@@ -1,5 +1,11 @@
 # Claude Code Quick YouTube Edit Prompt
 
+## Purpose
+
+Provide a copy-paste invocation for a bounded first-pass local YouTube edit using the canonical Claude Code video-editing stack.
+
+## Prompt
+
 ```text
 Use the AgentDefaults Claude Code local video-editing stack:
 
