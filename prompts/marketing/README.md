@@ -19,7 +19,17 @@ For a promo that demonstrates how someone actually uses the app, copy [`app-prom
 
 The companion also requires a deliberate visual treatment, kinetic typography, layered device/graphic compositions, connected transitions, and a composed or appropriately licensed soundtrack arranged around the edit. It includes Reddit and YouTube references and a timed study of supplied local reference footage, with portrait adaptation, a continuous visual motif, contrast between chapters, readable motion holds, and waveform-checked music cues. HyperFrames is an optional render tool alongside the other supported approaches. It defaults to 60 fps and requires visual/musical preview and QC. Music is required unless the user explicitly requests silence; an unavailable soundtrack is a partial/blocked result.
 
-On the marketing side, it requires a message strategy built around one outcome-led promise and three hook lines. Frame 0 must be readable, the brand must appear by about 5 s, and the end card must make the CTA clear. The film is checked against platform safe zones, and music rights must cover paid ads. Besides the master, it delivers two alternate-hook variants, a 15 s cutdown, a poster that reads in a 3:4 crop, and a `COPY.md` of claim-traced post captions. Each variant must pass a muted scroll test.
+On the marketing side, it requires a message strategy built around one outcome-led promise and three hook lines, with one selected for production and two retained as copy alternatives. Frame 0 must be readable, the brand must appear by about 5 s, and the end card must make the CTA clear. The film is checked against platform safe zones, and music rights must cover paid ads. By default it delivers exactly one final MP4, a poster that reads in a 3:4 crop, and a `COPY.md` of claim-traced post captions. Additional videos require an explicit request: hook variants need different messages and opening visuals, cutdowns need a real 15 s edit, and multiple creative videos need different featured workflows/benefits and scene sequences. Every delivered video must pass a muted scroll test; multiple videos also require decoded-frame comparisons and duration checks so duplicate exports cannot count as variants.
+
+Regression cases for agent runs using the real-usage prompt:
+
+| Request or observed output | Required outcome |
+|---|---|
+| Prompt used without a video-count override | Exactly one final MP4 in `out/`; two unused hook ideas remain copy only. |
+| Master plus two hook variants and a 15 s cutdown explicitly requested | Four final MP4s; each hook changes its message and opening visuals; the cutdown is a separately edited 15 s story retaining the action, result, and ending. |
+| Four different promo videos requested | Four creative edits with different hooks, featured workflows/benefits, and scene sequences. |
+| Four exports show the same visuals despite different filenames, encodings, metadata, or music | Duplicate edits fail QC and cannot count toward delivery. |
+| Requested differences cannot be produced within the budget | Preserve passing unique edits and report partial delivery with the missing count and reason. |
 
 Notes:
 
