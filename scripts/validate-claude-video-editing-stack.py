@@ -186,8 +186,11 @@ def check_transcriber(failures: list[str]) -> None:
         text,
         [
             "nvidia/parakeet-tdt-0.6b-v3",
+            "mlx-community/parakeet-tdt-0.6b-v3",
+            "parakeet_mlx",
             "nemo.collections.asr",
             "timestamps=True",
+            "--backend",
             '"segments"',
             '"words"',
         ],
