@@ -95,6 +95,7 @@ class ConfirmationGateTest(unittest.TestCase):
         ["play", "publish", "--package", "com.example.app", "--aab", "app.aab"],
         ["play", "promote", "--package", "com.example.app", "--source", "internal", "--target", "production"],
         ["play", "create-subscription", "--package", "com.example.app", "--product-id", "p", "--body", "b.json"],
+        ["play", "pricing-apply", "--package", "com.example.app", "--plan-id", "0" * 64],
         ["admob", "create-app", "--name", "Example"],
         ["admob", "create-adunit", "--app-id", "ca-app-pub-1~2", "--name", "n", "--format", "BANNER"],
         ["rc", "create-play-app", "--project", "proj_1", "--name", "Example"],
