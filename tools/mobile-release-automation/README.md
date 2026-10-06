@@ -332,6 +332,7 @@ MRA currently automates:
 - staged rollout fractions
 - release notes
 - subscriptions and one-time products
+- approval-bound localized one-time-product pricing plans
 - localized store listings
 - screenshots/images
 - Google Group tester configuration
@@ -341,6 +342,24 @@ MRA currently automates:
 
 Read-only operations discard their temporary edit. Dry-run edit mutations are
 validated and discarded. A committed public-facing change is approval-gated.
+
+## Localized one-time-product pricing
+
+MRA 1.8.0 adds a deterministic pricing-plan workflow for modern Google Play `OneTimeProduct` purchase options. Planning reads live Play state and uses Google's `convertRegionPrices` calculation endpoint; it does not mutate catalog state. The resulting plan is persisted and content-addressed by `plan_id`.
+
+```bash
+mra play pricing-plan --profile medtick \\
+  --product-id <product-id> \\
+  --purchase-option-id <purchase-option-id>
+```
+
+A live apply accepts only that persisted plan id:
+
+```bash
+mra --yes play pricing-apply --profile medtick --plan-id <approved-plan-id>
+```
+
+The apply path additionally invokes the native human approval dialog, rejects product or Play region-version drift, and re-reads the product after mutation. It reports success only when every approved regional price matches live Play state. See [`skills/google-play-localized-pricing.md`](../../skills/google-play-localized-pricing.md).
 
 ## Play analytics and reporting freshness
 
@@ -581,7 +600,7 @@ restricting direct agent access to those facilities.
 
 ## Legacy compatibility
 
-MRA 1.7.0 keeps old RevenueCat key-reference fields parseable so upgrading does
+MRA 1.8.0 keeps old RevenueCat key-reference fields parseable so upgrading does
 not break an existing local profile file. Those fields are ignored by active
 RevenueCat authentication. The official RevenueCat CLI OAuth session is now the
 only supported agent authentication path.
