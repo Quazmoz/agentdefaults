@@ -8,6 +8,8 @@ Sequence work across Google Play, RevenueCat, and AdMob so that dependent object
 
 Load this skill when a task touches release upload, track promotion, monetization configuration, or ad inventory on any of the three platforms, including tasks that touch only one of them.
 
+For Google Play regional price planning or mutation, also load `skills/google-play-localized-pricing.md`. Regional pricing is an approval-bound financial mutation, not a generic catalog edit.
+
 ## Required Inputs
 
 ```text
@@ -70,6 +72,8 @@ For a new app, a new track, or a newly granted credential, use a supported dry-r
 ### 5. Classify and authorize each mutation
 
 State the action, its resolved target, its permission class, and its blast radius. Obtain approval for that exact action. An approval for the internal track does not cover closed testing, and an approval to create a product does not cover activating an offer.
+
+For localized pricing, the approval target is the persisted `plan_id` plus its app/product/purchase-option scope. Never translate approval of one plan into a regenerated plan or another app. If the plan becomes stale, regenerate it and obtain fresh approval.
 
 ### 6. Execute one coherent change at a time
 
