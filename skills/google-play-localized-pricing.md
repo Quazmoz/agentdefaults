@@ -95,6 +95,8 @@ Approval must name every app being changed. If the operator approves only a subs
 
 MedTick was the first production pilot for this workflow. That pilot established the plan -> exact approval -> apply -> read-back pattern; it is historical evidence, not a permanent scope restriction.
 
+Do not mutate Play until the operator has explicitly approved the exact app + `plan_id` pair being applied.
+
 For every future app or batch:
 
 - do not assume package name, product ID, purchase-option ID, or current price from documentation or memory when live Play state can establish them;
