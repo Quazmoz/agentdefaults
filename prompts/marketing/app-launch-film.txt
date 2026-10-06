@@ -87,8 +87,8 @@ Mix:
 - Master to about −14 LUFS integrated with true peak ≤ −1 dBTP; measure the WAV master and the encoded AAC. Deliver a 48 kHz stereo WAV master plus voice, music, and SFX stems.
 
 PHASE 4 — RENDER PIPELINE
-- Serve the film as a local web page that exposes render(t). Capture it with Playwright (headless Chromium with GPU acceleration; confirm the GPU is actually active, since software WebGL is slow and can differ) at 4× the output rate (240 fps), split by frame range across parallel workers (default 4; match the machine).
-- Motion blur in FFmpeg: blend 3 consecutive sub-frames (tmix=frames=3, about a 270° shutter) and keep every 4th (framestep=4) down to 60 fps. Text in holds must stay crisp.
+- Serve the film as a local web page that exposes render(t). Capture it with Playwright (headless Chromium with GPU acceleration; confirm the GPU is actually active, since software WebGL is slow and can differ) at the output rate, 60 fps at most (one capture per output frame, no supersampling), split by frame range across parallel workers (default 4; match the machine).
+- No sub-frame motion blur. If a fast move needs blur, draw it inside render(t) on the moving shape (a short directional blur scaled by its velocity), never on text or UI the viewer is reading. Text in holds must stay crisp.
 - Encode H.264 High, yuv420p, BT.709, CRF 16, constant 60 fps, +faststart, AAC 48 kHz stereo, muxed with the master.
 - When a change touches one scene, re-render only that time range plus a short margin and splice it at frame-exact boundaries, then run full QC on the joined file.
 - One-line commands for: render the full film, render a time range, render stills at named timestamps, rebuild the audio mix.
