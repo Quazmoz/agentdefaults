@@ -101,8 +101,9 @@ For every future app or batch:
 
 - do not assume package name, product ID, purchase-option ID, or current price from documentation or memory when live Play state can establish them;
 - generate an independent persisted plan per app/product;
-- inspect enough app billing source/documentation to confirm the UI presents Google Play's localized price for the same product/purchase option used at checkout;
-- if the app can display a misleading hardcoded/stale/mismatched price, block the store-price rollout for that app until the code path is corrected under separate authorization;
+- inspect enough app billing source/documentation to determine whether the UI presents Google Play's localized price for the same product/purchase option used at checkout;
+- treat hardcoded/stale/mismatched app-side price display as a `PRICING_UI_WARNING` to remediate separately; it does not by itself block a store-side pricing plan when the live Play package/product/purchase option are safely and uniquely resolved;
+- block pricing only when live Play target identity or supported catalog state cannot be established safely enough to guarantee the intended product would be changed;
 - end the planning session at the approval boundary;
 - apply only exact app + plan_id pairs explicitly approved by the operator.
 
