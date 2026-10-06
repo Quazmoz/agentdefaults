@@ -409,6 +409,14 @@ class PlayClient:
             "/oneTimeProducts", "oneTimeProducts", "list one-time products"
         )
 
+    def get_one_time_product(self, product_id: str) -> dict:
+        """Read one modern OneTimeProduct, including purchase-option regional prices."""
+        return self._request(
+            "GET",
+            f"/oneTimeProducts/{product_id}",
+            f"get one-time product {product_id}",
+        )
+
     def set_purchase_option_active(
         self,
         product_id: str,
