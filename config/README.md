@@ -56,7 +56,7 @@ Distinct-model evidence counts only when the operator or runtime actually confir
 
 ## `video-editing/channel-style.md`
 
-This profile holds durable pacing, graphics, b-roll, caption, and sound preferences learned from explicit user feedback. Ordinary one-off review notes should affect the current edit only. Persist them here only when the user explicitly asks to learn, save, remember, or reuse the preference.
+This profile holds durable pacing, graphics, b-roll, caption, and sound preferences learned from explicit user feedback. Ordinary one-off review notes should affect the current edit only. Persist them here only when the user explicitly asks to learn, save, remember, or reuse the preference. Learned rules carry an ID, scope, and provenance. They are refined or superseded rather than duplicated, and capped at 40 active rules.
 
 The canonical behavior remains:
 

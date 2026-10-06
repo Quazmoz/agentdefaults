@@ -1,30 +1,49 @@
 #!/usr/bin/env python3
-"""Transcribe one audio file with NVIDIA Parakeet and emit normalized timestamp JSON."""
+"""Transcribe one audio/video file with NVIDIA Parakeet and emit normalized timestamp JSON.
+
+Output (schema 2), times in seconds relative to the start of the input file:
+
+    {"schema": 2, "backend", "model", "audio", "duration", "text",
+     "segments": [{"text", "start", "end", "confidence"?}],
+     "words":    [{"text", "start", "end", "confidence"?}]}
+
+`words` are real words for both backends: parakeet-mlx returns SentencePiece
+subword tokens, which are merged here on their leading-space word marker.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
+import shutil
+import subprocess
+import sys
+import tempfile
+import wave
 from pathlib import Path
 from typing import Any
 
 NEMO_MODEL = "nvidia/parakeet-tdt-0.6b-v3"
 MLX_MODEL = "mlx-community/parakeet-tdt-0.6b-v3"
+# Model card: full attention handles ~24 min (A100 80GB); local attention up to ~3 h.
+NEMO_FULL_ATTENTION_MAX_S = 20 * 60
+MLX_CHUNK_S = 120.0  # parakeet-mlx CLI default; the Python API does not chunk unless asked.
+MLX_OVERLAP_S = 15.0
 
 
-def _plain(value: Any) -> Any:
-    """Convert tensor/numpy scalar-like values into JSON-safe Python values."""
-    if isinstance(value, dict):
-        return {str(k): _plain(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_plain(v) for v in value]
+def _num(value: Any) -> float:
     if hasattr(value, "item"):
-        try:
-            return value.item()
-        except (ValueError, TypeError):
-            pass
-    return value
+        value = value.item()
+    return round(float(value or 0.0), 3)
+
+
+def _item(text: str, start: Any, end: Any, confidence: Any = None) -> dict[str, Any]:
+    out: dict[str, Any] = {"text": text.strip(), "start": _num(start), "end": _num(end)}
+    if confidence is not None:
+        out["confidence"] = round(float(confidence), 3)
+    return out
 
 
 def _auto_backend() -> str:
@@ -33,130 +52,153 @@ def _auto_backend() -> str:
     return "nemo"
 
 
-def _normalize_mlx_item(item: Any) -> dict[str, Any]:
+def merge_subword_tokens(tokens: list[Any]) -> list[dict[str, Any]]:
+    """Merge parakeet-mlx AlignedTokens (leading space starts a word) into words."""
+    words: list[dict[str, Any]] = []
+    for token in tokens:
+        text = str(getattr(token, "text", ""))
+        confidence = getattr(token, "confidence", None)
+        if not text.strip():
+            continue
+        if words and not text[0].isspace():
+            word = words[-1]
+            word["text"] += text
+            word["end"] = _num(getattr(token, "end", word["end"]))
+            if confidence is not None and "confidence" in word:
+                word["confidence"] = min(word["confidence"], round(float(confidence), 3))
+            continue
+        words.append(_item(text, getattr(token, "start", 0.0), getattr(token, "end", 0.0), confidence))
+    return words
+
+
+def normalize_mlx(result: Any) -> dict[str, Any]:
+    segments, words = [], []
+    for sentence in getattr(result, "sentences", None) or []:
+        segments.append(
+            _item(
+                str(getattr(sentence, "text", "")),
+                getattr(sentence, "start", 0.0),
+                getattr(sentence, "end", 0.0),
+                getattr(sentence, "confidence", None),
+            )
+        )
+        words.extend(merge_subword_tokens(list(getattr(sentence, "tokens", None) or [])))
+    return {"text": str(getattr(result, "text", "") or "").strip(), "segments": segments, "words": words}
+
+
+def _nemo_items(items: Any, text_key: str) -> list[dict[str, Any]]:
+    out = []
+    for raw in items or []:
+        if not isinstance(raw, dict) or "start" not in raw:
+            continue  # offsets-only entries (pre-2.2 NeMo) carry no seconds
+        out.append(_item(str(raw.get(text_key, raw.get("text", ""))), raw["start"], raw.get("end", raw["start"])))
+    return out
+
+
+def normalize_nemo(output: Any) -> dict[str, Any]:
+    # NeMo 2.0/2.1 returned (best, all); beam search can return a list per file.
+    if isinstance(output, tuple):
+        output = output[0]
+    hypothesis = output[0] if isinstance(output, list) else output
+    if isinstance(hypothesis, list):
+        hypothesis = hypothesis[0]
+    stamps = getattr(hypothesis, "timestamp", None)
+    if not isinstance(stamps, dict):
+        raise SystemExit("NeMo returned no timestamp dict; nemo_toolkit[asr]>=2.2 is required.")
     return {
-        "text": str(getattr(item, "text", "")).strip(),
-        "start": float(getattr(item, "start", 0.0)),
-        "end": float(getattr(item, "end", 0.0)),
-        "duration": float(getattr(item, "duration", 0.0)),
-        "confidence": _plain(getattr(item, "confidence", None)),
+        "text": str(getattr(hypothesis, "text", "") or "").strip(),
+        "segments": _nemo_items(stamps.get("segment"), "segment"),
+        "words": _nemo_items(stamps.get("word"), "word"),
     }
 
 
-def _transcribe_mlx(audio: Path, model_name: str) -> dict[str, Any]:
+def _transcribe_mlx(wav: Path, model_name: str, duration: float) -> dict[str, Any]:
     try:
         from parakeet_mlx import from_pretrained
     except ModuleNotFoundError as exc:
         raise SystemExit(
-            "Parakeet MLX is not installed. On Apple Silicon run: "
-            "python -m pip install -U parakeet-mlx"
+            "Parakeet MLX is not installed. On Apple Silicon run: python -m pip install -U 'parakeet-mlx>=0.5'"
         ) from exc
-
     model = from_pretrained(model_name)
-    result = model.transcribe(str(audio))
-    segments = []
-    words = []
-    for sentence in getattr(result, "sentences", []):
-        segment = _normalize_mlx_item(sentence)
-        if segment["confidence"] is None:
-            segment.pop("confidence")
-        segments.append(segment)
-        for token in getattr(sentence, "tokens", []):
-            word = _normalize_mlx_item(token)
-            if word["confidence"] is None:
-                word.pop("confidence")
-            words.append(word)
-
-    return {
-        "backend": "mlx",
-        "model": model_name,
-        "audio": str(audio),
-        "text": getattr(result, "text", ""),
-        "segments": segments,
-        "words": words,
-    }
+    kwargs: dict[str, Any] = {}
+    if duration > MLX_CHUNK_S:
+        kwargs = {"chunk_duration": MLX_CHUNK_S, "overlap_duration": MLX_OVERLAP_S}
+    return normalize_mlx(model.transcribe(str(wav), **kwargs))
 
 
-def _normalize_nemo_items(items: list[Any], text_key: str) -> list[dict[str, Any]]:
-    normalized: list[dict[str, Any]] = []
-    for raw in items:
-        item = _plain(raw)
-        if not isinstance(item, dict):
-            continue
-        start = float(item.get("start", 0.0))
-        end = float(item.get("end", start))
-        normalized.append(
-            {
-                "text": str(item.get(text_key, item.get("text", ""))).strip(),
-                "start": start,
-                "end": end,
-                "duration": max(0.0, end - start),
-            }
-        )
-    return normalized
-
-
-def _transcribe_nemo(audio: Path, model_name: str) -> dict[str, Any]:
+def _transcribe_nemo(wav: Path, model_name: str, duration: float) -> dict[str, Any]:
     try:
         import nemo.collections.asr as nemo_asr
     except ModuleNotFoundError as exc:
         raise SystemExit(
-            'NeMo ASR is not installed. Create a video venv and run: '
-            'python -m pip install "nemo_toolkit[asr]"'
+            'NeMo ASR is not installed. Create a video venv and run: python -m pip install "nemo_toolkit[asr]>=2.2"'
         ) from exc
-
     model = nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
-    hypothesis = model.transcribe([str(audio)], timestamps=True)[0]
-    stamps = getattr(hypothesis, "timestamp", {}) or {}
-
-    return {
-        "backend": "nemo",
-        "model": model_name,
-        "audio": str(audio),
-        "text": getattr(hypothesis, "text", ""),
-        "segments": _normalize_nemo_items(stamps.get("segment", []), "segment"),
-        "words": _normalize_nemo_items(stamps.get("word", []), "word"),
-    }
+    if duration > NEMO_FULL_ATTENTION_MAX_S:
+        model.change_attention_model(self_attention_model="rel_pos_local_attn", att_context_size=[256, 256])
+    return normalize_nemo(model.transcribe([str(wav)], timestamps=True))
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Transcribe audio with NVIDIA Parakeet using MLX or NeMo timestamps."
-    )
-    parser.add_argument("audio", type=Path, help="Input audio file (16 kHz mono WAV recommended).")
+def extract_wav(source: Path, wav: Path) -> float:
+    """Decode any ffmpeg-readable input to 16 kHz mono PCM; return its duration in seconds."""
+    if not shutil.which("ffmpeg"):
+        raise SystemExit("ffmpeg is required to extract 16 kHz mono audio (brew install ffmpeg / apt install ffmpeg).")
+    cmd = ["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
+           "-map", "0:a:0", "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", str(wav)]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise SystemExit(f"ffmpeg could not extract an audio stream from {source}:\n{proc.stderr.strip()}")
+    with wave.open(str(wav)) as handle:
+        return handle.getnframes() / handle.getframerate()
+
+
+def check_model(backend: str, model: str) -> None:
+    if backend == "mlx" and model.startswith("nvidia/"):
+        raise SystemExit(f"{model} is a NeMo checkpoint; the MLX backend needs an MLX conversion such as {MLX_MODEL}.")
+    if backend == "nemo" and model.startswith("mlx-community/"):
+        raise SystemExit(f"{model} is an MLX conversion; the NeMo backend needs a NeMo checkpoint such as {NEMO_MODEL}.")
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Transcribe audio/video with NVIDIA Parakeet (MLX or NeMo) to timestamp JSON.")
+    parser.add_argument("audio", type=Path, help="Input media file; audio is extracted to 16 kHz mono with ffmpeg.")
     parser.add_argument("-o", "--output", type=Path, help="Output JSON path; defaults to stdout.")
-    parser.add_argument(
-        "--backend",
-        choices=("auto", "mlx", "nemo"),
-        default="auto",
-        help="Parakeet runtime. auto prefers MLX on Apple Silicon and NeMo elsewhere.",
-    )
-    parser.add_argument(
-        "--model",
-        help="Override the backend's default Parakeet model identifier.",
-    )
-    return parser.parse_args()
+    parser.add_argument("--backend", choices=("auto", "mlx", "nemo"), default="auto",
+                        help="Parakeet runtime. auto prefers MLX on Apple Silicon and NeMo elsewhere.")
+    parser.add_argument("--model", help="Override the backend's default Parakeet model identifier.")
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    args = parse_args()
-
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     if not args.audio.is_file():
-        raise SystemExit(f"Input audio not found: {args.audio}")
-
+        raise SystemExit(f"Input media not found: {args.audio}")
     backend = _auto_backend() if args.backend == "auto" else args.backend
-    if backend == "mlx":
-        result = _transcribe_mlx(args.audio, args.model or MLX_MODEL)
-    else:
-        result = _transcribe_nemo(args.audio, args.model or NEMO_MODEL)
+    model = args.model or (MLX_MODEL if backend == "mlx" else NEMO_MODEL)
+    check_model(backend, model)
 
-    payload = json.dumps(result, ensure_ascii=False, indent=2)
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(payload + "\n", encoding="utf-8")
-    else:
-        print(payload)
+    with tempfile.TemporaryDirectory(prefix="parakeet-") as tmp:
+        wav = Path(tmp) / "audio.wav"
+        duration = extract_wav(args.audio, wav)
+        transcribe = _transcribe_mlx if backend == "mlx" else _transcribe_nemo
+        try:
+            body = transcribe(wav, model, duration)
+        except (RuntimeError, ValueError, MemoryError) as exc:
+            raise SystemExit(f"Parakeet {backend} transcription failed for {args.audio}: {exc}") from exc
 
+    result = {"schema": 2, "backend": backend, "model": model, "audio": str(args.audio),
+              "duration": round(duration, 3), **body}
+    if not result["words"]:
+        print(f"warning: no speech recognized in {args.audio}", file=sys.stderr)
+
+    payload = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
+    if not args.output:
+        sys.stdout.write(payload)
+        return 0
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    partial = args.output.with_name(args.output.name + ".partial")
+    partial.write_text(payload, encoding="utf-8")
+    os.replace(partial, args.output)  # never leave a truncated transcript behind
     return 0
 
 

@@ -41,7 +41,7 @@ Use the relevant component while iterating, then run `validate-agentdefaults.py`
 
 `validate-github-actions-stack.py` checks the GitHub Actions specialist's manifest registration, authority/trust schema, canonical agent/skill/prompt/example/acceptance invariants, cross-tool routing, Copilot adapter references, and inclusion in the primary validation suite.
 
-`validate-claude-video-editing-stack.py` checks the local Claude Code video-editing stack's manifest/routing, native `/youtube-edit` skill, Parakeet timestamp helper, HyperFrames/FFmpeg/evidence/licensing/style-learning invariants, and acceptance-test coverage.
+`validate-claude-video-editing-stack.py` checks the local Claude Code video-editing stack's manifest/routing, native `/youtube-edit` skill, Parakeet and EDL helper contracts, HyperFrames/FFmpeg/evidence/licensing/style-learning invariants, and acceptance-test coverage. It also runs `tools/video/test_video_tools.py`: model-free Parakeet normalization tests plus FFmpeg render/QC tests on synthetic media, which skip when FFmpeg is absent.
 
 A repository-level validator does not replace build/lint/type/test/e2e/security checks or actual GitHub Actions runtime qualification in a target repository being operated by one of the agents.
 

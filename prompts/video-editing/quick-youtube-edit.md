@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide a copy-paste invocation for a bounded first-pass local YouTube edit using the canonical Claude Code video-editing stack.
+A copy-paste invocation for a bounded first-pass local YouTube edit using the canonical Claude Code video-editing stack.
 
 ## Prompt
 
@@ -18,32 +18,35 @@ SOURCE
 
 GOAL
 Create a strong first-pass YouTube edit from the supplied footage.
+<optional: target length, audience, the one proof moment that must be in the hook>
+
+RUN MODE
+<attended | unattended overnight; you may / may not render HyperFrames graphics for the review cut without preview approval>
 
 WORKFLOW
-1. Keep raw media immutable.
-2. Probe source media with ffprobe.
-3. Extract speech audio and transcribe it with NVIDIA Parakeet, including word and segment timestamps.
-4. Build a transcript-driven story/edit plan before cutting.
-5. Create a reproducible rough cut with FFmpeg.
-6. When I make externally verifiable claims, use available browser tooling to capture primary-source proof/b-roll and record the source URL in work/source-manifest.md.
-7. Use HyperFrames for meaningful motion graphics. Lint during authoring; for the final gate run `check --snapshots`, inspect those snapshots, then open the final Studio preview. Satisfy the active HyperFrames review/approval requirement before rendering graphics.
-8. Use Tella only if it is actually connected and useful for a Tella-native source.
-9. Use music/SFX only from a licensed source I have access to. Keep sound design restrained.
-10. Assemble and QC the review render with FFmpeg/ffprobe plus targeted playback review.
+1. Keep raw media immutable. Run the preflight and record what is available.
+2. Probe sources with tools/video/edl.py probe.
+3. Transcribe each source with NVIDIA Parakeet using tools/video/parakeet_transcribe.py, with word and segment timestamps.
+4. Write work/edit.json (the EDL) before rendering. Resolve every `edl.py plan` warning about cuts inside words or in active audio, or list it as an unverified seam.
+5. Render and QC the rough cut from the EDL.
+6. For externally verifiable claims I make, capture primary-source proof with available browser tooling. Record claim, URL, and capture date on the EDL overlay.
+7. Use HyperFrames for meaningful graphics. Reuse the catalog and approved patterns first. Lint during authoring; for the final gate run `check --snapshots`, inspect the snapshots, then open the final Studio preview. Satisfy the HyperFrames review/approval requirement, or the unattended rule above, before rendering graphics.
+8. Use Tella only if it is connected and useful for a Tella-native source.
+9. Use music/SFX only from a licensed source I have access to, with a license note on every EDL audio item. Keep sound restrained.
+10. Render the review cut, run `edl.py qc --frames`, view the stills, and write captions (SRT) and work/review-notes.md.
 
 EDITORIAL STYLE
-- Technical creator video.
-- Proof/result-forward hook when supported by the footage.
+- Technical creator video. Proof- or result-forward hook when the footage supports it.
 - Preserve commands, versions, product/repo/model names, warnings, failures, and caveats.
 - Tighten dead air and retakes without making speech robotic.
 - Keep app UI, terminal output, code, and dashboards readable.
 - Prefer real app/demo footage and real source evidence over synthetic generic b-roll.
-- Sparse, modern motion graphics; no generic neon AI aesthetic.
-- Long-form captions only if they materially help or I ask for them.
+- Sparse, modern motion graphics. No generic neon AI aesthetic.
+- Long-form captions as an SRT unless I ask for burned-in captions.
 
 STOP
-One broad edit pass plus one targeted QC/fix pass, then return a review render and concise notes.
+One broad edit pass plus one targeted QC/fix pass, then return the review render and concise notes.
 
 FINAL NOTES
-Report raw duration, review-render duration, major cuts, b-roll sources, graphics added, tools actually used, QC actually performed, and any remaining manual-review items.
+Report raw duration, review-render duration, major cuts with output timestamps, b-roll sources, graphics and their approval status, tools actually used or unavailable, QC actually performed and stills viewed, and remaining manual-review items.
 ```

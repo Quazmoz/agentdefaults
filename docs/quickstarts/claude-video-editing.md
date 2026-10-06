@@ -2,212 +2,157 @@
 
 ## Purpose
 
-Provide the operator setup and invocation path for the AgentDefaults local Claude Code YouTube editing stack.
+Operator setup and invocation for the AgentDefaults local Claude Code YouTube editing stack.
 
 ## Goal
 
-Edit a local YouTube recording with Claude Code using the same role-based pattern demonstrated in Christian Peverelli's Claude Code editing workflow:
+Edit a folder of local recordings with Claude Code, following the role-based pattern from Christian Peverelli's Claude Code editing workflow (<https://youtu.be/HzXD4GVqXwM>):
 
-- Claude Code coordinates
-- Parakeet transcribes
-- HyperFrames animates
-- browser tooling researches/captures factual b-roll
-- Tella can handle Tella-native screen recordings when connected
-- a licensed sound library can supply music/SFX
-- FFmpeg assembles and performs technical QC
+- Claude Code coordinates.
+- Parakeet transcribes. Claude cannot hear, so word timestamps are how it finds cuts.
+- FFmpeg assembles and checks the edit through `tools/video/edl.py`, driven by one JSON edit decision list (EDL).
+- HyperFrames animates.
+- Browser tooling captures source-backed b-roll.
+- Tella and a licensed sound library are optional.
+- Timestamped feedback, when you ask, becomes persistent style rules.
+
+The full procedure is in [`skills/claude-code-video-editing.md`](../../skills/claude-code-video-editing.md). The contract and approval gates are in [`agents/claude-code-video-editor-agent.md`](../../agents/claude-code-video-editor-agent.md).
 
 ## 1. Prerequisites
 
-Core:
-
-- Claude Code with local project/file access
-- Node.js 22+
-- FFmpeg / ffprobe
-- Python environment capable of running a supported Parakeet backend (MLX on Apple Silicon or NeMo elsewhere)
-- enough disk space for intermediate renders
-
-Verify:
+- Claude Code with local file access
+- FFmpeg/ffprobe; required
+- Python 3.10+
+- Node.js 22+, for HyperFrames
+- Disk space for renders. Review cuts at 1080p are cheap even from 4K sources.
 
 ```bash
-node --version
-ffmpeg -version
-ffprobe -version
-python3 --version
+ffmpeg -version | head -1 && node --version && python3 --version
 ```
 
-## 2. HyperFrames
+## 2. Parakeet
 
-Use the current HyperFrames skills:
+```bash
+python3 -m venv .venv-video && source .venv-video/bin/activate
+python -m pip install -U pip
+
+# Apple Silicon (MLX)
+python -m pip install -U "parakeet-mlx>=0.5"
+
+# NVIDIA / Linux (NeMo)
+python -m pip install "nemo_toolkit[asr]>=2.2"
+```
+
+Then run:
+
+```bash
+python3 tools/video/parakeet_transcribe.py /path/project/raw/cam.mp4 -o /path/project/work/transcripts/cam.json
+```
+
+- **Input:** any media file. The helper extracts 16 kHz mono with ffmpeg.
+- **Backend:** `--backend auto` uses MLX on Apple Silicon and NeMo elsewhere. Use `--backend mlx|nemo` to force one.
+- **Default models:** `mlx-community/parakeet-tdt-0.6b-v3` (MLX) and `nvidia/parakeet-tdt-0.6b-v3` (NeMo). The helper rejects a model meant for the other backend.
+- **Output:** schema 2 JSON with `text`, `segments`, and `words`. Each item has `text`, `start`, `end` (seconds, 3 dp), and optional `confidence`. MLX subword tokens are merged into real words.
+- **Long recordings:** MLX is chunked at 120 s with 15 s overlap. NeMo switches to local attention past 20 minutes. Parakeet TDT v3 covers 25 European languages with automatic language detection.
+- **Model download:** the first run downloads the model weights, so it needs network access once.
+
+If no backend can run, the stack stops before speech editing and reports why. It does not quietly switch to another recognizer.
+
+## 3. HyperFrames
+
+In Claude Code:
+
+```text
+claude plugin marketplace add heygen-com/hyperframes
+claude plugin install hyperframes@hyperframes
+```
+
+For agent or non-interactive installs and updates:
 
 ```bash
 npx hyperframes skills update
+npx --yes hyperframes doctor --json | jq -e '.ok'
 ```
 
-Alternative interactive installation:
+Start a fresh Claude Code session after installing skills. The installed `/hyperframes` skills and `npx hyperframes <cmd> --help` are runtime truth.
 
-```bash
-npx skills add heygen-com/hyperframes
-```
+The gate sequence:
 
-Start a fresh Claude Code session after skill installation if the commands are not discovered.
+1. `lint` while authoring.
+2. `check --snapshots` as the final automated gate. It includes lint.
+3. Inspect the snapshots.
+4. `preview --background` gives you a Studio URL.
+5. Render only after you approve.
 
-## 3. Parakeet
+Overlays render with transparency via `render --format mov`, which gives ProRes 4444.
 
-AgentDefaults includes:
-
-`tools/video/parakeet_transcribe.py`
-
-The helper supports two Parakeet runtimes and normalizes both to the same transcript JSON:
-
-- **Apple Silicon:** prefer `parakeet-mlx`, which uses MLX and exposes aligned sentence/token timestamps.
-- **Other supported systems / NVIDIA-oriented environments:** use NVIDIA NeMo ASR.
-
-Apple Silicon setup:
-
-```bash
-python3 -m venv .venv-video
-source .venv-video/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -U parakeet-mlx
-```
-
-NeMo setup:
-
-```bash
-python3 -m venv .venv-video
-source .venv-video/bin/activate
-python -m pip install --upgrade pip
-python -m pip install "nemo_toolkit[asr]"
-```
-
-Run:
-
-```bash
-ffmpeg -i raw/input.mp4 -vn -ac 1 -ar 16000 -c:a pcm_s16le work/transcript.wav
-python3 tools/video/parakeet_transcribe.py work/transcript.wav -o work/transcript.json
-```
-
-Default models:
+## 4. Invoke
 
 ```text
-MLX:  mlx-community/parakeet-tdt-0.6b-v3
-NeMo: nvidia/parakeet-tdt-0.6b-v3
+/youtube-edit /absolute/path/to/project-or-video
+Tight 8-10 minute technical video. Proof first. Keep the app UI readable. Restrained graphics.
 ```
 
-`--backend auto` is the default: it selects MLX on Apple Silicon and NeMo elsewhere. Use `--backend mlx` or `--backend nemo` to force one explicitly.
+Given a single file, the editor creates `<stem>-edit/` next to it. The EDL references the original file in place; it is never copied, moved, or modified.
 
-The helper writes a normalized JSON object with full text, segment timestamps, and word/token timestamps.
-
-If the local OS/hardware cannot support the chosen Parakeet runtime, stop and report the environment issue rather than pretending transcription succeeded.
-
-## 4. Invoke the native Claude skill
-
-From this repository:
+### Unattended / overnight
 
 ```text
-/youtube-edit /absolute/path/to/video.mp4
+/youtube-edit /path/to/project
+Run unattended overnight. You may render HyperFrames graphics for the review cut without waiting for preview approval.
 ```
 
-Or be explicit:
+The second sentence is what pre-authorizes draft graphics. Without it, graphics stay as previewable projects with placeholders in the cut.
+
+Unattended runs never purchase, publish, download unlicensed media, or delete anything. In the morning, read `work/review-notes.md` and watch `renders/review-v1.mp4`.
+
+## 5. What you get
 
 ```text
-/youtube-edit /path/to/video.mp4
-Make this a tight 6-8 minute technical YouTube video. Keep the real app/demo footage readable, use primary-source proof when I reference external claims, and keep motion graphics restrained.
+project/
+  work/edit.json            every cut, overlay, evidence source, and audio license
+  work/review-notes.md      open decisions, seams that need your ears, placeholders
+  renders/review-v1.mp4     plus review-v1.mp4.json (timeline) and review-v1.srt
+  renders/qc/review-v1/     stills Claude viewed during QC
 ```
 
-## 5. HyperFrames review loop
+## 6. Give feedback and teach the style
 
-Inside each HyperFrames project, use lint while iterating, then the final gate/review flow:
-
-```bash
-# Fast iteration check after the first pass and structural edits
-npx hyperframes lint
-
-# Final automated gate; includes lint
-npx hyperframes check --snapshots
-
-# Inspect the generated snapshots, then review the final Studio project
-npx hyperframes preview --background
-```
-
-Do not run a redundant `lint` immediately before `check`. After the final Studio preview has received the approval required by the installed HyperFrames review workflow, render:
-
-```bash
-npx hyperframes render --quality looks --output ../../renders/graphics-section.mp4
-test -s ../../renders/graphics-section.mp4
-ffprobe -v error -show_format -show_streams ../../renders/graphics-section.mp4
-```
-
-Use `--quality delivery` for the final delivery encode when appropriate. Treat the installed HyperFrames skill as runtime truth if its CLI/review contract changes.
-
-## 6. Optional integrations
-
-### Browser research
-
-Use whatever browser automation Claude Code has actually been configured to access.
-
-Record sources in:
-
-`work/source-manifest.md`
-
-### Tella
-
-Use Tella MCP only when installed and the source recording/workflow benefits from its native operations. The editing stack must still work without it.
-
-### Music / SFX
-
-Epidemic Sound is a good fit when the account/connector is available, but any user-licensed library is acceptable. Never pull random online audio into the edit and label it safe.
-
-## 7. Teach the style
-
-Give timestamped notes, for example:
+Timestamps refer to the render you watched:
 
 ```text
-0:04 title is too large
+review-v1 0:04 title is too large
 0:11 remove the whoosh
 0:24 keep the app screen on 2 seconds longer
-0:36 this source screenshot is good; use this treatment again
+0:36 this source screenshot treatment is good
 ```
 
-Then, only when you want the preference persisted:
+The editor maps each note through `review-v1.mp4.json` to the exact segment or overlay, applies it, and renders `review-v2`.
+
+To make a preference permanent:
 
 ```text
-Apply those notes, then learn the reusable parts and update config/video-editing/channel-style.md.
+Learn the reusable parts of those notes.
 ```
 
-This keeps one-off feedback out of the permanent rules while allowing the editor to improve over time.
+Only then does `config/video-editing/channel-style.md` change. Rules get IDs, scopes, and provenance. Contradictions are confirmed with you, and the file is capped at 40 active rules.
 
-## 8. Final QC
+The source workflow trained its style hook-first. Edit short hooks with heavy feedback before handing over full videos.
 
-Before calling a video done:
+## 7. Optional integrations
 
-```bash
-ffprobe -v error -show_streams -show_format renders/final.mp4
-ffmpeg -i renders/final.mp4 -vf "blackdetect=d=0.20:pix_th=0.10" -an -f null -
-ffmpeg -i renders/final.mp4 -af "silencedetect=n=-50dB:d=1.0" -vn -f null -
-```
-
-Review the detected ranges; some black/silence is intentional.
-
-Also manually/playback-check:
-
-- hook
-- edited speech seams
-- dense screen-demo sections
-- graphics
-- researched proof/b-roll
-- final 20-30 seconds
-
-Machine checks supplement playback review; they do not replace it.
-
+- **Browser:** whatever browser automation Claude Code has configured. Evidence captures are recorded inside the EDL, and `plan` rejects evidence without a URL, claim, and capture date.
+- **Tella:** use the MCP when it is installed and the footage is Tella-native. Otherwise use Tella's exported files as ordinary sources.
+- **Music/SFX:** Epidemic Sound or any library you license. Every audio item in the EDL needs a `license` note, and `plan` rejects items without one.
 
 ## Repository Validation
 
 After changing this stack, run:
 
 ```bash
+python3 tools/video/test_video_tools.py
 python3 scripts/validate-claude-video-editing-stack.py
 python3 scripts/validate-agentdefaults.py
 ```
 
-These repository validators check stack structure and invariants. They do not prove that local NeMo/Parakeet, HyperFrames, browser automation, Tella, or licensed-audio integrations are installed and operational on a particular workstation.
+The tests render tiny synthetic media with FFmpeg, and those cases are skipped when FFmpeg is absent. They exercise the Parakeet normalization with fake model output. They do not prove that a real Parakeet model, HyperFrames, browser automation, Tella, or licensed audio works on a given workstation.
