@@ -215,7 +215,8 @@
         "skills/admob-inventory-automation.md"
       ],
       "prompts": [
-        "prompts/implementation/mobile-release-automation-task.md"
+        "prompts/implementation/mobile-release-automation-task.md",
+        "prompts/implementation/google-play-localized-pricing-rollout.md"
       ],
       "schema": "schemas/mobile-release-automation-task.schema.json",
       "example": "examples/mobile-release-automation-task.yaml",
