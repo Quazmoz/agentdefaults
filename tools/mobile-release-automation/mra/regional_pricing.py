@@ -323,14 +323,18 @@ def approval_detail(plan: dict[str, Any]) -> str:
 
 
 def _matches_plan(product: dict[str, Any], plan: dict[str, Any], proposed: bool) -> bool:
-    option = _purchase_option(product, plan["purchase_option_id"])
+    source_product = deepcopy(product)
+    option = _purchase_option(source_product, plan["purchase_option_id"])
     regions = _regions(option)
     key = "proposed_price" if proposed else "current_price"
     for change in plan.get("changes", []):
         current = regions.get(change["region_code"])
         if not current or _money_key(current.get("price")) != _money_key(change[key]):
             return False
-    return True
+        # Reverse approved prices so the fingerprint also verifies protected
+        # prices, availability, and every other purchase-option field.
+        current["price"] = deepcopy(change["current_price"])
+    return _source_fingerprint(source_product) == plan["source_fingerprint"]
 
 
 def _current_region_version(

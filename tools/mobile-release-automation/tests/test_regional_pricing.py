@@ -47,6 +47,11 @@ def initial_product() -> dict:
                         "availability": "AVAILABLE",
                         "price": money("INR", "249"),
                     },
+                    {
+                        "regionCode": "GB",
+                        "availability": "AVAILABLE",
+                        "price": money("GBP", "2", 190_000_000),
+                    },
                 ],
             }
         ],
@@ -169,6 +174,55 @@ class RegionalPricingTest(unittest.TestCase):
                 client=self.live.client,
             )
         self.assertIn("stale", str(caught.exception))
+        self.assertFalse(self.live.session.urls("PATCH"))
+
+    def test_read_back_rejects_unapproved_purchase_option_changes(self) -> None:
+        plan = self.plan()
+        patch = self.live.client.upsert_one_time_product
+        before = deepcopy(self.live.product)
+        for drift in ("US", "GB", "availability", "buy_option"):
+            with self.subTest(drift=drift):
+                self.live.product = deepcopy(before)
+
+                def patch_with_drift(*args, **kwargs):
+                    result = patch(*args, **kwargs)
+                    option = self.live.product["purchaseOptions"][0]
+                    regions = option["regionalPricingAndAvailabilityConfigs"]
+                    if drift in ("US", "GB"):
+                        protected = next(r for r in regions if r["regionCode"] == drift)
+                        protected["price"] = money(protected["price"]["currencyCode"], "1")
+                    elif drift == "availability":
+                        regions[1]["availability"] = "NO_LONGER_AVAILABLE"
+                    else:
+                        option["buyOption"]["legacyCompatible"] = False
+                    return result
+
+                self.live.client.upsert_one_time_product = patch_with_drift
+                with self.assertRaisesRegex(regional_pricing.PricingError, "read-back"):
+                    regional_pricing.apply_one_time_product_plan(
+                        PACKAGE, plan["plan_id"], profile="example", client=self.live.client
+                    )
+
+    def test_already_applied_rejects_unapproved_protected_price(self) -> None:
+        plan = self.plan()
+        regions = self.live.product["purchaseOptions"][0]["regionalPricingAndAvailabilityConfigs"]
+        regions[1]["price"] = deepcopy(plan["changes"][0]["proposed_price"])
+        regions[0]["price"] = money("USD", "1")
+        with self.assertRaisesRegex(regional_pricing.PricingError, "stale"):
+            regional_pricing.apply_one_time_product_plan(
+                PACKAGE, plan["plan_id"], profile="example", client=self.live.client
+            )
+        self.assertFalse(self.live.session.urls("PATCH"))
+
+    def test_already_applied_verifies_preserved_purchase_option_state(self) -> None:
+        plan = self.plan()
+        regions = self.live.product["purchaseOptions"][0]["regionalPricingAndAvailabilityConfigs"]
+        regions[1]["price"] = deepcopy(plan["changes"][0]["proposed_price"])
+        result = regional_pricing.apply_one_time_product_plan(
+            PACKAGE, plan["plan_id"], profile="example", client=self.live.client
+        )
+        self.assertEqual(result["status"], "already_applied")
+        self.assertTrue(result["verified"])
         self.assertFalse(self.live.session.urls("PATCH"))
 
     def test_tampered_plan_fails_integrity_check(self) -> None:
