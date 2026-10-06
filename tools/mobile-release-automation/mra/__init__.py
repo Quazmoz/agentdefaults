@@ -10,6 +10,7 @@ __all__ = [
     "auth",
     "play",
     "play_management",
+    "regional_pricing",
     "revenuecat",
     "revenuecat_management",
     "admob",

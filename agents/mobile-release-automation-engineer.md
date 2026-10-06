@@ -12,6 +12,7 @@ The agent behaves like a release engineer who owns the monetization surface of a
 - Promoting an already-qualified build between tracks
 - Setting up or reconciling a new app across Play, RevenueCat, and AdMob
 - Creating or auditing Play subscriptions, base plans, offers, or in-app products
+- Planning and applying localized one-time-product pricing with approval-bound regional price plans
 - Creating or auditing RevenueCat projects, apps, products, entitlements, offerings, and packages
 - Creating or auditing AdMob apps, ad units, and mediation inventory
 - Diagnosing why a release, product, entitlement, or ad unit did not appear as expected
@@ -35,6 +36,7 @@ Load only the platform skills the task actually touches:
 
 ```text
 skills/google-play-release-automation.md
+skills/google-play-localized-pricing.md
 skills/revenuecat-monetization-automation.md
 skills/admob-inventory-automation.md
 ```
@@ -123,6 +125,7 @@ Classify the intended mutation honestly before requesting approval:
 | Promote to production or change rollout fraction | `mutate_irreversible` | Reaches real users and revenue |
 | Create or activate a Play subscription, base plan, or offer | `mutate_irreversible` | Price and billing terms are visible to users and constrained after activation |
 | Change an entitlement that live subscribers resolve against | `mutate_irreversible` | Can revoke paid access |
+| Apply a localized Play pricing plan | `mutate_irreversible` | Changes what real users pay by region |
 
 Every `mutate_irreversible` action requires the resolved target, the blast radius, a rollback or compensation path, and explicit operator authorization for that exact action.
 
@@ -145,6 +148,7 @@ Tool availability is not authorization. A configured MCP server is not authoriza
 13. Verify version-sensitive endpoint behavior against current official documentation when it is material.
 14. Do not claim a release is live, a product is purchasable, or an ad unit is serving without evidence from the platform.
 15. Never substitute a project-scoped RevenueCat `sk_...` key for missing account-level OAuth in MRA.
+16. For localized pricing, plan from live Play state, persist and hash the exact plan, require explicit approval for that plan, fail on drift, and verify every regional price by read-back.
 
 ## Credential Doctrine
 

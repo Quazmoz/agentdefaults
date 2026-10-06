@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import config, human_approval, redaction
+from . import config, human_approval, redaction, regional_pricing
 from . import play as play_module
 
 
@@ -164,6 +164,72 @@ def play_set_purchase_option_active(
     return _tag(result, "high", True)
 
 
+def play_plan_localized_one_time_pricing(
+    profile: str,
+    product_id: str,
+    purchase_option_id: str,
+    policy_name: str = regional_pricing.POLICY_NAME,
+    reference_region: str = "US",
+    target_regions: list[str] | None = None,
+) -> dict:
+    """Create a persisted, read-only regional-pricing plan from current Play state.
+
+    The plan contains exact current/proposed prices and a content hash. It does
+    not mutate Google Play and is the artifact the operator must review before
+    any apply action.
+    """
+    return regional_pricing.create_one_time_product_plan(
+        _package(profile),
+        product_id,
+        purchase_option_id,
+        profile=profile,
+        policy_name=policy_name,
+        reference_region=reference_region,
+        target_regions=target_regions,
+        client=_client(profile),
+    )
+
+
+def play_apply_localized_one_time_pricing(profile: str, plan_id: str) -> dict:
+    """Apply one previously generated pricing plan after native human approval."""
+    try:
+        plan = regional_pricing.load_plan(plan_id)
+    except regional_pricing.PricingError as error:
+        return {
+            "status": "error",
+            "platform": "play",
+            "error_type": "PricingError",
+            "detail": str(error),
+            "_mra": {"risk": "high", "human_approved": False},
+        }
+
+    approved, refusal = _gate(
+        "Approve Google Play regional pricing change",
+        regional_pricing.approval_detail(plan),
+    )
+    if not approved:
+        return refusal
+
+    try:
+        result = regional_pricing.apply_one_time_product_plan(
+            _package(profile),
+            plan_id,
+            profile=profile,
+            client=_client(profile),
+        )
+    except regional_pricing.PricingError as error:
+        return {
+            "status": "error",
+            "platform": "play",
+            "error_type": "PricingError",
+            "detail": str(error),
+            "_mra": {"risk": "high", "human_approved": True},
+        }
+    except play_module.PlayError as error:
+        return _failure(error, "high", True)
+    return _tag(result, "high", True)
+
+
 def register(server) -> None:
     for tool in (
         play_convert_region_prices,
@@ -171,5 +237,7 @@ def register(server) -> None:
         play_activate_base_plan,
         play_upsert_one_time_product,
         play_set_purchase_option_active,
+        play_plan_localized_one_time_pricing,
+        play_apply_localized_one_time_pricing,
     ):
         server.tool()(tool)

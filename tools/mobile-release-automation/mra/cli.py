@@ -14,9 +14,9 @@ import json
 import sys
 
 from . import admob as admob_module
-from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
+from . import admob_credentials, auth, config, human_approval, play_credentials, revenuecat_cli
 from . import play as play_module
-from . import play_reporting
+from . import play_reporting, regional_pricing
 from . import revenuecat as rc_module
 
 MUTATING = "mutating"
@@ -173,6 +173,46 @@ def cmd_play_create_subscription(args: argparse.Namespace) -> int:
     body = json.loads(Path(args.body).expanduser().read_text(encoding="utf-8"))
     client = play_module.PlayClient(resolve_package(args))
     return emit(client.create_subscription(args.product_id, body, args.regions_version))
+
+
+def cmd_play_pricing_plan(args: argparse.Namespace) -> int:
+    package_name = resolve_package(args)
+    return emit(
+        regional_pricing.create_one_time_product_plan(
+            package_name,
+            args.product_id,
+            args.purchase_option_id,
+            profile=getattr(args, "profile", None),
+            policy_name=args.policy,
+            reference_region=args.reference_region,
+            target_regions=args.region,
+        )
+    )
+
+
+def cmd_play_pricing_apply(args: argparse.Namespace) -> int:
+    confirm(args, f"apply localized pricing plan {args.plan_id}")
+    plan = regional_pricing.load_plan(args.plan_id)
+    decision = human_approval.request(
+        "Approve Google Play regional pricing change",
+        regional_pricing.approval_detail(plan),
+    )
+    if not decision.get("approved"):
+        return emit(
+            {
+                "status": "human_approval_required",
+                "risk": "high",
+                "approval": decision,
+                "detail": "Regional pricing plan was not executed.",
+            }
+        )
+    return emit(
+        regional_pricing.apply_one_time_product_plan(
+            resolve_package(args),
+            args.plan_id,
+            profile=getattr(args, "profile", None),
+        )
+    )
 
 
 # ---- admob -----------------------------------------------------------------
@@ -370,6 +410,32 @@ def build_parser() -> argparse.ArgumentParser:
     subscription.add_argument("--regions-version", default="2022/02")
     subscription.set_defaults(func=cmd_play_create_subscription)
 
+    pricing_plan = play.add_parser(
+        "pricing-plan",
+        help="create a persisted localized one-time-product pricing plan (read-only)",
+    )
+    add_target(pricing_plan)
+    pricing_plan.add_argument("--product-id", required=True)
+    pricing_plan.add_argument("--purchase-option-id", required=True)
+    pricing_plan.add_argument(
+        "--policy", default=regional_pricing.POLICY_NAME, choices=sorted(regional_pricing.POLICIES)
+    )
+    pricing_plan.add_argument("--reference-region", default="US")
+    pricing_plan.add_argument(
+        "--region",
+        action="append",
+        help="limit to one policy region; repeat for multiple regions",
+    )
+    pricing_plan.set_defaults(func=cmd_play_pricing_plan)
+
+    pricing_apply = play.add_parser(
+        "pricing-apply",
+        help=f"apply one persisted localized pricing plan [{MUTATING}]",
+    )
+    add_target(pricing_apply)
+    pricing_apply.add_argument("--plan-id", required=True)
+    pricing_apply.set_defaults(func=cmd_play_pricing_apply)
+
     # admob
     admob = subparsers.add_parser("admob", help="AdMob API").add_subparsers(
         dest="admob_command", required=True
@@ -479,7 +545,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
-    except (config.ConfigError, play_reporting.ReportingError) as error:
+    except (config.ConfigError, play_reporting.ReportingError, regional_pricing.PricingError) as error:
         note(f"configuration error: {error}")
         return 3
     except (play_module.PlayError, admob_module.AdMobError, rc_module.RevenueCatError) as error:
