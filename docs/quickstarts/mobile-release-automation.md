@@ -279,26 +279,13 @@ USER ACTION
 `CAPABILITY` states what this account can and cannot automate, with evidence. `IDENTIFIERS` lists every generated ID, flagging any AdMob ad unit ID that must reach source control before the next build.
 
 
-## Localized Play pricing pilot
+## Localized Play pricing rollout
 
-For regional one-time-product pricing, load [`skills/google-play-localized-pricing.md`](../../skills/google-play-localized-pricing.md). The safe path is plan -> human review -> exact-plan approval -> apply -> Play read-back verification.
+For regional one-time-product pricing, load [`skills/google-play-localized-pricing.md`](../../skills/google-play-localized-pricing.md) and use [`prompts/implementation/google-play-localized-pricing-rollout.md`](../../prompts/implementation/google-play-localized-pricing-rollout.md).
 
-Start with a read-only plan:
+The reusable workflow is deliberately two-phase:
 
-```bash
-mra play pricing-plan \\
-  --profile medtick \\
-  --product-id <live-product-id> \\
-  --purchase-option-id <live-purchase-option-id>
-```
+1. **PLAN_ONLY** — read live Play state, audit price-display readiness, generate independent persisted plans, present exact differences, then stop.
+2. **APPLY_APPROVED** — only after the operator names exact app + `plan_id` pairs, apply those plans through the native human gate and verify authoritative Play read-back.
 
-Do not guess the identifiers. Read the configured MRA profile and live Play catalog first. The plan is persisted under the private MRA home and identified by a SHA-256 `plan_id`.
-
-Only after the operator explicitly approves that exact plan:
-
-```bash
-mra --yes play pricing-apply --profile medtick --plan-id <approved-plan-id>
-```
-
-The apply command still invokes the native macOS approval dialog, rejects stale product/region state, and verifies the approved prices by reading Play back. A stale plan requires a new plan and new approval.
-
+Do not guess package/product/purchase-option identifiers. Do not hardcode regional prices into app source. A stale plan or a materially misleading app-side price display returns the app to a blocked/planning state rather than broadening mutation authority.

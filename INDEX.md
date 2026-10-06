@@ -95,9 +95,11 @@ docs/quickstarts/mobile-release-automation.md
 agents/mobile-release-automation-engineer.md
 skills/mobile-release-automation-orchestration.md
 skills/google-play-release-automation.md
+skills/google-play-localized-pricing.md
 skills/revenuecat-monetization-automation.md
 skills/admob-inventory-automation.md
 prompts/implementation/mobile-release-automation-task.md
+prompts/implementation/google-play-localized-pricing-rollout.md
 schemas/mobile-release-automation-task.schema.json
 examples/mobile-release-automation-task.yaml
 docs/mobile-release-automation-acceptance-tests.md
@@ -109,6 +111,8 @@ scripts/validate-mobile-release-automation-stack.py
 This specialist owns Play app bundle upload, testing tracks, staged rollout and promotion, Play monetization products, RevenueCat apps/products/entitlements/offerings/packages, and AdMob apps and ad units.
 
 The three platforms are not equally automatable, and the stack treats that as a first-class fact. Google Play and RevenueCat support API-driven creation. AdMob accepts OAuth user credentials only, rejects service accounts entirely, and gates app and ad-unit creation per account through a Google account manager. Probe AdMob access before planning AdMob automation.
+
+Use `prompts/implementation/google-play-localized-pricing-rollout.md` for approval-gated portfolio pricing work: it starts in read-only planning mode, produces per-app immutable plan IDs, stops for explicit approval, and only then permits exact-plan application plus read-back verification.
 
 `tools/mobile-release-automation/` is the runnable local toolkit: a CLI, an offline test suite, and a local stdio MCP server for Play and AdMob, for which no first-party MCP server exists. Use RevenueCat's first-party server at `https://mcp.revenuecat.ai/mcp` for RevenueCat.
 

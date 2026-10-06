@@ -13,6 +13,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 
 STACK_NAME = "Mobile Release and Monetization Automation"
+LOCALIZED_PRICING_PROMPT = "prompts/implementation/google-play-localized-pricing-rollout.md"
 STACK = {
     "quickstart": "docs/quickstarts/mobile-release-automation.md",
     "agent": "agents/mobile-release-automation-engineer.md",
@@ -92,6 +93,7 @@ def load_json(path: str) -> dict[str, Any]:
 
 def check_required_files(failures: list[str]) -> None:
     required = set(STACK.values()) | set(SKILLS) | set(TOOLKIT_FILES) | set(ROUTING_FILES)
+    required.add(LOCALIZED_PRICING_PROMPT)
     required |= {
         "agentdefaults.manifest.json",
         "scripts/validate-agentdefaults.py",
@@ -127,6 +129,11 @@ def check_manifest(failures: list[str]) -> None:
     declared = stack.get("skills")
     if declared != SKILLS:
         failures.append(f"manifest {STACK_NAME}.skills should list exactly {SKILLS}")
+
+    if LOCALIZED_PRICING_PROMPT not in stack.get("prompts", []):
+        failures.append(
+            f"manifest {STACK_NAME}.prompts should include {LOCALIZED_PRICING_PROMPT}"
+        )
 
 
 def check_schema(failures: list[str]) -> None:
@@ -226,6 +233,22 @@ def check_skill_contracts(failures: list[str]) -> None:
     for invariant in ("Do not mutate Play until", "US/GB"):
         if invariant not in pricing:
             failures.append(f"localized pricing skill must state {invariant!r}")
+
+    rollout = read(LOCALIZED_PRICING_PROMPT)
+    for term in (
+        "PLAN_ONLY",
+        "APPLY_APPROVED",
+        "NO LIVE GOOGLE PLAY PRICING CHANGES HAVE BEEN APPLIED",
+        "plan_id",
+        "US",
+        "GB",
+        "read-back",
+        "BLOCKED_FOR_PRICING",
+    ):
+        if term not in rollout:
+            failures.append(f"localized pricing rollout prompt must cover {term!r}")
+    if rollout.index("PLAN_ONLY") > rollout.index("APPLY_APPROVED"):
+        failures.append("localized pricing rollout prompt must define PLAN_ONLY before APPLY_APPROVED")
 
     revenuecat = read("skills/revenuecat-monetization-automation.md")
     for term in ("mcp.revenuecat.ai", "entitlement", "store_identifier", "rc auth login"):

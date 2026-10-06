@@ -91,10 +91,19 @@ SKIPPED/UNSUPPORTED
 
 Approval must name every app being changed. If the operator approves only a subset, apply only those plan IDs.
 
-## MedTick Pilot
+## Pilot History and Reusable Rollout Rule
 
-For the first rollout, the allowed app scope is MedTick only.
+MedTick was the first production pilot for this workflow. That pilot established the plan -> exact approval -> apply -> read-back pattern; it is historical evidence, not a permanent scope restriction.
 
-Do not assume its package name, product ID, purchase-option ID, or current price from documentation or memory. Discover all of them from the local MRA profile and live Google Play catalog. If more than one monetized product/purchase option is present, explain which one corresponds to the user-facing lifetime/Pro purchase before planning.
+Do not mutate Play until the operator has explicitly approved the exact app + `plan_id` pair being applied.
 
-The first session ends at the approval boundary: prepare and verify the MedTick plan, show the exact changes, and ask the operator for approval. Do not mutate Play until the operator replies with explicit approval.
+For every future app or batch:
+
+- do not assume package name, product ID, purchase-option ID, or current price from documentation or memory when live Play state can establish them;
+- generate an independent persisted plan per app/product;
+- inspect enough app billing source/documentation to confirm the UI presents Google Play's localized price for the same product/purchase option used at checkout;
+- if the app can display a misleading hardcoded/stale/mismatched price, block the store-price rollout for that app until the code path is corrected under separate authorization;
+- end the planning session at the approval boundary;
+- apply only exact app + plan_id pairs explicitly approved by the operator.
+
+The reusable invocation is `prompts/implementation/google-play-localized-pricing-rollout.md`.
