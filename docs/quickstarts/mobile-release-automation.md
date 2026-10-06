@@ -277,3 +277,28 @@ USER ACTION
 ```
 
 `CAPABILITY` states what this account can and cannot automate, with evidence. `IDENTIFIERS` lists every generated ID, flagging any AdMob ad unit ID that must reach source control before the next build.
+
+
+## Localized Play pricing pilot
+
+For regional one-time-product pricing, load [`skills/google-play-localized-pricing.md`](../../skills/google-play-localized-pricing.md). The safe path is plan -> human review -> exact-plan approval -> apply -> Play read-back verification.
+
+Start with a read-only plan:
+
+```bash
+mra play pricing-plan \\
+  --profile medtick \\
+  --product-id <live-product-id> \\
+  --purchase-option-id <live-purchase-option-id>
+```
+
+Do not guess the identifiers. Read the configured MRA profile and live Play catalog first. The plan is persisted under the private MRA home and identified by a SHA-256 `plan_id`.
+
+Only after the operator explicitly approves that exact plan:
+
+```bash
+mra --yes play pricing-apply --profile medtick --plan-id <approved-plan-id>
+```
+
+The apply command still invokes the native macOS approval dialog, rejects stale product/region state, and verifies the approved prices by reading Play back. A stale plan requires a new plan and new approval.
+
