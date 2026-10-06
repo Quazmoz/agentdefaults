@@ -52,6 +52,16 @@ prompts/implementation/codebase-de-slop-task.md
 + examples/codebase-maintenance-task.yaml
 ```
 
+For approval-gated Google Play regional pricing, use:
+
+```text
+prompts/implementation/google-play-localized-pricing-rollout.md
++ agents/mobile-release-automation-engineer.md
++ skills/google-play-localized-pricing.md
+```
+
+That prompt always begins read-only, emits independent plan IDs, stops for exact approval, and only then permits approved-plan application plus platform read-back.
+
 For Ponytail + Graft, humans and agents should start with [`ponytail-graft/README.md`](ponytail-graft/README.md) for navigation. The normal tested agent entrypoint is still:
 
 ```text
