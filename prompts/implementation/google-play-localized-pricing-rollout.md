@@ -1,5 +1,9 @@
 # Approval-Gated Google Play Localized Pricing Rollout
 
+## Purpose
+
+Prepare localized Google Play one-time-product pricing as a read-only proposal first, then apply only exact persisted app + plan ID pairs that the operator explicitly approves in a later message. Preserve the native human approval gate and require authoritative Google Play read-back before reporting any live pricing change as verified.
+
 Use with:
 - `agents/mobile-release-automation-engineer.md`
 - `skills/mobile-release-automation-orchestration.md`
