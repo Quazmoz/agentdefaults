@@ -26,6 +26,7 @@ STACK = {
 SKILLS = [
     "skills/mobile-release-automation-orchestration.md",
     "skills/google-play-release-automation.md",
+    "skills/google-play-localized-pricing.md",
     "skills/revenuecat-monetization-automation.md",
     "skills/admob-inventory-automation.md",
 ]
@@ -38,12 +39,14 @@ TOOLKIT_FILES = [
     "tools/mobile-release-automation/mra/config.py",
     "tools/mobile-release-automation/mra/auth.py",
     "tools/mobile-release-automation/mra/play.py",
+    "tools/mobile-release-automation/mra/regional_pricing.py",
     "tools/mobile-release-automation/mra/admob.py",
     "tools/mobile-release-automation/mra/revenuecat.py",
     "tools/mobile-release-automation/mra/revenuecat_cli.py",
     "tools/mobile-release-automation/mra/cli.py",
     "tools/mobile-release-automation/mra/mcp_server.py",
     "tools/mobile-release-automation/tests/test_play.py",
+    "tools/mobile-release-automation/tests/test_regional_pricing.py",
     "tools/mobile-release-automation/tests/test_admob.py",
     "tools/mobile-release-automation/tests/test_revenuecat.py",
     "tools/mobile-release-automation/tests/test_revenuecat_cli.py",
@@ -216,6 +219,14 @@ def check_skill_contracts(failures: list[str]) -> None:
         if term not in play:
             failures.append(f"Play skill must cover {term}")
 
+    pricing = read("skills/google-play-localized-pricing.md")
+    for term in ("plan_id", "read-back", "MedTick", "regionVersion"):
+        if term not in pricing:
+            failures.append(f"localized pricing skill must cover {term}")
+    for invariant in ("Do not mutate Play until", "US/GB"):
+        if invariant not in pricing:
+            failures.append(f"localized pricing skill must state {invariant!r}")
+
     revenuecat = read("skills/revenuecat-monetization-automation.md")
     for term in ("mcp.revenuecat.ai", "entitlement", "store_identifier", "rc auth login"):
         if term not in revenuecat:
@@ -256,6 +267,14 @@ def check_toolkit_safety(failures: list[str]) -> None:
     play = read("tools/mobile-release-automation/mra/play.py")
     if "_delete_edit_quietly" not in play:
         failures.append("Play client must clean up edits that are not committed")
+
+    pricing = read("tools/mobile-release-automation/mra/regional_pricing.py")
+    for term in ("source_fingerprint", "regionVersion", "plan_id", "verified"):
+        if term not in pricing:
+            failures.append(f"regional pricing safety path must enforce {term!r}")
+    monetization = read("tools/mobile-release-automation/mra/mcp_play_monetization.py")
+    if "play_apply_localized_one_time_pricing" not in monetization or "_gate(" not in monetization:
+        failures.append("localized pricing MCP apply must use the native human approval gate")
 
     rc_cli = read("tools/mobile-release-automation/mra/revenuecat_cli.py")
     for term in ("RC_API_KEY", "REVENUECAT_V2_SECRET_KEY", "rc auth login"):
