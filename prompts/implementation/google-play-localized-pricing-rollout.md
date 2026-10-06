@@ -29,13 +29,14 @@ Authority ceiling is propose. This phase must not mutate live Google Play catalo
 
 For each target:
 1. Resolve the MRA profile, package, live one-time product, and purchase option from authoritative Play state.
-2. Inspect the app billing contract/source enough to verify that UI pricing comes from Google Play localized ProductDetails/formattedPrice and that checkout uses the same product/purchase option.
-3. If the app can misrepresent the actual localized checkout price, mark it BLOCKED_FOR_PRICING. Do not edit app source under this prompt.
-4. Confirm the product is supported by MRA's modern OneTimeProduct pricing workflow.
-5. Read current US and GB prices and Play regionsVersion.
-6. Generate one independent persisted MRA pricing plan for each READY app using purchasing-power-v1.
-7. Validate plan_id/content integrity, source_fingerprint, regionsVersion, target identifiers, lower-only changes, regional currencies, availability, and preservation of US/GB.
-8. Never activate an unavailable region. Never hand-author final local-currency prices.
+2. Inspect the app billing contract/source enough to determine whether UI pricing comes from Google Play localized ProductDetails/formattedPrice and whether checkout uses the same product/purchase option.
+3. Treat app-side stale/hardcoded/mismatched display-price behavior as PRICING_UI_WARNING, not as a store-pricing blocker. Record the exact remediation needed for a later app-code pass, but do not edit app source under this prompt.
+4. Mark BLOCKED_FOR_PRICING only when the live Play target itself cannot be safely and uniquely resolved or mutated, including unresolved package/product/purchase-option identity, unsupported/legacy-only catalog state, unavailable required Play API state, or other ambiguity that could change the wrong product.
+5. Confirm the product is supported by MRA's modern OneTimeProduct pricing workflow.
+6. Read current US and GB prices and Play regionsVersion.
+7. Generate one independent persisted MRA pricing plan for every app whose live Play target is safely resolved, even when PRICING_UI_WARNING is present.
+8. Validate plan_id/content integrity, source_fingerprint, regionsVersion, target identifiers, lower-only changes, regional currencies, availability, and preservation of US/GB.
+9. Never activate an unavailable region. Never hand-author final local-currency prices.
 
 Before planning, qualify AgentDefaults/MRA:
 - python3 scripts/validate-agentdefaults.py
@@ -50,6 +51,7 @@ DISCOVERED
 VERIFIED
 UNVERIFIED
 RISKS
+PRICING UI WARNINGS
 BLOCKED APPS
 
 APPS PROPOSED FOR CHANGE
