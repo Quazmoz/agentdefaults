@@ -243,6 +243,7 @@ def check_skill_contracts(failures: list[str]) -> None:
         "US",
         "GB",
         "read-back",
+        "PRICING_UI_WARNING",
         "BLOCKED_FOR_PRICING",
     ):
         if term not in rollout:
