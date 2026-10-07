@@ -23,8 +23,10 @@ skills/palmierpro-transcript-cuts-and-captions.md
 skills/palmierpro-youtube-fast-edit.md
 skills/palmierpro-ai-generation-workflow.md
 docs/palmierpro-mcp-tool-map.md
-docs/palmierpro-mcp-acceptance-tests.md
+config/video-editing/channel-style.md
 ```
+
+Grading only (not loaded at runtime): `docs/palmierpro-mcp-acceptance-tests.md`, enforced by `tools/video/palmier_mock/trace_check.py`.
 
 Prompt templates:
 
@@ -53,9 +55,8 @@ Approval gates still apply to paid generation/upscaling, source-library deletion
 - Inspect media before describing or editing source content.
 - Treat Palmier timing as project frames and refresh IDs/state after copy/switch/undo or stale-state errors.
 - Use `get_transcript` and `remove_words` for word-aligned speech cleanup; re-read the transcript after each `remove_words` mutation.
-- Treat transcript timestamps as candidate edit locations, not authoritative acoustic cut points. After every speech-affecting mutation, verify the local seam against actual timeline/source audio as far as the available Palmier/client surface permits.
-- Never knowingly leave a mid-word/mid-syllable cut, clipped initial/final phoneme, or semantically incomplete sentence. Natural long-form cadence and a small useful pause outrank maximum compression.
-- If an edited speech seam cannot be acoustically validated, leave/report a review marker rather than claiming it is clean.
+- Follow the Dialogue Boundary Invariant, cut handles, and Seam Audit in `skills/palmierpro-transcript-cuts-and-captions.md`. Never claim a seam is clean without the audit; mark seams it cannot clear.
+- For Shorts and other derived versions, copy the timeline first and run the settings scope check before `set_project_settings`.
 - Use `remove_silence` only for verified quiet/speech-free pauses; verify affected transcript and acoustic boundaries and never replace a safe failure with a blind range cut.
 - Use `detect_beats` for intentional beat-synced edits instead of estimating beat positions manually.
 - Use multicam tools for real multicamera sessions and `manage_masks` for supported masking workflows when the live schema exposes them.
@@ -64,7 +65,7 @@ Approval gates still apply to paid generation/upscaling, source-library deletion
 - Privacy-sensitive requests fail closed: inspect both speech and visuals, use only live-schema-supported masking/tracking, require opaque concealment or removal for secrets, cut moving exposure that cannot be reliably tracked/verified, and recheck the final composite.
 - Before generation, call `list_models`, inspect any reference media, and use only reference/input combinations supported by the live model schema.
 - Confirm before paid generation/upscaling, source media deletion, folder deletion, overwrite exports, publishing, or other consequential side effects not already explicitly authorized.
-- Do not export unless requested; when export is requested, observe the actual export job to terminal status or report its current authoritative state.
+- Do not export unless requested (the seam-QC FCPXML to a scratch path is the one exception); when export is requested, observe the actual export job to terminal status or report its current authoritative state.
 - Keep completion notes concise and distinguish completed, verified, review-needed, blocked, generation, and export state.
 
 ## Good Tasks For This Agent
