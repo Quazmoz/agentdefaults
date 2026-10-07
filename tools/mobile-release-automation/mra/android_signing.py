@@ -371,7 +371,7 @@ def _run_gradle(
         text=True,
     )
     assert process.stdout is not None
-    with log_path.open("w", encoding="utf-8") as log:
+    with process.stdout, log_path.open("w", encoding="utf-8") as log:
         for line in process.stdout:
             log.write(_redact_text(line, secrets))
     log_path.chmod(0o600)

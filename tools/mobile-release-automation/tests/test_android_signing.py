@@ -87,10 +87,10 @@ class AndroidSigningTest(unittest.TestCase):
             repo.mkdir()
             gradlew = repo / "gradlew"
             gradlew.write_text(
-                "#!/bin/sh\n"
-                'echo "$ORG_GRADLE_PROJECT_android.injected.signing.store.password"\n'
-                'echo "$ORG_GRADLE_PROJECT_android.injected.signing.key.password"\n'
-                "exit 0\n",
+                "#!/usr/bin/env python3\n"
+                "import os\n"
+                'print(os.environ["ORG_GRADLE_PROJECT_android.injected.signing.store.password"])\n'
+                'print(os.environ["ORG_GRADLE_PROJECT_android.injected.signing.key.password"])\n',
                 encoding="utf-8",
             )
             gradlew.chmod(0o700)
