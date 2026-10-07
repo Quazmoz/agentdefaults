@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from . import admob_credentials, config, human_approval, play_credentials, redaction
+from . import admob_credentials, android_signing, config, human_approval, play_credentials, redaction
 from . import mcp_admob_tools, mcp_play_monetization, mcp_play_mutations
 from . import mcp_revenuecat_mutations
 from . import play as play_module
@@ -120,6 +120,7 @@ def doctor() -> dict[str, Any]:
             "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
             "revenuecat_api": _probe(_revenuecat_api_status),
             "admob": _probe(admob_credentials.status),
+            "android_signing": android_signing.all_identity_statuses(),
             "human_approval": human_approval.status(),
             "legacy_revenuecat_key_bindings": sorted(
                 slug for slug, profile in profiles.items() if profile.revenuecat_secret_id
@@ -144,6 +145,7 @@ def approval_policy() -> dict[str, Any]:
             "single RevenueCat project/app/product/empty entitlement/package/offering creation",
             "single unlinked AdMob app or ad-unit creation where supported",
             "local creation/reconciliation of non-secret app profiles and identifiers",
+            "signed Android release-bundle builds from clean local Git worktrees",
         ],
         "high": [
             "non-internal Play releases or promotions",
@@ -164,6 +166,31 @@ def approval_policy() -> dict[str, Any]:
             "state and tool output must not contain secret values."
         ),
     }
+
+
+@server.tool()
+def android_signing_status(identity: str = android_signing.DEFAULT_IDENTITY) -> Any:
+    """Read non-secret Android upload-key readiness from the local OS Keychain."""
+    return _safe_read(lambda: android_signing.identity_status(identity))
+
+
+@server.tool()
+def android_build_signed_bundles(
+    repo_path: str,
+    modules: list[str],
+    identity: str = android_signing.DEFAULT_IDENTITY,
+) -> dict[str, Any]:
+    """Build signed release AABs without exposing signing passwords to the agent."""
+    try:
+        result = android_signing.build_signed_bundles(
+            repo_path, modules, identity_name=identity
+        )
+    except (config.ConfigError, ValueError) as error:
+        payload = _error_payload(error)
+        payload["_mra"] = {"risk": "contained-local", "human_approved": False}
+        return payload
+    result["_mra"] = {"risk": "contained-local", "human_approved": False}
+    return redaction.redact(result)
 
 
 @server.tool()

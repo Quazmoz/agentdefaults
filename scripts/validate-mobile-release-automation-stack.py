@@ -38,6 +38,7 @@ TOOLKIT_FILES = [
     "tools/mobile-release-automation/requirements.txt",
     "tools/mobile-release-automation/mra/__init__.py",
     "tools/mobile-release-automation/mra/config.py",
+    "tools/mobile-release-automation/mra/android_signing.py",
     "tools/mobile-release-automation/mra/auth.py",
     "tools/mobile-release-automation/mra/play.py",
     "tools/mobile-release-automation/mra/regional_pricing.py",
@@ -46,6 +47,7 @@ TOOLKIT_FILES = [
     "tools/mobile-release-automation/mra/revenuecat_cli.py",
     "tools/mobile-release-automation/mra/cli.py",
     "tools/mobile-release-automation/mra/mcp_server.py",
+    "tools/mobile-release-automation/tests/test_android_signing.py",
     "tools/mobile-release-automation/tests/test_play.py",
     "tools/mobile-release-automation/tests/test_regional_pricing.py",
     "tools/mobile-release-automation/tests/test_admob.py",
@@ -283,6 +285,18 @@ def check_toolkit_safety(failures: list[str]) -> None:
     config = read("tools/mobile-release-automation/mra/config.py")
     if "_require_private" not in config:
         failures.append("config must refuse group/world readable credential files")
+
+    signing = read("tools/mobile-release-automation/mra/android_signing.py")
+    for term in (
+        "ANDROID_SIGNING_KEYCHAIN_SERVICE",
+        "android.injected.signing.store.password",
+        "--no-daemon",
+        "refusing to resolve Android signing secrets for a dirty worktree",
+        "jarsigner",
+        "certificate_sha256",
+    ):
+        if term not in signing:
+            failures.append(f"Android signing path must enforce {term!r}")
 
     admob = read("tools/mobile-release-automation/mra/admob.py")
     if "AdMobAccessDenied" not in admob:
