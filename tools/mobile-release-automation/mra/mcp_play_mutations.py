@@ -93,15 +93,32 @@ def play_publish_bundle(
     status: str = "completed",
     dry_run: bool = True,
 ) -> dict:
-    """Backward-compatible single-AAB wrapper."""
-    return play_publish_bundles(
-        profile,
-        [aab_path],
-        track=track,
-        release_notes_en_us=release_notes_en_us,
-        status=status,
-        dry_run=dry_run,
-    )
+    """Backward-compatible single-AAB publish surface."""
+    package_name = _package(profile)
+    approved = False
+    risk = "observe" if dry_run else "contained"
+    if not dry_run and not _is_internal(track):
+        risk = "high"
+        approved, refusal = _gate(
+            "Approve Google Play release",
+            f"Profile: {profile}\nPackage: {package_name}\nTrack: {track}\n"
+            f"Status: {status}\nAAB: {Path(aab_path).expanduser()}",
+        )
+        if not approved:
+            return refusal
+
+    try:
+        result = play_module.publish_bundle(
+            package_name,
+            Path(aab_path).expanduser(),
+            track=track,
+            status=status,
+            release_notes={"en-US": release_notes_en_us} if release_notes_en_us else None,
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return mcp_play_monetization._failure(error, risk, approved)
+    return _tag(result, risk, approved)
 
 
 def play_promote(
