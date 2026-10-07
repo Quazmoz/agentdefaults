@@ -390,7 +390,8 @@ Snapshots returned through MCP are defensively redacted.
 
 MRA currently automates:
 
-- AAB upload
+- single- and multi-AAB upload
+- atomic phone + Wear releases when separate AABs share one package
 - track reads and releases
 - promotion between tracks
 - staged rollout fractions
@@ -407,6 +408,23 @@ MRA currently automates:
 
 Read-only operations discard their temporary edit. Dry-run edit mutations are
 validated and discarded. A committed public-facing change is approval-gated.
+
+For separate phone and Wear AABs that share one Play package, publish both in
+one edit/release:
+
+```bash
+mra --yes play publish \
+  --profile wristbridge \
+  --track internal \
+  --aab /path/to/app-release.aab \
+  --aab /path/to/wear-release.aab
+```
+
+The MCP equivalent is
+`play_publish_bundles(profile, aab_paths, track="internal", dry_run=false)`.
+Do not make two independent single-bundle track writes for the pair because a
+track PUT replaces the release definition and can drop the version code from
+the previous write.
 
 For read-only listing/localization assessment from the operator CLI:
 

@@ -459,6 +459,79 @@ class PlayClient:
 # ---- high level operations -------------------------------------------------
 
 
+def publish_bundles(
+    package_name: str,
+    aab_paths: Sequence[Path],
+    track: str,
+    status: str = "completed",
+    release_notes: dict[str, str] | None = None,
+    user_fraction: float | None = None,
+    release_name: str | None = None,
+    dry_run: bool = False,
+    changes_not_sent_for_review: bool = False,
+    client: PlayClient | None = None,
+) -> dict:
+    """Upload one or more AABs and assign all version codes in one Play edit.
+
+    Phone and Wear apps that share one package are one multi-artifact Play
+    release. Publishing their AABs in separate track edits can cause the second
+    track write to replace the first release's version-code set.
+    """
+    paths = [Path(path).expanduser() for path in aab_paths]
+    if not paths:
+        raise PlayError("publish requires at least one app bundle")
+
+    play = client or PlayClient(package_name)
+    result: dict[str, Any] = {
+        "package_name": package_name,
+        "track": track,
+        "dry_run": dry_run,
+    }
+    with play.edit(
+        commit=not dry_run,
+        changes_not_sent_for_review=changes_not_sent_for_review,
+    ) as edit_id:
+        uploaded: list[dict[str, Any]] = []
+        version_codes: list[int] = []
+        for path in paths:
+            bundle = play.upload_bundle(edit_id, path)
+            version_code = int(bundle["versionCode"])
+            uploaded.append(
+                {
+                    "path": str(path),
+                    "version_code": version_code,
+                    "sha1": bundle.get("sha1"),
+                    "sha256": bundle.get("sha256"),
+                }
+            )
+            version_codes.append(version_code)
+
+        if len(set(version_codes)) != len(version_codes):
+            raise PlayError(
+                "uploaded bundles resolved to duplicate versionCodes; "
+                "multi-artifact releases require unique versionCodes"
+            )
+
+        play.set_track_release(
+            edit_id,
+            track,
+            version_codes,
+            status=status,
+            release_notes=release_notes,
+            user_fraction=user_fraction,
+            release_name=release_name,
+        )
+        result["edit_id"] = edit_id
+        result["bundles"] = uploaded
+        result["version_codes"] = version_codes
+        if len(uploaded) == 1:
+            result["version_code"] = uploaded[0]["version_code"]
+            result["sha256"] = uploaded[0]["sha256"]
+
+    result["committed"] = not dry_run
+    return result
+
+
 def publish_bundle(
     package_name: str,
     aab_path: Path,
@@ -471,34 +544,19 @@ def publish_bundle(
     changes_not_sent_for_review: bool = False,
     client: PlayClient | None = None,
 ) -> dict:
-    """Upload a bundle and assign it to a track in one edit.
-
-    With dry_run the edit is validated and then discarded, so nothing reaches
-    testers. Note that the upload itself still happens: validation cannot be
-    performed against a bundle Play has not received.
-    """
-    play = client or PlayClient(package_name)
-    result: dict[str, Any] = {
-        "package_name": package_name,
-        "track": track,
-        "dry_run": dry_run,
-    }
-    with play.edit(commit=not dry_run, changes_not_sent_for_review=changes_not_sent_for_review) as edit_id:
-        bundle = play.upload_bundle(edit_id, aab_path)
-        result["version_code"] = bundle["versionCode"]
-        result["sha256"] = bundle.get("sha256")
-        play.set_track_release(
-            edit_id,
-            track,
-            [bundle["versionCode"]],
-            status=status,
-            release_notes=release_notes,
-            user_fraction=user_fraction,
-            release_name=release_name,
-        )
-        result["edit_id"] = edit_id
-    result["committed"] = not dry_run
-    return result
+    """Backward-compatible single-bundle wrapper around publish_bundles."""
+    return publish_bundles(
+        package_name,
+        [aab_path],
+        track=track,
+        status=status,
+        release_notes=release_notes,
+        user_fraction=user_fraction,
+        release_name=release_name,
+        dry_run=dry_run,
+        changes_not_sent_for_review=changes_not_sent_for_review,
+        client=client,
+    )
 
 
 def promote(

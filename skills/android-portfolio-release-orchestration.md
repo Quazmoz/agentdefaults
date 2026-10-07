@@ -81,6 +81,29 @@ else:
 
 Record the exact candidate Git SHA after refresh.
 
+## Internal-candidate versus production qualification
+
+Internal Testing is a QA distribution lane, not evidence that an app is
+production-qualified. Do not require every production-only physical-device,
+paired-runtime, billing-sandbox, screenshot, store-copy, or rollout gate before
+an artifact may reach Internal Testing unless the repository explicitly marks
+that gate as required before any internal distribution.
+
+Use these concepts separately:
+
+- `INTERNAL_READY` — the exact current-main candidate is suitable for Internal
+  Testing so QA can continue. Artifact-integrity build/lint/test/static gates
+  have passed, release signing/package/version identity is valid, and there is
+  no known crash, data-loss, security/privacy, or entitlement defect that makes
+  tester distribution unsafe.
+- `RELEASE-QUALIFIED` — every applicable repository release gate, including
+  required device/emulator/paired-runtime/Play-installed/manual gates, has
+  actually passed.
+
+A candidate may be `INTERNAL_READY` while production qualification remains
+`UNVERIFIED`. Those unfinished gates remain blockers for later production
+promotion when the repository requires them.
+
 ## Qualification and Build
 
 Do not blindly copy one Gradle command across the portfolio.
@@ -98,7 +121,10 @@ release-specific R8/native/signing checks
 
 Use the project's own wrapper and JDK/toolchain.
 
-A failed or unavailable required gate marks that app `BLOCKED` or `UNVERIFIED`; it does not become release-qualified because another app passed.
+A failed gate required for artifact integrity or internal distribution marks
+that app `BLOCKED` or `UNVERIFIED`. An unexecuted production-only
+manual/device gate keeps `RELEASE-QUALIFIED=false` but does not by itself
+prevent `INTERNAL_READY=true`.
 
 ## Release signing and final AAB
 
@@ -163,14 +189,17 @@ For every successfully built release candidate, record at minimum:
   "git_sha": "...",
   "branch": "main",
   "application_id": "...",
-  "version_code": 123,
+  "version_codes": [123, 124],
   "version_name": "1.2.3",
-  "aab_path": "...",
-  "aab_sha256": "...",
+  "artifacts": [
+    {"module": "app", "aab_path": "...", "aab_sha256": "..."},
+    {"module": "wear", "aab_path": "...", "aab_sha256": "..."}
+  ],
   "gradle_tasks": ["..."],
   "qualification": {
     "built": true,
     "tested": true,
+    "internal_ready": true,
     "release_qualified": false
   }
 }
@@ -180,15 +209,23 @@ Never call an app `RELEASE-QUALIFIED` unless its repository's required gates act
 
 ## Internal Testing Upload
 
-For a candidate that passed the required gates:
+For a candidate that is `INTERNAL_READY`:
 
 1. run MRA diagnostics/approval-policy checks;
 2. read the current Play tracks;
 3. confirm package/application ID and versionCode do not conflict with live state;
-4. upload the exact recorded AAB to `internal`;
-5. read the internal track back;
-6. verify the uploaded versionCode is present;
-7. retain the same candidate digest in the report.
+4. determine the complete Play artifact set for that package;
+5. for a single-artifact app, upload the exact AAB to `internal`;
+6. for phone + Wear apps sharing one package, upload every required AAB in
+   **one MRA edit/release** with `play_publish_bundles` or repeated CLI
+   `--aab` arguments;
+7. read the internal track back;
+8. verify every intended versionCode is present in the same release;
+9. retain every candidate digest in the report.
+
+Never publish phone and Wear AABs sharing one package as two independent
+single-bundle track writes. The second track update can replace the first
+release's version-code set.
 
 The internal upload may be automated as a contained mutation under MRA's policy, but the operator's local MRA configuration remains authoritative.
 
@@ -213,7 +250,8 @@ Default to sequential or bounded low concurrency for Gradle builds to avoid memo
 A portfolio run must continue past isolated app failures when safe, while preserving an explicit result per app:
 
 ```text
-QUALIFIED
+INTERNAL_READY
+RELEASE_QUALIFIED
 BUILT_NOT_QUALIFIED
 BLOCKED_DIRTY_WORKTREE
 BLOCKED_GIT_DIVERGENCE

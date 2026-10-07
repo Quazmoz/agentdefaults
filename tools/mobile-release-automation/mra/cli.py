@@ -232,9 +232,9 @@ def cmd_play_publish(args: argparse.Namespace) -> int:
     if not args.dry_run:
         confirm(args, f"publish to the {args.track!r} track")
     return emit(
-        play_module.publish_bundle(
+        play_module.publish_bundles(
             resolve_package(args),
-            Path(args.aab).expanduser(),
+            [Path(path).expanduser() for path in args.aab],
             track=args.track,
             status=args.status,
             release_notes=parse_notes(args.notes),
@@ -494,7 +494,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     publish = play.add_parser("publish", help=f"upload an .aab to a track [{MUTATING}]")
     add_target(publish)
-    publish.add_argument("--aab", required=True, help="path to the app bundle")
+    publish.add_argument(
+        "--aab",
+        action="append",
+        required=True,
+        help="path to an app bundle; repeat for phone/Wear artifacts sharing one package",
+    )
     publish.add_argument("--track", default="internal")
     publish.add_argument("--status", default="completed", choices=play_module.RELEASE_STATUSES)
     publish.add_argument("--notes", action="append", metavar="LANG=TEXT")

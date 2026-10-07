@@ -30,14 +30,31 @@ Do not promote to production in this run unless the operator separately authoriz
 4. Never destroy, stash, reset, rebase, or overwrite uncommitted work automatically.
 5. Refresh clean repositories from their intended release branch using safe fast-forward semantics.
 6. Discover the actual applicable Gradle qualification/release tasks instead of assuming one command fits all apps.
-7. Run required lint/test/assembly/release gates, but use MRA's Keychain-backed signing broker for the final Play AAB rather than inventing signing properties.
+7. Separate Internal Testing eligibility from production qualification. Run
+   every gate required to make the exact artifact safe and valid for Internal
+   Testing. Keep production-only physical-device, paired-runtime,
+   billing-sandbox, screenshot, and other later gates explicitly UNVERIFIED
+   instead of automatically blocking Internal Testing unless the repository
+   explicitly makes them pre-internal requirements. Never call such a candidate
+   RELEASE-QUALIFIED. Use MRA's Keychain-backed signing broker for the final
+   Play AAB rather than inventing signing properties.
 8. Check `android_signing_status(identity="play-upload")`. If it is not ready, mark `BLOCKED_SIGNING` and tell the operator to run the documented interactive `mra-agent signing configure` command locally; never request a password in chat.
-9. For a clean qualified repository, call `android_build_signed_bundles(repo_path, modules, identity="play-upload")` using the real application module(s). Treat the returned signed AAB path, SHA-256 and signer certificate as the exact candidate. Do not rebuild it afterward.
+9. For a clean INTERNAL_READY repository, call
+   `android_build_signed_bundles(repo_path, modules, identity="play-upload")`
+   using the real application module(s). Treat every returned signed AAB path,
+   SHA-256 and signer certificate as one exact candidate set. Do not rebuild it
+   afterward.
 10. Record an exact-candidate manifest including Git SHA, applicationId, versionCode/versionName, AAB path, AAB SHA-256, signer certificate SHA-256, tasks run, and evidence labels.
-11. For each qualified candidate, reconcile current Play track state through MRA.
-12. Upload the exact recorded AAB to `internal`.
-13. Read the internal track back and verify the intended versionCode.
-14. Continue past isolated failures when safe and preserve one explicit status per app.
+11. For each INTERNAL_READY candidate, reconcile current Play track state through MRA.
+12. Determine whether Play distribution is one AAB or a phone/Wear AAB set.
+13. For a phone/Wear pair sharing one package, publish the complete set
+    atomically through `play_publish_bundles`, or operator CLI with repeated
+    `--aab` arguments in one command. Never perform two independent
+    single-bundle track writes for the pair.
+14. Upload the exact candidate set to `internal`.
+15. Read the internal track back and verify every intended versionCode is
+    present in the same release.
+16. Continue past isolated failures when safe and preserve one explicit status per app.
 
 ## Hard stops per app
 
@@ -74,3 +91,6 @@ Return:
 Use the evidence labels accurately:
 
 `IMPLEMENTED | STATICALLY VERIFIED | BUILT | TESTED | RELEASE-QUALIFIED | UNVERIFIED`
+
+`INTERNAL_READY` is a distribution-status classification only; it is not an
+evidence synonym for RELEASE-QUALIFIED.
