@@ -173,8 +173,11 @@ class EdlPipeline(unittest.TestCase):
         plan = edl.build_plan(path, check_audio=False)
         self.assertEqual(plan["errors"], [])
         self.assertEqual(plan["redactions"][0]["slices"][0]["box"], [92, 92, 136, 36])
-        command = " ".join(edl.build_render_command(plan, self.tmp / "moving.mp4", 23, "ultrafast"))
+        out = self.tmp / "renders/privacy-moving.mp4"
+        command = " ".join(edl.build_render_command(plan, out, 23, "ultrafast"))
         self.assertIn("boxblur=", command)
+        self.assertEqual(edl.main(["render", str(path), "-o", str(out), "--preset", "ultrafast"]), 0)
+        self.assertTrue(out.is_file())
 
     def test_captions_remap_to_output_time_and_drop_partial_words(self):
         cues = edl.caption_cues(edl.build_plan(self.edl_path, check_audio=False), 42, 5.0)
