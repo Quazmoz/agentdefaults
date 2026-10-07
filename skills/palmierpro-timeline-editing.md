@@ -242,13 +242,20 @@ Verify caption placement with `inspect_timeline` when important UI or platform c
 
 ## Transitions
 
-Clean cuts are the default for technical YouTube.
+This section is the canonical transition default for every Palmier prompt and skill. A prompt may override it only by saying so explicitly.
 
-Use fades/dips only at meaningful section boundaries or when requested.
+| Where | Default |
+|---|---|
+| Very start of a first-pass or full long-form edit | Subtle fade-in from black, 8-15 frames at project fps, with a matching audio fade-in when audio starts at frame 0 |
+| Very end of a first-pass or full long-form edit | Subtle fade-out to black, 8-15 frames, with a matching audio fade-out |
+| Between shots in a continuous scene | Clean cut |
+| Major section or scene change | Clean cut. Use a short dip-to-black only when the user asks for one |
+| Shorts and vertical cutdowns | No head fade (the hook must hit in frame 1). A tail fade only if the clip does not loop |
+| Transcript-cleanup-only and specific-change requests | No new transitions |
 
-If no dedicated transition tool is exposed, use supported keyframed opacity/overlap techniques and verify the actual composited result.
+Implement fades with the live schema: `set_clip_properties` fade fields when exposed, otherwise `set_keyframes` on opacity and volume. Do not invent a transition API. Verify each fade with `inspect_timeline` at its first and last frame.
 
-Do not add a transition to every cut.
+Never use a crossfade to hide overlapping speech. Audio micro-fades are for clicks and noise-floor jumps only.
 
 ## Color, Effects, Audio
 
@@ -340,7 +347,7 @@ Refresh state after undo before more mutation.
 - Preserve caveats and negative results.
 - Leave enough dwell time for code/UI/terminal reading.
 - Do not add a long-form caption track by default.
-- Use clean cuts more than decorative transitions.
+- Follow the Transitions table above; no decorative transitions between routine cuts.
 - Do not fabricate a CTA that was never recorded/requested.
 
 ## Failure Handling
