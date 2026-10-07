@@ -66,7 +66,7 @@ Use the smallest correct owner. Infrastructure hosting an AI workload is still D
 | Audit or harden DevOps cybersecurity across Terraform/OpenTofu, Ansible/AAP, Jenkins, CI/CD, GitOps, IAM, secrets, runners/agents, state, or software supply chain | [`docs/quickstarts/devsecops-security-engineer.md`](docs/quickstarts/devsecops-security-engineer.md) · [`agents/devsecops-security-engineer.md`](agents/devsecops-security-engineer.md) |
 | Create, audit, or reconcile DevOps docs-as-code, runbooks, Markdown, Mermaid, and documentation diagrams | [`docs/quickstarts/devops-documentation-engineer.md`](docs/quickstarts/devops-documentation-engineer.md) · [`agents/devops-documentation-engineer.md`](agents/devops-documentation-engineer.md) |
 | De-slop an existing codebase: stale comments/docstrings, duplicate helpers, dead residue, abstraction inflation, brittle tests, dependency/config drift, weak failure handling, or practical efficiency cleanup across languages | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) · [`agents/codebase-maintenance-engineer.md`](agents/codebase-maintenance-engineer.md) |
-| Automate Google Play releases, RevenueCat monetization configuration, or AdMob inventory: internal testing uploads, track promotion, products, entitlements, offerings, packages, apps, and ad units | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) · [`agents/mobile-release-automation-engineer.md`](agents/mobile-release-automation-engineer.md) |
+| Automate Google Play releases, RevenueCat monetization configuration, AdMob inventory, or portfolio-wide local build -> Internal Testing orchestration | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) · [`agents/mobile-release-automation-engineer.md`](agents/mobile-release-automation-engineer.md) |
 | Design, build, or audit another AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 
@@ -94,11 +94,13 @@ Use `prompts/implementation/github-actions-task.md` for repeatable work and `sch
 docs/quickstarts/mobile-release-automation.md
 agents/mobile-release-automation-engineer.md
 skills/mobile-release-automation-orchestration.md
+skills/android-portfolio-release-orchestration.md
 skills/google-play-release-automation.md
 skills/google-play-localized-pricing.md
 skills/revenuecat-monetization-automation.md
 skills/admob-inventory-automation.md
 prompts/implementation/mobile-release-automation-task.md
+prompts/implementation/android-portfolio-release-orchestration.md
 prompts/implementation/google-play-localized-pricing-rollout.md
 schemas/mobile-release-automation-task.schema.json
 examples/mobile-release-automation-task.yaml
@@ -108,7 +110,7 @@ tools/mobile-release-automation/
 scripts/validate-mobile-release-automation-stack.py
 ```
 
-This specialist owns Play app bundle upload, testing tracks, staged rollout and promotion, Play monetization products, RevenueCat apps/products/entitlements/offerings/packages, and AdMob apps and ad units.
+This specialist owns Play app bundle upload, testing tracks, staged rollout and promotion, Play monetization products, RevenueCat apps/products/entitlements/offerings/packages, and AdMob apps and ad units. For many local Android/Wear repositories, `skills/android-portfolio-release-orchestration.md` adds safe checkout discovery, per-repo Gradle qualification, exact-candidate manifests, and verified Internal Testing uploads without making the portfolio registry authoritative for build state.
 
 The three platforms are not equally automatable, and the stack treats that as a first-class fact. Google Play and RevenueCat support API-driven creation. AdMob accepts OAuth user credentials only, rejects service accounts entirely, and gates app and ad-unit creation per account through a Google account manager. Probe AdMob access before planning AdMob automation.
 
@@ -120,7 +122,7 @@ Use `prompts/implementation/google-play-localized-pricing-rollout.md` for approv
 
 | Need | Start with |
 |---|---|
-| Google Play growth / ASO | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
+| Google Play growth / ASO / listing localization review | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
 | Palmier Pro MCP video editing | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
 | Claude Code local video editing | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
 | App-market browser research | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) |

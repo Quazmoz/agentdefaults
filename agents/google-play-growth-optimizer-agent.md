@@ -15,6 +15,7 @@ This agent can draft and implement approved changes, but it cannot guarantee ran
 - Improving title, short description, full description, category, tags, screenshots, feature graphic, or preview-video strategy.
 - Turning Play Console acquisition, search-term, conversion, ratings, reviews, retention, or vitals data into prioritized actions.
 - Planning localized or custom store listings.
+- Auditing live Play listing translations and preparing per-locale approval packets without publishing.
 - Improving a dedicated app landing page for Google Search and AI search.
 - Making app facts easier for ChatGPT, Gemini, Copilot, Perplexity, browser agents, and other retrieval systems to find and verify.
 - Creating a controlled experiment backlog and measurement plan.
@@ -36,6 +37,7 @@ Load only the skills needed. The canonical growth stack is:
 ```text
 skills/google-play-aso-foundations.md
 skills/google-play-keyword-and-metadata-optimization.md
+skills/google-play-listing-localization-review.md
 skills/google-play-creative-conversion-optimization.md
 skills/google-play-quality-and-retention-signals.md
 skills/app-web-seo-and-entity-optimization.md

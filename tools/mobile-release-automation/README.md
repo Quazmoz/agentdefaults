@@ -334,6 +334,7 @@ MRA currently automates:
 - subscriptions and one-time products
 - approval-bound localized one-time-product pricing plans
 - localized store listings
+- read-only listing inventory/single-locale fetch for translation audits
 - screenshots/images
 - Google Group tester configuration
 - country availability
@@ -342,6 +343,15 @@ MRA currently automates:
 
 Read-only operations discard their temporary edit. Dry-run edit mutations are
 validated and discarded. A committed public-facing change is approval-gated.
+
+For read-only listing/localization assessment from the operator CLI:
+
+```bash
+mra play listings --profile medtick
+mra play listing --profile medtick --language en-US
+```
+
+These commands never commit an edit. Agent-side translation review should use `skills/google-play-listing-localization-review.md` and must not call the approval-gated update tool until the operator separately approves a concrete locale diff.
 
 ## Localized one-time-product pricing
 

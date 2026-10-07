@@ -22,6 +22,14 @@ def routes() -> dict:
         ("POST", ":validate"): ok({"id": "edit-1"}),
         ("DELETE", "/edits/"): ok({}),
         ("GET", "/listings"): ok({"listings": [{"language": "en-US", "title": "Old"}]}),
+        ("GET", "/listings/en-US"): ok(
+            {
+                "language": "en-US",
+                "title": "Old",
+                "shortDescription": "Short",
+                "fullDescription": "Full",
+            }
+        ),
         ("PUT", "/listings/en-US"): ok({"language": "en-US", "title": "New"}),
         ("GET", "/testers/internal"): ok({"googleGroups": ["qa@example.com"]}),
         ("PUT", "/testers/internal"): ok({"googleGroups": ["qa@example.com"]}),
@@ -44,6 +52,14 @@ class ListingTest(unittest.TestCase):
     def test_list_is_read_only_and_discards_edit(self) -> None:
         api, session = management()
         self.assertEqual(api.list_listings()[0]["language"], "en-US")
+        self.assertFalse(any(":commit" in url for url in session.urls("POST")))
+        self.assertFalse(any(":validate" in url for url in session.urls("POST")))
+        self.assertTrue(session.urls("DELETE"))
+
+    def test_get_listing_is_read_only_and_discards_edit(self) -> None:
+        api, session = management()
+        listing = api.get_listing("en-US")
+        self.assertEqual(listing["title"], "Old")
         self.assertFalse(any(":commit" in url for url in session.urls("POST")))
         self.assertFalse(any(":validate" in url for url in session.urls("POST")))
         self.assertTrue(session.urls("DELETE"))

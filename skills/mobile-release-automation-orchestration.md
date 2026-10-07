@@ -10,6 +10,10 @@ Load this skill when a task touches release upload, track promotion, monetizatio
 
 For Google Play regional price planning or mutation, also load `skills/google-play-localized-pricing.md`. Regional pricing is an approval-bound financial mutation, not a generic catalog edit.
 
+For portfolio-wide local build -> Internal Testing -> promotion work, also load `skills/android-portfolio-release-orchestration.md`. That skill owns local checkout discovery, dirty-worktree handling, Gradle qualification, and exact-candidate manifests; MRA remains the Play mutation/read-back surface.
+
+For Play listing translation review, load `skills/google-play-listing-localization-review.md`. Listing assessment is observe/propose work; public metadata mutation remains approval-gated.
+
 ## Required Inputs
 
 ```text

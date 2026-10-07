@@ -63,7 +63,7 @@ Then choose what you are trying to do:
 | Use validators or the loop control plane | [`scripts/README.md`](scripts/README.md) |
 | Design or audit an AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
 | De-slop/refactor a codebase safely | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
-| Automate Play releases, RevenueCat, and AdMob | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) |
+| Automate Play releases, RevenueCat, AdMob, portfolio builds, or Play localization reads | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) |
 | Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | Route principal/specialist engineering work | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
 | Build or release Wear OS software | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
@@ -209,8 +209,8 @@ This table is a routing map, not a preload list. Load the smallest coherent stac
 | Automation Platform Selection | Category-aware architecture/product decisions | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
 | App Market Research | Browser-backed Play Store/community research | [`docs/quickstarts/app-market-research.md`](docs/quickstarts/app-market-research.md) |
 | Community App Validation | Focused public-community demand/history validation | [`docs/quickstarts/community-app-validation.md`](docs/quickstarts/community-app-validation.md) |
-| Google Play Growth | ASO, conversion, quality, web/entity and growth experiments | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
-| Mobile Release and Monetization Automation | Play releases and tracks, RevenueCat products/entitlements/offerings, AdMob apps and ad units | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) |
+| Google Play Growth | ASO, conversion, listing localization review, quality, web/entity and growth experiments | [`docs/quickstarts/google-play-growth.md`](docs/quickstarts/google-play-growth.md) |
+| Mobile Release and Monetization Automation | Play releases/tracks/listing reads, portfolio exact-candidate orchestration, RevenueCat products/entitlements/offerings, AdMob apps and ad units | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) |
 | Palmier Pro MCP | Agent-driven video editing through Palmier Pro MCP | [`docs/quickstarts/palmierpro-mcp.md`](docs/quickstarts/palmierpro-mcp.md) |
 | Claude Code Local Video Editing | File-based YouTube editing with Parakeet, HyperFrames, evidence-backed browser b-roll, and FFmpeg | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
 | Wear OS Development / Release | Wear OS implementation and Play readiness | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
