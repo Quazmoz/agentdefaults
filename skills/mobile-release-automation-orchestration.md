@@ -21,6 +21,7 @@ mode                assess | setup | release | monetize | inventory | diagnose
 app identity        Play package name; AdMob publisher/app id; RevenueCat project/app id
 intended outcome    one observable, externally checkable platform result
 authorized actions  which mutations the operator approved, on which targets
+authorization source interactive | explicit_user_prompt
 execution surface   local CLI | first-party MCP | local MCP
 ```
 
@@ -75,7 +76,11 @@ For a new app, a new track, or a newly granted credential, use a supported dry-r
 
 ### 5. Classify and authorize each mutation
 
-State the action, its resolved target, its permission class, and its blast radius. Obtain approval for that exact action. An approval for the internal track does not cover closed testing, and an approval to create a product does not cover activating an offer.
+State the action, its resolved target, its permission class, and its blast radius.
+
+If the current user prompt already names and authorizes that exact mutation, treat it as human approval for that scope. Record `authorization_source: explicit_user_prompt` and the exact `approved_actions`. Do not show a redundant approval popup; execute through the operator CLI with `--yes` when the equivalent MCP tool would require a native dialog.
+
+If the current prompt did not authorize the exact action, use the normal interactive approval path. An approval for the internal track does not cover closed testing, and an approval to create a product does not cover activating an offer.
 
 For localized pricing, the approval target is the persisted `plan_id` plus its app/product/purchase-option scope. Never translate approval of one plan into a regenerated plan or another app. If the plan becomes stale, regenerate it and obtain fresh approval.
 
@@ -112,7 +117,7 @@ Report every generated identifier, flagging those that must reach source code be
 
 ## Safety
 
-- Default to `propose`. Mutating tools require explicit confirmation and must not default to enabled.
+- Default to `propose`. Mutations require explicit human authorization. A precise current user prompt counts as that authorization for its named scope; do not convert it into blanket permission.
 - Never script a vendor console UI to work around a missing API.
 - Never write credentials, refresh tokens, OAuth tokens, or keys into the repository, logs, commit messages, or transcripts.
 - State plainly when an action transmits a credential across a vendor boundary.

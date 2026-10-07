@@ -54,6 +54,7 @@ execution:
 
 authority:
   permission_class: mutate_reversible
+  authorization_source: explicit_user_prompt
   approved_actions:
     - publish version code 184 to the internal track of com.example.myapp
     - create RevenueCat product premium_monthly in project proj_abc123

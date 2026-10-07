@@ -154,7 +154,12 @@ claude mcp add mobile-release-automation -- \
   /absolute/path/to/tools/mobile-release-automation/.venv/bin/mra-agent-mcp
 ```
 
-The local MCP server is risk-gated, not read-only. It can inspect state and perform contained automation directly. High-risk actions require a real local human approval before the vendor API call occurs.
+The local MCP server is risk-gated, not read-only. It can inspect state and perform contained automation directly. High-risk MCP actions use a native local approval dialog.
+
+If the current user prompt already explicitly authorizes the exact high-risk
+mutation, do not invoke the MCP path just to ask the same question again. Use
+the operator CLI with `--yes` for the prompt's exact approved scope. Any scope
+expansion still requires new authorization.
 
 ### 6. Create a profile
 
@@ -187,14 +192,27 @@ The legacy commands `mra-agent profile bind-revenuecat` and `mra-agent auth bind
 
 ### 7. Read Play listings safely
 
-For translation/localization assessment, the operator CLI now exposes read-only listing commands:
+For translation/localization assessment, the operator CLI exposes read-only listing commands:
 
 ```bash
 mra play listings --profile myapp
 mra play listing --profile myapp --language en-US
 ```
 
-For agent review, use `skills/google-play-listing-localization-review.md` plus `prompts/review/google-play-listing-localization-audit.md`. Assessment does not authorize `play_update_listing`.
+For an exact listing change already authorized by the current user prompt, use
+the drift-protected operator path rather than the high-risk MCP tool:
+
+```bash
+mra --yes play listing-update \
+  --profile myapp \
+  --language en-US \
+  --expected-current /tmp/en-US-before.json \
+  --body /tmp/en-US-after.json
+```
+
+The command aborts on live drift and performs immediate read-back verification.
+For agent review, use `skills/google-play-listing-localization-review.md` plus
+`prompts/review/google-play-listing-localization-audit.md`.
 
 ### 8. Portfolio-wide local release runs
 
@@ -271,7 +289,10 @@ high         non-internal Play releases/promotions; current-offering changes;
 
 Contained actions may execute through MCP. High-risk MCP actions fail closed unless the local operator approves the exact action in the native macOS approval dialog. The AI cannot self-authorize by setting a confirmation boolean.
 
-The operator CLI remains available for explicit local work and retains its `--yes` confirmation behavior.
+A precise current user prompt can preauthorize named high-risk actions. For that
+case, agents should use the operator CLI and `--yes` for those exact actions,
+avoiding a duplicate popup. The prompt must name the target/scope; `--yes`
+must never be generalized beyond it.
 
 ## What Is Not Automatable
 

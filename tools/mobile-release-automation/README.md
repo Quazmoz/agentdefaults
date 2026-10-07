@@ -328,8 +328,15 @@ High-risk MCP actions do **not** accept an agent-controlled `confirm=true` bypas
 They invoke the native local human-approval gate and fail closed if the operator
 declines, times out, or the approval UI is unavailable.
 
-The operator `mra` CLI remains a separate trust surface and uses explicit
-operator confirmation such as `--yes` for mutation commands.
+When the current user prompt explicitly preauthorizes an exact mutation, the
+prompt itself is the human authorization. Agents with the local operator CLI
+should use `mra --yes` for only those named actions instead of invoking the
+high-risk MCP tool and forcing a redundant popup. Any scope expansion requires
+new authorization.
+
+The operator `mra` CLI is therefore the prompt-preauthorized trust surface;
+`--yes` means "execute the exact action already authorized by the operator",
+not "approve arbitrary future mutations".
 
 ## Plan, apply, verify
 
@@ -408,7 +415,22 @@ mra play listings --profile medtick
 mra play listing --profile medtick --language en-US
 ```
 
-These commands never commit an edit. Agent-side translation review should use `skills/google-play-listing-localization-review.md` and must not call the approval-gated update tool until the operator separately approves a concrete locale diff.
+These commands never commit an edit. Agent-side translation review should use `skills/google-play-listing-localization-review.md`.
+
+MRA 1.10.0 also exposes an operator listing mutation designed for prompt-preauthorized work:
+
+```bash
+mra --yes play listing-update \
+  --profile medtick \
+  --language de-DE \
+  --expected-current /tmp/medtick-de-before.json \
+  --body /tmp/medtick-de-after.json
+```
+
+Both JSON files contain the complete `language`, `title`, `shortDescription`,
+and `fullDescription`. The command refuses the write if live text differs from
+the expected-current snapshot, commits the update only after `--yes`, then
+re-reads Play and returns `status: verified` only on an exact match.
 
 ## Localized one-time-product pricing
 

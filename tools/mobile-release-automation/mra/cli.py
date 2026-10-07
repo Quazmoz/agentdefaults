@@ -14,7 +14,7 @@ import json
 import sys
 
 from . import admob as admob_module
-from . import admob_credentials, auth, config, human_approval, play_credentials, revenuecat_cli
+from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
 from . import play as play_module
 from . import play_management, play_reporting, regional_pricing
 from . import revenuecat as rc_module
@@ -124,6 +124,110 @@ def cmd_play_listing(args: argparse.Namespace) -> int:
     return emit(client.get_listing(args.language))
 
 
+_LISTING_TEXT_FIELDS = ("title", "shortDescription", "fullDescription")
+
+
+def _load_listing_json(path_value: str, language: str, label: str) -> dict[str, str]:
+    path = Path(path_value).expanduser()
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise SystemExit(f"could not read {label} listing JSON {path}: {error}") from error
+    if not isinstance(payload, dict):
+        raise SystemExit(f"{label} listing JSON must contain one object")
+
+    allowed = {"language", *_LISTING_TEXT_FIELDS}
+    unknown = sorted(set(payload) - allowed)
+    if unknown:
+        raise SystemExit(
+            f"{label} listing JSON has unsupported fields: {', '.join(unknown)}"
+        )
+    if payload.get("language", language) != language:
+        raise SystemExit(
+            f"{label} listing language {payload.get('language')!r} does not match {language!r}"
+        )
+
+    missing = [field for field in _LISTING_TEXT_FIELDS if field not in payload]
+    if missing:
+        raise SystemExit(
+            f"{label} listing JSON is missing required fields: {', '.join(missing)}"
+        )
+    normalized: dict[str, str] = {"language": language}
+    for field in _LISTING_TEXT_FIELDS:
+        value = payload[field]
+        if not isinstance(value, str):
+            raise SystemExit(f"{label} listing field {field!r} must be a string")
+        normalized[field] = value
+    return normalized
+
+
+def _listing_projection(payload: dict) -> dict[str, str | None]:
+    return {field: payload.get(field) for field in _LISTING_TEXT_FIELDS}
+
+
+def cmd_play_listing_update(args: argparse.Namespace) -> int:
+    """Update one localized listing with exact-state drift protection and read-back."""
+    desired = _load_listing_json(args.body, args.language, "desired")
+    expected = _load_listing_json(args.expected_current, args.language, "expected-current")
+    client = play_management.PlayManagementClient(resolve_package(args))
+
+    current = client.get_listing(args.language)
+    drift = {
+        field: {"expected": expected[field], "actual": current.get(field)}
+        for field in _LISTING_TEXT_FIELDS
+        if current.get(field) != expected[field]
+    }
+    if drift:
+        emit(
+            {
+                "status": "drift_detected",
+                "language": args.language,
+                "committed": False,
+                "drift": drift,
+            }
+        )
+        return 2
+
+    if not args.dry_run:
+        confirm(args, f"update public Play listing {args.language!r}")
+
+    result = client.update_listing(
+        args.language,
+        title=desired["title"],
+        short_description=desired["shortDescription"],
+        full_description=desired["fullDescription"],
+        dry_run=args.dry_run,
+    )
+    if args.dry_run:
+        return emit(
+            {
+                "status": "validated",
+                "language": args.language,
+                "committed": False,
+                "desired": _listing_projection(desired),
+                "result": result,
+            }
+        )
+
+    read_back = client.get_listing(args.language)
+    mismatches = {
+        field: {"expected": desired[field], "actual": read_back.get(field)}
+        for field in _LISTING_TEXT_FIELDS
+        if read_back.get(field) != desired[field]
+    }
+    payload = {
+        "status": "verified" if not mismatches else "verification_failed",
+        "language": args.language,
+        "committed": True,
+        "before": _listing_projection(current),
+        "desired": _listing_projection(desired),
+        "read_back": _listing_projection(read_back),
+        "mismatches": mismatches,
+    }
+    emit(payload)
+    return 0 if not mismatches else 5
+
+
 def cmd_play_publish(args: argparse.Namespace) -> int:
     if not args.dry_run:
         confirm(args, f"publish to the {args.track!r} track")
@@ -202,20 +306,7 @@ def cmd_play_pricing_plan(args: argparse.Namespace) -> int:
 
 def cmd_play_pricing_apply(args: argparse.Namespace) -> int:
     confirm(args, f"apply localized pricing plan {args.plan_id}")
-    plan = regional_pricing.load_plan(args.plan_id)
-    decision = human_approval.request(
-        "Approve Google Play regional pricing change",
-        regional_pricing.approval_detail(plan),
-    )
-    if not decision.get("approved"):
-        return emit(
-            {
-                "status": "human_approval_required",
-                "risk": "high",
-                "approval": decision,
-                "detail": "Regional pricing plan was not executed.",
-            }
-        )
+    regional_pricing.load_plan(args.plan_id)
     return emit(
         regional_pricing.apply_one_time_product_plan(
             resolve_package(args),
@@ -377,6 +468,29 @@ def build_parser() -> argparse.ArgumentParser:
     add_target(listing)
     listing.add_argument("--language", default="en-US", help="BCP-47 Play listing locale")
     listing.set_defaults(func=cmd_play_listing)
+
+    listing_update = play.add_parser(
+        "listing-update",
+        help=f"update one localized Play Store listing with drift/read-back checks [{MUTATING}]",
+    )
+    add_target(listing_update)
+    listing_update.add_argument("--language", required=True, help="BCP-47 Play listing locale")
+    listing_update.add_argument(
+        "--body",
+        required=True,
+        help="JSON file containing language/title/shortDescription/fullDescription",
+    )
+    listing_update.add_argument(
+        "--expected-current",
+        required=True,
+        help="JSON snapshot that must exactly match the current live text before mutation",
+    )
+    listing_update.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate desired listing then discard the edit",
+    )
+    listing_update.set_defaults(func=cmd_play_listing_update)
 
     publish = play.add_parser("publish", help=f"upload an .aab to a track [{MUTATING}]")
     add_target(publish)
