@@ -1,0 +1,37 @@
+{
+  "project": "Fixture: MCP demo talking head",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "canGenerate": true,
+  "settings_scope": "project",
+  "media": [
+    {"mediaRef": "m-cam", "name": "cam-take1.mov", "type": "video", "ready": true, "durationSeconds": 42.0},
+    {"mediaRef": "m-screen", "name": "screen.mov", "type": "video", "ready": true, "durationSeconds": 42.0}
+  ],
+  "tracks": [
+    {"key": "v1", "type": "video", "name": "Screen"},
+    {"key": "v2", "type": "video", "name": "Facecam"},
+    {"key": "a1", "type": "audio", "name": "Dialogue"}
+  ],
+  "clips": [
+    {"key": "screen", "track": "v1", "mediaRef": "m-screen", "startFrame": 0, "endFrame": 1260},
+    {"key": "cam", "track": "v2", "mediaRef": "m-cam", "startFrame": 0, "endFrame": 1260},
+    {"key": "cam-audio", "track": "a1", "mediaRef": "m-cam", "startFrame": 0, "endFrame": 1260, "linkGroup": "L1"}
+  ],
+  "words": [
+    {"text": "um", "start": 1.0, "end": 1.3},
+    {"text": "so", "start": 1.5, "end": 1.7},
+    {"text": "this", "start": 1.8, "end": 2.0},
+    {"text": "agent", "start": 2.0, "end": 2.4},
+    {"text": "edited", "start": 2.5, "end": 2.9},
+    {"text": "my", "start": 3.0, "end": 3.1},
+    {"text": "my", "start": 3.3, "end": 3.4},
+    {"text": "timeline", "start": 3.5, "end": 4.1},
+    {"text": "but", "start": 4.6, "end": 4.8},
+    {"text": "it", "start": 4.8, "end": 4.9},
+    {"text": "needs", "start": 5.0, "end": 5.3},
+    {"text": "Palmier", "start": 5.4, "end": 5.9},
+    {"text": "0.9", "start": 6.0, "end": 6.5}
+  ]
+}
