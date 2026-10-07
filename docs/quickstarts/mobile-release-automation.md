@@ -9,10 +9,12 @@ Set up and use agent-driven automation for Google Play, RevenueCat, and AdMob: u
 ```text
 agents/mobile-release-automation-engineer.md
 skills/mobile-release-automation-orchestration.md
+skills/android-portfolio-release-orchestration.md
 skills/google-play-release-automation.md
 skills/revenuecat-monetization-automation.md
 skills/admob-inventory-automation.md
 prompts/implementation/mobile-release-automation-task.md
+prompts/implementation/android-portfolio-release-orchestration.md
 schemas/mobile-release-automation-task.schema.json
 examples/mobile-release-automation-task.yaml
 docs/mobile-release-automation-acceptance-tests.md
@@ -153,7 +155,32 @@ Agents should read profile identifiers with `profile_get` and reconcile verified
 
 The legacy commands `mra-agent profile bind-revenuecat` and `mra-agent auth bind-revenuecat-bootstrap` remain only as migration-safe deprecated no-ops. Do not use them for new setups.
 
-### 6. Give the agent a task
+### 6. Read Play listings safely
+
+For translation/localization assessment, the operator CLI now exposes read-only listing commands:
+
+```bash
+mra play listings --profile myapp
+mra play listing --profile myapp --language en-US
+```
+
+For agent review, use `skills/google-play-listing-localization-review.md` plus `prompts/review/google-play-listing-localization-audit.md`. Assessment does not authorize `play_update_listing`.
+
+### 7. Portfolio-wide local release runs
+
+For many local Android/Wear repositories, load `skills/android-portfolio-release-orchestration.md` and use `prompts/implementation/android-portfolio-release-orchestration.md`.
+
+That workflow:
+
+- discovers in-scope local checkouts;
+- blocks dirty/diverged repositories instead of overwriting work;
+- inspects each repository's actual Gradle tasks;
+- records Git SHA, applicationId, versionCode/versionName, AAB path and SHA-256;
+- uploads only qualified exact candidates to Internal Testing through MRA;
+- reads the track back after upload;
+- keeps production promotion as a separate approval-gated phase.
+
+### 8. Give the agent a task
 
 Fill in `prompts/implementation/mobile-release-automation-task.md`, or write a task document against `schemas/mobile-release-automation-task.schema.json`. `examples/mobile-release-automation-task.yaml` is a worked example.
 
