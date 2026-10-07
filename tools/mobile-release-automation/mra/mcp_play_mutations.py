@@ -38,6 +38,53 @@ def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:
     }
 
 
+def play_publish_bundles(
+    profile: str,
+    aab_paths: list[str],
+    track: str = "internal",
+    release_notes_en_us: str | None = None,
+    status: str = "completed",
+    dry_run: bool = True,
+) -> dict:
+    """Publish an atomic AAB set; non-internal real releases require approval."""
+    package_name = _package(profile)
+    paths = [str(Path(path).expanduser()) for path in aab_paths]
+    if not paths:
+        return {
+            "status": "error",
+            "detail": "at least one AAB path is required",
+            "_mra": {
+                "risk": "observe" if dry_run else "contained",
+                "human_approved": False,
+            },
+        }
+
+    approved = False
+    risk = "observe" if dry_run else "contained"
+    if not dry_run and not _is_internal(track):
+        risk = "high"
+        approved, refusal = _gate(
+            "Approve Google Play release",
+            f"Profile: {profile}\nPackage: {package_name}\nTrack: {track}\n"
+            f"Status: {status}\nAABs:\n" + "\n".join(paths),
+        )
+        if not approved:
+            return refusal
+
+    try:
+        result = play_module.publish_bundles(
+            package_name,
+            [Path(path) for path in paths],
+            track=track,
+            status=status,
+            release_notes={"en-US": release_notes_en_us} if release_notes_en_us else None,
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return mcp_play_monetization._failure(error, risk, approved)
+    return _tag(result, risk, approved)
+
+
 def play_publish_bundle(
     profile: str,
     aab_path: str,
@@ -46,7 +93,7 @@ def play_publish_bundle(
     status: str = "completed",
     dry_run: bool = True,
 ) -> dict:
-    """Publish an AAB; non-internal real releases require human approval."""
+    """Backward-compatible single-AAB publish surface."""
     package_name = _package(profile)
     approved = False
     risk = "observe" if dry_run else "contained"
@@ -54,7 +101,8 @@ def play_publish_bundle(
         risk = "high"
         approved, refusal = _gate(
             "Approve Google Play release",
-            f"Profile: {profile}\nPackage: {package_name}\nTrack: {track}\nStatus: {status}\nAAB: {Path(aab_path).expanduser()}",
+            f"Profile: {profile}\nPackage: {package_name}\nTrack: {track}\n"
+            f"Status: {status}\nAAB: {Path(aab_path).expanduser()}",
         )
         if not approved:
             return refusal
@@ -110,6 +158,7 @@ def play_promote(
 
 def register(server) -> None:
     server.tool()(play_publish_bundle)
+    server.tool()(play_publish_bundles)
     server.tool()(play_promote)
     mcp_play_management.register(server)
     mcp_reconcile.register(server)

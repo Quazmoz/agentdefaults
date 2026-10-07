@@ -34,6 +34,23 @@ class PlayListingCliTest(unittest.TestCase):
         args = cli.build_parser().parse_args(["play", "listing", "--profile", "medtick"])
         self.assertEqual(args.language, "en-US")
 
+    def test_publish_accepts_multiple_aabs_for_one_atomic_release(self) -> None:
+        args = cli.build_parser().parse_args(
+            [
+                "--yes",
+                "play",
+                "publish",
+                "--profile",
+                "wristbridge",
+                "--aab",
+                "/tmp/phone.aab",
+                "--aab",
+                "/tmp/wear.aab",
+            ]
+        )
+        self.assertEqual(args.aab, ["/tmp/phone.aab", "/tmp/wear.aab"])
+        self.assertIs(args.func, cli.cmd_play_publish)
+
     def test_listing_update_routes_to_mutating_handler(self) -> None:
         args = cli.build_parser().parse_args(
             [

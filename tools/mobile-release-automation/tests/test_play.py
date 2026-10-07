@@ -94,11 +94,61 @@ class PublishBundleTest(unittest.TestCase):
         notes = body["releases"][0]["releaseNotes"]
         self.assertEqual([entry["language"] for entry in notes], ["de-DE", "en-US"])
 
-    def test_missing_bundle_fails_before_opening_an_edit(self) -> None:
+    def test_phone_and_wear_bundles_share_one_atomic_track_release(self) -> None:
+        phone = Path(self.tempdir.name) / "phone-release.aab"
+        wear = Path(self.tempdir.name) / "wear-release.aab"
+        phone.write_bytes(b"phone")
+        wear.write_bytes(b"wear")
+        version_codes = iter((102, 101))
+        routes = play_routes()
+        routes[("POST", "/bundles")] = lambda **_: FakeResponse(
+            200,
+            {
+                "versionCode": next(version_codes),
+                "sha1": "s1",
+                "sha256": "s256",
+            },
+        )
+        api, session = client(routes)
+
+        result = play.publish_bundles(
+            PACKAGE,
+            [phone, wear],
+            track="internal",
+            client=api,
+        )
+
+        self.assertEqual(result["version_codes"], [102, 101])
+        self.assertEqual(len(result["bundles"]), 2)
+        body = session.body_for("PUT", "/tracks/internal")
+        self.assertEqual(body["releases"][0]["versionCodes"], ["102", "101"])
+        self.assertEqual(
+            len([url for url in session.urls("POST") if ":commit" in url]),
+            1,
+        )
+
+    def test_multi_bundle_duplicate_version_codes_fail_and_discard_edit(self) -> None:
+        phone = Path(self.tempdir.name) / "phone-release.aab"
+        wear = Path(self.tempdir.name) / "wear-release.aab"
+        phone.write_bytes(b"phone")
+        wear.write_bytes(b"wear")
+        api, session = client(play_routes())
+
+        with self.assertRaises(play.PlayError):
+            play.publish_bundles(
+                PACKAGE,
+                [phone, wear],
+                track="internal",
+                client=api,
+            )
+
+        self.assertFalse(any(":commit" in url for url in session.urls("POST")))
+        self.assertTrue(session.urls("DELETE"))
+
+    def test_missing_bundle_fails_and_discards_edit(self) -> None:
         api, session = client(play_routes())
         with self.assertRaises(play.PlayError):
             play.publish_bundle(PACKAGE, Path("/nonexistent.aab"), "internal", client=api)
-        # The edit is opened first, so it must also be cleaned up.
         self.assertTrue(session.urls("DELETE"))
 
 
