@@ -7,6 +7,7 @@ anywhere except to the owning vendor's own API host.
 
 __all__ = [
     "config",
+    "android_signing",
     "auth",
     "play",
     "play_management",

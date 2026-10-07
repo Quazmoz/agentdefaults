@@ -8,10 +8,11 @@ and its browser OAuth session; MRA never prints or stores RevenueCat OAuth token
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import sys
 
-from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
+from . import admob_credentials, android_signing, auth, config, play_credentials, revenuecat_cli
 from . import revenuecat as rc_module
 from . import secrets as secret_provider
 
@@ -65,6 +66,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             "revenuecat_google_play": _probe(play_credentials.revenuecat_status),
             "revenuecat_api": _probe(_revenuecat_api_status),
             "admob": _probe(admob_credentials.status),
+            "android_signing": android_signing.all_identity_statuses(),
             "legacy_revenuecat_key_bindings": legacy_bindings,
             "platform_mutations": "risk-gated on MCP; explicit on operator mra CLI",
         }
@@ -134,6 +136,42 @@ def cmd_bind_admob(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_signing_configure(args: argparse.Namespace) -> int:
+    if not sys.stdin.isatty():
+        raise config.ConfigError(
+            "Android signing setup must be run interactively in a local terminal"
+        )
+    store_password = getpass.getpass("Keystore password: ")
+    key_password = getpass.getpass(
+        "Key password (press Enter to reuse the keystore password): "
+    )
+    if not key_password:
+        key_password = store_password
+    return emit(
+        android_signing.configure_identity(
+            args.name,
+            args.keystore,
+            args.alias,
+            store_password=store_password,
+            key_password=key_password,
+        )
+    )
+
+
+def cmd_signing_status(args: argparse.Namespace) -> int:
+    return emit(android_signing.identity_status(args.name))
+
+
+def cmd_signing_build(args: argparse.Namespace) -> int:
+    return emit(
+        android_signing.build_signed_bundles(
+            args.repo,
+            args.module,
+            identity_name=args.name,
+        )
+    )
+
+
 def cmd_rc_projects(args: argparse.Namespace) -> int:
     profile = _auth_profile(args.profile)
     return emit(_client(profile).list_projects())
@@ -193,6 +231,38 @@ def build_parser() -> argparse.ArgumentParser:
     )
     bind_admob.add_argument("--secret-id", required=True)
     bind_admob.set_defaults(func=cmd_bind_admob)
+
+    signing = subparsers.add_parser(
+        "signing", help="macOS Keychain-backed Android release signing"
+    ).add_subparsers(dest="signing_command", required=True)
+
+    signing_configure = signing.add_parser(
+        "configure",
+        help="interactively store Android upload-key passwords in the OS Keychain",
+    )
+    signing_configure.add_argument("--name", default=android_signing.DEFAULT_IDENTITY)
+    signing_configure.add_argument("--keystore", required=True)
+    signing_configure.add_argument("--alias", required=True)
+    signing_configure.set_defaults(func=cmd_signing_configure)
+
+    signing_status = signing.add_parser(
+        "status", help="show non-secret Android signing readiness"
+    )
+    signing_status.add_argument("--name", default=android_signing.DEFAULT_IDENTITY)
+    signing_status.set_defaults(func=cmd_signing_status)
+
+    signing_build = signing.add_parser(
+        "build", help="build verified signed release AABs without exposing passwords"
+    )
+    signing_build.add_argument("--name", default=android_signing.DEFAULT_IDENTITY)
+    signing_build.add_argument("--repo", required=True)
+    signing_build.add_argument(
+        "--module",
+        action="append",
+        required=True,
+        help="Android application module; repeat for phone/Wear multi-artifact apps",
+    )
+    signing_build.set_defaults(func=cmd_signing_build)
 
     profile = subparsers.add_parser("profile", help="manage local app profiles").add_subparsers(
         dest="profile_command", required=True

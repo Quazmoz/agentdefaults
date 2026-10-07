@@ -25,7 +25,8 @@ command -v mra-mcp
 command -v mra-agent-mcp
 ```
 
-The RevenueCat OAuth transport is MRA **1.7.0 or newer**.
+The RevenueCat OAuth transport is MRA **1.7.0 or newer**. Keychain-backed
+Android release signing is MRA **1.9.0 or newer**.
 
 ## Fresh install
 
@@ -81,6 +82,32 @@ The Google service account RevenueCat uses for Play purchase validation is still
 ```bash
 mra-agent auth bind-revenuecat-play --secret-id YOUR_REVENUECAT_PLAY_SERVICE_ACCOUNT_UUID
 ```
+
+### Optional one-time Android upload-key setup
+
+To let local agents generate the same class of signed release AAB you generate
+through Android Studio without receiving the passwords, run this yourself in a
+local terminal:
+
+```bash
+mra-agent signing configure \
+  --name play-upload \
+  --keystore /Users/quinnfavo/my-release-key.jks \
+  --alias my-key-alias
+```
+
+MRA prompts for both passwords with hidden input and stores them in macOS
+Keychain. Do not paste them into chat, an agent prompt, shell arguments, Gradle
+properties in a repository, or a local source file.
+
+Verify:
+
+```bash
+mra-agent signing status --name play-upload
+```
+
+If Android Studio already remembers these passwords, MRA still does not extract
+Password Safe. Enter them once through the local configure prompt.
 
 After install, run:
 

@@ -100,6 +100,58 @@ Use the project's own wrapper and JDK/toolchain.
 
 A failed or unavailable required gate marks that app `BLOCKED` or `UNVERIFIED`; it does not become release-qualified because another app passed.
 
+## Release signing and final AAB
+
+Use MRA's Keychain-backed signing broker for the final Play artifact whenever the
+configured upload key is required.
+
+First check:
+
+```text
+android_signing_status(identity="play-upload")
+```
+
+or:
+
+```bash
+mra-agent signing status --name play-upload
+```
+
+If it is not ready, classify the app `BLOCKED_SIGNING`. Do not ask the operator
+to paste passwords into chat. The only supported setup handoff is the
+operator-interactive local command:
+
+```bash
+mra-agent signing configure \
+  --name play-upload \
+  --keystore /Users/quinnfavo/my-release-key.jks \
+  --alias my-key-alias
+```
+
+Once ready, build the final signed AAB through:
+
+```text
+android_build_signed_bundles(
+  repo_path="/absolute/repo/path",
+  modules=["app"],
+  identity="play-upload"
+)
+```
+
+Use the actual application modules discovered from repository evidence; pass
+multiple modules for separate phone/Wear artifacts.
+
+The helper deliberately refuses dirty Git worktrees before it resolves signing
+secrets, uses Android Studio-compatible injected signing properties, disables
+the Gradle daemon for the signing invocation, redacts captured output, verifies
+the AAB signature, and requires the signer certificate to match the configured
+upload key.
+
+Do not run ad-hoc `bundleRelease` commands with passwords on the command line,
+do not create repository-local signing property files, and do not substitute a
+debug-signed bundle. The helper-produced AAB is the candidate that must be
+hashed, qualified, and uploaded.
+
 ## Exact Candidate Manifest
 
 For every successfully built release candidate, record at minimum:
