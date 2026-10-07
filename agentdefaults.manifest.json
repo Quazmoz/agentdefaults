@@ -191,12 +191,16 @@
       "skills": [
         "skills/google-play-aso-foundations.md",
         "skills/google-play-keyword-and-metadata-optimization.md",
+        "skills/google-play-listing-localization-review.md",
         "skills/google-play-creative-conversion-optimization.md",
         "skills/google-play-quality-and-retention-signals.md",
         "skills/app-web-seo-and-entity-optimization.md",
         "skills/ai-agent-recommendation-readiness.md",
         "skills/app-growth-experimentation-and-measurement.md",
         "skills/google-play-growth-orchestrator.md"
+      ],
+      "prompts": [
+        "prompts/review/google-play-listing-localization-audit.md"
       ],
       "schema": "schemas/google-play-growth-brief.schema.json",
       "example": "examples/google-play-growth-brief.yaml",
@@ -209,6 +213,7 @@
       "agent": "agents/mobile-release-automation-engineer.md",
       "skills": [
         "skills/mobile-release-automation-orchestration.md",
+        "skills/android-portfolio-release-orchestration.md",
         "skills/google-play-release-automation.md",
         "skills/google-play-localized-pricing.md",
         "skills/revenuecat-monetization-automation.md",
@@ -216,6 +221,7 @@
       ],
       "prompts": [
         "prompts/implementation/mobile-release-automation-task.md",
+        "prompts/implementation/android-portfolio-release-orchestration.md",
         "prompts/implementation/google-play-localized-pricing-rollout.md"
       ],
       "schema": "schemas/mobile-release-automation-task.schema.json",
