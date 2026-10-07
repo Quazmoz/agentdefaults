@@ -246,6 +246,36 @@ def cmd_play_publish(args: argparse.Namespace) -> int:
     )
 
 
+def _parse_track_aab(values: list[str]) -> dict[str, list[Path]]:
+    mapped: dict[str, list[Path]] = {}
+    for value in values:
+        track, separator, path_value = value.partition("=")
+        track = track.strip()
+        path_value = path_value.strip()
+        if not separator or not track or not path_value:
+            raise SystemExit(f"--track-aab expects TRACK=PATH, got {value!r}")
+        mapped.setdefault(track, []).append(Path(path_value).expanduser())
+    return mapped
+
+
+def cmd_play_publish_set(args: argparse.Namespace) -> int:
+    track_aabs = _parse_track_aab(args.track_aab)
+    if not args.dry_run:
+        confirm(args, "publish atomic Play track set " + ", ".join(sorted(track_aabs)))
+    return emit(
+        play_module.publish_track_bundles(
+            resolve_package(args),
+            track_aabs,
+            status=args.status,
+            release_notes=parse_notes(args.notes),
+            user_fraction=args.user_fraction,
+            release_name=args.release_name,
+            dry_run=args.dry_run,
+            changes_not_sent_for_review=args.changes_not_sent_for_review,
+        )
+    )
+
+
 def cmd_play_promote(args: argparse.Namespace) -> int:
     if not args.dry_run:
         confirm(args, f"promote {args.source!r} to {args.target!r}")
@@ -512,6 +542,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="commit without sending pending changes for review",
     )
     publish.set_defaults(func=cmd_play_publish)
+
+    publish_set = play.add_parser(
+        "publish-set",
+        help=f"publish AABs to multiple form-factor tracks in one atomic edit [{MUTATING}]",
+    )
+    add_target(publish_set)
+    publish_set.add_argument(
+        "--track-aab",
+        action="append",
+        required=True,
+        metavar="TRACK=PATH",
+        help="target track and AAB path; repeat for phone/Wear track sets",
+    )
+    publish_set.add_argument(
+        "--status", default="completed", choices=play_module.RELEASE_STATUSES
+    )
+    publish_set.add_argument("--notes", action="append", metavar="LANG=TEXT")
+    publish_set.add_argument("--user-fraction", type=float, help="staged rollout fraction")
+    publish_set.add_argument("--release-name")
+    publish_set.add_argument(
+        "--dry-run", action="store_true", help="validate the complete edit then discard it"
+    )
+    publish_set.add_argument(
+        "--changes-not-sent-for-review",
+        action="store_true",
+        help="commit without sending pending changes for review",
+    )
+    publish_set.set_defaults(func=cmd_play_publish_set)
 
     promote = play.add_parser("promote", help=f"promote a release between tracks [{MUTATING}]")
     add_target(promote)

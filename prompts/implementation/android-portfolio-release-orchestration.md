@@ -46,15 +46,17 @@ Do not promote to production in this run unless the operator separately authoriz
    afterward.
 10. Record an exact-candidate manifest including Git SHA, applicationId, versionCode/versionName, AAB path, AAB SHA-256, signer certificate SHA-256, tasks run, and evidence labels.
 11. For each INTERNAL_READY candidate, reconcile current Play track state through MRA.
-12. Determine whether Play distribution is one AAB or a phone/Wear AAB set.
-13. For a phone/Wear pair sharing one package, publish the complete set
-    atomically through `play_publish_bundles`, or operator CLI with repeated
-    `--aab` arguments in one command. Never perform two independent
-    single-bundle track writes for the pair.
-14. Upload the exact candidate set to `internal`.
-15. Read the internal track back and verify every intended versionCode is
-    present in the same release.
-16. Continue past isolated failures when safe and preserve one explicit status per app.
+12. Determine both the artifact set and the exact live Play track ID for each
+    form factor.
+13. If all artifacts belong to one track, use `play_publish_bundles`.
+14. If phone and Wear use dedicated tracks, use
+    `play_publish_track_set(profile, track_aab_paths, ...)` or
+    `mra --yes play publish-set --track-aab TRACK=PATH ...` so the mobile and
+    Wear track updates share one edit/validate/commit boundary.
+15. Never guess form-factor track IDs. Read them from Play first.
+16. Read every affected track back and verify each intended versionCode on its
+    intended track.
+17. Continue past isolated failures when safe and preserve one explicit status per app.
 
 ## Hard stops per app
 

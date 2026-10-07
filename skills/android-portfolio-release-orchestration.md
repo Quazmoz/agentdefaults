@@ -214,18 +214,24 @@ For a candidate that is `INTERNAL_READY`:
 1. run MRA diagnostics/approval-policy checks;
 2. read the current Play tracks;
 3. confirm package/application ID and versionCode do not conflict with live state;
-4. determine the complete Play artifact set for that package;
-5. for a single-artifact app, upload the exact AAB to `internal`;
-6. for phone + Wear apps sharing one package, upload every required AAB in
-   **one MRA edit/release** with `play_publish_bundles` or repeated CLI
-   `--aab` arguments;
-7. read the internal track back;
-8. verify every intended versionCode is present in the same release;
-9. retain every candidate digest in the report.
+4. determine the complete Play artifact set and the live target track ID for
+   each form factor;
+5. for a single-artifact app, upload the exact AAB to its internal track;
+6. if multiple artifacts belong to the **same** track, use
+   `play_publish_bundles` or repeated CLI `--aab` arguments;
+7. if Play uses dedicated form-factor tracks (for example phone `internal`
+   plus Wear `wear:internal`), use `play_publish_track_set` or CLI
+   `play publish-set` so all uploads and all track PUTs occur inside one
+   package edit and one validate/commit boundary;
+8. use the exact track identifiers returned by live Play state; do not invent a
+   form-factor track alias from documentation alone;
+9. read every affected internal/form-factor track back;
+10. verify each intended versionCode is present on its intended track;
+11. retain every candidate digest in the report.
 
-Never publish phone and Wear AABs sharing one package as two independent
-single-bundle track writes. The second track update can replace the first
-release's version-code set.
+Never force a Wear bundle onto the mobile track when Play has dedicated Wear
+tracks enabled. Never perform separate package edits when one atomic edit can
+validate/commit the coordinated form-factor release set.
 
 The internal upload may be automated as a contained mutation under MRA's policy, but the operator's local MRA configuration remains authoritative.
 

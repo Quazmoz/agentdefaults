@@ -85,6 +85,60 @@ def play_publish_bundles(
     return _tag(result, risk, approved)
 
 
+def play_publish_track_set(
+    profile: str,
+    track_aab_paths: dict[str, list[str]],
+    release_notes_en_us: str | None = None,
+    status: str = "completed",
+    dry_run: bool = True,
+) -> dict:
+    """Publish phone/Wear form-factor tracks atomically in one Play edit."""
+    package_name = _package(profile)
+    normalized = {
+        track: [str(Path(path).expanduser()) for path in paths]
+        for track, paths in track_aab_paths.items()
+    }
+    if not normalized or any(not paths for paths in normalized.values()):
+        return {
+            "status": "error",
+            "detail": "each track requires at least one AAB path",
+            "_mra": {
+                "risk": "observe" if dry_run else "contained",
+                "human_approved": False,
+            },
+        }
+
+    approved = False
+    all_internal = all(_is_internal(track) for track in normalized)
+    risk = "observe" if dry_run else ("contained" if all_internal else "high")
+    if not dry_run and not all_internal:
+        approved, refusal = _gate(
+            "Approve Google Play form-factor release set",
+            f"Profile: {profile}\nPackage: {package_name}\nStatus: {status}\n"
+            + "\n".join(
+                f"{track}: " + ", ".join(paths)
+                for track, paths in normalized.items()
+            ),
+        )
+        if not approved:
+            return refusal
+
+    try:
+        result = play_module.publish_track_bundles(
+            package_name,
+            {
+                track: [Path(path) for path in paths]
+                for track, paths in normalized.items()
+            },
+            status=status,
+            release_notes={"en-US": release_notes_en_us} if release_notes_en_us else None,
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return mcp_play_monetization._failure(error, risk, approved)
+    return _tag(result, risk, approved)
+
+
 def play_publish_bundle(
     profile: str,
     aab_path: str,
@@ -159,6 +213,7 @@ def play_promote(
 def register(server) -> None:
     server.tool()(play_publish_bundle)
     server.tool()(play_publish_bundles)
+    server.tool()(play_publish_track_set)
     server.tool()(play_promote)
     mcp_play_management.register(server)
     mcp_reconcile.register(server)

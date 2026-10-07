@@ -127,6 +127,75 @@ class PublishBundleTest(unittest.TestCase):
             1,
         )
 
+    def test_phone_and_wear_form_factor_tracks_commit_atomically(self) -> None:
+        phone = Path(self.tempdir.name) / "phone-release.aab"
+        wear = Path(self.tempdir.name) / "wear-release.aab"
+        phone.write_bytes(b"phone")
+        wear.write_bytes(b"wear")
+        version_codes = iter((44, 45))
+        routes = play_routes()
+        routes[("POST", "/bundles")] = lambda **_: FakeResponse(
+            200,
+            {
+                "versionCode": next(version_codes),
+                "sha1": "s1",
+                "sha256": "s256",
+            },
+        )
+        api, session = client(routes)
+
+        result = play.publish_track_bundles(
+            PACKAGE,
+            {"internal": [phone], "wear:internal": [wear]},
+            client=api,
+        )
+
+        self.assertEqual(result["version_codes"], [44, 45])
+        self.assertEqual(
+            session.body_for("PUT", "/tracks/internal")["releases"][0]["versionCodes"],
+            ["44"],
+        )
+        self.assertEqual(
+            session.body_for("PUT", "/tracks/wear:internal")["releases"][0]["versionCodes"],
+            ["45"],
+        )
+        self.assertEqual(
+            len([url for url in session.urls("POST") if ":commit" in url]),
+            1,
+        )
+
+    def test_form_factor_track_set_dry_run_validates_once_and_discards(self) -> None:
+        phone = Path(self.tempdir.name) / "phone-release.aab"
+        wear = Path(self.tempdir.name) / "wear-release.aab"
+        phone.write_bytes(b"phone")
+        wear.write_bytes(b"wear")
+        version_codes = iter((44, 45))
+        routes = play_routes()
+        routes[("POST", "/bundles")] = lambda **_: FakeResponse(
+            200,
+            {
+                "versionCode": next(version_codes),
+                "sha1": "s1",
+                "sha256": "s256",
+            },
+        )
+        api, session = client(routes)
+
+        result = play.publish_track_bundles(
+            PACKAGE,
+            {"internal": [phone], "wear:internal": [wear]},
+            dry_run=True,
+            client=api,
+        )
+
+        self.assertFalse(result["committed"])
+        self.assertEqual(
+            len([url for url in session.urls("POST") if ":validate" in url]),
+            1,
+        )
+        self.assertFalse(any(":commit" in url for url in session.urls("POST")))
+        self.assertTrue(session.urls("DELETE"))
+
     def test_multi_bundle_duplicate_version_codes_fail_and_discard_edit(self) -> None:
         phone = Path(self.tempdir.name) / "phone-release.aab"
         wear = Path(self.tempdir.name) / "wear-release.aab"
