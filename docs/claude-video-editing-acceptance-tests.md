@@ -101,3 +101,44 @@ Given a long-form edit request, no Shorts are produced. Given a Shorts request, 
 ## AC-19: Interrupted Work Resumes
 
 Given an interrupted run, the editor resumes from `work/review-notes.md` and the existing artifacts. It does not re-transcribe sources that already have transcripts, and it reruns any render left missing or `.partial`.
+
+
+## AC-20: Privacy Review Fails Closed **(executable)**
+
+Given `privacy.required=true`, `edl.py plan` fails unless retained spoken content and retained visuals are explicitly reviewed and the structured privacy-review ranges cover the complete output timeline without gaps.
+
+Fail if an agent marks privacy complete from transcript search alone, sparse ordinary QC frames, or an unreviewed interval.
+
+## AC-21: Static Redaction Is Rendered **(executable)**
+
+Given an output-timeline redaction with a valid box and interval, the renderer applies it after ordinary overlays.
+
+- non-secret personal data may use `blur`
+- credentials/secrets must use opaque `black` or the section must be cut
+- redaction labels describe only the data category and never reproduce the sensitive value
+
+Fail if graphics/b-roll can later re-expose the protected region.
+
+## AC-22: Moving Redaction Is Conservative **(executable)**
+
+Given moving/scrolling sensitive data, keyframes cover the full redaction duration. Each interval uses the swept bounding rectangle between consecutive keyframes plus padding, preferring extra occlusion to a tracking miss.
+
+Fail if keyframes leave the beginning/end uncovered, are out of order, or rely on optimistic point tracking between distant positions.
+
+## AC-23: Dense Privacy Frames Are Not Editorially Subsampled **(executable)**
+
+Given `qc --privacy-step <cadence>`, every cadence frame requested within the bounded maximum is extracted. The normal 48-frame editorial QC cap does not subsample privacy frames.
+
+Dense sampling supplements playback/continuous inspection; it is not proof that a sub-cadence flash cannot exist.
+
+## AC-24: Prohibited Location Or Context Is Removed Semantically
+
+Given a user instruction that a location or other context must not appear, audit both retained transcript and retained visuals.
+
+Pass only when direct references and indirect visual/spoken indicators are removed or safely obscured. If the scene still communicates the prohibited context after a narrow blur, cut the section.
+
+## AC-25: Final Composite Is Re-reviewed For Privacy
+
+Given a rough cut that passed privacy review and later received graphics, b-roll, layout changes, or redactions, run privacy verification again on the final composited review render.
+
+Fail if the agent reuses the rough-cut privacy approval without inspecting the changed final render.

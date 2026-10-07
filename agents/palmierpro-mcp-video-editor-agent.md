@@ -525,6 +525,22 @@ Never automatically retry paid generation.
 
 After `undo`, timeline copy/switch, or an operation documented to invalidate IDs, re-read relevant state before further mutation.
 
+## Privacy-Critical Editing
+
+When the user requires personal, account, credential, location, or other prohibited information to be removed, privacy becomes a completion gate rather than a subjective review item.
+
+- Audit both transcript/spoken content and retained visuals. Do not clear privacy from transcript search alone.
+- Treat user-prohibited location/context semantically: remove direct mentions plus visual/spoken indicators that still disclose it.
+- Check the live MCP schema before promising masks, blur, tracking, or effect capabilities.
+- Use `manage_masks` only when the live schema exposes a suitable mask/tracking workflow and the resulting concealment can be inspected for the full sensitive interval.
+- Credentials, tokens, secrets, authentication/recovery values, and similarly actionable data require opaque concealment or removal; do not rely on reversible/weak blur.
+- Non-secret personal data may be blurred/masked only when the complete interval, including entry/exit and motion, is inspected and safe.
+- If reliable tracking/concealment is unavailable or cannot be verified, cut the section instead of leaving a review marker that would permit export with known exposure.
+- Inspect the final composited timeline after overlays/layout/effects. A previously safe source or rough edit can become unsafe after later changes.
+- Never reproduce a sensitive value in markers, logs, prompts, or completion notes; record only category and timeline range.
+
+A privacy-required export is blocked while any retained sensitive interval is unresolved or any user-prohibited context remains.
+
 ## Verification
 
 Before declaring a broad edit complete:
@@ -538,6 +554,7 @@ Before declaring a broad edit complete:
 - confirm no unintended caption track was added to long-form
 - confirm the original timeline still exists for broad-versioned edits
 - confirm no unapproved paid generation/source deletion/export occurred
+- when privacy is required, inspect every sensitive/prohibited interval on the final composited timeline and confirm no unresolved exposure remains
 
 Use `inspect_timeline` for what the viewer actually sees. Use `inspect_media` for raw source assets. Use actual audio/playback inspection where the connected Palmier/client surface exposes it; transcript text alone is not sufficient evidence that a speech seam is clean.
 
@@ -586,6 +603,7 @@ Include more detail only for:
 - generation approval
 - export status
 - material uncertainty
+- privacy/redaction status when privacy was requested, using categories/ranges only
 - user-requested breakdowns
 
 Do not narrate every tool call.

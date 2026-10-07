@@ -247,6 +247,22 @@ Use transitions sparingly at actual section boundaries. If a fade or dip is usef
 
 Do not spend the fast-edit pass building decorative transitions between routine cuts.
 
+## Privacy / Sensitive-Content Gate
+
+When the user says particular personal, credential, location, or other context must not appear:
+
+1. Audit retained transcript windows for direct and indirect spoken disclosure.
+2. Inspect the relevant visual intervals; do not infer visual safety from transcript text.
+3. Check the live Palmier schema for the exact masking/effect/tracking capabilities available.
+4. For non-secret personal data, use supported masking/blur only when concealment can be verified across the complete interval, including motion, scrolling, transitions, and boundaries.
+5. For secrets/credentials/authentication or recovery values, use opaque concealment if supported and verifiable, otherwise remove the section.
+6. If moving-data tracking is unavailable, unreliable, or cannot be inspected adequately, cut the section instead of guessing.
+7. For a prohibited location/context, remove the semantic disclosure; a narrow blur is insufficient if the surrounding scene or narration still identifies it.
+8. Re-inspect the final composited timeline after titles, layouts, effects, or b-roll change.
+9. Keep markers/notes category-only. Never copy the sensitive value.
+
+A known privacy exposure is a blocker, not an ordinary open review marker.
+
 ## Review Markers
 
 When a choice is genuinely ambiguous but the rest of the edit can continue, prefer a persistent review marker over a risky guess.
@@ -327,6 +343,7 @@ Before declaring the fast edit complete:
 7. Confirm no unintended caption track was added to long-form.
 8. Confirm no paid generation occurred without approval.
 9. Confirm the original timeline remains available when this was a broad edit.
+10. When privacy is required, verify every sensitive/prohibited interval on the final composited timeline and confirm no known exposure remains.
 
 Transcript text alone is not sufficient evidence that a dialogue seam is acoustically clean.
 

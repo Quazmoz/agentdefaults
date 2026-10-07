@@ -101,9 +101,30 @@ For technical creator videos, prefer this truthful structure when the footage su
 
 Remove abandoned takes, inferior retakes, dead air that carries no visual value, repeated explanations, and capture pre-roll. Locate pre-roll by inspection, never with a fixed offset.
 
+When the user stopped and restarted recording, treat sequential files as one narrative continuation unless evidence says they are synchronized camera/screen sources. Compare overlap around the restart, remove repeated setup/explanations, choose the strongest complete take, and make the join feel intentional without falsifying chronology.
+
 Preserve uncertainty language, warnings, failure states, version numbers, commands, model/repository/product names, pricing, compatibility details, and caveats.
 
 Keep the creator's personality. Do not cut every breath or filler, and avoid robotic pacing. No generic "MrBeast" escalation, fake urgency, or hype the footage does not support.
+
+## Privacy-Critical Editing
+
+Privacy requirements are stronger than ordinary editorial QC.
+
+Trigger this mode when the user requests removal/redaction of personal or geographic information, or when screen recordings expose account, browser, desktop, terminal, notification, filesystem, credential, or other sensitive surfaces.
+
+- Audit both transcript/spoken content and retained visuals. Transcript search alone cannot clear a video.
+- User-prohibited context (for example a city/location the user says must not appear) is semantic: remove spoken references and visuals that reveal it directly or indirectly. Do not preserve the context merely by blurring one word if the surrounding scene still communicates it.
+- Secrets, credentials, tokens, authentication codes, private keys, recovery codes, and similarly actionable values must be cut or covered with opaque `mode=black` redaction. Blur is not sufficient for secrets.
+- Non-secret personal data may use `mode=blur` when the result is visually verified and cannot expose the value at the edges or during motion.
+- Redactions are output-timeline EDL entries and are applied after graphics/b-roll. Use padding. For moving/scrolling data, provide keyframes spanning the entire interval; the renderer uses conservative swept rectangles between keyframes rather than optimistic point tracking.
+- If reliable redaction would destroy the useful visual or tracking cannot be bounded safely, cut the section.
+- Run dense privacy-frame extraction with `edl.py qc --frames <dir> --privacy-step 0.5` (or a stricter cadence when needed) and inspect every generated privacy frame in batches. Dense frames supplement actual playback/continuous inspection where available; they are not permission to ignore sub-cadence flashes.
+- The EDL `privacy.required` gate must remain true until final verification. Set `visual_reviewed` and `transcript_reviewed` only after those reviews actually happened, and make `privacy.reviews` cover the complete retained output. `edl.py plan` fails on coverage gaps.
+- Re-run the privacy sweep on the final composited render after overlays/graphics/redactions change. A clean rough cut does not prove a clean final render.
+- Privacy notes identify only the category and time range (for example `email address` or `location indicator`). Never copy the sensitive value into logs, prompts, filenames, or review notes.
+
+A privacy-required edit is not complete while any retained interval is unreviewed, any requested prohibited context remains, or any redaction interval has not been visually verified.
 
 ## Verification Contract
 
@@ -111,6 +132,7 @@ A render is not good because FFmpeg exited 0. Before calling any review render r
 
 - `edl.py qc` reports no issues. That covers the streams present, planned duration, resolution, fps, audio/video stream lengths, black and silence ranges, and integrated loudness and true peak.
 - The extracted stills have been viewed: hook, every overlay, a sample of seams, and the ending.
+- When privacy is required, dense privacy frames and redaction boundaries have been viewed for the complete retained output, and the final render passes the EDL privacy coverage gate.
 - Every `plan` warning for an `inside word` or `active audio` seam is resolved or listed as unverified in `work/review-notes.md`.
 - Every evidence overlay's captured content has been viewed and matches the narration claim it is attached to.
 - The edit uses no audio without a license note.
@@ -127,6 +149,7 @@ Report:
 - the tools actually used, and those unavailable
 - the QC actually run and the stills actually viewed
 - unverified seams, open decisions, and placeholders (or point to `work/review-notes.md`)
+- privacy/redaction summary by category and timestamp, without reproducing sensitive values
 - the output path and its `.json` timeline sidecar
 
 ## Acceptance Criteria

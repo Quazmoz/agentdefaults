@@ -24,6 +24,11 @@ EDL (paths relative to the EDL file; times are seconds or "m:ss.s" strings):
 
 Overlay kinds: graphic (own HyperFrames render), evidence (needs evidence.claim/url/captured),
 broll (needs license). Every audio item needs license. Overlays are picture-only.
+Redactions are output-timeline regions applied after overlays. `mode=black` is required for secrets/credentials;
+`mode=blur` is appropriate only for non-secret personal data. Moving redactions use relative keyframes and
+conservative swept rectangles between keyframes so uncertain tracking fails toward over-redaction.
+When privacy.required is true, `plan` fails unless transcript and visual review are explicitly complete and the
+privacy review intervals cover the entire output timeline.
 """
 
 from __future__ import annotations
@@ -45,6 +50,8 @@ SEAM_FADE_S = 0.01  # micro-fade against clicks only; never a fix for a bad spee
 WORD_TOLERANCE_S = 0.02
 LOUD_BOUNDARY_DB = -35.0
 MAX_QC_FRAMES = 48
+MAX_PRIVACY_QC_FRAMES = 20000
+PRIVACY_EPS_S = 0.05
 
 
 class EdlError(Exception):
@@ -170,6 +177,163 @@ def inside_word(words: list[dict[str, Any]], t: float) -> dict[str, Any] | None:
     return None
 
 
+def _normalize_box(box: Any, width: int, height: int, label: str, errors: list[str]) -> list[int] | None:
+    if not isinstance(box, list) or len(box) != 4:
+        errors.append(f"{label}: box must be [x, y, width, height]")
+        return None
+    try:
+        x, y, w, h = [int(round(float(v))) for v in box]
+    except (TypeError, ValueError):
+        errors.append(f"{label}: box values must be numeric")
+        return None
+    if w < 1 or h < 1 or x < 0 or y < 0 or x + w > width or y + h > height:
+        errors.append(f"{label}: box {[x, y, w, h]} outside output frame {width}x{height}")
+        return None
+    return [x, y, w, h]
+
+
+def _pad_box(box: list[int], padding: int, width: int, height: int) -> list[int]:
+    x, y, w, h = box
+    x0, y0 = max(0, x - padding), max(0, y - padding)
+    x1, y1 = min(width, x + w + padding), min(height, y + h + padding)
+    return [x0, y0, max(1, x1 - x0), max(1, y1 - y0)]
+
+
+def _swept_box(a: list[int], b: list[int]) -> list[int]:
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    x0, y0 = min(ax, bx), min(ay, by)
+    x1, y1 = max(ax + aw, bx + bw), max(ay + ah, by + bh)
+    return [x0, y0, x1 - x0, y1 - y0]
+
+
+def _build_redactions(edl: dict[str, Any], out: dict[str, Any], duration: float,
+                      errors: list[str]) -> list[dict[str, Any]]:
+    width, height = int(out["width"]), int(out["height"])
+    redactions: list[dict[str, Any]] = []
+    for i, item in enumerate(edl.get("redactions") or []):
+        label = f"redaction {i}"
+        category = str(item.get("label", "")).strip()
+        if not category:
+            errors.append(f"{label}: label is required and must describe the category, not reproduce the sensitive value")
+        mode = str(item.get("mode", "blur"))
+        if mode not in {"blur", "black"}:
+            errors.append(f"{label}: unsupported mode {mode!r}; use 'blur' or 'black'")
+            continue
+        try:
+            at, dur = seconds(item.get("at", 0)), seconds(item["duration"])
+            padding = int(item.get("padding", 8))
+        except (KeyError, TypeError, ValueError, EdlError) as exc:
+            errors.append(f"{label}: invalid timing/padding: {exc}")
+            continue
+        if at < 0 or dur <= 0 or at + dur > duration + PRIVACY_EPS_S:
+            errors.append(f"{label}: {at}+{dur}s does not fit the {duration:.2f}s program")
+            continue
+        if padding < 0 or padding > max(width, height):
+            errors.append(f"{label}: invalid padding {padding}")
+            continue
+
+        slices: list[dict[str, Any]] = []
+        keyframes = item.get("keyframes")
+        if keyframes is not None:
+            if not isinstance(keyframes, list) or len(keyframes) < 2:
+                errors.append(f"{label}: moving redactions need at least two keyframes")
+                continue
+            parsed: list[tuple[float, list[int]]] = []
+            for j, keyframe in enumerate(keyframes):
+                if not isinstance(keyframe, dict):
+                    errors.append(f"{label} keyframe {j}: must be an object")
+                    continue
+                try:
+                    rel = seconds(keyframe["at"])
+                except (KeyError, EdlError) as exc:
+                    errors.append(f"{label} keyframe {j}: {exc}")
+                    continue
+                box = _normalize_box(keyframe.get("box"), width, height, f"{label} keyframe {j}", errors)
+                if box is not None:
+                    parsed.append((rel, box))
+            if len(parsed) != len(keyframes):
+                continue
+            if abs(parsed[0][0]) > PRIVACY_EPS_S or abs(parsed[-1][0] - dur) > PRIVACY_EPS_S:
+                errors.append(f"{label}: keyframes must cover the full redaction interval from 0 to duration ({dur:.3f}s)")
+                continue
+            if any(a[0] < -PRIVACY_EPS_S or a[0] > dur + PRIVACY_EPS_S for a in parsed):
+                errors.append(f"{label}: keyframe time outside 0..{dur:.3f}s")
+                continue
+            if any(b[0] <= a[0] for a, b in zip(parsed, parsed[1:])):
+                errors.append(f"{label}: keyframe times must be strictly increasing")
+                continue
+            for (t0, box0), (t1, box1) in zip(parsed, parsed[1:]):
+                swept = _pad_box(_swept_box(box0, box1), padding, width, height)
+                slices.append({"start": at + t0, "end": at + t1, "box": swept})
+        else:
+            box = _normalize_box(item.get("box"), width, height, label, errors)
+            if box is None:
+                continue
+            slices.append({"start": at, "end": at + dur, "box": _pad_box(box, padding, width, height)})
+
+        redactions.append({"index": i, "at": at, "duration": dur, "mode": mode, "label": category,
+                           "padding": padding, "moving": keyframes is not None, "slices": slices})
+    return redactions
+
+
+def _build_privacy(edl: dict[str, Any], duration: float, errors: list[str]) -> dict[str, Any]:
+    spec = edl.get("privacy") or {}
+    required = bool(spec.get("required", False))
+    privacy: dict[str, Any] = {"required": required}
+    if not required:
+        return privacy
+
+    if spec.get("visual_reviewed") is not True:
+        errors.append("privacy: visual_reviewed must be true after actual retained-output inspection")
+    if spec.get("transcript_reviewed") is not True:
+        errors.append("privacy: transcript_reviewed must be true after spoken-content review")
+
+    try:
+        review_step = float(spec["review_step"])
+    except (KeyError, TypeError, ValueError):
+        review_step = 0.0
+        errors.append("privacy: review_step is required")
+    if review_step and not 0.1 <= review_step <= 1.0:
+        errors.append("privacy: review_step must be between 0.1 and 1.0 seconds for a fail-closed visual sweep")
+
+    reviews: list[dict[str, Any]] = []
+    for i, item in enumerate(spec.get("reviews") or []):
+        label = f"privacy review {i}"
+        try:
+            start, end = seconds(item["start"]), seconds(item["end"])
+        except (KeyError, EdlError) as exc:
+            errors.append(f"{label}: {exc}")
+            continue
+        status = str(item.get("status", ""))
+        method = str(item.get("method", "")).strip()
+        if status not in {"clear", "redacted"}:
+            errors.append(f"{label}: status must be 'clear' or 'redacted'")
+        if not method:
+            errors.append(f"{label}: method is required")
+        if start < 0 or end <= start or end > duration + PRIVACY_EPS_S:
+            errors.append(f"{label}: invalid range {start}-{end} for {duration:.2f}s program")
+            continue
+        reviews.append({"start": max(0.0, start), "end": min(duration, end), "status": status, "method": method})
+
+    if not reviews:
+        errors.append("privacy: reviews must cover the complete output timeline")
+    else:
+        cursor = 0.0
+        for item in sorted(reviews, key=lambda x: (x["start"], x["end"])):
+            if item["start"] > cursor + PRIVACY_EPS_S:
+                errors.append(f"privacy: reviews leave uncovered output {cursor:.3f}-{item['start']:.3f}s")
+                break
+            cursor = max(cursor, item["end"])
+        if cursor < duration - PRIVACY_EPS_S:
+            errors.append(f"privacy: reviews leave uncovered output {cursor:.3f}-{duration:.3f}s")
+
+    privacy.update({"visual_reviewed": spec.get("visual_reviewed") is True,
+                    "transcript_reviewed": spec.get("transcript_reviewed") is True,
+                    "review_step": review_step, "reviews": reviews,
+                    "forbidden_terms": list(spec.get("forbidden_terms") or [])})
+    return privacy
+
 def build_plan(edl_path: Path, check_audio: bool = True) -> dict[str, Any]:
     edl = json.loads(edl_path.read_text(encoding="utf-8"))
     base = edl_path.resolve().parent
@@ -275,6 +439,9 @@ def build_plan(edl_path: Path, check_audio: bool = True) -> dict[str, Any]:
                          "image": is_image, "box": box, "fade": float(ov.get("fade", 0)),
                          "evidence": ov.get("evidence"), "license": ov.get("license")})
 
+    redactions = _build_redactions(edl, out, duration, errors)
+    privacy = _build_privacy(edl, duration, errors)
+
     audio = []
     for i, item in enumerate(edl.get("audio") or []):
         label = f"audio {i} ({Path(str(item.get('file'))).name})"
@@ -295,7 +462,8 @@ def build_plan(edl_path: Path, check_audio: bool = True) -> dict[str, Any]:
                       "fade_out": float(item.get("fade_out", 0)), "license": item.get("license")})
 
     return {"edl": str(edl_path.resolve()), "output": {**out, "fps": str(fps)}, "duration": duration,
-            "segments": segments, "overlays": overlays, "audio": audio, "errors": errors, "warnings": warnings}
+            "segments": segments, "overlays": overlays, "redactions": redactions, "privacy": privacy,
+            "audio": audio, "errors": errors, "warnings": warnings}
 
 
 def print_plan(plan: dict[str, Any]) -> None:
@@ -371,7 +539,27 @@ def build_render_command(plan: dict[str, Any], output: Path, crf: int, preset: s
         graph.append(f"[vb{k}][o{k}]overlay=x={bx}+({bw}-w)/2:y={by}+({bh}-h)/2:eof_action=pass:"
                      f"enable='between(t,{ov['at']:.6f},{ov['at'] + ov['duration']:.6f})'[vb{k + 1}]")
         n += 1
-    graph.append(f"[vb{len(plan['overlays'])}]format=yuv420p[vout]")
+
+    video_label = f"[vb{len(plan['overlays'])}]"
+    redaction_no = 0
+    for redaction in plan["redactions"]:
+        for slice_ in redaction["slices"]:
+            start, end = slice_["start"], slice_["end"]
+            bx, by, bw, bh = slice_["box"]
+            next_label = f"vr{redaction_no + 1}"
+            if redaction["mode"] == "black":
+                graph.append(f"{video_label}drawbox=x={bx}:y={by}:w={bw}:h={bh}:color=black@1:t=fill:"
+                             f"enable='between(t,{start:.6f},{end:.6f})'[{next_label}]")
+            else:
+                base_label, crop_label, blur_label = f"vr{redaction_no}b", f"vr{redaction_no}c", f"vr{redaction_no}x"
+                radius = max(1, min(20, bw // 4, bh // 4))
+                graph.append(f"{video_label}split=2[{base_label}][{crop_label}]")
+                graph.append(f"[{crop_label}]crop={bw}:{bh}:{bx}:{by},boxblur={radius}:2[{blur_label}]")
+                graph.append(f"[{base_label}][{blur_label}]overlay=x={bx}:y={by}:eof_action=pass:"
+                             f"enable='between(t,{start:.6f},{end:.6f})'[{next_label}]")
+            video_label = f"[{next_label}]"
+            redaction_no += 1
+    graph.append(f"{video_label}format=yuv420p[vout]")
 
     beds = []
     for k, au in enumerate(plan["audio"]):
@@ -413,7 +601,7 @@ def render(plan: dict[str, Any], output: Path, crf: int, preset: str) -> None:
         raise SystemExit(f"ffmpeg render failed:\n{proc.stderr.strip()[-2000:]}")
     os.replace(partial, output)
     # Sidecar timeline so review timestamps on this exact render map back to sources after the EDL changes.
-    sidecar = {k: plan[k] for k in ("edl", "output", "duration", "segments", "overlays", "audio", "warnings")}
+    sidecar = {k: plan[k] for k in ("edl", "output", "duration", "segments", "overlays", "redactions", "privacy", "audio", "warnings")}
     output.with_name(output.name + ".json").write_text(json.dumps(sidecar, indent=2) + "\n", encoding="utf-8")
 
 
@@ -460,7 +648,8 @@ def srt(cues: list[tuple[float, float, str]]) -> str:
 
 # --- QC ----------------------------------------------------------------------
 
-def qc(path: Path, plan: dict[str, Any] | None, frames_dir: Path | None) -> dict[str, Any]:
+def qc(path: Path, plan: dict[str, Any] | None, frames_dir: Path | None,
+       privacy_step: float | None = None) -> dict[str, Any]:
     info = probe(path)
     issues: list[str] = []
     review: list[str] = []
@@ -497,13 +686,29 @@ def qc(path: Path, plan: dict[str, Any] | None, frames_dir: Path | None) -> dict
             issues.append(f"resolution {video.get('width')}x{video.get('height')} != {out['width']}x{out['height']}")
         if video and abs(video["fps"] - float(Fraction(out["fps"]))) > 0.01:
             issues.append(f"fps {video['fps']} != {out['fps']}")
+
     if frames_dir:
         times = {min(1.0, info["duration"] / 2), max(info["duration"] - 1.0, 0.0)}
         if plan:
             times |= {s["out_start"] + 0.15 for s in plan["segments"][1:]}
             times |= {o["at"] + o["duration"] / 2 for o in plan["overlays"]}
+            for redaction in plan.get("redactions", []):
+                for slice_ in redaction.get("slices", []):
+                    start, end = slice_["start"], slice_["end"]
+                    times |= {start + 0.01, start + (end - start) / 2, max(start + 0.01, end - 0.01)}
+            if privacy_step is None and plan.get("privacy", {}).get("required"):
+                privacy_step = float(plan["privacy"].get("review_step") or 0)
+        if privacy_step is not None:
+            if privacy_step <= 0:
+                issues.append("privacy_step must be positive")
+            else:
+                count = int(info["duration"] / privacy_step) + 1
+                if count > MAX_PRIVACY_QC_FRAMES:
+                    issues.append(f"dense privacy sweep would create {count} frames; raise review_step or split the review")
+                else:
+                    times |= {min(i * privacy_step, max(info["duration"] - 0.001, 0.0)) for i in range(count)}
         ordered = sorted(t for t in times if 0 <= t < info["duration"])
-        if len(ordered) > MAX_QC_FRAMES:  # ponytail: even subsample; review the skipped seams by timestamp
+        if privacy_step is None and len(ordered) > MAX_QC_FRAMES:
             step = len(ordered) / MAX_QC_FRAMES
             ordered = [ordered[int(i * step)] for i in range(MAX_QC_FRAMES)]
         frames_dir.mkdir(parents=True, exist_ok=True)
@@ -515,6 +720,8 @@ def qc(path: Path, plan: dict[str, Any] | None, frames_dir: Path | None) -> dict
             if still.is_file():
                 stills.append(str(still))
         report["frames"] = stills
+        report["privacy_step"] = privacy_step
+        report["privacy_frames_generated"] = len(stills) if privacy_step is not None else 0
     report["issues"], report["review"] = issues, review
     return report
 
@@ -567,6 +774,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("file", type=Path)
     p.add_argument("--edl", type=Path, help="EDL to compare against (default: the render's .json sidecar)")
     p.add_argument("--frames", type=Path, help="write review stills here (seams, overlays, head, tail)")
+    p.add_argument("--privacy-step", type=float,
+                   help="dense visual privacy sweep cadence in seconds; never subsampled (recommended 0.5)")
     args = parser.parse_args(argv)
 
     try:
@@ -584,7 +793,7 @@ def main(argv: list[str] | None = None) -> int:
                 plan = build_plan(args.edl, check_audio=False)
             elif sidecar.is_file():
                 plan = json.loads(sidecar.read_text(encoding="utf-8"))
-            report = qc(args.file, plan, args.frames)
+            report = qc(args.file, plan, args.frames, args.privacy_step)
             print(json.dumps(report, indent=2))
             return 1 if report["issues"] else 0
         else:
