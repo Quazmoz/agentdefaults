@@ -391,7 +391,8 @@ Snapshots returned through MCP are defensively redacted.
 MRA currently automates:
 
 - single- and multi-AAB upload
-- atomic phone + Wear releases when separate AABs share one package
+- atomic same-track multi-AAB releases
+- atomic multi-track form-factor releases within one Play edit
 - track reads and releases
 - promotion between tracks
 - staged rollout fractions
@@ -422,9 +423,33 @@ mra --yes play publish \
 
 The MCP equivalent is
 `play_publish_bundles(profile, aab_paths, track="internal", dry_run=false)`.
-Do not make two independent single-bundle track writes for the pair because a
-track PUT replaces the release definition and can drop the version code from
-the previous write.
+
+If Play has dedicated Wear tracks enabled, do not force the Wear AAB into the
+mobile track. Read the live track IDs and publish the coordinated set inside one
+edit instead:
+
+```bash
+mra --yes play publish-set \
+  --profile jetlag \
+  --track-aab internal=/path/to/phone-release.aab \
+  --track-aab wear:internal=/path/to/wear-release.aab
+```
+
+MCP:
+
+```text
+play_publish_track_set(
+  profile="jetlag",
+  track_aab_paths={
+    "internal": ["/path/to/phone-release.aab"],
+    "wear:internal": ["/path/to/wear-release.aab"]
+  },
+  dry_run=false
+)
+```
+
+Use the exact form-factor track IDs returned by Play for that app. The complete
+set is uploaded, validated, and committed under one package edit.
 
 For read-only listing/localization assessment from the operator CLI:
 

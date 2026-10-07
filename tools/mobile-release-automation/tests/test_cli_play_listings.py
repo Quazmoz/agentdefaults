@@ -51,6 +51,26 @@ class PlayListingCliTest(unittest.TestCase):
         self.assertEqual(args.aab, ["/tmp/phone.aab", "/tmp/wear.aab"])
         self.assertIs(args.func, cli.cmd_play_publish)
 
+    def test_publish_set_accepts_separate_phone_and_wear_tracks(self) -> None:
+        args = cli.build_parser().parse_args(
+            [
+                "--yes",
+                "play",
+                "publish-set",
+                "--profile",
+                "jetlag",
+                "--track-aab",
+                "internal=/tmp/phone.aab",
+                "--track-aab",
+                "wear:internal=/tmp/wear.aab",
+            ]
+        )
+        self.assertEqual(
+            args.track_aab,
+            ["internal=/tmp/phone.aab", "wear:internal=/tmp/wear.aab"],
+        )
+        self.assertIs(args.func, cli.cmd_play_publish_set)
+
     def test_listing_update_routes_to_mutating_handler(self) -> None:
         args = cli.build_parser().parse_args(
             [

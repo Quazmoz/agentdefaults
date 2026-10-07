@@ -532,6 +532,106 @@ def publish_bundles(
     return result
 
 
+def publish_track_bundles(
+    package_name: str,
+    track_aab_paths: dict[str, Sequence[Path]],
+    status: str = "completed",
+    release_notes: dict[str, str] | None = None,
+    user_fraction: float | None = None,
+    release_name: str | None = None,
+    dry_run: bool = False,
+    changes_not_sent_for_review: bool = False,
+    client: PlayClient | None = None,
+) -> dict:
+    """Publish multiple form-factor track releases in one package edit.
+
+    Google Play manages dedicated form factors such as Wear OS on prefixed
+    tracks. A phone AAB may belong on internal while its Wear companion belongs
+    on wear:internal. Upload every artifact and update every target track inside
+    one edit so validation and commit are atomic.
+    """
+    normalized: dict[str, list[Path]] = {}
+    seen_paths: set[Path] = set()
+    for raw_track, raw_paths in track_aab_paths.items():
+        track = raw_track.strip()
+        if not track:
+            raise PlayError("track name cannot be blank")
+        paths = [Path(path).expanduser() for path in raw_paths]
+        if not paths:
+            raise PlayError(f"track {track!r} requires at least one app bundle")
+        for path in paths:
+            resolved = path.resolve()
+            if resolved in seen_paths:
+                raise PlayError(
+                    f"bundle {path} was assigned to more than one track; "
+                    "each uploaded versionCode must have one target track in this release set"
+                )
+            seen_paths.add(resolved)
+        normalized[track] = paths
+
+    if not normalized:
+        raise PlayError("publish-track-set requires at least one track")
+
+    play = client or PlayClient(package_name)
+    result: dict[str, Any] = {
+        "package_name": package_name,
+        "tracks": list(normalized),
+        "dry_run": dry_run,
+    }
+    with play.edit(
+        commit=not dry_run,
+        changes_not_sent_for_review=changes_not_sent_for_review,
+    ) as edit_id:
+        all_version_codes: list[int] = []
+        releases: dict[str, dict[str, Any]] = {}
+
+        for track, paths in normalized.items():
+            uploaded: list[dict[str, Any]] = []
+            version_codes: list[int] = []
+            for path in paths:
+                bundle = play.upload_bundle(edit_id, path)
+                version_code = int(bundle["versionCode"])
+                uploaded.append(
+                    {
+                        "path": str(path),
+                        "version_code": version_code,
+                        "sha1": bundle.get("sha1"),
+                        "sha256": bundle.get("sha256"),
+                    }
+                )
+                version_codes.append(version_code)
+                all_version_codes.append(version_code)
+
+            releases[track] = {
+                "version_codes": version_codes,
+                "bundles": uploaded,
+            }
+
+        if len(set(all_version_codes)) != len(all_version_codes):
+            raise PlayError(
+                "uploaded track-set bundles resolved to duplicate versionCodes; "
+                "every artifact in one package edit must use a unique versionCode"
+            )
+
+        for track, release in releases.items():
+            play.set_track_release(
+                edit_id,
+                track,
+                release["version_codes"],
+                status=status,
+                release_notes=release_notes,
+                user_fraction=user_fraction,
+                release_name=release_name,
+            )
+
+        result["edit_id"] = edit_id
+        result["releases"] = releases
+        result["version_codes"] = all_version_codes
+
+    result["committed"] = not dry_run
+    return result
+
+
 def publish_bundle(
     package_name: str,
     aab_path: Path,
