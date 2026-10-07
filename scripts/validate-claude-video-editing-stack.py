@@ -168,6 +168,9 @@ def check_agent_and_skill(failures: list[str]) -> None:
             "exited 0",
             "black and silence ranges",
             "review-notes.md",
+            "Privacy-Critical Editing",
+            "privacy.required",
+            "dense privacy",
         ],
         STACK["agent"],
         failures,
@@ -194,6 +197,10 @@ def check_agent_and_skill(failures: list[str]) -> None:
             "Resume",
             "Shorts (only when requested)",
             "Stop Rule",
+            "Privacy-Critical Pass",
+            "privacy.reviews",
+            "--privacy-step",
+            "moving/scrolling",
         ],
         STACK["skill"],
         failures,
@@ -250,7 +257,7 @@ def check_transcriber(failures: list[str]) -> None:
     )
     require_terms(
         read(STACK["edl"]),
-        ["probe", "silences", "plan", "render", "captions", "qc", "evidence", "license", "refusing to overwrite an input"],
+        ["probe", "silences", "plan", "render", "captions", "qc", "evidence", "license", "redactions", "privacy", "--privacy-step", "refusing to overwrite an input"],
         STACK["edl"],
         failures,
     )
@@ -259,7 +266,7 @@ def check_transcriber(failures: list[str]) -> None:
 def check_acceptance_tests(failures: list[str]) -> None:
     text = read(STACK["acceptance_tests"])
     case_count = text.count("\n## AC-")
-    if case_count < 19:
+    if case_count < 25:
         failures.append(
             f"{STACK['acceptance_tests']}: expected at least 19 acceptance cases, found {case_count}"
         )
@@ -281,6 +288,12 @@ def check_acceptance_tests(failures: list[str]) -> None:
             "Style Profile Stays Maintainable",
             "Shorts Are Opt-In",
             "Interrupted Work Resumes",
+            "Privacy Review Fails Closed",
+            "Static Redaction Is Rendered",
+            "Moving Redaction Is Conservative",
+            "Dense Privacy Frames",
+            "Prohibited Location Or Context",
+            "Final Composite Is Re-reviewed For Privacy",
         ],
         STACK["acceptance_tests"],
         failures,

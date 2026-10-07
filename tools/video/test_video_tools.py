@@ -133,6 +133,49 @@ class EdlPipeline(unittest.TestCase):
                                                    "evidence": {"claim": "x"}}])
         self.assertIn("missing url, captured", "\n".join(edl.build_plan(bad2, check_audio=False)["errors"]))
 
+
+    def test_privacy_gate_redactions_and_dense_review_frames(self):
+        incomplete = self.write(
+            "privacy-gap.json",
+            privacy={"required": True, "visual_reviewed": True, "transcript_reviewed": True, "review_step": 0.5,
+                     "reviews": [{"start": 0, "end": 2.0, "status": "clear", "method": "dense-frames+transcript"}]},
+        )
+        errors = "\n".join(edl.build_plan(incomplete, check_audio=False)["errors"])
+        self.assertIn("privacy: reviews leave uncovered output", errors)
+
+        privacy = {"required": True, "visual_reviewed": True, "transcript_reviewed": True, "review_step": 0.5,
+                   "reviews": [{"start": 0, "end": 4.3, "status": "redacted", "method": "dense-frames+transcript"}]}
+        redactions = [{"at": 0.2, "duration": 1.0, "mode": "black", "box": [100, 100, 100, 100],
+                       "padding": 0, "label": "account identifier"}]
+        path = self.write("privacy-good.json", privacy=privacy, redactions=redactions, overlays=[], audio=[])
+        plan = edl.build_plan(path, check_audio=False)
+        self.assertEqual(plan["errors"], [])
+        out = self.tmp / "renders/privacy.mp4"
+        self.assertEqual(edl.main(["render", str(path), "-o", str(out), "--preset", "ultrafast"]), 0)
+        self.assertTrue(max(pixel(out, 0.6, 120, 120)) < 40)
+        r, g, b = pixel(out, 0.6, 300, 200)
+        self.assertTrue(b > 150 and r < 80, (r, g, b))
+        r, g, b = pixel(out, 1.4, 120, 120)
+        self.assertTrue(b > 150 and r < 80, (r, g, b))
+
+        report = edl.qc(out, plan, self.tmp / "privacy-frames", privacy_step=1.0)
+        self.assertEqual(report["issues"], [])
+        self.assertEqual(report["privacy_step"], 1.0)
+        self.assertGreaterEqual(report["privacy_frames_generated"], 5)
+
+    def test_moving_privacy_redaction_uses_conservative_swept_region(self):
+        privacy = {"required": True, "visual_reviewed": True, "transcript_reviewed": True, "review_step": 0.5,
+                   "reviews": [{"start": 0, "end": 4.3, "status": "redacted", "method": "dense-frames+transcript"}]}
+        moving = [{"at": 0.2, "duration": 1.0, "mode": "blur", "padding": 8, "label": "moving personal data",
+                   "keyframes": [{"at": 0.0, "box": [100, 100, 20, 20]},
+                                 {"at": 1.0, "box": [200, 100, 20, 20]}]}]
+        path = self.write("privacy-moving.json", privacy=privacy, redactions=moving, overlays=[], audio=[])
+        plan = edl.build_plan(path, check_audio=False)
+        self.assertEqual(plan["errors"], [])
+        self.assertEqual(plan["redactions"][0]["slices"][0]["box"], [92, 92, 136, 36])
+        command = " ".join(edl.build_render_command(plan, self.tmp / "moving.mp4", 23, "ultrafast"))
+        self.assertIn("boxblur=", command)
+
     def test_captions_remap_to_output_time_and_drop_partial_words(self):
         cues = edl.caption_cues(edl.build_plan(self.edl_path, check_audio=False), 42, 5.0)
         self.assertEqual([c[2] for c in cues], ["hello world.", "again"])

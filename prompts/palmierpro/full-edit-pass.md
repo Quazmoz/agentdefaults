@@ -84,6 +84,19 @@ If a transcript/silence/range operation creates a bad speech seam:
 
 A harmless filler may remain if deleting it would create a clipped or unnatural seam. Natural speech outranks maximum cut density.
 
+PRIVACY / PROHIBITED CONTENT
+
+If the task includes personal information, credentials/secrets, location information, or any context the user says must not appear, treat that as a release blocker.
+
+- Audit both retained transcript content and retained visuals.
+- Remove direct and indirect disclosure of user-prohibited location/context.
+- Check the live Palmier MCP schema before using masks/blur/tracking; do not invent support.
+- Non-secret personal information may be masked/blurred only if the complete interval can be visually verified.
+- Credentials, tokens, secrets, authentication/recovery values, and similarly actionable data require opaque concealment or removal.
+- If motion/scrolling cannot be tracked and verified safely with the available surface, cut the section.
+- Re-inspect the final composited timeline after later titles/layout/effects/b-roll changes.
+- Never write the sensitive value into markers or notes; record category and timeline range only.
+
 LONG-FORM CAPTION RULE
 Do not add a burned automatic caption track to this 16:9 long-form edit unless I explicitly ask for captions. Use `add_texts` for sparse titles/callouts instead.
 
@@ -111,6 +124,7 @@ Before finishing:
 - inspect the ending if modified
 - confirm the original timeline still exists
 - confirm no long-form caption track was added unless requested
+- when privacy is required, verify the final retained timeline contains no known sensitive/prohibited disclosure
 
 Transcript correctness alone is not proof of acoustic correctness. Do not claim a dialogue seam is verified unless the actual seam was checked with the available audio/playback surface. If not, mark/report it for review.
 

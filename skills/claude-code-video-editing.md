@@ -24,6 +24,7 @@ $P/
     transcripts/<id>.json   one Parakeet transcript per source file
     edit.json               the EDL: cuts, overlays, evidence, audio (single source of truth)
     review-notes.md         capabilities, open decisions, unverified seams, placeholders, feedback log
+    privacy-review.md        privacy categories/ranges and verification evidence; never sensitive values
   graphics/<name>/          one HyperFrames project per graphic
   broll/                    browser captures used as evidence
   audio/                    licensed music/SFX actually used
@@ -108,7 +109,11 @@ The render adds 10 ms micro-fades at every seam to stop clicks. They do not repa
 
 ### Multiple recordings
 
-Separate camera and screen recordings need an offset. Find the same spoken phrase in both transcripts; the difference in their word timestamps is the offset. Use the recording with the better microphone as `segments`. Add the other as a video overlay whose `start` is the matching source time and whose `box` sets the picture-in-picture or full-frame placement. Overlays are picture-only.
+First classify the relationship.
+
+**Sequential stop/restart recordings:** these are consecutive takes of one intended video, not synchronized multicam sources. Read both transcripts around the boundary, identify duplicated setup/explanation, false starts, and the strongest complete continuation, then place ordinary EDL segments from each source in narrative order. Do not concatenate blindly and do not force an offset.
+
+**Synchronized camera/screen recordings:** these need an offset. Find the same spoken phrase in both transcripts; the difference in their word timestamps is the offset. Use the recording with the better microphone as `segments`. Add the other as a video overlay whose `start` is the matching source time and whose `box` sets the picture-in-picture or full-frame placement. Overlays are picture-only.
 
 ## 4. Rough Render And QC
 
@@ -122,6 +127,49 @@ python3 tools/video/edl.py qc "$P/renders/rough-v1.mp4" --frames "$P/renders/qc/
 `qc` exits non-zero on hard issues: missing streams, duration, resolution, or fps not matching the plan, or audio and video stream lengths differing by more than 0.1 s. It also lists black and silence ranges and loudness for review.
 
 View the stills it writes. Rendering 4K sources at 1080p output works as a proxy review cut. Use native resolution only for the final render.
+
+## 4.5 Privacy-Critical Pass
+
+Use this pass whenever the user specifies information that must not appear, or the footage contains screens where private/account/credential/location data could surface.
+
+Privacy review happens against the **retained output timeline**, not just the raw transcript.
+
+### 4.5.1 Define the policy in the EDL
+
+Redactions are output-timeline entries. Use `black` for credentials, tokens, secrets, auth codes, private keys, recovery values, and similarly actionable data. Never rely on blur for secrets. Use `blur` only for non-secret personal information when preserving the surrounding visual has value.
+
+For moving/scrolling information, keyframe `at` values are relative to the redaction start and must cover `0..duration`. The renderer covers the swept bounding region between consecutive keyframes plus padding, intentionally preferring excess coverage over a tracking miss. If the area cannot be safely bounded, cut the section.
+
+Set `privacy.required=true`, keep `visual_reviewed=false` and `transcript_reviewed=false` until the corresponding reviews actually happen, and use `privacy.reviews` to record reviewed output intervals without copying sensitive values.
+
+### 4.5.2 Audit spoken content
+
+Search/read every retained transcript for the user's prohibited categories/terms plus contextual variants. A location-removal request is semantic: remove direct mentions and surrounding wording that still discloses the location.
+
+Set `privacy.transcript_reviewed=true` only after this pass.
+
+### 4.5.3 Audit visuals densely
+
+Render the rough cut, then:
+
+```bash
+python3 tools/video/edl.py qc "$P/renders/rough-v1.mp4" --edl "$P/work/edit.json" \
+  --frames "$P/work/privacy-frames/rough-v1" --privacy-step 0.5
+```
+
+Inspect **every generated privacy frame**, in batches. Also inspect/play intervals where notifications, scrolling, tab switching, terminal output, account menus, file paths, maps/weather/time-zone content, or other short-lived sensitive surfaces could appear. Dense cadence sampling does not prove safety for a flash shorter than the cadence.
+
+Record only categories and ranges in `work/privacy-review.md`; never copy the sensitive value.
+
+After each reviewed contiguous interval, add a `privacy.reviews` entry with `start`, `end`, `status` (`clear` or `redacted`), and the actual review `method`. The ranges must cover the complete retained output. Set `privacy.visual_reviewed=true` only after that coverage is real.
+
+Run `python3 tools/video/edl.py plan "$P/work/edit.json"`. The plan must fail while privacy review coverage has gaps.
+
+### 4.5.4 Final privacy gate
+
+After graphics, evidence b-roll, layout changes, and redactions are all present, render the final review cut and repeat the dense privacy sweep. Verify the beginning/middle/end of every redaction and every moving-redaction slice.
+
+Do not reuse a rough-cut privacy approval after compositing changed. If any user-prohibited context remains or a region cannot be conclusively cleared, redact/cut it and re-run the affected review range.
 
 ## 5. Evidence B-roll
 
@@ -184,6 +232,7 @@ python3 tools/video/edl.py captions "$P/work/edit.json" -o "$P/renders/review-v1
 ```
 
 - View the stills for the hook, every overlay, a sample of seams, and the ending.
+- When privacy is required, run dense final privacy frames, inspect every generated frame plus redaction boundaries, and ensure `edl.py plan` has no privacy coverage errors.
 - Captions are remapped from source transcripts to output time. Words cut partway are dropped.
 - Long-form gets an SRT for upload, not burned-in captions, unless the user asks. Correct technical terms in the SRT text.
 - If the user asks to burn captions and `ffmpeg -filters` lacks `subtitles`, use the HyperFrames `embedded-captions` workflow instead.

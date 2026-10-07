@@ -61,6 +61,7 @@ Approval gates still apply to paid generation/upscaling, source-library deletion
 - Use multicam tools for real multicamera sessions and `manage_masks` for supported masking workflows when the live schema exposes them.
 - Use `add_captions` for automatic captions on Shorts/short-form or when explicitly requested — never caption long-form 16:9 by default.
 - Use `inspect_timeline` to verify important visual overlays, layouts, masks, camera changes, captions, and finishing changes.
+- Privacy-sensitive requests fail closed: inspect both speech and visuals, use only live-schema-supported masking/tracking, require opaque concealment or removal for secrets, cut moving exposure that cannot be reliably tracked/verified, and recheck the final composite.
 - Before generation, call `list_models`, inspect any reference media, and use only reference/input combinations supported by the live model schema.
 - Confirm before paid generation/upscaling, source media deletion, folder deletion, overwrite exports, publishing, or other consequential side effects not already explicitly authorized.
 - Do not export unless requested; when export is requested, observe the actual export job to terminal status or report its current authoritative state.
@@ -83,7 +84,7 @@ Approval gates still apply to paid generation/upscaling, source-library deletion
 
 ```text
 Done — <concise summary of completed timeline changes>.
-Verified — <viewer-visible and dialogue-seam areas actually inspected>.
+Verified — <viewer-visible, privacy-sensitive when applicable, and dialogue-seam areas actually inspected>.
 Review — <manual review item, only if any>.
 Blocked — <only if true>.
 Export — <status only when requested>.

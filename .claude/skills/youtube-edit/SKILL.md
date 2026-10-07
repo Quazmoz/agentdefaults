@@ -29,6 +29,7 @@ When the user runs `/youtube-edit`:
 4. Transcribe each source with Parakeet using `tools/video/parakeet_transcribe.py`.
 5. Write the EDL (`work/edit.json`) and resolve every `edl.py plan` warning about word or active-audio boundaries.
 6. Render a rough cut and run `edl.py qc` on it.
+7. When private/account/location/prohibited information could appear, enable the EDL privacy gate, audit retained transcripts, create output-timeline redactions, run dense `qc --privacy-step 0.5` frames, and verify complete privacy-review coverage. Credentials/secrets use opaque black redaction or are cut; moving data uses full-interval keyframes/swept coverage.
 7. Add primary-source evidence b-roll, recorded in the EDL with URL, claim, and capture date.
 8. Make HyperFrames graphics: reuse the catalog and approved patterns first. Lint during authoring and run `check --snapshots` as the final gate. Inspect the snapshots, then open the final Studio preview.
 9. Render HyperFrames graphics only after approval of that Studio preview, or as labeled unapproved drafts when an unattended request pre-authorized it.
@@ -45,5 +46,7 @@ Shorts only when asked. Style rules are persisted only when the user says learn,
 - Never invent factual b-roll, transcript text, or results.
 - Never use unknown-license music or media.
 - Never overwrite raw footage.
+- Privacy-sensitive edits fail closed: uncertainty means redact/cut and report the unresolved interval; never mark an uninspected range clear.
+- Never copy a sensitive value into logs or notes. Record only its category and timestamp.
 - Never claim visual or audio verification that was not performed. An FFmpeg exit code of 0 is not QC.
 - Do not silently replace Parakeet with another transcription engine.
