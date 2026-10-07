@@ -2,71 +2,32 @@
 
 ## Purpose
 
-Use this prompt to ask an MCP-connected agent to create a short-form cutdown from an existing Palmier Pro project.
-
-This is best for YouTube Shorts, TikTok, Instagram Reels, LinkedIn short clips, and X video snippets derived from longer Quinn-style technical creator content: AI/DevOps demos, app builds, local AI tests, MCP workflows, Wear OS apps, repo walkthroughs, Play Store results, coding-agent experiments, and automation demos.
-
-For YouTube Shorts specifically, prefer [`youtube-short-from-long-form.md`](youtube-short-from-long-form.md) because it includes vertical framing and facecam/screenshare placement rules.
+Use this prompt for a short-form cutdown for TikTok, Instagram Reels, LinkedIn, or X from an existing Palmier Pro project. For YouTube Shorts, use [`youtube-short-from-long-form.md`](youtube-short-from-long-form.md), which this prompt follows apart from the platform.
 
 ## Prompt
 
 ```text
-You are connected to Palmier Pro through MCP. The Palmier project is already open and contains the long-form source media or edited timeline.
+Load the AgentDefaults Palmier Pro MCP stack before acting: the files listed under "Recommended Stack" in
+agents/palmierpro-mcp-video-editor-agent.md, plus config/video-editing/channel-style.md.
 
-Act as an expert short-form editor for Quinn Favo's AI/DevOps engineering channel. Quinn's content should feel practical, technical, proof-driven, and accurate.
+TASK
+Make one short-form cutdown for <platform> from the strongest self-contained proof moment in this project.
 
-Goal: create a short-form social cutdown that is punchy, understandable without much context, and reviewable in the Palmier timeline.
-
-Target format:
-- Duration: ideally 18-35 seconds; 30-60 seconds only if the source moment truly needs that length.
-- Aspect ratio: use the requested platform. For YouTube Shorts, use 9:16 vertical and follow the dedicated YouTube Short prompt.
-- Style: high-retention technical creator clip.
-
-Workflow:
-1. Call get_timeline and get_media.
-2. Use get_transcript, inspect_media, and/or search_media to find the strongest self-contained proof moment.
-3. Select a segment with a clear hook, useful proof/demo, and clean ending.
-4. Remove filler, dead air, repeated starts, and unnecessary context. If the clip uses a recording's opening, trim the OBS/screen-recorder intro so it starts on real content.
-5. Add burned-in captions for spoken content (short-form/Shorts are the only formats that get subtitles).
-6. Add short text hooks or callouts only where they improve clarity.
-7. Verify key visual/caption placement with inspect_timeline.
-
-Selection priorities:
-- working AI agent result
-- working app/demo result
-- Play Store approval/rejection lesson
-- local AI / NPU / OpenVINO proof point
-- MCP workflow proof
-- repo/code/terminal result
-- concrete before/after automation result
-
-Rules:
-- Do not fabricate a hook that the source content does not support.
-- Do not remove caveats that make the clip accurate.
-- Do not imply free, unlimited, a hack, guaranteed approval, or unsupported performance claims.
-- Keep code, app UI, terminal output, repo names, and platform status readable.
-- Do not use paid generation/upscale tools without explicit approval.
-- Do not delete source media.
-- Do not export unless I ask.
-
-Suggested caption style:
-- readable on mobile
-- concise line lengths
-- avoid covering app UI, code, terminal output, platform status, facecam, or important visuals
-
-When done, tell me the selected topic, approximate duration, visual layout, and what edits were made.
+Follow prompts/palmierpro/youtube-short-from-long-form.md exactly (protect the long-form edit, the settings scope
+check, framing, captions, speech, limits, and final response), with these differences:
+- Aspect: the platform's native format (9:16 for TikTok and Reels; 1:1 or 4:5 for LinkedIn and X feed when I ask).
+  Run the same scope check before any set_project_settings call.
+- Safe zones: use the platform's own UI (TikTok and Reels have a larger bottom caption area and a right action
+  rail similar to Shorts). For square and 4:5 feed video, keep 5% margins.
+- Duration: 18-35 s, up to 60 s only if the moment truly needs it.
 ```
 
 ## Expected Output
 
 ```text
-Done — created a 28-second cutdown around the Play Store approval result, tightened the intro, added captions, and placed one accurate hook text overlay. Review the crop around the Play Console status before export.
+Done. I made a 28-second 9:16 cutdown for Reels on a copy; the long-form timeline is untouched. It's built around the Play Store approval result, with captions in the safe area and one hook text. Seam audit clean. Check the crop around the Play Console status before export.
 ```
 
 ## Quality Bar
 
-- Selects a coherent standalone moment.
-- Preserves technical accuracy and Quinn's builder credibility.
-- Keeps the clip tight without making it misleading.
-- Adds captions and verifies important visual placement.
-- Avoids paid generation unless approved.
+Same as the YouTube Short prompt. A replay against `tools/video/palmier_mock/` passes `trace_check.py --profile short`.
