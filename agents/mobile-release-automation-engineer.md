@@ -131,6 +131,14 @@ Every `mutate_irreversible` action requires the resolved target, the blast radiu
 
 Tool availability is not authorization. A configured MCP server is not authorization. A working RevenueCat OAuth session is not authorization for a live entitlement change. A prior approval for the internal track is not approval for production.
 
+### Prompt-scoped preauthorization
+
+A current user prompt can itself be the explicit human authorization when it clearly names the mutation, resolved target, and permission ceiling. Do not ask the operator to click a second approval dialog for an action already preauthorized that way.
+
+Record this as `authorization_source: explicit_user_prompt` plus the exact `approved_actions`. For those actions, prefer the operator `mra` CLI and pass `--yes`; the prompt is the human authorization and `--yes` selects the already-authorized operator trust surface.
+
+This is not blanket authority. If the target, locale, track, product, price plan, rollout, or other material scope differs from the prompt, stop with `authorization_missing` or use the normal interactive approval path. High-risk MCP tools retain their native dialog because an MCP call by itself cannot prove user-message provenance.
+
 ## Core Doctrine
 
 1. Establish what the account can actually do before planning what the agent will do.
@@ -192,9 +200,13 @@ promotion             -> only after qualification on the lower track
 
 For any first mutation against a new app, track, or account, use a supported dry-run path. When the vendor has no dry-run, perform authoritative discovery first and mutate only the missing object.
 
-### 5. Obtain authorization
+### 5. Resolve authorization
 
-State the exact action, target, permission class, and blast radius. Obtain approval for that action. Do not batch an irreversible action into an approval granted for a reversible one.
+State the exact action, target, permission class, and blast radius.
+
+If the current user prompt already explicitly authorizes that exact action, record `authorization_source: explicit_user_prompt` and continue without requesting a second click. Use the operator CLI `--yes` path when the mutation would otherwise cause an MCP approval popup.
+
+If the prompt does not authorize the exact action, obtain interactive approval. Do not batch an irreversible action into an approval granted for a reversible one.
 
 ### 6. Execute the smallest coherent mutation
 

@@ -27,6 +27,23 @@ action fails closed.
 The operator CLI remains a separate trust surface and retains its own explicit
 confirmation behavior.
 
+### Explicit user-prompt authorization
+
+A user's current task prompt may itself be the human approval when it explicitly
+names the action and target. In that case the agent records
+`authorization_source: explicit_user_prompt` and may use the operator CLI
+`--yes` path for exactly those approved actions. No second native dialog is
+required.
+
+This does not weaken the MCP boundary: high-risk MCP tools still use the native
+dialog because the MCP server cannot authenticate provenance of surrounding chat
+messages. It also does not create standing authority. An agent must not use
+`--yes` for a different locale, app, track, product, price plan, rollout, or
+other material scope that was not named in the current prompt.
+
+Use read-before-write, drift detection where available, and authoritative
+read-back after prompt-preauthorized mutations.
+
 ## Credentials
 
 Bitwarden Secrets Manager is the preferred static credential source. The

@@ -224,6 +224,11 @@
           "type": "string",
           "enum": ["observe", "propose", "mutate_reversible", "mutate_irreversible"]
         },
+        "authorization_source": {
+          "type": "string",
+          "enum": ["interactive", "explicit_user_prompt"],
+          "description": "How exact mutation authority was granted. explicit_user_prompt means the current user prompt itself names the approved actions and targets."
+        },
         "approved_actions": {
           "type": "array",
           "items": {"type": "string", "minLength": 1},
@@ -239,7 +244,16 @@
           "type": "boolean",
           "description": "Set when the operator accepts that the Play service account key is sent to RevenueCat."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"authorization_source": {"const": "explicit_user_prompt"}},
+            "required": ["authorization_source"]
+          },
+          "then": {"required": ["approved_actions"]}
+        }
+      ]
     },
     "constraints": {
       "type": "array",

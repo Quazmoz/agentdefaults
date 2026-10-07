@@ -194,9 +194,12 @@ If the operator later approves a specific locale/version of the recommendation:
 1. re-read the current live listing;
 2. detect drift from the audited source;
 3. if drift exists, regenerate the proposal and obtain fresh approval;
-4. use MRA's approval-gated listing update;
-5. read the listing back from Play;
-6. report the exact locale and resulting fields.
+4. if the approval is explicit in the current user prompt, use the operator
+   `mra --yes play listing-update` path with an exact expected-current snapshot
+   so no redundant native popup is shown;
+5. otherwise use the high-risk MCP listing update and its native approval gate;
+6. read the listing back from Play;
+7. report the exact locale and resulting fields.
 
 Approval for one locale does not authorize another locale.
 

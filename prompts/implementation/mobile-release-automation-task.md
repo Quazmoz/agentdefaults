@@ -61,6 +61,7 @@ RevenueCat OAuth: <verified official rc CLI OAuth | first-party MCP OAuth | not 
 
 AUTHORITY
 Permission ceiling: <observe | propose | mutate_reversible | mutate_irreversible>
+Authorization source: <interactive | explicit_user_prompt>
 Approved actions, each naming its exact target:
 - <e.g. publish version code 184 to the internal track of com.example.app>
 Forbidden actions:
@@ -91,6 +92,11 @@ RULES
 - Use a supported dry-run for first mutations where one exists; otherwise use
   read-before-write plus immediate read-back.
 - Treat each irreversible action as needing its own explicit authorization.
+- When Authorization source is explicit_user_prompt, the current user prompt is
+  already the human approval for the listed exact actions. Use the operator
+  `mra --yes` CLI path for those mutations instead of triggering a redundant
+  MCP/native approval popup. Do not use `--yes` for anything outside the
+  prompt's approved_actions.
 - Never script a vendor console UI to work around a missing API.
 - Never widen a credential's scope to make a call succeed.
 - Never write credentials, OAuth tokens, refresh tokens, or keys into the repo,
