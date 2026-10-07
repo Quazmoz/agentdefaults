@@ -16,6 +16,7 @@ Orchestrator:
 Core skills:
   skills/google-play-aso-foundations.md
   skills/google-play-keyword-and-metadata-optimization.md
+  skills/google-play-listing-localization-review.md
   skills/google-play-creative-conversion-optimization.md
   skills/google-play-quality-and-retention-signals.md
   skills/app-web-seo-and-entity-optimization.md
@@ -36,6 +37,9 @@ Optional research:
 Brief:
   schemas/google-play-growth-brief.schema.json
   examples/google-play-growth-brief.yaml
+
+Review prompt:
+  prompts/review/google-play-listing-localization-audit.md
 
 Acceptance tests:
   docs/google-play-growth-acceptance-tests.md
@@ -73,6 +77,26 @@ Produce:
 - a measured 30-day plan
 
 Do not publish Play Console, pricing, release, review, or production website changes without explicit approval.
+```
+
+## Live Localization Review with MRA
+
+For an existing app whose MRA profile is configured, use the dedicated read-only review path:
+
+```text
+Load agents/google-play-growth-optimizer-agent.md,
+skills/google-play-listing-localization-review.md,
+skills/google-play-keyword-and-metadata-optimization.md,
+and prompts/review/google-play-listing-localization-audit.md.
+
+Read the live source locale and every localized listing through MRA. Inspect current repository product truth, compare every locale for semantic fidelity, naturalness, stale claims, ASO quality, policy/claim safety, and character limits, then return before/after recommendations. Do not call play_update_listing and do not publish anything.
+```
+
+The operator CLI equivalents are:
+
+```bash
+mra play listings --profile <profile>
+mra play listing --profile <profile> --language <locale>
 ```
 
 ## Minimal Invocation
