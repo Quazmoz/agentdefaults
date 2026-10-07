@@ -1,5 +1,11 @@
 # Google Play Listing Localization Audit
 
+## Purpose
+
+Provide a reusable read-only review task for assessing live Google Play listing localizations against current app truth and producing an approval-ready recommendation packet without publishing changes.
+
+## Invocation
+
 Act as the Google Play Growth Optimizer and mobile release automation reviewer for this app.
 
 Load:
