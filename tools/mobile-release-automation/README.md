@@ -3,9 +3,9 @@
 ## Purpose
 
 Mobile Release Automation (MRA) gives operators and coding agents a safe,
-auditable way to automate repetitive Google Play, RevenueCat, and AdMob work
-without placing vendor credentials in Git, prompts, model context, or normal
-command output.
+auditable way to automate Android release signing plus repetitive Google Play,
+RevenueCat, and AdMob work without placing signing or vendor credentials in Git,
+prompts, model context, or normal command output.
 
 Every vendor operation uses a documented public API or an official vendor CLI.
 MRA does not scrape vendor consoles or rely on private browser endpoints.
@@ -18,6 +18,7 @@ For the cross-platform desired-state workflow, start with
 
 | Platform | Authentication | Automation status |
 |---|---|---|
+| Android release signing | macOS Keychain + local JKS/upload key | Clean-worktree release AAB builds can use Android Studio-compatible injected signing properties without exposing passwords to the agent. |
 | Google Play | Google Cloud service account | Releases, tracks, products, listings, images, tester groups, reviews/replies, country availability, and deobfuscation artifacts are API-driven. |
 | RevenueCat | Browser OAuth through the official RevenueCat CLI | Projects, apps, products, entitlements, offerings, packages, product wiring, and webhook integrations are automatable across projects authorized to the RevenueCat account. |
 | AdMob | OAuth user credentials | Inventory and reporting are broadly automatable. App/ad-unit and mediation writes exist in the public API but are limited-access per AdMob account. |
@@ -182,6 +183,61 @@ export MRA_REVENUECAT_CLI_PROFILE=<profile-name>
 
 The selected CLI profile still must report `method: oauth`.
 
+### Android release signing
+
+MRA 1.9.0 can broker an existing Android upload key from macOS Keychain into a
+release build without giving the coding agent either password.
+
+One-time setup is intentionally operator-interactive:
+
+```bash
+mra-agent signing configure \
+  --name play-upload \
+  --keystore /Users/quinnfavo/my-release-key.jks \
+  --alias my-key-alias
+```
+
+The command prompts locally for the keystore password and key password. Press
+Enter at the key-password prompt to reuse the keystore password. Passwords are
+stored in the OS credential store; `android-signing.json` stores only the
+keystore path, alias, and certificate SHA-256 fingerprint.
+
+Check readiness without exposing a password:
+
+```bash
+mra-agent signing status --name play-upload
+```
+
+Agents may then build through MCP:
+
+```text
+android_signing_status(identity="play-upload")
+android_build_signed_bundles(
+  repo_path="/path/to/repo",
+  modules=["app"],
+  identity="play-upload"
+)
+```
+
+or through the local agent CLI:
+
+```bash
+mra-agent signing build \
+  --name play-upload \
+  --repo /path/to/repo \
+  --module app
+```
+
+Repeat `--module` for a phone/Wear repository that ships separate application
+bundles. The helper refuses dirty worktrees before reading Keychain secrets,
+disables the Gradle daemon for the signing invocation, redacts captured Gradle
+output, verifies the AAB JAR signature, and requires the bundle signer
+fingerprint to match the configured upload key.
+
+MRA does not import or extract Android Studio Password Safe entries. If Android
+Studio already remembers the password, enter it once through the local
+`signing configure` prompt.
+
 ### AdMob OAuth
 
 The static Desktop OAuth client comes from Bitwarden. The long-lived refresh
@@ -251,6 +307,7 @@ Examples:
 - creating one RevenueCat project/app/product/empty entitlement/package/offering
 - creating an unlinked AdMob app or one ad unit where Google permits it
 - reconciling verified non-secret IDs into a local profile
+- building verified signed Android release AABs from clean local Git worktrees
 
 ### High-risk mutation
 

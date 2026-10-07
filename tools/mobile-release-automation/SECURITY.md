@@ -46,6 +46,17 @@ CLI and consumes the resulting JSON without reading or copying OAuth tokens.
 Legacy RevenueCat secret-reference fields remain parseable for migration safety,
 but active RevenueCat authentication ignores them.
 
+Android upload-key passwords use a separate machine-local boundary. The
+keystore path, key alias, and expected certificate SHA-256 fingerprint are
+non-secret metadata under `MRA_HOME`; the keystore and key passwords are stored
+through Python keyring in macOS Keychain. They are never accepted as MCP tool
+arguments, command-line flags, profile fields, repository config, or model-visible
+desired state.
+
+The one-time command `mra-agent signing configure` is deliberately interactive
+and refuses non-TTY setup. MRA does not read Android Studio Password Safe. The
+operator types the password locally once, outside chat/model context.
+
 ## RevenueCat OAuth boundary
 
 Install and authenticate the official RevenueCat CLI locally:
@@ -195,6 +206,38 @@ service account can bypass Google's server-side entitlement. Reconciliation
 returns `manual_required`, the operator performs the exact remaining Console
 step, and `mra_verify` reads the result afterward.
 
+## Android release-signing boundary
+
+The signing helper is local-only and does not transmit the upload key or its
+passwords to Google, RevenueCat, AdMob, or any other vendor. It performs the
+same signing-input role as Android Studio's signed App Bundle flow by injecting
+the Android Gradle Plugin signing properties into the child Gradle process.
+
+Before resolving any Keychain secret it requires the requested repository root
+to be a clean Git worktree. It then:
+
+1. resolves the configured JKS path/alias and Keychain passwords locally;
+2. launches the repository's own `gradlew` with `--no-daemon`;
+3. passes signing values only in the child process environment as
+   `ORG_GRADLE_PROJECT_android.injected.signing.*` properties;
+4. captures Gradle output and redacts the literal signing passwords before
+   writing a private local log;
+5. verifies each generated AAB as a signed JAR;
+6. compares the AAB signer SHA-256 fingerprint against the configured upload key;
+7. returns only non-secret artifact paths, hashes, certificate fingerprints, Git
+   SHA/branch, and task evidence.
+
+Residual trust boundary: a Gradle build executes repository code and can read its
+own process environment. Only invoke the signing helper on an operator-trusted
+repository/commit. The clean-worktree gate prevents an agent from editing a build
+script and then immediately asking MRA to expose signing values to that edited
+worktree, but it cannot make untrusted committed build logic safe.
+
+The MCP signing-build tool is a contained local mutation because it creates local
+artifacts only. Publishing that artifact to Internal Testing remains a separate
+contained Play mutation. Wider-track promotion remains high-risk and
+approval-gated.
+
 ## Verification
 
 After changing local credential bindings or MRA itself, run:
@@ -204,7 +247,15 @@ mra-agent doctor
 ```
 
 The RevenueCat portion should report `official-revenuecat-cli-oauth` when the
-local RevenueCat CLI is correctly authenticated.
+local RevenueCat CLI is correctly authenticated. If Android signing is
+configured, the doctor also reports only its non-secret readiness/fingerprint
+state.
+
+For direct signing verification:
+
+```bash
+mra-agent signing status --name play-upload
+```
 
 For MCP clients, `approval_policy` describes the current mutation policy. The
 cross-platform health path is:

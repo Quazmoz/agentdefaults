@@ -104,7 +104,37 @@ mra-agent auth bind-admob --secret-id YOUR_BITWARDEN_SECRET_UUID
 mra admob login
 ```
 
-### 3. Confirm what works
+### 3. Configure Android release signing when local agents build Play AABs
+
+This is a one-time operator action, not an agent prompt:
+
+```bash
+mra-agent signing configure \
+  --name play-upload \
+  --keystore /Users/quinnfavo/my-release-key.jks \
+  --alias my-key-alias
+mra-agent signing status --name play-upload
+```
+
+The passwords are entered with hidden local prompts and stored in macOS
+Keychain. MRA does not import Android Studio Password Safe entries.
+
+After this setup, an MCP-connected local agent can call:
+
+```text
+android_signing_status(identity="play-upload")
+android_build_signed_bundles(
+  repo_path="/absolute/path/to/repo",
+  modules=["app"],
+  identity="play-upload"
+)
+```
+
+The build helper accepts only a clean Git worktree, creates release AABs through
+the repository Gradle wrapper with Android Studio-compatible injected signing,
+verifies the signer certificate, and returns no passwords.
+
+### 4. Confirm what works
 
 ```bash
 mra-agent doctor
@@ -117,7 +147,7 @@ A healthy RevenueCat entry from `mra-agent doctor` reports the source as `offici
 
 Record the AdMob probe result. It determines whether the monetization scope is accepted. App/ad-unit creation is separately gated by Google and can still return 403 even after the probe succeeds.
 
-### 4. Register the local MCP server
+### 5. Register the local MCP server
 
 ```bash
 claude mcp add mobile-release-automation -- \
@@ -126,7 +156,7 @@ claude mcp add mobile-release-automation -- \
 
 The local MCP server is risk-gated, not read-only. It can inspect state and perform contained automation directly. High-risk actions require a real local human approval before the vendor API call occurs.
 
-### 5. Create a profile
+### 6. Create a profile
 
 A brand-new app profile needs only the identifiers you already know. It does not need a RevenueCat project ID or RevenueCat secret key. Operators can use the CLI:
 
@@ -155,7 +185,7 @@ Agents should read profile identifiers with `profile_get` and reconcile verified
 
 The legacy commands `mra-agent profile bind-revenuecat` and `mra-agent auth bind-revenuecat-bootstrap` remain only as migration-safe deprecated no-ops. Do not use them for new setups.
 
-### 6. Read Play listings safely
+### 7. Read Play listings safely
 
 For translation/localization assessment, the operator CLI now exposes read-only listing commands:
 
@@ -166,7 +196,7 @@ mra play listing --profile myapp --language en-US
 
 For agent review, use `skills/google-play-listing-localization-review.md` plus `prompts/review/google-play-listing-localization-audit.md`. Assessment does not authorize `play_update_listing`.
 
-### 7. Portfolio-wide local release runs
+### 8. Portfolio-wide local release runs
 
 For many local Android/Wear repositories, load `skills/android-portfolio-release-orchestration.md` and use `prompts/implementation/android-portfolio-release-orchestration.md`.
 
@@ -175,12 +205,13 @@ That workflow:
 - discovers in-scope local checkouts;
 - blocks dirty/diverged repositories instead of overwriting work;
 - inspects each repository's actual Gradle tasks;
-- records Git SHA, applicationId, versionCode/versionName, AAB path and SHA-256;
+- uses the Keychain-backed signing broker for final signed release AABs;
+- records Git SHA, applicationId, versionCode/versionName, AAB path, SHA-256 and signer fingerprint;
 - uploads only qualified exact candidates to Internal Testing through MRA;
 - reads the track back after upload;
 - keeps production promotion as a separate approval-gated phase.
 
-### 8. Give the agent a task
+### 9. Give the agent a task
 
 Fill in `prompts/implementation/mobile-release-automation-task.md`, or write a task document against `schemas/mobile-release-automation-task.schema.json`. `examples/mobile-release-automation-task.yaml` is a worked example.
 
@@ -230,8 +261,9 @@ Only invoke high-risk attachment tools when read-back proves a relationship is m
 
 ```text
 observe      read tracks, products, inventory, RevenueCat wiring; dry-run a Play edit
-contained    publish to internal testing; create individual RevenueCat or AdMob objects;
-             reconcile verified non-secret local profile identifiers
+contained    build signed local Android release AABs; publish to internal testing;
+             create individual RevenueCat or AdMob objects; reconcile verified
+             non-secret local profile identifiers
 high         non-internal Play releases/promotions; current-offering changes;
              live entitlement/package wiring; backing-store creation; future
              destructive, financial, or broad multi-app mutations
