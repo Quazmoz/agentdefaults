@@ -1,5 +1,11 @@
 # Android Portfolio Release Orchestration Task
 
+## Purpose
+
+Provide a reusable, safety-bounded task contract for a local agent that discovers, qualifies, builds, and uploads many Android/Wear repositories while preserving exact release-candidate identity and MRA approval boundaries.
+
+## Invocation
+
 Act as the principal Android/Wear release engineer and mobile release automation engineer for a portfolio of local repositories.
 
 Load:
