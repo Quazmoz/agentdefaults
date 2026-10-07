@@ -16,7 +16,7 @@ import sys
 from . import admob as admob_module
 from . import admob_credentials, auth, config, human_approval, play_credentials, revenuecat_cli
 from . import play as play_module
-from . import play_reporting, regional_pricing
+from . import play_management, play_reporting, regional_pricing
 from . import revenuecat as rc_module
 
 MUTATING = "mutating"
@@ -112,6 +112,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def cmd_play_tracks(args: argparse.Namespace) -> int:
     return emit(play_module.track_status(resolve_package(args)))
+
+
+def cmd_play_listings(args: argparse.Namespace) -> int:
+    client = play_management.PlayManagementClient(resolve_package(args))
+    return emit(client.list_listings())
+
+
+def cmd_play_listing(args: argparse.Namespace) -> int:
+    client = play_management.PlayManagementClient(resolve_package(args))
+    return emit(client.get_listing(args.language))
 
 
 def cmd_play_publish(args: argparse.Namespace) -> int:
@@ -358,6 +368,15 @@ def build_parser() -> argparse.ArgumentParser:
     tracks = play.add_parser("tracks", help="list track state")
     add_target(tracks)
     tracks.set_defaults(func=cmd_play_tracks)
+
+    listings = play.add_parser("listings", help="list all localized Play Store listings")
+    add_target(listings)
+    listings.set_defaults(func=cmd_play_listings)
+
+    listing = play.add_parser("listing", help="read one localized Play Store listing")
+    add_target(listing)
+    listing.add_argument("--language", default="en-US", help="BCP-47 Play listing locale")
+    listing.set_defaults(func=cmd_play_listing)
 
     publish = play.add_parser("publish", help=f"upload an .aab to a track [{MUTATING}]")
     add_target(publish)
