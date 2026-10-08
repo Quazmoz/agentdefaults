@@ -115,8 +115,9 @@ Trigger this mode when the user requests removal/redaction of personal or geogra
 
 - Audit both transcript/spoken content and retained visuals. Transcript search alone cannot clear a video.
 - User-prohibited context (for example a city/location the user says must not appear) is semantic: remove spoken references and visuals that reveal it directly or indirectly. Do not preserve the context merely by blurring one word if the surrounding scene still communicates it.
-- Secrets, credentials, tokens, authentication codes, private keys, recovery codes, and similarly actionable values must be cut or covered with opaque `mode=black` redaction. Blur is not sufficient for secrets.
-- Non-secret personal data may use `mode=blur` when the result is visually verified and cannot expose the value at the edges or during motion.
+- **Default to `mode=blur` for non-secret sensitive details** (names, emails, account identifiers that are not credentials, notifications, non-prohibited addresses/locations, and private desktop/terminal paths). Use tight but padded, tracked regions, not large black rectangles. Prefer preserving the surrounding UI and viewer comprehension. A sensitive screen does not imply that every field is a secret.
+- **Never blur recoverable secrets.** For credentials, tokens, authentication codes, private keys, recovery codes, and similarly actionable values, **prefer cutting the shot**. Use opaque `mode=black` only when the shot must remain and the region can be reliably bounded; it is a safety fallback, not the normal visual style.
+- Inspect the final encoded output at representative and worst-case moments. Increase blur, padding, or temporal coverage if text or contextual clues are still recognizable. If blur cannot protect non-secret data without hiding most of the UI, reframe or cut rather than layering conspicuous black boxes.
 - Redactions are output-timeline EDL entries and are applied after graphics/b-roll. Use padding. For moving/scrolling data, provide keyframes spanning the entire interval; the renderer uses conservative swept rectangles between keyframes rather than optimistic point tracking.
 - If reliable redaction would destroy the useful visual or tracking cannot be bounded safely, cut the section.
 - Run dense privacy-frame extraction with `edl.py qc --frames <dir> --privacy-step 0.5` (or a stricter cadence when needed) and inspect every generated privacy frame in batches. Dense frames supplement actual playback/continuous inspection where available; they are not permission to ignore sub-cadence flashes.
@@ -125,6 +126,14 @@ Trigger this mode when the user requests removal/redaction of personal or geogra
 - Privacy notes identify only the category and time range (for example `email address` or `location indicator`). Never copy the sensitive value into logs, prompts, filenames, or review notes.
 
 A privacy-required edit is not complete while any retained interval is unreviewed, any requested prohibited context remains, or any redaction interval has not been visually verified.
+
+## Reuse Of Installed Tools And Model Weights
+
+- Treat the workstation's Parakeet runtime, MLX/NeMo weights, FFmpeg, and previously obtained HyperFrames tools as persistent shared dependencies, **not per-video or per-prompt downloads**.
+- Run preflight against the existing video Python environment and model cache before installing anything. Hugging Face's model cache and the NeMo cache should remain outside video project `work/` and temporary directories.
+- Reuse unchanged dependencies and model snapshots. Check for newer compatible versions only as an intentional maintenance step; do not use unconditional `pip install -U`, `npx ... update`, cache clearing, or installation per prompt.
+- The transcriber skips completed transcripts when the source size/mtime, backend, and model identifier match. Re-transcribe using `--force` after a model/runtime update with an unchanged identifier, or when correcting suspect recognition.
+- Network access may be required the first time, or when a selected upstream model/package revision has genuinely changed. Record any download or upgrade in the notes, and never claim an update was checked without actually checking.
 
 ## Verification Contract
 
