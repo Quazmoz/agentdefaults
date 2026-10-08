@@ -99,6 +99,22 @@ class ParakeetNormalization(unittest.TestCase):
                 self.assertEqual(pt.main([str(audio), "-o", str(out)]), 0)
                 self.assertEqual(transcribe.call_count, 5)  # corrupt checkpoint not reused
 
+    def test_source_changed_during_transcription_discards_stale_result(self):
+        with tempfile.TemporaryDirectory(prefix="parakeet-race-") as tmp:
+            audio, out = Path(tmp) / "recording.mp4", Path(tmp) / "transcript.json"
+            audio.write_bytes(b"initial")
+
+            def change_source(*_args):
+                audio.write_bytes(b"recording still in progress")
+                return {"text": "", "words": [], "segments": []}
+
+            with (patch.object(pt, "_auto_backend", return_value="mlx"),
+                  patch.object(pt, "extract_wav", return_value=0.25),
+                  patch.object(pt, "_transcribe_mlx", side_effect=change_source)):
+                with self.assertRaisesRegex(SystemExit, "Source changed during transcription"):
+                    pt.main([str(audio), "-o", str(out)])
+            self.assertFalse(out.exists())
+
     def test_legacy_or_mismatched_transcript_is_not_reused(self):
         with tempfile.TemporaryDirectory(prefix="parakeet-legacy-") as tmp:
             audio = Path(tmp) / "a.mp4"
