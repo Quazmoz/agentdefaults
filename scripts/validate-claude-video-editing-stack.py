@@ -172,7 +172,7 @@ def check_agent_and_skill(failures: list[str]) -> None:
             "privacy.required",
             "dense privacy",
             "Default to `mode=blur`",
-            "Reus", 
+            "Reuse Of Installed Tools And Model Weights",
         ],
         STACK["agent"],
         failures,
