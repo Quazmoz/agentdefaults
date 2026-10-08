@@ -5,7 +5,12 @@ Output (schema 2), times in seconds relative to the start of the input file:
 
     {"schema": 2, "backend", "model", "audio", "duration", "text",
      "segments": [{"text", "start", "end", "confidence"?}],
-     "words":    [{"text", "start", "end", "confidence"?}]}
+     "words":    [{"text", "start", "end", "confidence"?}],
+     "source_fingerprint": {"size_bytes", "mtime_ns"}}
+
+Completed transcripts are reused when the source fingerprint, backend, and model
+match. Model weights remain in the backend's normal persistent cache; this tool
+does not download them into a per-project temporary folder.
 
 `words` are real words for both backends: parakeet-mlx returns SentencePiece
 subword tokens, which are merged here on their leading-space word marker.
@@ -159,6 +164,36 @@ def check_model(backend: str, model: str) -> None:
         raise SystemExit(f"{model} is an MLX conversion; the NeMo backend needs a NeMo checkpoint such as {NEMO_MODEL}.")
 
 
+def source_fingerprint(path: Path) -> dict[str, int]:
+    """Fast invalidation for a source file, without reading multi-GB video into memory."""
+    stat = path.stat()
+    return {"size_bytes": stat.st_size, "mtime_ns": stat.st_mtime_ns}
+
+
+def transcript_cache_hit(output: Path, audio: Path, backend: str, model: str,
+                         fingerprint: dict[str, int]) -> bool:
+    """Reuse only complete schema-2 output for this exact source and model.
+
+    Legacy transcripts without a fingerprint are regenerated once. --force also
+    overrides the cache when a remote checkpoint or runtime has been upgraded.
+    """
+    try:
+        cached = json.loads(output.read_text(encoding="utf-8"))
+        return (isinstance(cached, dict)
+                and cached.get("schema") == 2
+                and cached.get("backend") == backend
+                and cached.get("model") == model
+                and isinstance(cached.get("audio"), str)
+                and Path(cached["audio"]).resolve() == audio.resolve()
+                and cached.get("source_fingerprint") == fingerprint
+                and isinstance(cached.get("text"), str)
+                and isinstance(cached.get("words"), list)
+                and isinstance(cached.get("segments"), list)
+                and isinstance(cached.get("duration"), (int, float)))
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Transcribe audio/video with NVIDIA Parakeet (MLX or NeMo) to timestamp JSON.")
     parser.add_argument("audio", type=Path, help="Input media file; audio is extracted to 16 kHz mono with ffmpeg.")
@@ -166,6 +201,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--backend", choices=("auto", "mlx", "nemo"), default="auto",
                         help="Parakeet runtime. auto prefers MLX on Apple Silicon and NeMo elsewhere.")
     parser.add_argument("--model", help="Override the backend's default Parakeet model identifier.")
+    parser.add_argument("--force", action="store_true",
+                        help="Regenerate a matching transcript after a model/runtime update or to correct an earlier result.")
     return parser.parse_args(argv)
 
 
@@ -176,6 +213,10 @@ def main(argv: list[str] | None = None) -> int:
     backend = _auto_backend() if args.backend == "auto" else args.backend
     model = args.model or (MLX_MODEL if backend == "mlx" else NEMO_MODEL)
     check_model(backend, model)
+    fingerprint = source_fingerprint(args.audio)
+    if args.output and not args.force and transcript_cache_hit(args.output, args.audio, backend, model, fingerprint):
+        print(f"reusing transcript: {args.output} (source, backend and model unchanged)", file=sys.stderr)
+        return 0
 
     with tempfile.TemporaryDirectory(prefix="parakeet-") as tmp:
         wav = Path(tmp) / "audio.wav"
@@ -186,8 +227,10 @@ def main(argv: list[str] | None = None) -> int:
         except (RuntimeError, ValueError, MemoryError) as exc:
             raise SystemExit(f"Parakeet {backend} transcription failed for {args.audio}: {exc}") from exc
 
-    result = {"schema": 2, "backend": backend, "model": model, "audio": str(args.audio),
-              "duration": round(duration, 3), **body}
+    if source_fingerprint(args.audio) != fingerprint:
+        raise SystemExit("Source changed during transcription; discard stale output and retry after recording finishes.")
+    result = {"schema": 2, "backend": backend, "model": model, "audio": str(args.audio.resolve()),
+              "source_fingerprint": fingerprint, "duration": round(duration, 3), **body}
     if not result["words"]:
         print(f"warning: no speech recognized in {args.audio}", file=sys.stderr)
 
@@ -196,9 +239,18 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write(payload)
         return 0
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    partial = args.output.with_name(args.output.name + ".partial")
-    partial.write_text(payload, encoding="utf-8")
-    os.replace(partial, args.output)  # never leave a truncated transcript behind
+    # Unique same-directory temporary files avoid collisions from concurrent runs.
+    partial: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=args.output.parent,
+                                         prefix=f".{args.output.name}.", suffix=".partial",
+                                         delete=False) as handle:
+            partial = Path(handle.name)
+            handle.write(payload)
+        os.replace(partial, args.output)  # never leave a truncated transcript behind
+    finally:
+        if partial is not None:
+            partial.unlink(missing_ok=True)
     return 0
 
 

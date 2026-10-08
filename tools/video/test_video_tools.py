@@ -15,6 +15,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace as NS
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import edl  # noqa: E402
@@ -67,6 +68,66 @@ class ParakeetNormalization(unittest.TestCase):
         with self.assertRaises(SystemExit):
             pt.check_model("nemo", pt.MLX_MODEL)
         pt.check_model("mlx", pt.MLX_MODEL)
+
+    def test_completed_transcript_reuse_and_precise_invalidation(self):
+        with tempfile.TemporaryDirectory(prefix="parakeet-cache-test-") as tmp:
+            audio = Path(tmp) / "recording.mp4"
+            out = Path(tmp) / "transcript.json"
+            audio.write_bytes(b"source A")
+            transcript = {"text": "hello", "words": [{"text": "hello", "start": 0, "end": 0.2}],
+                          "segments": [{"text": "hello", "start": 0, "end": 0.2}]}
+            with (patch.object(pt, "_auto_backend", return_value="mlx"),
+                  patch.object(pt, "extract_wav", return_value=0.25) as extract,
+                  patch.object(pt, "_transcribe_mlx", return_value=transcript) as transcribe):
+                self.assertEqual(pt.main([str(audio), "-o", str(out)]), 0)
+                first = json.loads(out.read_text())
+                self.assertEqual(first["source_fingerprint"], pt.source_fingerprint(audio))
+                self.assertEqual(transcribe.call_count, 1)
+                self.assertEqual(pt.main([str(audio), "-o", str(out)]), 0)
+                self.assertEqual(transcribe.call_count, 1)  # no model load or audio extraction
+                self.assertEqual(extract.call_count, 1)
+
+                audio.write_bytes(b"source B is changed")
+                self.assertEqual(pt.main([str(audio), "-o", str(out)]), 0)
+                self.assertEqual(transcribe.call_count, 2)
+                self.assertEqual(pt.main([str(audio), "-o", str(out), "--model",
+                                          "mlx-community/alternate-parakeet"]), 0)
+                self.assertEqual(transcribe.call_count, 3)  # backend model changed
+                self.assertEqual(pt.main([str(audio), "-o", str(out), "--force"]), 0)
+                self.assertEqual(transcribe.call_count, 4)  # explicit refresh
+                out.write_text("{incomplete")
+                self.assertEqual(pt.main([str(audio), "-o", str(out)]), 0)
+                self.assertEqual(transcribe.call_count, 5)  # corrupt checkpoint not reused
+
+    def test_source_changed_during_transcription_discards_stale_result(self):
+        with tempfile.TemporaryDirectory(prefix="parakeet-race-") as tmp:
+            audio, out = Path(tmp) / "recording.mp4", Path(tmp) / "transcript.json"
+            audio.write_bytes(b"initial")
+
+            def change_source(*_args):
+                audio.write_bytes(b"recording still in progress")
+                return {"text": "", "words": [], "segments": []}
+
+            with (patch.object(pt, "_auto_backend", return_value="mlx"),
+                  patch.object(pt, "extract_wav", return_value=0.25),
+                  patch.object(pt, "_transcribe_mlx", side_effect=change_source)):
+                with self.assertRaisesRegex(SystemExit, "Source changed during transcription"):
+                    pt.main([str(audio), "-o", str(out)])
+            self.assertFalse(out.exists())
+
+    def test_legacy_or_mismatched_transcript_is_not_reused(self):
+        with tempfile.TemporaryDirectory(prefix="parakeet-legacy-") as tmp:
+            audio = Path(tmp) / "a.mp4"
+            out = Path(tmp) / "a.json"
+            audio.write_bytes(b"x")
+            old = {"schema": 2, "backend": "mlx", "model": pt.MLX_MODEL,
+                   "audio": str(audio), "duration": 0.3, "words": [], "segments": [], "text": ""}
+            out.write_text(json.dumps(old))
+            self.assertFalse(pt.transcript_cache_hit(out, audio, "mlx", pt.MLX_MODEL, pt.source_fingerprint(audio)))
+            old["source_fingerprint"] = pt.source_fingerprint(audio)
+            out.write_text(json.dumps(old))
+            self.assertTrue(pt.transcript_cache_hit(out, audio, "mlx", pt.MLX_MODEL, pt.source_fingerprint(audio)))
+            self.assertFalse(pt.transcript_cache_hit(out, audio, "nemo", pt.NEMO_MODEL, pt.source_fingerprint(audio)))
 
 
 @unittest.skipUnless(HAVE_FFMPEG, "ffmpeg/ffprobe not installed")
@@ -162,6 +223,20 @@ class EdlPipeline(unittest.TestCase):
         self.assertEqual(report["issues"], [])
         self.assertEqual(report["privacy_step"], 1.0)
         self.assertGreaterEqual(report["privacy_frames_generated"], 5)
+
+    def test_nonsecret_static_blur_renders_without_black_cover(self):
+        redactions = [{"at": 0.2, "duration": 1.0, "mode": "blur",
+                       "box": [100, 100, 100, 60], "padding": 8, "label": "email address"}]
+        path = self.write("privacy-static-blur.json", redactions=redactions, overlays=[], audio=[])
+        plan = edl.build_plan(path, check_audio=False)
+        self.assertEqual(plan["errors"], [])
+        self.assertEqual(plan["redactions"][0]["mode"], "blur")
+        command = " ".join(edl.build_render_command(plan, self.tmp / "renders/blur.mp4", 23, "ultrafast"))
+        self.assertIn("boxblur=", command)
+        self.assertNotIn("drawbox=", command)
+        out = self.tmp / "renders/static-blur.mp4"
+        self.assertEqual(edl.main(["render", str(path), "-o", str(out), "--preset", "ultrafast"]), 0)
+        self.assertTrue(out.is_file())
 
     def test_moving_privacy_redaction_uses_conservative_swept_region(self):
         privacy = {"required": True, "visual_reviewed": True, "transcript_reviewed": True, "review_step": 0.5,

@@ -171,6 +171,8 @@ def check_agent_and_skill(failures: list[str]) -> None:
             "Privacy-Critical Editing",
             "privacy.required",
             "dense privacy",
+            "Default to `mode=blur`",
+            "Reuse Of Installed Tools And Model Weights",
         ],
         STACK["agent"],
         failures,
@@ -201,6 +203,8 @@ def check_agent_and_skill(failures: list[str]) -> None:
             "privacy.reviews",
             "--privacy-step",
             "moving/scrolling",
+            "Use `blur` by default",
+            "Reuse first",
         ],
         STACK["skill"],
         failures,
@@ -251,6 +255,9 @@ def check_transcriber(failures: list[str]) -> None:
             "chunk_duration",
             "rel_pos_local_attn",
             "check_model",
+            "transcript_cache_hit",
+            "source_fingerprint",
+            "--force",
         ],
         STACK["transcriber"],
         failures,
@@ -266,9 +273,9 @@ def check_transcriber(failures: list[str]) -> None:
 def check_acceptance_tests(failures: list[str]) -> None:
     text = read(STACK["acceptance_tests"])
     case_count = text.count("\n## AC-")
-    if case_count < 25:
+    if case_count < 27:
         failures.append(
-            f"{STACK['acceptance_tests']}: expected at least 19 acceptance cases, found {case_count}"
+            f"{STACK['acceptance_tests']}: expected at least 27 acceptance cases, found {case_count}"
         )
     require_terms(
         text,
@@ -294,6 +301,8 @@ def check_acceptance_tests(failures: list[str]) -> None:
             "Dense Privacy Frames",
             "Prohibited Location Or Context",
             "Final Composite Is Re-reviewed For Privacy",
+            "Privacy Redactions Remain Visually Natural",
+            "Previously Downloaded Models And Transcripts Are Reused",
         ],
         STACK["acceptance_tests"],
         failures,

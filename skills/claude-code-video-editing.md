@@ -35,18 +35,25 @@ Bootstrap: `mkdir -p "$P"/{work/transcripts,graphics,broll,audio,renders}`. Do n
 
 Given a single file instead of a project, set `$P` to `<file dir>/<file stem>-edit` and point EDL `sources` at the original file in place. Never copy, move, or modify it.
 
-**Resume:** artifacts are checkpoints. On resume, read `work/review-notes.md` first. Skip any step whose output already exists and is newer than its input. A missing or `.partial` render means the run was interrupted, so rerun that render. Both helpers write atomically, so a finished file is never truncated.
+**Resume:** artifacts are checkpoints. On resume, read `work/review-notes.md` first. Skip completed work when inputs and tool/model identities still match; file existence alone is not sufficient. The Parakeet helper validates a transcript's source size/mtime, backend and model identifier before skipping it. A missing or `.partial` render means the run was interrupted, so rerun that render. Both helpers write atomically, so a finished file is never truncated.
 
 ## 0. Preflight
 
 ```bash
 ffmpeg -version | head -1 && ffprobe -version | head -1
 node --version                                  # HyperFrames needs >= 22
-npx --yes hyperframes doctor --json | jq -e '.ok'   # doctor always exits 0; gate on .ok
-python3 -c "import parakeet_mlx" || python3 -c "import nemo.collections.asr"
+VIDEO_VENV="${VIDEO_VENV:-${XDG_DATA_HOME:-$HOME/.local/share}/agentdefaults/video-venv}"
+test -f "$VIDEO_VENV/bin/activate" && source "$VIDEO_VENV/bin/activate"
+# Reuse installed HyperFrames; no implicit npm download/update during preflight.
+if command -v hyperframes >/dev/null 2>&1; then
+  hyperframes doctor --json | jq -e '.ok'
+else
+  npx --no-install hyperframes doctor --json | jq -e '.ok'
+fi
+python -c "import parakeet_mlx" || python -c "import nemo.collections.asr"
 ```
 
-Record what is available at the top of `work/review-notes.md`. Apply the agent's degradation table to anything missing. Do not promise a step whose tool failed preflight.
+Record what is available at the top of `work/review-notes.md`. Apply the agent's degradation table to anything missing. Do not promise a step whose tool failed preflight. Before any installation, inspect existing Python environments, installed tools, and persistent model caches. Use the one-time setup in `docs/quickstarts/claude-video-editing.md` if genuinely missing; never automatically run package upgrades, clear caches, or reinstall model weights per prompt.
 
 ## 1. Probe
 
@@ -73,6 +80,8 @@ python3 tools/video/edl.py transcript "$P/work/transcripts/cam.json" --words --f
 ```
 
 - Make one transcript per source file. Timestamps are relative to that file, so never transcribe a concatenation.
+- **Reuse first:** on matching source fingerprint (size and nanosecond mtime), backend and model identifier, the helper exits without extracting audio, importing the model, or writing the transcript. Legacy/corrupt/mismatched outputs are regenerated. It does not infer that an upstream checkpoint changed under the same model identifier: after an approved model/runtime upgrade, run with `--force` to refresh that transcript.
+- Parakeet MLX weights use the persistent Hugging Face cache (default `~/.cache/huggingface/hub`, configurable via `HF_HOME` / `HF_HUB_CACHE`); NeMo uses its own model cache. Preserve both between sessions, worktrees and videos. Cache lookup must precede downloads; unchanged model files should never be fetched again.
 - The helper extracts 16 kHz mono itself. It chunks long audio on MLX (120 s chunks, 15 s overlap) and switches NeMo to local attention past 20 minutes.
 - `words` are whole words on both backends. Each has `start`/`end` in seconds and optional `confidence`; treat low-confidence words around a cut with suspicion.
 - Read segments for structure. Load word rows only for the windows you are about to cut, to keep context small.
@@ -136,7 +145,9 @@ Privacy review happens against the **retained output timeline**, not just the ra
 
 ### 4.5.1 Define the policy in the EDL
 
-Redactions are output-timeline entries. Use `black` for credentials, tokens, secrets, auth codes, private keys, recovery values, and similarly actionable data. Never rely on blur for secrets. Use `blur` only for non-secret personal information when preserving the surrounding visual has value.
+Redactions are output-timeline entries. **Use `blur` by default for non-secret details** (emails, names, account IDs, location hints that are not independently prohibited, paths and notifications). Keep the blur as small as practical with adequate padding and motion coverage, so the video looks natural rather than obscured by conspicuous black boxes. Inspect encoded frames to ensure blurred text cannot be inferred from remaining pixels or surrounding context.
+
+**For actionable secrets** (credentials, tokens, auth codes, private keys, recovery values), prefer **cutting the shot**. Never rely on blur for secrets. Use opaque `black` only as a last-resort fallback when the shot is essential and the sensitive region can be bounded safely. If the user's prohibited context is still clear after blurring, reframe or cut the scene instead.
 
 For moving/scrolling information, keyframe `at` values are relative to the redaction start and must cover `0..duration`. The renderer covers the swept bounding region between consecutive keyframes plus padding, intentionally preferring excess coverage over a tracking miss. If the area cannot be safely bounded, cut the section.
 
