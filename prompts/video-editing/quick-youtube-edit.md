@@ -28,12 +28,12 @@ PRIVACY / PROHIBITED CONTENT
 <If recordings are sequential stop/restart takes, say so here.>
 
 WORKFLOW
-1. Keep raw media immutable. Run the preflight and record what is available.
+1. Keep raw media immutable. Reuse existing installed tools, Python environment, and persistent model caches instead of downloading them per prompt. Run the preflight and record what is available; install or upgrade only when missing or a verified newer compatible version is needed.
 2. Probe sources with tools/video/edl.py probe.
-3. Transcribe each source with NVIDIA Parakeet using tools/video/parakeet_transcribe.py, with word and segment timestamps.
+3. Transcribe each source with NVIDIA Parakeet using tools/video/parakeet_transcribe.py, with word and segment timestamps. Matching transcripts are reused; after a model/runtime upgrade, use --force deliberately.
 4. Write work/edit.json (the EDL) before rendering. Resolve every `edl.py plan` warning about cuts inside words or in active audio, or list it as an unverified seam.
 5. Render and QC the rough cut from the EDL.
-5a. If private/account/location/prohibited information could appear, set `privacy.required=true`; review retained transcript content; add output-timeline redactions; use opaque black for secrets and blur only for non-secret personal data; keyframe moving/scrolling regions across the entire interval; run dense privacy frames (normally 0.5 s); inspect every generated frame in batches; and make privacy review ranges cover the full output. If a region cannot be bounded safely, cut it.
+5a. If private/account/location/prohibited information could appear, set `privacy.required=true`; review retained transcript content; add output-timeline redactions; prefer small, strong blurred boxes for non-secret details to preserve natural-looking UI; cut actionable secrets rather than blurring them, with opaque black only as a last resort; keyframe moving/scrolling regions across the entire interval; run dense privacy frames (normally 0.5 s); inspect every generated frame in batches; and make privacy review ranges cover the full output. If a region cannot be bounded safely, cut it.
 6. For externally verifiable claims I make, capture primary-source proof with available browser tooling. Record claim, URL, and capture date on the EDL overlay.
 7. Use HyperFrames for meaningful graphics. Reuse the catalog and approved patterns first. Lint during authoring; for the final gate run `check --snapshots`, inspect the snapshots, then open the final Studio preview. Satisfy the HyperFrames review/approval requirement, or the unattended rule above, before rendering graphics.
 8. Use Tella only if it is connected and useful for a Tella-native source.
