@@ -33,15 +33,20 @@ ffmpeg -version | head -1 && node --version && python3 --version
 ## 2. Parakeet
 
 ```bash
-python3 -m venv .venv-video && source .venv-video/bin/activate
-python -m pip install -U pip
+# ONCE per workstation, outside individual videos, worktrees and temporary dirs:
+VIDEO_VENV="${VIDEO_VENV:-${XDG_DATA_HOME:-$HOME/.local/share}/agentdefaults/video-venv}"
+mkdir -p "$(dirname "$VIDEO_VENV")"
+test -x "$VIDEO_VENV/bin/python" || python3 -m venv "$VIDEO_VENV"
+source "$VIDEO_VENV/bin/activate"
 
-# Apple Silicon (MLX)
-python -m pip install -U "parakeet-mlx>=0.5"
+# Apple Silicon (MLX): install only when missing, not on every prompt.
+python -c "import parakeet_mlx" || python -m pip install "parakeet-mlx>=0.5"
 
-# NVIDIA / Linux (NeMo)
-python -m pip install "nemo_toolkit[asr]>=2.2"
+# NVIDIA / Linux (NeMo): use INSTEAD of the MLX line, only if missing.
+python -c "import nemo.collections.asr" || python -m pip install "nemo_toolkit[asr]>=2.2"
 ```
+
+For subsequent videos: activate the existing `VIDEO_VENV` and run preflight. Do not create a new per-video `.venv`, use `pip install -U` unconditionally, or re-download identical packages. If installation fails, diagnose the existing environment before replacing it. Upgrade explicitly only after checking upstream for a newer **compatible** version and recording the change.
 
 Then run:
 
@@ -54,7 +59,10 @@ python3 tools/video/parakeet_transcribe.py /path/project/raw/cam.mp4 -o /path/pr
 - **Default models:** `mlx-community/parakeet-tdt-0.6b-v3` (MLX) and `nvidia/parakeet-tdt-0.6b-v3` (NeMo). The helper rejects a model meant for the other backend.
 - **Output:** schema 2 JSON with `text`, `segments`, and `words`. Each item has `text`, `start`, `end` (seconds, 3 dp), and optional `confidence`. MLX subword tokens are merged into real words.
 - **Long recordings:** MLX is chunked at 120 s with 15 s overlap. NeMo switches to local attention past 20 minutes. Parakeet TDT v3 covers 25 European languages with automatic language detection.
-- **Model download:** the first run downloads the model weights, so it needs network access once.
+- **Model reuse:** the first run downloads model weights. MLX uses Hugging Face's shared disk cache (default `~/.cache/huggingface/hub`; respect any pre-existing `HF_HOME` or `HF_HUB_CACHE`). NeMo also caches pretrained checkpoints. Both caches must persist across prompts, projects, shells and machine restarts. Do not relocate them into `work/`, a venv, a temporary directory or a disposable CI workspace unless that cache is persisted.
+- **Version behavior:** the normal online model loader may check for a newer upstream revision, but unchanged cached files should not be downloaded again. Explicitly set `HF_HUB_OFFLINE=1` for MLX if you want to use a known complete local Hugging Face snapshot without network checks. Remove that flag when checking for model updates. Do not force downloads or clear caches.
+- **Transcript reuse:** if the source's resolved path, size and nanosecond mtime, selected backend and model ID match a valid schema-2 output, the helper returns immediately without extracting audio, loading Parakeet or overwriting the file. Missing/legacy/corrupted/stale transcripts are regenerated. This is a fast stat-based fingerprint, not a cryptographic content hash. If the same model ID was updated upstream (or recognition needs correcting), run with `--force` to re-transcribe. Changing `--model` also invalidates the transcript cache.
+- **Refresh example:** `python3 tools/video/parakeet_transcribe.py /path/project/raw/cam.mp4 -o /path/project/work/transcripts/cam.json --force`. This forces transcription, **not** a fresh weight download.
 
 If no backend can run, the stack stops before speech editing and reports why. It does not quietly switch to another recognizer.
 
@@ -67,12 +75,19 @@ claude plugin marketplace add heygen-com/hyperframes
 claude plugin install hyperframes@hyperframes
 ```
 
-For agent or non-interactive installs and updates:
+For the **initial** installation, follow HyperFrames' install instructions above. Only run `npx hyperframes skills update` when an intentional update is warranted; it is not part of every editing session.
+
+To check a previously installed tool without automatically fetching a new npm version:
 
 ```bash
-npx hyperframes skills update
-npx --yes hyperframes doctor --json | jq -e '.ok'
+if command -v hyperframes >/dev/null 2>&1; then
+  hyperframes doctor --json | jq -e '.ok'
+else
+  npx --no-install hyperframes doctor --json | jq -e '.ok'
+fi
 ```
+
+If neither command can find an installed HyperFrames CLI, use the stack's graphics-placeholder fallback; inspect the tool's documented installation path before initiating a download.
 
 Start a fresh Claude Code session after installing skills. The installed `/hyperframes` skills and `npx hyperframes <cmd> --help` are runtime truth.
 
@@ -155,4 +170,4 @@ python3 scripts/validate-claude-video-editing-stack.py
 python3 scripts/validate-agentdefaults.py
 ```
 
-The tests render tiny synthetic media with FFmpeg, and those cases are skipped when FFmpeg is absent. They exercise the Parakeet normalization with fake model output. They do not prove that a real Parakeet model, HyperFrames, browser automation, Tella, or licensed audio works on a given workstation.
+The tests render tiny synthetic media with FFmpeg, and those cases are skipped when FFmpeg is absent. They exercise Parakeet normalization and transcript-cache invalidation with fake model output, plus static blurred-box rendering. They do not prove that a real Parakeet model, HyperFrames, browser automation, Tella, or licensed audio works on a given workstation.
