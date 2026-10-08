@@ -227,6 +227,8 @@ def main(argv: list[str] | None = None) -> int:
         except (RuntimeError, ValueError, MemoryError) as exc:
             raise SystemExit(f"Parakeet {backend} transcription failed for {args.audio}: {exc}") from exc
 
+    if source_fingerprint(args.audio) != fingerprint:
+        raise SystemExit("Source changed during transcription; discard stale output and retry after recording finishes.")
     result = {"schema": 2, "backend": backend, "model": model, "audio": str(args.audio.resolve()),
               "source_fingerprint": fingerprint, "duration": round(duration, 3), **body}
     if not result["words"]:
