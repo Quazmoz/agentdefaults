@@ -34,7 +34,12 @@ ffmpeg -version | head -1 && node --version && python3 --version
 
 ```bash
 # ONCE per workstation, outside individual videos, worktrees and temporary dirs:
-VIDEO_VENV="${VIDEO_VENV:-${XDG_DATA_HOME:-$HOME/.local/share}/agentdefaults/video-venv}"
+SHARED_VIDEO_VENV="${XDG_DATA_HOME:-$HOME/.local/share}/agentdefaults/video-venv"
+if [ -z "${VIDEO_VENV:-}" ]; then
+  if test -x "$SHARED_VIDEO_VENV/bin/python"; then VIDEO_VENV="$SHARED_VIDEO_VENV"
+  elif test -x ".venv-video/bin/python"; then VIDEO_VENV="$PWD/.venv-video"
+  else VIDEO_VENV="$SHARED_VIDEO_VENV"; fi
+fi
 mkdir -p "$(dirname "$VIDEO_VENV")"
 test -x "$VIDEO_VENV/bin/python" || python3 -m venv "$VIDEO_VENV"
 source "$VIDEO_VENV/bin/activate"

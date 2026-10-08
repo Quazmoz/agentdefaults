@@ -42,7 +42,13 @@ Given a single file instead of a project, set `$P` to `<file dir>/<file stem>-ed
 ```bash
 ffmpeg -version | head -1 && ffprobe -version | head -1
 node --version                                  # HyperFrames needs >= 22
-VIDEO_VENV="${VIDEO_VENV:-${XDG_DATA_HOME:-$HOME/.local/share}/agentdefaults/video-venv}"
+# Prefer an explicit path, then the shared venv, then a pre-existing legacy .venv-video.
+SHARED_VIDEO_VENV="${XDG_DATA_HOME:-$HOME/.local/share}/agentdefaults/video-venv"
+if [ -z "${VIDEO_VENV:-}" ]; then
+  if test -f "$SHARED_VIDEO_VENV/bin/activate"; then VIDEO_VENV="$SHARED_VIDEO_VENV"
+  elif test -f ".venv-video/bin/activate"; then VIDEO_VENV="$PWD/.venv-video"
+  else VIDEO_VENV="$SHARED_VIDEO_VENV"; fi
+fi
 test -f "$VIDEO_VENV/bin/activate" && source "$VIDEO_VENV/bin/activate"
 # Reuse installed HyperFrames; no implicit npm download/update during preflight.
 if command -v hyperframes >/dev/null 2>&1; then
