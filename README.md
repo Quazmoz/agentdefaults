@@ -56,6 +56,7 @@ Then choose what you are trying to do:
 | Operate a Bounded Completion loop quickly | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
 | Understand the full agent-loop model | [`docs/loops/README.md`](docs/loops/README.md) |
 | Use authenticated Comet browser research | [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) |
+| Safely synchronize local IDE repositories with remote AI-agent edits | [`docs/quickstarts/agent-managed-git-sync.md`](docs/quickstarts/agent-managed-git-sync.md) |
 | Reduce context/tool/output token waste | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | Understand task/state schemas | [`schemas/README.md`](schemas/README.md) |
 | Adapt examples safely | [`examples/README.md`](examples/README.md) |
