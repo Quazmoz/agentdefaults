@@ -33,7 +33,8 @@ If you have **valuable local edits**, create a local topic branch for them rathe
 ```bash
 git switch -c work/local-changes
 # Review your staged files, avoid secrets/build outputs, then commit intentional changes.
-git add <specific-files>
+git add -- docs/ARCHITECTURE.md  # Replace with the specific files you intend to preserve.
+git diff --cached --check
 git commit -m "Preserve local work"
 git switch main
 git merge --ff-only origin/main
