@@ -18,7 +18,7 @@ import sys
 from . import admob as admob_module
 from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
 from . import play as play_module
-from . import play_management, play_reporting, regional_pricing
+from . import growth_batch, play_management, play_reporting, regional_pricing
 from . import revenuecat as rc_module
 
 MUTATING = "mutating"
@@ -404,6 +404,26 @@ def cmd_play_pricing_plan(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_play_growth_batch_check(args: argparse.Namespace) -> int:
+    """Validate one exact multi-app approval packet without live writes."""
+    manifest = growth_batch.load_manifest(args.manifest, args.sha256)
+    result = growth_batch.preflight(manifest)
+    return emit({
+        "status": "ready", "manifest_sha256": args.sha256, "actions": result,
+        "action_count": len(result), "mode": "observe_only",
+        "approval": f"APPROVE PLAY GROWTH BATCH {args.sha256}",
+    })
+
+
+def cmd_play_growth_batch_apply(args: argparse.Namespace) -> int:
+    """Execute only the exact hash previously approved in the Codex conversation."""
+    manifest = growth_batch.load_manifest(args.manifest, args.sha256)
+    confirm(args, f"apply exact Play growth batch {args.sha256}")
+    result = growth_batch.apply(manifest)
+    emit({"manifest_sha256": args.sha256, **result})
+    return 0 if result["status"] == "verified" else 5
+
+
 def cmd_play_pricing_apply(args: argparse.Namespace) -> int:
     confirm(args, f"apply localized pricing plan {args.plan_id}")
     regional_pricing.load_plan(args.plan_id)
@@ -711,6 +731,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     pricing_plan.set_defaults(func=cmd_play_pricing_plan)
 
+    growth_check = play.add_parser(
+        "growth-batch-check", help="inspect exact no-build Play growth batch without mutation"
+    )
+    growth_check.add_argument("--manifest", required=True, help="local UTF-8 batch JSON")
+    growth_check.add_argument("--sha256", required=True, help="raw manifest SHA-256")
+    growth_check.set_defaults(func=cmd_play_growth_batch_check)
+
+    growth_apply = play.add_parser(
+        "growth-batch-apply", help=f"apply one preapproved exact no-build batch [{MUTATING}]"
+    )
+    growth_apply.add_argument("--manifest", required=True, help="approved batch JSON")
+    growth_apply.add_argument("--sha256", required=True, help="approved batch SHA-256")
+    growth_apply.set_defaults(func=cmd_play_growth_batch_apply)
+
     pricing_apply = play.add_parser(
         "pricing-apply",
         help=f"apply one persisted localized pricing plan [{MUTATING}]",
@@ -828,7 +862,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
-    except (config.ConfigError, play_reporting.ReportingError, regional_pricing.PricingError) as error:
+    except (config.ConfigError, growth_batch.BatchError, play_reporting.ReportingError, regional_pricing.PricingError) as error:
         note(f"configuration error: {error}")
         return 3
     except (play_module.PlayError, admob_module.AdMobError, rc_module.RevenueCatError) as error:

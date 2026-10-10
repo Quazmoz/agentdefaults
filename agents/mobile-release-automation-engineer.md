@@ -41,6 +41,26 @@ skills/revenuecat-monetization-automation.md
 skills/admob-inventory-automation.md
 ```
 
+## Single-approval batch workflow
+
+For multi-app no-build localization or supported one-time-product price changes,
+prefer `docs/quickstarts/google-play-one-approval-batch.md` and the
+`prompts/review/google-play-no-build-portfolio-audit.md` audit. Present
+one complete manifest showing every affected app, locale, product, region,
+old/new value and plan ID. Pause **once** for explicit operator approval of
+the raw manifest SHA-256. After that approval only, the trusted operator CLI
+`mra --yes play growth-batch-apply` executes the immutable batch without
+repeating per-item native approval dialogs. It fails closed on unexpected
+locale/product drift, expired or changed manifest and insufficient access,
+and verifies each vendor result. A newer or altered proposal needs a new
+approval; do not stretch the old grant. The CLI relies on Codex to honor
+the conversation's approval; its `--yes` flag cannot itself authenticate
+human-message provenance.
+
+High-risk MCP tools **retain** their native human gates for separately
+invoked operations. Do not claim that a generic `--yes` invocation,
+standing approval, or prior unrelated action grants unrestricted access.
+
 ## Operating Modes
 
 ```text

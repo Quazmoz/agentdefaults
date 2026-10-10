@@ -56,7 +56,7 @@ The factors are product policy, not foreign-exchange calculations. Google still 
      --profile medtick \
      --plan-id <approved-plan-id>
    ```
-   The CLI still requires a native macOS approval dialog. The secure MCP tool has the same native gate.
+   The trusted operator CLI uses explicit `--yes` authorization; the secure MCP mutation tool retains its native human approval gate. For multi-app work, prefer the single hash-bound batch above.
 8. MRA re-reads Play before mutation. It refuses stale source state or a changed Play `regionVersion`.
 9. MRA patches only the selected purchase option pricing field and then re-reads Play. Success is reportable only if all approved regional prices match the read-back.
 
@@ -73,6 +73,29 @@ The factors are product policy, not foreign-exchange calculations. Google still 
 - US/GB must not be modified by `purchasing-power-v1`.
 - A successful PATCH is insufficient; read-back verification is mandatory.
 - Never convert a user approval for one app into approval for another app or a portfolio batch.
+
+## One review and approval for a whole portfolio batch
+
+When multiple app/pricing plans are ready, the preferred Codex workflow is
+`docs/quickstarts/google-play-one-approval-batch.md`. Bind exact
+app/profile/package/`plan_id` pairs to one immutable, SHA-256-hashed
+`growth-batch` manifest. Codex displays every affected region and before/
+after price to the operator and **stops for one approval of the complete hash**.
+Once the operator explicitly approves `APPROVE PLAY GROWTH BATCH <sha256>`
+in the current conversation, Codex invokes the operator CLI
+`mra --yes play growth-batch-apply` with the **original bytes and hash**.
+It does not invoke per-app secure-MCP native dialogs. The existing per-plan
+pricing integrity, source drift, regionVersion and read-back checks remain
+mandatory. Unexpected drift, expiration, additions, omissions, or new prices
+require a *new* exact batch review; partial success never justifies retrying
+non-idempotent writes blindly. The batch CLI cannot authenticate the human
+conversation itself, so Codex must only invoke it following genuine explicit
+operator approval.
+
+Single-plan `mra --yes play pricing-apply` remains available, but do not
+require a native popup on top of an already approved batch. The high-risk
+secure MCP tool continues to require native approval when it is called
+separately without the trusted operator CLI batch.
 
 ## Multi-App Rollout
 

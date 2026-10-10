@@ -511,6 +511,45 @@ copy, review, image, and pricing opportunities without live mutations.
 conversion or sales performance**; the agent must parse authorized reporting
 rows to rank business impact or flag the missing data.
 
+## One approval for an entire no-build Play growth batch
+
+For multi-app localization and supported localized OneTimeProduct price
+changes, Codex should use one **immutable, exact-SHA-256 manifest** instead
+of invoking per-item secure MCP tools and causing repeated native dialogs.
+
+```bash
+shasum -a 256 /tmp/play-growth-approved.json
+mra play growth-batch-check --manifest /tmp/play-growth-approved.json \
+  --sha256 <exact-manifest-sha256>
+# After the operator approves exactly: APPROVE PLAY GROWTH BATCH <sha256>
+mra --yes play growth-batch-apply --manifest /tmp/play-growth-approved.json \
+  --sha256 <approved-manifest-sha256>
+```
+
+The check is read-only, verifies all targets and proposed changes, and
+provides the exact review hash. Applying rechecks the entire batch before
+mutation, executes the approved actions one by one, stops on drift/error,
+and verifies read-back. **Cross-app changes are not atomic**: on failure
+report partial results and reconcile remotely before retrying. No automatic
+rollback and no silent new plans. Play Console managed publishing and
+public propagation require separate checks.
+
+Supported batch kinds: `listing-create`, `listing-update`, and
+`pricing-apply`. The manifest has at most 50 actions and a maximum
+seven-day validity window. No price amounts can be supplied outside a
+persisted, integrity-checked pricing plan. It does not authorize publishing
+an app, replacing screenshots, replying to reviews, changing subscriptions,
+or mutating RevenueCat/AdMob.
+
+For the exact schema, a representative manifest, and the single approval
+conversation contract, see
+`docs/quickstarts/google-play-one-approval-batch.md`.
+The operator CLI's `--yes` is a trust surface: it **does not verify**
+that the agent faithfully observed human approval. Codex must validate
+approval provenance from the current conversation before using it.
+The per-action secure MCP native dialogs remain intact when used outside
+this preauthorized operator batch.
+
 ## Localized one-time-product pricing
 
 MRA 1.8.0 adds a deterministic pricing-plan workflow for modern Google Play `OneTimeProduct` purchase options. Planning reads live Play state and uses Google's `convertRegionPrices` calculation endpoint; it does not mutate catalog state. The resulting plan is persisted and content-addressed by `plan_id`.

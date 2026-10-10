@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Prepare localized Google Play one-time-product pricing as a read-only proposal first, then apply only exact persisted app + plan ID pairs that the operator explicitly approves in a later message. Preserve the native human approval gate and require authoritative Google Play read-back before reporting any live pricing change as verified.
+Prepare localized Google Play one-time-product pricing as a read-only proposal first, then apply only exact persisted app + plan ID pairs that the operator explicitly approves in a later message. Use a **single explicitly reviewed batch authorization** for the entire approved set, then apply only its immutable exact SHA-256 through the operator CLI without repetitive native dialogs. Preserve live read-back and source-drift checks before reporting results.
 
 Use with:
 - `agents/mobile-release-automation-engineer.md`
@@ -76,7 +76,7 @@ STOP after the approval request. Do not call pricing-apply and do not trigger th
 
 PHASE 2 — APPLY_APPROVED
 
-Enter only after a later operator message explicitly names exact app + plan_id pairs from your immediately preceding PLAN_ONLY output.
+Enter only after a later operator message explicitly authorizes the exact **full manifest SHA-256** displayed in your immediately preceding PLAN_ONLY output. The hash binds the named app/plan_id pairs and their full scope.
 
 Do not treat the original prompt, generic approval, prior app approval, policy approval, silence, or source-code approval as authorization.
 

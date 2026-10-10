@@ -46,6 +46,32 @@ No Android/Gradle/Kotlin changes; no AAB build or upload; no repo commits as par
 
 A verified API commit is **not proof of user-visible publication**. Inspect Play Console Publishing overview/managed publishing and public listing propagation separately. Treat rollback as a separately approved action; for a newly added locale do not auto-delete it.
 
+## Single approval after review
+
+Prepare one finite `growth-batch` manifest for currently supported
+`listing-create`, `listing-update`, and `pricing-apply` actions. Read
+`docs/quickstarts/google-play-one-approval-batch.md` for its exact schema and
+safe execution rules. Include **all** affected apps, locales, existing/desired
+text and persisted pricing-plan regional diffs in the review packet. Run
+`mra play growth-batch-check --manifest ... --sha256 ...` read-only to check
+that every action is ready. Stop at **one approval** of the whole raw-file
+SHA-256 in the current Codex conversation:
+
+```text
+APPROVE PLAY GROWTH BATCH <64-character-manifest-sha256>
+```
+
+After this exact approval, use the operator
+`mra --yes play growth-batch-apply --manifest ... --sha256 ...` once. Do
+not request separate approval per app, region, locale, or tool call, and do
+not trigger native macOS dialogs for these preauthorized CLI operations.
+Any change to the reviewed plan, a stale price, unexpected live drift,
+expiry or additional app **requires a new reviewed batch**, not silent expansion.
+The CLI cannot itself authenticate a chat message: Codex must verify the
+operator's approval belongs to the current turn and matches that exact hash.
+Do not auto-publish unsupported image/review/availability/other actions as
+part of this batch; report them separately as proposals.
+
 ## Final output contract
 
 ```markdown
@@ -63,4 +89,4 @@ Date, GitHub source refs, live Play observation times, report coverage/permissio
 ## DISCOVERED / VERIFIED / UNVERIFIED / RISKS / USER ACTION
 ```
 
-Stop at `PLAN_ONLY`. Do not silently interpret this prompt as publishing authorization.
+Stop at `PLAN_ONLY` until the user separately and explicitly approves the complete manifest SHA-256; if approved later, execute only that immutable batch. The audit prompt itself is never publishing authorization.
