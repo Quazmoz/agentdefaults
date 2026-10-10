@@ -501,12 +501,32 @@ retry. A successful API commit does **not** prove public publication; verify
 Play Console Publishing overview and public locale propagation. Neither the
 CLI's `--yes` nor this documentation grants blanket authorization.
 
-### No-build portfolio growth audit
+### No-build portfolio growth audit — live MRA verification required
 
-For Codex, load `prompts/review/google-play-no-build-portfolio-audit.md`
-with `agents/google-play-growth-optimizer-agent.md` and MRA. It discovers
-registered apps, compares live production listing truth, and drafts localized
-copy, review, image, and pricing opportunities without live mutations.
+For Codex, Claude Code, or another agent with shell/MRA access, load
+`prompts/review/google-play-no-build-portfolio-audit.md` with
+`agents/google-play-growth-optimizer-agent.md`. The **first deliverable is
+not a recommendation**: complete the live Google Play baseline using the
+**already-authorized** local MRA session.
+
+```bash
+mra profile list
+mra doctor
+mra play tracks --profile <actual-profile>
+mra play listings --profile <actual-profile>
+mra play listing --profile <actual-profile> --language en-US
+mra play products --profile <actual-profile>
+mra play freshness --profile <actual-profile>
+```
+
+Inspect the real available locale set, product type, production track,
+MRA permissions and per-app errors before preparing recommendations. A
+doctor probe or GitHub draft alone **does not** prove live Play access.
+The installed profile/credentials are reused; agents must not request or
+relocate secret keys. If running remotely without the existing authorized
+environment, return `LIVE_AUDIT_BLOCKED` with exact access blockers, not
+fabricated live status. Only include fully live-verified actions in the
+single, later-approved immutable growth batch.
 `mra play freshness` checks export availability/recency, **not actual
 conversion or sales performance**; the agent must parse authorized reporting
 rows to rank business impact or flag the missing data.
