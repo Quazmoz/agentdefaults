@@ -42,6 +42,7 @@ class PlayManagementClient:
         full_description: str,
         video: str | None = None,
         dry_run: bool = True,
+        expected_current: dict[str, Any] | None = None,
     ) -> dict:
         body: dict[str, Any] = {
             "language": language,
@@ -52,6 +53,17 @@ class PlayManagementClient:
         if video:
             body["video"] = video
         with self.client.edit(commit=not dry_run, validate=True) as edit_id:
+            if expected_current is not None:
+                current = self.client._request(  # noqa: SLF001
+                    "GET", f"/edits/{edit_id}/listings/{language}",
+                    f"compare listing {language}",
+                )
+                fields = ("title", "shortDescription", "fullDescription")
+                if any(current.get(field) != expected_current.get(field) for field in fields):
+                    raise play_module.PlayError(f"listing {language} drifted before update")
+                # Fail closed if an unrecorded promo video would be cleared.
+                if current.get("video") != expected_current.get("video"):
+                    raise play_module.PlayError(f"listing {language} video drifted before update")
             result = self.client._request(  # noqa: SLF001
                 "PUT",
                 f"/edits/{edit_id}/listings/{language}",
