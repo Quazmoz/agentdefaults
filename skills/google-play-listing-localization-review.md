@@ -187,6 +187,36 @@ Reason:
 
 For languages where the agent cannot confidently judge native idiom, say so explicitly and recommend native review. Do not disguise translation uncertainty as ASO confidence.
 
+## Creating a genuinely absent locale with MRA
+
+Google's `edits.listings.update` is an upsert. **Never** use the
+existing-locale `listing-update` wrapper against an absent locale or
+replace a localized listing merely because a stale audit says it is missing.
+
+MRA's distinct `play listing-create` operator command enforces an in-edit
+absence check and validates the SHA-256 of the **exact UTF-8 JSON file**,
+including `language`, `title`, `shortDescription`, and
+`fullDescription`. The command validates length limits and performs
+Play edit validation during dry-run; successful execution re-reads the locale.
+MRA rejects creation if the locale now exists, if the inventory is malformed,
+or if the approved file's raw bytes changed. A concurrent external Play edit
+may still yield a commit conflict; reconcile the live state before retrying.
+
+```bash
+shasum -a 256 /tmp/es-ES.json
+mra play listing-create --profile myapp --language es-ES \
+  --body /tmp/es-ES.json --sha256 <exact-sha256> --dry-run
+# Only after separate approval for this app, locale, and exact payload:
+mra --yes play listing-create --profile myapp --language es-ES \
+  --body /tmp/es-ES.json --sha256 <approved-sha256>
+```
+
+Treat listing copy as distinct from runtime localization. If the shipped app
+does not support that language in its UI, do not promise that it does.
+Human native-language and claim reviews remain release gates. Uploading
+listing text does not automatically localize Play assets or prove public
+publication; review Publishing overview and the live locale separately.
+
 ## Mutation Boundary
 
 If the operator later approves a specific locale/version of the recommendation:
@@ -194,11 +224,14 @@ If the operator later approves a specific locale/version of the recommendation:
 1. re-read the current live listing;
 2. detect drift from the audited source;
 3. if drift exists, regenerate the proposal and obtain fresh approval;
-4. if the approval is explicit in the current user prompt, use the operator
-   `mra --yes play listing-update` path with an exact expected-current snapshot
-   so no redundant native popup is shown;
-5. otherwise use the high-risk MCP listing update and its native approval gate;
-6. read the listing back from Play;
+4. for an **existing** locale, use the operator
+   `mra --yes play listing-update` with an exact expected-current snapshot only when
+   that particular update is preauthorized in the current user prompt; otherwise
+   use the high-risk MCP listing update and its native approval gate;
+5. for an **absent** locale, use `mra play listing-create --dry-run` with
+   the approved file hash, then `mra --yes play listing-create` only after
+   exact app/locale/hash authorization; do not use the existing-locale update path;
+6. read the listing back from Play, and verify Console/publication status separately;
 7. report the exact locale and resulting fields.
 
 Approval for one locale does not authorize another locale.
