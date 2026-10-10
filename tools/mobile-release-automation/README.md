@@ -475,6 +475,42 @@ and `fullDescription`. The command refuses the write if live text differs from
 the expected-current snapshot, commits the update only after `--yes`, then
 re-reads Play and returns `status: verified` only on an exact match.
 
+### Safely create a missing Play Store locale
+
+`edits.listings.update` supports both create and update; the ordinary
+`listing-update` CLI intentionally covers **existing** locales only.
+Use the distinct, absence-checked `listing-create` command for genuinely
+missing translations. Create an approved complete JSON payload with exact
+`language`, `title`, `shortDescription`, and `fullDescription`.
+Do not claim the app UI is translated unless that shipped build is localized.
+
+```bash
+shasum -a 256 /tmp/es-ES.json
+mra play listing-create --profile wristrandom --language es-ES \
+  --body /tmp/es-ES.json --sha256 <sha256-of-exact-file> --dry-run
+# Only after specific authorization for package, locale, and exact SHA-256:
+mra --yes play listing-create --profile wristrandom --language es-ES \
+  --body /tmp/es-ES.json --sha256 <approved-sha256>
+```
+
+The command checks absence **inside the same Play edit as the PUT**,
+validates text lengths, refuses modified payloads, uses Play validation in
+dry-run, and reads the committed text back. It never overwrites an existing
+locale. On concurrent edits or uncertain writes, re-read Play before any
+retry. A successful API commit does **not** prove public publication; verify
+Play Console Publishing overview and public locale propagation. Neither the
+CLI's `--yes` nor this documentation grants blanket authorization.
+
+### No-build portfolio growth audit
+
+For Codex, load `prompts/review/google-play-no-build-portfolio-audit.md`
+with `agents/google-play-growth-optimizer-agent.md` and MRA. It discovers
+registered apps, compares live production listing truth, and drafts localized
+copy, review, image, and pricing opportunities without live mutations.
+`mra play freshness` checks export availability/recency, **not actual
+conversion or sales performance**; the agent must parse authorized reporting
+rows to rank business impact or flag the missing data.
+
 ## Localized one-time-product pricing
 
 MRA 1.8.0 adds a deterministic pricing-plan workflow for modern Google Play `OneTimeProduct` purchase options. Planning reads live Play state and uses Google's `convertRegionPrices` calculation endpoint; it does not mutate catalog state. The resulting plan is persisted and content-addressed by `plan_id`.
