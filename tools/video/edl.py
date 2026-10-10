@@ -553,8 +553,10 @@ def build_render_command(plan: dict[str, Any], output: Path, crf: int, preset: s
             else:
                 base_label, crop_label, blur_label = f"vr{redaction_no}b", f"vr{redaction_no}c", f"vr{redaction_no}x"
                 radius = max(1, min(20, bw // 4, bh // 4))
+                # chroma planes are half-size in 4:2:0, and boxblur requires radius < plane_min/2
+                chroma_radius = max(0, min(radius, min(bw, bh) // 4 - 1))
                 graph.append(f"{video_label}split=2[{base_label}][{crop_label}]")
-                graph.append(f"[{crop_label}]crop={bw}:{bh}:{bx}:{by},boxblur={radius}:2[{blur_label}]")
+                graph.append(f"[{crop_label}]crop={bw}:{bh}:{bx}:{by},boxblur=luma_radius={radius}:luma_power=2:chroma_radius={chroma_radius}:chroma_power=2[{blur_label}]")
                 graph.append(f"[{base_label}][{blur_label}]overlay=x={bx}:y={by}:eof_action=pass:"
                              f"enable='between(t,{start:.6f},{end:.6f})'[{next_label}]")
             video_label = f"[{next_label}]"

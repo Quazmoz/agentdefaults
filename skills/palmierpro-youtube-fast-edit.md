@@ -164,43 +164,7 @@ Rules:
 
 ### Dialogue boundary invariant
 
-Transcript timestamps identify candidate edits; they are not guaranteed acoustic cut points.
-
-Every speech-affecting edit — including `remove_words`, `remove_silence`, range deletion, trim, clip removal, and retake replacement — must preserve:
-
-- the complete initial phoneme/syllable of the first kept word after the cut
-- the complete final phoneme/syllable and natural decay of the last kept word before the cut
-- complete sentence/clause meaning
-- natural cadence and breathing appropriate to long-form delivery
-- no duplicated syllable/word, overlap, click/pop, or accidental double speech
-
-Never knowingly leave a cut:
-
-- inside a word or syllable
-- before a final consonant finishes
-- after a word has begun but before its body is audible
-- in the middle of a sentence when the omitted remainder is required for grammatical or semantic completion
-- so tight that otherwise-correct speech sounds mechanically truncated
-
-Prefer, in order when practical:
-
-1. complete sentence boundary
-2. complete clause boundary
-3. natural thought pause
-4. clean breath/pause
-5. intentional J-cut/L-cut that preserves the full phrase
-
-For long-form YouTube, a small natural pause is better than a clipped phoneme.
-
-If a cleanup mutation creates a bad seam:
-
-1. undo when the latest action is safely attributable
-2. refresh timeline/transcript state
-3. retry with looser aggressiveness or a smaller target
-4. recover source handles/pre-roll/post-roll where possible
-5. use micro-fades only for clicks/noise-floor changes, never to smear overlapping speech
-
-If the available Palmier/client surface cannot validate the acoustic seam, leave a review marker or report the exact cut instead of claiming it is clean.
+Apply the invariant, cut handles, and repair steps in `skills/palmierpro-transcript-cuts-and-captions.md` to every speech-affecting edit (`remove_words`, `remove_silence`, range deletion, trims, clip removal, retake replacement). After the cleanup pass, run its Seam Audit.
 
 ## Visual Pass
 
@@ -241,11 +205,7 @@ Do not use a crossfade to hide two overlapping spoken phonemes. Micro-fades are 
 
 ## Transitions
 
-Technical YouTube defaults to clean cuts.
-
-Use transitions sparingly at actual section boundaries. If a fade or dip is useful, implement it using the live keyframe/property schema and verify the result with `inspect_timeline`.
-
-Do not spend the fast-edit pass building decorative transitions between routine cuts.
+Use the canonical default in `skills/palmierpro-timeline-editing.md` → Transitions: a subtle head fade-in and tail fade-out with matching audio fades, and clean cuts everywhere else. Do not spend the fast-edit pass building decorative transitions.
 
 ## Privacy / Sensitive-Content Gate
 
@@ -335,11 +295,11 @@ After `undo`, timeline copy/switch, or any operation documented to invalidate ID
 Before declaring the fast edit complete:
 
 1. `get_transcript` the edited timeline or relevant windows and check for dangling speech/meaning changes.
-2. Audit every speech-edit seam created by cleanup for complete word/phoneme boundaries, sentence continuity, and natural cadence; use actual audio/playback inspection where the connected surface supports it.
+2. Run the Seam Audit from `skills/palmierpro-transcript-cuts-and-captions.md`. Fix ERROR seams and mark unresolved WARN seams.
 3. `inspect_timeline` the opening/hook.
 4. `inspect_timeline` at least one representative technical/demo section.
 5. `inspect_timeline` every important text/layout change.
-6. Inspect the ending if it was modified.
+6. `inspect_timeline` the first and last frames of the head fade-in and tail fade-out, and the ending if it was modified.
 7. Confirm no unintended caption track was added to long-form.
 8. Confirm no paid generation occurred without approval.
 9. Confirm the original timeline remains available when this was a broad edit.

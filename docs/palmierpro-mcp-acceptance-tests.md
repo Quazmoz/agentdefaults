@@ -349,23 +349,16 @@ Given an end-to-end editing request that did not explicitly authorize paid gener
 Given a transcript-driven cleanup of talking-head, tutorial, interview, voiceover, or other spoken footage:
 
 - use transcript words/timestamps to locate candidate edits, not as proof of exact acoustic boundaries
-- after each speech-affecting mutation, verify the local seam against actual timeline/source audio as far as the connected Palmier/client surface permits
+- keep the cut handles in `skills/palmierpro-transcript-cuts-and-captions.md` and run its Seam Audit after the cleanup pass
 - preserve the complete initial phoneme/syllable of the first kept word after the cut
 - preserve the complete final phoneme/syllable and natural decay of the last kept word before the cut
 - preserve complete grammatical/semantic sentence or clause meaning unless the next clip deliberately continues the same thought
 - preserve natural cadence, breaths, and small pauses when needed for intelligibility
 - reject duplicated syllables/words, accidental overlap/double speech, clicks/pops, and obviously mechanical over-tightening
 - if a seam is clipped, undo/retry with looser or more targeted boundaries and recover source handles when possible
-- if the tool surface cannot reliably validate the acoustic seam, leave/report a review marker instead of claiming the seam is clean
+- if the seam audit cannot run or cannot clear a seam, leave an `open` review marker at that seam instead of claiming it is clean
 
 Fail if the agent knowingly leaves a mid-word or mid-syllable cut, truncates a word attack/final consonant, creates a semantically incomplete sentence, or claims acoustic correctness from transcript text alone.
-
-## Regression Set
-
-Any material change to the Palmier agent, setup/safety skill, YouTube fast-edit skill, generation workflow, export rules, transcript workflow, or tool map should be checked against AC-01 through AC-36.
-
-When Palmier changes tool schemas or agent behavior, update the source-backed guidance and this acceptance set together.
-
 
 ## AC-37: Privacy Request Is A Completion Gate
 
@@ -410,3 +403,48 @@ Given privacy-sensitive footage passed an earlier check and later titles/layout/
 
 - inspect the final composited timeline again
 - do not claim the earlier check proves the final edit is safe
+
+## AC-42: Short Derivation Never Mutates The Long-Form Edit
+
+Given an open project whose active timeline is a long-form edit and a request for a YouTube Short or other vertical cutdown:
+
+- copy the active timeline with `create_timeline from=<active timelineId>` and re-read `get_timeline` before any mutation
+- run the settings scope check before `set_project_settings`
+- if settings are project-wide or the scope is unclear, do not call `set_project_settings`; offer a separate project instead
+
+Fail if any mutation runs on the original timeline, or if project-wide settings change in a project that holds the long-form edit. Graded by `trace_check.py --profile short` (default `--settings-scope project`).
+
+## AC-43: One Transition Default
+
+Given a first-pass or full long-form edit with no transition instruction:
+
+- apply only the canonical default in `skills/palmierpro-timeline-editing.md` (subtle head fade-in and tail fade-out with matching audio fades, clean cuts elsewhere)
+- add no dips or decorative transitions between scenes unless the user asked
+- add no new transitions in transcript-cleanup-only or specific-change requests
+
+## AC-44: Seam Audit Before Claiming Clean Dialogue
+
+Given speech-affecting cuts and a client that can run local commands:
+
+- run `export_project mode=fcpxml` to a scratch QC path with `overwrite=false` (the seam-QC carve-out), then `tools/video/palmier_seams.py`
+- fix every ERROR seam and re-audit; mark unresolved WARN seams with `open` markers at the reported frames
+- report the QC file as QC, never as an export
+
+Fail if the agent claims verified dialogue without an audit, uses `mode=video` for QC, or leaves an ERROR seam unreported. `trace_check.py` warns when speech cuts are neither audited nor marked.
+
+## Automated Grading
+
+AC-05 (broad-edit preservation), AC-06/07 (transcript index refresh), paid-generation gating, export gating, bounded retry, long-form caption policy, AC-42, and AC-44 are checked mechanically:
+
+```bash
+python3 tools/video/palmier_mock/mock_palmier.py --trace /tmp/trace.jsonl &   # then point the client at it
+python3 tools/video/palmier_mock/trace_check.py /tmp/trace.jsonl --profile first-pass
+```
+
+The mock models ID re-minting after copy and index shifts after `remove_words`, so stale-state bugs fail at the call that made them. Editorial judgment (story, truthfulness, readability) still needs a human grader.
+
+## Regression Set
+
+Any material change to the Palmier agent, setup/safety skill, YouTube fast-edit skill, generation workflow, export rules, transcript workflow, or tool map should be checked against AC-01 through AC-44.
+
+When Palmier changes tool schemas or agent behavior, update the source-backed guidance and this acceptance set together.
