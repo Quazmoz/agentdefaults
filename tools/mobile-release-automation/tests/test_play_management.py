@@ -127,6 +127,57 @@ class ListingTest(unittest.TestCase):
         self.assertFalse(session.urls("PUT"))
         self.assertFalse(any(":commit" in url for url in session.urls("POST")))
 
+    def test_expected_listing_is_checked_inside_the_same_edit(self) -> None:
+        api, session = management()
+        current = {"title": "Old", "shortDescription": "Short",
+                   "fullDescription": "Full"}
+        result = api.update_listing(
+            "en-US", title="New", short_description="Short",
+            full_description="Full", dry_run=False, expected_current=current,
+        )
+        self.assertTrue(result["committed"])
+        requests = [(c["method"], c["url"]) for c in session.calls]
+        same_edit = [url for method, url in requests if method == "GET"
+                     and "/listings/en-US" in url]
+        writes = [url for method, url in requests if method == "PUT"
+                  and "/listings/en-US" in url]
+        self.assertEqual(len(same_edit), 1)
+        self.assertEqual(len(writes), 1)
+        self.assertEqual(same_edit[0], writes[0])
+        self.assertTrue(any(":commit" in url for url in session.urls("POST")))
+
+    def test_expected_listing_drift_blocks_put_and_commit(self) -> None:
+        api, session = management()
+        with self.assertRaisesRegex(play.PlayError, "drifted before update"):
+            api.update_listing(
+                "en-US", title="New", short_description="Short",
+                full_description="Full", dry_run=False,
+                expected_current={"title": "Old", "shortDescription": "Changed",
+                                  "fullDescription": "Full"},
+            )
+        self.assertFalse(session.urls("PUT"))
+        self.assertFalse(any(":commit" in url for url in session.urls("POST")))
+        self.assertTrue(session.urls("DELETE"))
+
+    def test_unrecorded_live_video_blocks_update(self) -> None:
+        responses = routes()
+        responses[("GET", "/listings/en-US")] = ok({
+            "title": "Old", "shortDescription": "Short",
+            "fullDescription": "Full", "video": "https://youtu.be/abc",
+        })
+        session = FakeSession(responses)
+        api = play_management.PlayManagementClient(
+            PACKAGE, client=play.PlayClient(PACKAGE, session=session),
+        )
+        with self.assertRaisesRegex(play.PlayError, "video drifted"):
+            api.update_listing(
+                "en-US", title="New", short_description="Short",
+                full_description="Full", dry_run=False,
+                expected_current={"title": "Old", "shortDescription": "Short",
+                                  "fullDescription": "Full"},
+            )
+        self.assertFalse(session.urls("PUT"))
+
     def test_dry_run_listing_update_validates_and_discards(self) -> None:
         api, session = management()
         result = api.update_listing(
