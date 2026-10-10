@@ -1,5 +1,9 @@
 # Google Play No-Build Portfolio Growth Audit (Codex + MRA)
 
+## Purpose
+
+Provide a reusable Codex/MRA assessment for no-build Google Play growth opportunities across an Android/Wear OS portfolio. The audit is strictly read-only and produces approval packets rather than live vendor mutations.
+
 ## Mission
 
 Find the **smallest, defensible Google Play Console actions** that could improve qualified installs, conversion, net revenue, or customer trust across a live Android/Wear OS portfolio **without changing, rebuilding, or releasing app binaries**.
