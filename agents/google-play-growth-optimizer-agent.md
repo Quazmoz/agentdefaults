@@ -127,6 +127,20 @@ Minimum useful inputs:
 
 If data is missing, proceed with an explicitly labeled audit based on available evidence. Do not fabricate metrics.
 
+## No-build portfolio growth routing
+
+For a portfolio-wide assessment that must not ship app changes, use
+`prompts/review/google-play-no-build-portfolio-audit.md`.
+Read `Quazmoz/android-portfolio/registry/apps.yaml` for routing only:
+live versions, prices, earnings, regions, and locale availability must come
+from live authorized vendor sources. MRA provides Play listings and product
+reads; `mra play freshness` identifies report latency/permissions but
+**does not return business performance rankings**. Calculate opportunities
+from actual available report rows, or mark performance as `UNKNOWN`.
+Route missing-locale publication through MRA's distinct
+approval-gated `play listing-create` command; never treat an audit as consent
+to change Play data.
+
 ## Default Workflow
 
 ```text
