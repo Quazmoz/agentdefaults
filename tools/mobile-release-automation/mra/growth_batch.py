@@ -128,6 +128,7 @@ def load_manifest(path_value: str, approved_sha256: str) -> dict:
     if not isinstance(actions, list) or not 1 <= len(actions) <= MAX_ACTIONS:
         raise BatchError("batch must contain between 1 and 50 explicit actions")
     keys: set[tuple] = set()
+    pricing_products: set[tuple[str, str]] = set()
     for action in actions:
         _validate_action(action)
         key = (
@@ -138,6 +139,12 @@ def load_manifest(path_value: str, approved_sha256: str) -> dict:
         if key in keys:
             raise BatchError("same package and locale/plan cannot occur twice in a batch")
         keys.add(key)
+        if action["kind"] == "pricing-apply":
+            plan = regional_pricing.load_plan(action["plan_id"])
+            product = (action["package_name"], plan["product_id"])
+            if product in pricing_products:
+                raise BatchError("multiple plans for one Play product must be combined and reapproved")
+            pricing_products.add(product)
     return manifest
 
 
@@ -196,8 +203,7 @@ def _inspect_action(action: dict) -> dict:
                 raise BatchError(f"locale {language} already exists with different metadata")
             status = "already_applied"
         elif _match_listing(current, action["desired"]) and (
-            "video" not in action["expected_current"] or
-            current.get("video") == action["expected_current"]["video"]
+            current.get("video") == action["expected_current"].get("video")
         ):
             status = "already_applied"
         elif _match_listing(current, action["expected_current"]):
