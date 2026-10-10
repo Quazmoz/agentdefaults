@@ -64,6 +64,69 @@ class ListingTest(unittest.TestCase):
         self.assertFalse(any(":validate" in url for url in session.urls("POST")))
         self.assertTrue(session.urls("DELETE"))
 
+    def test_create_absent_locale_checks_and_commits_in_one_edit(self) -> None:
+        endpoints = routes()
+        endpoints[("PUT", "/listings/de-DE")] = ok({"language": "de-DE", "title": "Neu"})
+        session = FakeSession(endpoints)
+        api = play_management.PlayManagementClient(
+            PACKAGE, client=play.PlayClient(PACKAGE, session=session)
+        )
+        result = api.create_listing(
+            "de-DE", title="Neu", short_description="Kurz", full_description="Lang",
+            dry_run=False,
+        )
+        self.assertTrue(result["committed"])
+        self.assertEqual(
+            session.body_for("PUT", "/listings/de-DE"),
+            {"language": "de-DE", "title": "Neu", "shortDescription": "Kurz",
+             "fullDescription": "Lang"},
+        )
+        methods = [call["method"] for call in session.calls]
+        self.assertLess(methods.index("GET"), methods.index("PUT"))
+        self.assertTrue(any(":commit" in url for url in session.urls("POST")))
+
+    def test_create_existing_locale_refuses_without_put_or_commit(self) -> None:
+        api, session = management()
+        with self.assertRaisesRegex(play.PlayError, "already exists"):
+            api.create_listing(
+                "en-US", title="Overwrite", short_description="Short",
+                full_description="Full", dry_run=False,
+            )
+        self.assertFalse(session.urls("PUT"))
+        self.assertFalse(any(":commit" in url for url in session.urls("POST")))
+        self.assertTrue(session.urls("DELETE"))
+
+    def test_create_missing_locale_dry_run_never_commits(self) -> None:
+        endpoints = routes()
+        endpoints[("PUT", "/listings/fr-FR")] = ok({"language": "fr-FR"})
+        session = FakeSession(endpoints)
+        api = play_management.PlayManagementClient(
+            PACKAGE, client=play.PlayClient(PACKAGE, session=session)
+        )
+        result = api.create_listing(
+            "fr-FR", title="Titre", short_description="Court",
+            full_description="Long", dry_run=True,
+        )
+        self.assertFalse(result["committed"])
+        self.assertTrue(any(":validate" in url for url in session.urls("POST")))
+        self.assertFalse(any(":commit" in url for url in session.urls("POST")))
+        self.assertTrue(session.urls("DELETE"))
+
+    def test_create_rejects_malformed_inventory_fail_closed(self) -> None:
+        endpoints = routes()
+        endpoints[("GET", "/listings")] = ok({"listings": "not-a-list"})
+        session = FakeSession(endpoints)
+        api = play_management.PlayManagementClient(
+            PACKAGE, client=play.PlayClient(PACKAGE, session=session)
+        )
+        with self.assertRaisesRegex(play.PlayError, "invalid locale inventory"):
+            api.create_listing(
+                "fr-FR", title="Titre", short_description="Court",
+                full_description="Long", dry_run=False,
+            )
+        self.assertFalse(session.urls("PUT"))
+        self.assertFalse(any(":commit" in url for url in session.urls("POST")))
+
     def test_dry_run_listing_update_validates_and_discards(self) -> None:
         api, session = management()
         result = api.update_listing(
