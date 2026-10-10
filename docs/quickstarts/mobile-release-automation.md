@@ -214,6 +214,32 @@ The command aborts on live drift and performs immediate read-back verification.
 For agent review, use `skills/google-play-listing-localization-review.md` plus
 `prompts/review/google-play-listing-localization-audit.md`.
 
+#### Create an absent locale without an app release
+
+The existing `listing-update` command is for already-present translations.
+For a missing locale, first verify live production features, native-language
+copy and the absence of that locale, then validate an approved complete JSON
+file. MRA checks absence inside the same Play edit as the create operation:
+
+```bash
+shasum -a 256 /tmp/es-ES.json
+mra play listing-create --profile myapp --language es-ES \
+  --body /tmp/es-ES.json --sha256 <file-sha256> --dry-run
+# Only after exact app/locale/file-hash approval:
+mra --yes play listing-create --profile myapp --language es-ES \
+  --body /tmp/es-ES.json --sha256 <approved-sha256>
+```
+
+Do not retry blindly after timeouts or commit conflicts. Read the locale
+back, and verify public visibility separately in Play Console. Listing
+translation is not the same as translating the in-app UI.
+
+For a **read-only portfolio growth pass**, run
+`prompts/review/google-play-no-build-portfolio-audit.md` with Codex.
+It separates published apps from unreleased candidates, checks locale
+coverage and pricing eligibility, and drafts explicit approval packets.
+It does not automatically publish or apply price plans.
+
 ### 8. Portfolio-wide local release runs
 
 For many local Android/Wear repositories, load `skills/android-portfolio-release-orchestration.md` and use `prompts/implementation/android-portfolio-release-orchestration.md`.
