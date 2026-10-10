@@ -1,5 +1,9 @@
 # Safe Git sync for agent-managed local checkouts
 
+## Purpose
+
+Synchronize agent-managed repository checkouts safely without overwriting local work or introducing avoidable branch divergence.
+
 ## When to use
 
 Use this for repositories edited both by local IDE/AI tools and remote GitHub agents. It avoids repeating Android Studio/JetBrains "Patch Conflict" dialogs during Project Update while preserving local edits. It is a Git workflow problem, not an Android build problem.
