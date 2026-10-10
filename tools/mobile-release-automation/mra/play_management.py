@@ -60,6 +60,48 @@ class PlayManagementClient:
             )
         return {"listing": result, "dry_run": dry_run, "committed": not dry_run}
 
+    def create_listing(
+        self,
+        language: str,
+        *,
+        title: str,
+        short_description: str,
+        full_description: str,
+        dry_run: bool = True,
+    ) -> dict:
+        """Create a missing locale only; never replace existing localized copy.
+
+        The absence check and PUT share a Play edit. Concurrent external edits
+        are still governed by Play's commit conflict handling; a failed or
+        uncertain commit must be reconciled by reading the locale before retry.
+        """
+        body = {
+            "language": language,
+            "title": title,
+            "shortDescription": short_description,
+            "fullDescription": full_description,
+        }
+        with self.client.edit(commit=not dry_run, validate=True) as edit_id:
+            existing = self.client._request(  # noqa: SLF001
+                "GET", f"/edits/{edit_id}/listings", "check existing listing locales"
+            ).get("listings")
+            if not isinstance(existing, list) or any(
+                not isinstance(item, dict) or not isinstance(item.get("language"), str)
+                for item in existing
+            ):
+                raise play_module.PlayError("Play returned an invalid locale inventory; refusing create")
+            if any(item["language"] == language for item in existing):
+                raise play_module.PlayError(
+                    f"listing {language!r} already exists; use drift-protected listing-update"
+                )
+            result = self.client._request(  # noqa: SLF001
+                "PUT",
+                f"/edits/{edit_id}/listings/{language}",
+                f"create listing {language}",
+                json=body,
+            )
+        return {"listing": result, "dry_run": dry_run, "committed": not dry_run}
+
     # ---- images ------------------------------------------------------------
 
     def list_images(self, language: str, image_type: str) -> list[dict]:
