@@ -131,6 +131,19 @@ If data is missing, proceed with an explicitly labeled audit based on available 
 
 For a portfolio-wide assessment that must not ship app changes, use
 `prompts/review/google-play-no-build-portfolio-audit.md`.
+**Mandatory before presenting a ready plan:** on the agent's authorized
+execution host, reuse the existing MRA Play session and run actual read-only
+`mra profile list`, `mra play tracks --profile ...`, and
+`mra play listings --profile ...` calls across the registered portfolio.
+Confirm each actionable app's real package, production track, exact live
+locale state, and exact product/purchase option where pricing is involved.
+Merely finding credentials, passing `mra doctor`, reading a GitHub listing
+draft, or recalling past metrics does **not** count as live verification.
+If the connected agent cannot access the established MRA auth, report
+`LIVE_AUDIT_BLOCKED` instead of proposing ready-to-publish actions.
+Use one hash-bound, preflighted approval batch **after** the full live audit;
+do not ask for repeated per-app approvals during planning.
+
 Read `Quazmoz/android-portfolio/registry/apps.yaml` for routing only:
 live versions, prices, earnings, regions, and locale availability must come
 from live authorized vendor sources. MRA provides Play listings and product
