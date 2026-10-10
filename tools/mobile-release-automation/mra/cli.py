@@ -10,7 +10,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 import argparse
+import hashlib
 import json
+import re
 import sys
 
 from . import admob as admob_module
@@ -127,11 +129,19 @@ def cmd_play_listing(args: argparse.Namespace) -> int:
 _LISTING_TEXT_FIELDS = ("title", "shortDescription", "fullDescription")
 
 
-def _load_listing_json(path_value: str, language: str, label: str) -> dict[str, str]:
+def _load_listing_json(
+    path_value: str, language: str, label: str, expected_sha256: str | None = None
+) -> dict[str, str]:
     path = Path(path_value).expanduser()
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
+        raw = path.read_bytes()
+        if expected_sha256 is not None:
+            if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+                raise SystemExit("--sha256 must be a lowercase SHA-256 hex digest")
+            if hashlib.sha256(raw).hexdigest() != expected_sha256:
+                raise SystemExit(f"{label} listing payload SHA-256 differs from approved file")
+        payload = json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
         raise SystemExit(f"could not read {label} listing JSON {path}: {error}") from error
     if not isinstance(payload, dict):
         raise SystemExit(f"{label} listing JSON must contain one object")
@@ -191,11 +201,17 @@ def cmd_play_listing_update(args: argparse.Namespace) -> int:
     if not args.dry_run:
         confirm(args, f"update public Play listing {args.language!r}")
 
+    # PUT replaces the whole listing, including optional video metadata.
+    # Preserve any existing promo video rather than silently deleting it.
+    video = current.get("video")
+    if video is not None and not isinstance(video, str):
+        raise play_module.PlayError("invalid video field in live listing; refusing update")
     result = client.update_listing(
         args.language,
         title=desired["title"],
         short_description=desired["shortDescription"],
         full_description=desired["fullDescription"],
+        **({"video": video} if video else {}),
         dry_run=args.dry_run,
     )
     if args.dry_run:
@@ -215,6 +231,8 @@ def cmd_play_listing_update(args: argparse.Namespace) -> int:
         for field in _LISTING_TEXT_FIELDS
         if read_back.get(field) != desired[field]
     }
+    if video and read_back.get("video") != video:
+        mismatches["video"] = {"expected": video, "actual": read_back.get("video")}
     payload = {
         "status": "verified" if not mismatches else "verification_failed",
         "language": args.language,
@@ -225,6 +243,58 @@ def cmd_play_listing_update(args: argparse.Namespace) -> int:
         "mismatches": mismatches,
     }
     emit(payload)
+    return 0 if not mismatches else 5
+
+
+def cmd_play_listing_create(args: argparse.Namespace) -> int:
+    """Create only an absent locale from an exact, operator-approved file."""
+    if not re.fullmatch(r"[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", args.language):
+        raise SystemExit("invalid Play listing locale (expected a BCP-47 language tag)")
+    desired = _load_listing_json(args.body, args.language, "desired", args.sha256)
+    limits = {"title": 30, "shortDescription": 80, "fullDescription": 4000}
+    for field, maximum in limits.items():
+        value = desired[field]
+        count = len(value.encode("utf-16-le")) // 2
+        if not value.strip() or count > maximum:
+            raise SystemExit(
+                f"invalid {field}: {count} UTF-16 units (must be 1..{maximum})"
+            )
+    if not args.dry_run:
+        confirm(args, f"create public Play listing {args.language!r}")
+
+    client = play_management.PlayManagementClient(resolve_package(args))
+    result = client.create_listing(
+        args.language,
+        title=desired["title"],
+        short_description=desired["shortDescription"],
+        full_description=desired["fullDescription"],
+        dry_run=args.dry_run,
+    )
+    if args.dry_run:
+        return emit({
+            "status": "validated",
+            "language": args.language,
+            "sha256": args.sha256,
+            "committed": False,
+            "result": result,
+        })
+
+    read_back = client.get_listing(args.language)
+    mismatches = {
+        field: {"expected": desired[field], "actual": read_back.get(field)}
+        for field in _LISTING_TEXT_FIELDS
+        if read_back.get(field) != desired[field]
+    }
+    emit({
+        "status": "verified" if not mismatches else "verification_failed",
+        "language": args.language,
+        "sha256": args.sha256,
+        "committed": True,
+        "desired": _listing_projection(desired),
+        "read_back": _listing_projection(read_back),
+        "mismatches": mismatches,
+        "publication_state": "not_verified_by_api",
+    })
     return 0 if not mismatches else 5
 
 
@@ -521,6 +591,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="validate desired listing then discard the edit",
     )
     listing_update.set_defaults(func=cmd_play_listing_update)
+
+    listing_create = play.add_parser(
+        "listing-create",
+        help=f"create only an absent localized Play Store listing [{MUTATING}]",
+    )
+    add_target(listing_create)
+    listing_create.add_argument("--language", required=True, help="BCP-47 Play listing locale")
+    listing_create.add_argument(
+        "--body", required=True, help="complete listing JSON file (UTF-8)"
+    )
+    listing_create.add_argument(
+        "--sha256", required=True, help="exact lowercase SHA-256 of the approved JSON file"
+    )
+    listing_create.add_argument(
+        "--dry-run", action="store_true", help="validate then discard the Play edit"
+    )
+    listing_create.set_defaults(func=cmd_play_listing_create)
 
     publish = play.add_parser("publish", help=f"upload an .aab to a track [{MUTATING}]")
     add_target(publish)
