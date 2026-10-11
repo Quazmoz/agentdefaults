@@ -26,6 +26,9 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 | Adapt examples safely | [`examples/README.md`](examples/README.md) |
 | Understand loop configuration | [`config/README.md`](config/README.md) |
 | See all tool mappings | [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) |
+| Run the Humanizer pass on human-facing prose | [`skills/humanizer.md`](skills/humanizer.md) |
+| Decide when to use an external tool (Hyperframes, Apify MCP, OpenSEO, Agent Skills, Codeburn, Ponytail) | [`docs/external-tools.md`](docs/external-tools.md) |
+| Add the pointer block to an app repo's `AGENTS.md` | [`docs/snippets/downstream-agents-pointer.md`](docs/snippets/downstream-agents-pointer.md) |
 | Validate the repository | [`scripts/validate-agentdefaults.py`](scripts/validate-agentdefaults.py) |
 
 ## Bounded Completion Workflow
