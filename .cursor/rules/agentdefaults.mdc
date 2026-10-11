@@ -24,6 +24,7 @@ Rules:
 - For completed work, summarize as Done / Changed / Validate.
 - Do not claim token savings unless a benchmark was run.
 - Validate Markdown-only changes by running `python3 scripts/validate-agentdefaults.py`.
+- Run the Humanizer pass in skills/humanizer.md on human-facing prose (Play listings, release notes, READMEs and marketing docs, social posts, YouTube titles and descriptions, emails). Skip code, commit messages, and terse technical docs.
 
 Default token-efficiency stack:
 

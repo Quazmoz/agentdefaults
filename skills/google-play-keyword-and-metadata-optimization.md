@@ -127,6 +127,7 @@ Rules:
 - Avoid exhaustive keyword lists.
 - Do not copy competitor descriptions.
 - Do not include content that will quickly become stale unless there is an update process.
+- Run the drafted title, short description, and full description through [`humanizer.md`](humanizer.md) before validation. Keep every mapped query and supported claim.
 
 ### 6. Select Category and Tags
 
@@ -197,7 +198,7 @@ Recommended:
 
 Before completion:
 
-- Recount all constrained fields.
+- Recount all constrained fields (again after the Humanizer pass).
 - Confirm no unsupported claims.
 - Confirm title and short description are not redundant.
 - Confirm the first full-description paragraph is intelligible without keywords.

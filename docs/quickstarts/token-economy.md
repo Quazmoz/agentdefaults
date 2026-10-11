@@ -150,6 +150,8 @@ model/provider/version and prompt/config version
 
 A token saving that lowers task quality is not a successful optimization.
 
+For real per-session token and cost data from your own agent history, Codeburn reads local session files; see the Codeburn and Ponytail sections of [`../external-tools.md`](../external-tools.md), which also cite JetBrains' measured Ponytail savings.
+
 ## GitHub Copilot
 
 For Copilot-specific cost/context behavior, load:

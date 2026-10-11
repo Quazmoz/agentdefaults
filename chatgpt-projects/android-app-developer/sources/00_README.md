@@ -57,3 +57,21 @@ Do not convert static inspection into build/test/release claims.
 Google Play, Billing, Wear OS quality rules, SDK deadlines, policy requirements, and vendor APIs change. Before consequential release or monetization decisions, verify current official documentation.
 
 This pack includes current anchors as of 2026-09-27, but those anchors are verification triggers rather than permanent truth.
+
+## Writing standard
+
+Run human-facing text through `09_HUMANIZER_WRITING_STANDARD.md` before handing it over: Play listings, release notes and "What's new", READMEs and marketing docs, social posts and captions, YouTube titles and descriptions, and emails. Skip it for code, commit messages, and terse technical docs.
+
+Plain ChatGPT Projects read only the uploaded sources, so upload file 09 with the rest of this pack. Codex reads the app repository's `AGENTS.md` instead, which should carry the pointer block from `docs/snippets/downstream-agents-pointer.md` in `Quazmoz/agentdefaults`.
+
+## Files
+
+- `01_ANDROID_ENGINEERING_STANDARD.md`
+- `02_WEAROS_ENGINEERING_STANDARD.md`
+- `03_GOOGLE_PLAY_RELEASE_STANDARD.md`
+- `04_MONETIZATION_ADS_STANDARD.md`
+- `05_TESTING_RELIABILITY_STANDARD.md`
+- `06_CI_AND_RELEASE_QUALIFICATION.md`
+- `07_PORTFOLIO_ROUTING_STANDARD.md`
+- `08_REUSABLE_TASK_PROMPTS.md`
+- `09_HUMANIZER_WRITING_STANDARD.md` (condensed from [Humanizer](https://github.com/blader/humanizer) v3.1.0 by Siqi Chen, MIT)

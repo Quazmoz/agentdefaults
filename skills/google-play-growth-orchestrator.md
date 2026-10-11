@@ -56,6 +56,7 @@ Use:
 - [`app-web-seo-and-entity-optimization.md`](app-web-seo-and-entity-optimization.md) for crawlability, landing pages, schema, and entity consistency.
 - [`ai-agent-recommendation-readiness.md`](ai-agent-recommendation-readiness.md) for crawler policy, recommendation facts, comparison utility, and prompt tests.
 - [`app-growth-experimentation-and-measurement.md`](app-growth-experimentation-and-measurement.md) for experiments and decision rules.
+- [`humanizer.md`](humanizer.md) as the last wording pass on every human-facing draft (metadata, release notes, captions, landing-page copy), before limits and policy are re-checked.
 
 Optional research:
 

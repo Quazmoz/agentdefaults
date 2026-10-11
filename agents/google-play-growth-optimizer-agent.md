@@ -59,6 +59,14 @@ skills/play-console-search-term-analysis.md
 skills/market-opportunity-clustering.md
 ```
 
+Writing pass for every human-facing draft (listing copy, release notes, captions, landing-page text):
+
+```text
+skills/humanizer.md
+```
+
+Run it after drafting and before the policy and character-limit checks. It changes wording only.
+
 For broader site work, also consult:
 
 ```text

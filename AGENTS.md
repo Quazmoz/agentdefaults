@@ -130,6 +130,8 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - `docs/quickstarts/mobile-release-automation.md` - Google Play, RevenueCat, and AdMob release and monetization automation, credential setup, and MCP wiring.
 - `docs/quickstarts/palmierpro-mcp.md` - Palmier Pro external MCP setup for Claude/Codex and video-editing stack selection.
 - `docs/tool-integration-guide.md` - cross-tool mapping and wrapper rules.
+- `docs/external-tools.md` - when to use Hyperframes, Apify MCP, OpenSEO, Agent Skills, Codeburn, and Ponytail.
+- `skills/humanizer.md` - vendored Humanizer pass for human-facing prose.
 - `.github/agents/` - GitHub Copilot custom-agent adapters.
 - `scripts/validate-agentdefaults.py` - canonical validation suite entrypoint.
 - `scripts/validate-cross-tool-routing.py` - cross-tool routing and adapter regression validation.
@@ -152,6 +154,12 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - Keep retries, loops, concurrency, tokens, and external spend bounded where relevant.
 - Report executed checks separately from checks that did not run.
 - Never claim production readiness, security, or tool compatibility solely from documentation or configuration edits.
+
+## Human-Facing Prose
+
+Run the Humanizer pass in [`skills/humanizer.md`](skills/humanizer.md) on prose an agent writes for people to read: Play Store listings, release notes and "What's new" text, READMEs and marketing docs, social posts and captions, YouTube titles and descriptions, and emails. Skip it for code, commit messages, and terse technical docs. It edits wording only and never adds a claim, number, or keyword. Native skill copies: `.claude/skills/humanizer/` and `.agents/skills/humanizer/`.
+
+For promo video, scraping, keyword data, spec skills, and token-spend tools, see [`docs/external-tools.md`](docs/external-tools.md).
 
 ## Validation
 

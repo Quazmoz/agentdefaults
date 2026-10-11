@@ -83,6 +83,7 @@ Keep the first paragraph compact and readable on mobile. Do not repeat the short
 - Do not claim "no data collected," "no tracking," "offline," "local-only," or "privacy-first" unless verified against code, SDKs, network behavior, billing, crash reporting, and Data Safety disclosures.
 - Mention one-time purchases, subscriptions, ads, accounts, and phone-companion requirements accurately.
 - Treat the short description and full-description opening as separate copy surfaces.
+- Run final copy through the Humanizer writing standard (`chatgpt-projects/android-app-developer/sources/09_HUMANIZER_WRITING_STANDARD.md`, condensed from `skills/humanizer.md`).
 
 ## Sensitive-claim guardrails
 

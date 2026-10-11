@@ -69,6 +69,9 @@ Then choose what you are trying to do:
 | Route principal/specialist engineering work | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
 | Build or release Wear OS software | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
 | Edit local YouTube footage with Claude Code | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
+| Make human-facing copy (listings, release notes, posts, emails) read naturally | [`skills/humanizer.md`](skills/humanizer.md) |
+| Decide when to use Hyperframes, Apify MCP, OpenSEO, Agent Skills, Codeburn, or Ponytail | [`docs/external-tools.md`](docs/external-tools.md) |
+| Add the AgentDefaults pointer block to an app repo's `AGENTS.md` | [`docs/snippets/downstream-agents-pointer.md`](docs/snippets/downstream-agents-pointer.md) |
 | Browse every featured stack | [`INDEX.md`](INDEX.md) |
 
 ## Mental Model
@@ -258,6 +261,10 @@ Use [`scripts/README.md`](scripts/README.md) to understand individual validators
 
 A validator result is evidence only when it actually ran. Target-repository build/lint/type/test/security/e2e checks and actual GitHub Actions runs still own target-system correctness.
 
+## Downstream Repos
+
+App repositories link back here with a small fenced block in their own `AGENTS.md` (`<!-- agentdefaults:writing-tools:start -->` ... `<!-- agentdefaults:writing-tools:end -->`). It points to the Humanizer skill and the external tools guide by URL. Paste the exact text from [`docs/snippets/downstream-agents-pointer.md`](docs/snippets/downstream-agents-pointer.md); change it here, not per repo.
+
 ## Adding or Changing a Default
 
 Before adding another artifact:
@@ -344,3 +351,5 @@ AgentDefaults is an actively evolving cross-tool scaffold containing reusable en
 ## License
 
 License to be added.
+
+Vendored third-party material and its licenses are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

@@ -26,6 +26,8 @@ For cross-tool behavior, also follow `AGENTS.md`.
 - Treat `GEMINI.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, and `.github/agents/*.agent.md` as integration wrappers.
 - Update `INDEX.md` and `README.md` when adding new reusable defaults.
 - Do not claim benchmark results unless the benchmark was actually run.
+- Run the Humanizer pass in `skills/humanizer.md` on human-facing prose (Play listings, release notes, READMEs and marketing docs, social posts, YouTube titles and descriptions, emails). Skip code, commit messages, and terse technical docs.
+- For external tools (Hyperframes, Apify MCP, OpenSEO, Agent Skills, Codeburn, Ponytail), see `docs/external-tools.md`.
 
 ## Useful Stacks
 
