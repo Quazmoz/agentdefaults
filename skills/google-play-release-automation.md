@@ -16,7 +16,7 @@ bundle              path, version code, and how it was built
 track               internal | alpha | beta | production | custom track name
 release status      draft | inProgress | halted | completed
 rollout fraction    required when status is inProgress
-release notes       language-keyed text where the track shows them
+release notes       language-keyed text where the track shows them (run through skills/humanizer.md)
 authorization       the operator's approval naming this track
 ```
 
