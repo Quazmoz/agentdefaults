@@ -26,6 +26,9 @@ Canonical behavior still lives in the relevant [`../agents/`](../agents/), [`../
 | Understand Claude project hooks/Graft integration | [`../.claude/README.md`](../.claude/README.md) |
 | Understand Copilot prompt adapters | [`../.github/prompts/README.md`](../.github/prompts/README.md) |
 | Understand cross-tool integration | [`tool-integration-guide.md`](tool-integration-guide.md) |
+| Decide when to use Hyperframes, Apify MCP, OpenSEO, Agent Skills, Codeburn, or Ponytail | [`external-tools.md`](external-tools.md) |
+| Make human-facing copy read naturally | [`../skills/humanizer.md`](../skills/humanizer.md) |
+| Point an app repo's `AGENTS.md` back to AgentDefaults | [`snippets/downstream-agents-pointer.md`](snippets/downstream-agents-pointer.md) |
 | Use AgentDefaults generally | [`user-guide.md`](user-guide.md) |
 | Browse featured stacks | [`../INDEX.md`](../INDEX.md) |
 
