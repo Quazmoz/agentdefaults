@@ -95,6 +95,10 @@ Other tool adapters include `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursor/rule
 
 Do not copy full canonical agent behavior into Copilot wrappers. A wrapper may summarize or route but cannot broaden the canonical agent's authority.
 
+## Human-Facing Prose
+
+Run the Humanizer pass in `skills/humanizer.md` on prose written for people: Play Store listings, release notes and "What's new" text, READMEs and marketing docs, social posts and captions, YouTube titles and descriptions, and emails. Skip code, commit messages, and terse technical docs. It edits wording only and never adds claims. External tool guidance: `docs/external-tools.md`.
+
 ## Repository Rules
 
 1. Inspect repository/system evidence before proposing or making a change.
