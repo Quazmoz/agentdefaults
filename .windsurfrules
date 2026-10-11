@@ -18,6 +18,7 @@ Repository rules:
 - Use compact, direct engineering responses.
 - Use `Done / Changed / Validate` for completed work.
 - Do not claim benchmarks or tests were run unless actually run.
+- Run the Humanizer pass in `skills/humanizer.md` on human-facing prose (Play listings, release notes, READMEs and marketing docs, social posts, YouTube titles and descriptions, emails). Skip code, commit messages, and terse technical docs.
 
 Default token-efficiency stack:
 
