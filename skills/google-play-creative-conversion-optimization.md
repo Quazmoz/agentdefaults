@@ -105,7 +105,7 @@ Create a test hypothesis rather than changing the icon casually, because icon ch
 - Prioritize actual UI.
 - Design for muted autoplay.
 - Keep pacing concise.
-- Add accurate captions where appropriate.
+- Add accurate captions where appropriate, and run caption and overlay text through [`humanizer.md`](humanizer.md).
 - Ensure the video is embeddable and compliant with current Play requirements.
 - Use the correct form-factor story.
 
