@@ -21,6 +21,7 @@ skills/google-play-quality-and-retention-signals.md
 skills/app-web-seo-and-entity-optimization.md
 skills/ai-agent-recommendation-readiness.md
 skills/app-growth-experimentation-and-measurement.md
+skills/humanizer.md
 docs/quickstarts/google-play-growth.md
 ```
 
