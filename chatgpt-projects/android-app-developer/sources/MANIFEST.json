@@ -4,7 +4,8 @@
   "basis": [
     "Quazmoz/android-portfolio",
     "Quazmoz/agentdefaults",
-    "current official Android/Google Play documentation checked 2026-09-27"
+    "current official Android/Google Play documentation checked 2026-09-27",
+    "blader/humanizer v3.1.0 (MIT), condensed in 09_HUMANIZER_WRITING_STANDARD.md, added 2026-10-11"
   ],
   "files": [
     "00_README.md",
@@ -15,11 +16,13 @@
     "05_TESTING_RELIABILITY_STANDARD.md",
     "06_CI_AND_RELEASE_QUALIFICATION.md",
     "07_PORTFOLIO_ROUTING_STANDARD.md",
-    "08_REUSABLE_TASK_PROMPTS.md"
+    "08_REUSABLE_TASK_PROMPTS.md",
+    "09_HUMANIZER_WRITING_STANDARD.md"
   ],
   "notes": [
     "Current app repository source overrides this pack.",
     "Mutable Google Play/Wear/Billing rules must be re-verified before consequential release decisions.",
-    "No secrets or credentials are included."
+    "No secrets or credentials are included.",
+    "09_HUMANIZER_WRITING_STANDARD.md is a condensed MIT-licensed adaptation; attribution is in the file and in THIRD_PARTY_NOTICES.md of Quazmoz/agentdefaults."
   ]
 }
