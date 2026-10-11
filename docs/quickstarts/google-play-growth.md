@@ -23,6 +23,9 @@ Core skills:
   skills/ai-agent-recommendation-readiness.md
   skills/app-growth-experimentation-and-measurement.md
 
+Writing pass (all human-facing copy):
+  skills/humanizer.md
+
 Optional research:
   agents/app-market-research-agent.md
   skills/browser-research-foundations.md
