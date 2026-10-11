@@ -60,6 +60,14 @@ If a skill is required for essentially every invocation of an agent, that relati
 | [`devops-documentation-engineering.md`](devops-documentation-engineering.md) | Evidence-backed DevOps docs-as-code/runbook/diagram behavior. |
 | [`devsecops-security-engineering.md`](devsecops-security-engineering.md) | Security analysis/hardening across DevOps/IaC/CI/CD/GitOps surfaces. |
 
+### Human-facing writing
+
+| Skill | Use |
+|---|---|
+| [`humanizer.md`](humanizer.md) | Remove AI writing patterns from prose people will read: Play listings, release notes, READMEs and marketing docs, social posts, YouTube titles and descriptions, emails. Vendored from [blader/humanizer](https://github.com/blader/humanizer) v3.1.0 (MIT). Not for code, commit messages, or terse technical docs. |
+
+It changes wording only and composes as the last pass with whichever skill drafted the text.
+
 ### Context and token efficiency
 
 | Skill | Use |
@@ -166,6 +174,7 @@ Available skills:
 - [`app-web-seo-and-entity-optimization.md`](app-web-seo-and-entity-optimization.md)
 - [`ai-agent-recommendation-readiness.md`](ai-agent-recommendation-readiness.md)
 - [`app-growth-experimentation-and-measurement.md`](app-growth-experimentation-and-measurement.md)
+- [`humanizer.md`](humanizer.md) as the final wording pass on listing copy, release notes, and captions
 
 Operator guide: [`../docs/quickstarts/google-play-growth.md`](../docs/quickstarts/google-play-growth.md)
 
@@ -275,6 +284,7 @@ agents/google-play-growth-optimizer-agent.md
 skills/google-play-growth-orchestrator.md
 skills/google-play-keyword-and-metadata-optimization.md
 skills/app-growth-experimentation-and-measurement.md
+skills/humanizer.md
 ```
 
 The exact set should follow the task, not the example.
