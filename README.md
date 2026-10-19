@@ -46,37 +46,7 @@ python3 scripts/validate-agentdefaults.py
 
 The validation command checks this **library**, not a target app or infrastructure deployment. Cloning alone does not install global agents, register MCP servers, or enable runtime hooks. Most agents, skills, and prompts are Markdown files that your AI client **reads when needed**; executable tooling has separate setup.
 
-Then choose what you are trying to do:
-
-| Need | Start here |
-|---|---|
-| **Use agents and prompts in an actual coding session** | [Practical usage below](#using-agentdefaults-in-a-real-task) |
-| **Install or run executable tools** (Ponytail/Graft, MRA, loop CLI, video helpers) | [Runnable tools below](#runnable-tools-and-installation) |
-| Understand the repository and documentation layout | [`docs/README.md`](docs/README.md) |
-| Choose a canonical agent | [`agents/README.md`](agents/README.md) |
-| Engineer, debug, harden, or qualify GitHub Actions | [`docs/quickstarts/github-actions-engineer.md`](docs/quickstarts/github-actions-engineer.md) |
-| Understand or compose skills | [`skills/README.md`](skills/README.md) |
-| Find a copy-paste task prompt | [`prompts/README.md`](prompts/README.md) |
-| Operate a Bounded Completion loop quickly | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
-| Understand the full agent-loop model | [`docs/loops/README.md`](docs/loops/README.md) |
-| Use authenticated Comet browser research | [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) |
-| Safely synchronize local IDE repositories with remote AI-agent edits | [`docs/quickstarts/agent-managed-git-sync.md`](docs/quickstarts/agent-managed-git-sync.md) |
-| Reduce context/tool/output token waste | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
-| Understand task/state schemas | [`schemas/README.md`](schemas/README.md) |
-| Adapt examples safely | [`examples/README.md`](examples/README.md) |
-| Understand loop configuration | [`config/README.md`](config/README.md) |
-| Use validators or the loop control plane | [`scripts/README.md`](scripts/README.md) |
-| Design or audit an AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
-| De-slop/refactor a codebase safely | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
-| Automate Play releases, RevenueCat, AdMob, portfolio builds, or Play localization reads | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) |
-| Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
-| Route principal/specialist engineering work | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
-| Build or release Wear OS software | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
-| Edit local YouTube footage with Claude Code | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
-| Make human-facing copy (listings, release notes, posts, emails) read naturally | [`skills/humanizer.md`](skills/humanizer.md) |
-| Decide when to use Hyperframes, Apify MCP, OpenSEO, Agent Skills, Codeburn, or Ponytail | [`docs/external-tools.md`](docs/external-tools.md) |
-| Add the AgentDefaults pointer block to an app repo's `AGENTS.md` | [`docs/snippets/downstream-agents-pointer.md`](docs/snippets/downstream-agents-pointer.md) |
-| Browse every featured stack | [`INDEX.md`](INDEX.md) |
+To get work done, start with [a real task](#using-agentdefaults-in-a-real-task). To install executable tooling, see [Runnable Tools](#runnable-tools-and-installation). For a complete list of specialized workflows, use the [Quickstart Directory](#full-quickstart-directory) or [Human Index](INDEX.md).
 
 ## Using AgentDefaults in a Real Task
 
@@ -150,7 +120,7 @@ To install or repair Ponytail + Graft in **another repository**, use the tested 
 
 ```bash
 # From the agentdefaults root (replace with a real contract file):
-python3 scripts/bounded-completion.py init --contract <contract.json>
+python3 scripts/bounded-completion.py init --contract path/to/contract.json
 python3 scripts/bounded-completion.py status
 python3 scripts/bounded-completion.py verify
 python3 scripts/bounded-completion.py gate
@@ -170,6 +140,38 @@ python3 -m venv .venv
 Then use [the MRA quickstart](docs/quickstarts/mobile-release-automation.md) for Bitwarden UUID bindings, RevenueCat browser OAuth, profiles, agent MCP registration, and approval rules. `mra` is the operator CLI; `mra-agent` is the restricted agent-facing CLI; `mra-mcp` and `mra-agent-mcp` both launch the supported risk-gated MCP server. **Never paste credentials into chat, prompts, or repository files.** Even though MRA redacts known secret formats, a coding agent with unrestricted shell access under your macOS account might be able to read Keychain credentials directly; see [MRA's trust boundary](tools/mobile-release-automation/SECURITY.md#trust-boundary).
 
 **Video helpers:** these are not installed by cloning and require their own model/backend dependencies and FFmpeg as appropriate. Start with the [local video-editing quickstart](docs/quickstarts/claude-video-editing.md); for a safe command overview, run `python3 tools/video/edl.py --help` from the repository root.
+
+## Full Quickstart Directory
+
+| Need | Start here |
+|---|---|
+| **Use agents and prompts in an actual coding session** | [Practical usage below](#using-agentdefaults-in-a-real-task) |
+| **Install or run executable tools** (Ponytail/Graft, MRA, loop CLI, video helpers) | [Runnable tools below](#runnable-tools-and-installation) |
+| Understand the repository and documentation layout | [`docs/README.md`](docs/README.md) |
+| Choose a canonical agent | [`agents/README.md`](agents/README.md) |
+| Engineer, debug, harden, or qualify GitHub Actions | [`docs/quickstarts/github-actions-engineer.md`](docs/quickstarts/github-actions-engineer.md) |
+| Understand or compose skills | [`skills/README.md`](skills/README.md) |
+| Find a copy-paste task prompt | [`prompts/README.md`](prompts/README.md) |
+| Operate a Bounded Completion loop quickly | [`docs/loops/QUICK_REFERENCE.md`](docs/loops/QUICK_REFERENCE.md) |
+| Understand the full agent-loop model | [`docs/loops/README.md`](docs/loops/README.md) |
+| Use authenticated Comet browser research | [`docs/quickstarts/comet-authenticated-research.md`](docs/quickstarts/comet-authenticated-research.md) |
+| Safely synchronize local IDE repositories with remote AI-agent edits | [`docs/quickstarts/agent-managed-git-sync.md`](docs/quickstarts/agent-managed-git-sync.md) |
+| Reduce context/tool/output token waste | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
+| Understand task/state schemas | [`schemas/README.md`](schemas/README.md) |
+| Adapt examples safely | [`examples/README.md`](examples/README.md) |
+| Understand loop configuration | [`config/README.md`](config/README.md) |
+| Use validators or the loop control plane | [`scripts/README.md`](scripts/README.md) |
+| Design or audit an AI agent | [`docs/quickstarts/agent-builder.md`](docs/quickstarts/agent-builder.md) |
+| De-slop/refactor a codebase safely | [`docs/quickstarts/codebase-maintenance-engineer.md`](docs/quickstarts/codebase-maintenance-engineer.md) |
+| Automate Play releases, RevenueCat, AdMob, portfolio builds, or Play localization reads | [`docs/quickstarts/mobile-release-automation.md`](docs/quickstarts/mobile-release-automation.md) |
+| Choose or challenge an automation platform | [`AUTOMATION_PLATFORM_INDEX.md`](AUTOMATION_PLATFORM_INDEX.md) |
+| Route principal/specialist engineering work | [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) |
+| Build or release Wear OS software | [`WEAROS_DEVELOPMENT_INDEX.md`](WEAROS_DEVELOPMENT_INDEX.md) / [`WEAROS_INDEX.md`](WEAROS_INDEX.md) |
+| Edit local YouTube footage with Claude Code | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
+| Make human-facing copy (listings, release notes, posts, emails) read naturally | [`skills/humanizer.md`](skills/humanizer.md) |
+| Decide when to use Hyperframes, Apify MCP, OpenSEO, Agent Skills, Codeburn, or Ponytail | [`docs/external-tools.md`](docs/external-tools.md) |
+| Add the AgentDefaults pointer block to an app repo's `AGENTS.md` | [`docs/snippets/downstream-agents-pointer.md`](docs/snippets/downstream-agents-pointer.md) |
+| Browse every featured stack | [`INDEX.md`](INDEX.md) |
 
 ## Mental Model
 
