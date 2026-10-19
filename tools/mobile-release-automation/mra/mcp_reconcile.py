@@ -378,12 +378,12 @@ def mra_apply(profile: str, desired_state: dict[str, Any]) -> dict[str, Any]:
         )
 
     verification = reconcile.verify_profile(profile, desired_state)
-    return {
+    return redaction.redact({
         "profile": profile,
         "executions": results,
-        "verification": redaction.redact(verification),
+        "verification": verification,
         "converged": verification["converged"],
-    }
+    })
 
 
 def mra_verify(profile: str, desired_state: dict[str, Any]) -> dict[str, Any]:
