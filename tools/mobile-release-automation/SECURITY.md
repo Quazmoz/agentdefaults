@@ -27,6 +27,22 @@ action fails closed.
 The operator CLI remains a separate trust surface and retains its own explicit
 confirmation behavior.
 
+### Legacy MCP compatibility module
+
+The supported `mra-mcp` and `mra-agent-mcp` commands both launch
+`mra.secure_mcp_server`. The older direct `python -m mra.mcp_server` module
+remains available only for compatibility. Its model-controlled `confirm=true`
+flag now **requests** native local operator approval rather than authorizing a
+mutation. Mutations fail closed when the dialog is declined, times out, or is
+unavailable. Agent clients should migrate to the supported entry points;
+headless legacy mutations will be refused. Legacy RevenueCat Play app creation
+uses only the dedicated RevenueCat Google Play credential, never the publisher
+service-account key.
+
+Both MCP surfaces redact documented credential fields before returning successful
+vendor responses. This is defense in depth, not a guarantee that arbitrary secret
+formats embedded in third-party free-text output can be recognized.
+
 ### Explicit user-prompt authorization
 
 A user's current task prompt may itself be the human approval when it explicitly
