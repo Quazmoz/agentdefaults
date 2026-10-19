@@ -20,7 +20,7 @@ def _client(profile: str) -> play_module.PlayClient:
 
 
 def _tag(result: dict, risk: str, approved: bool = False) -> dict:
-    return {**result, "_mra": {"risk": risk, "human_approved": approved}}
+    return redaction.redact({**result, "_mra": {"risk": risk, "human_approved": approved}})
 
 
 def _failure(error: play_module.PlayError, risk: str, approved: bool) -> dict:
@@ -63,7 +63,7 @@ def play_convert_region_prices(
 ) -> dict:
     """Convert a tax-exclusive price and return Google's current regionVersion."""
     price = {"currencyCode": currency_code, "units": str(units), "nanos": nanos}
-    return _client(profile).convert_region_prices(price, product_tax_category_code)
+    return redaction.redact(_client(profile).convert_region_prices(price, product_tax_category_code))
 
 
 def play_create_subscription(
