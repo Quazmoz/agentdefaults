@@ -16,7 +16,7 @@ import re
 import sys
 
 from . import admob as admob_module
-from . import admob_credentials, auth, config, play_credentials, revenuecat_cli
+from . import admob_credentials, auth, config, play_credentials, redaction, revenuecat_cli
 from . import play as play_module
 from . import growth_batch, play_management, play_reporting, regional_pricing
 from . import revenuecat as rc_module
@@ -25,13 +25,13 @@ MUTATING = "mutating"
 
 
 def emit(payload: Any) -> int:
-    json.dump(payload, sys.stdout, indent=2, sort_keys=True, default=str)
+    json.dump(redaction.redact(payload), sys.stdout, indent=2, sort_keys=True, default=str)
     sys.stdout.write("\n")
     return 0
 
 
 def note(message: str) -> None:
-    print(message, file=sys.stderr)
+    print(redaction.redact_text(message), file=sys.stderr)
 
 
 def confirm(args: argparse.Namespace, description: str) -> None:
