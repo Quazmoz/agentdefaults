@@ -60,7 +60,7 @@ _PATTERNS = (
     ),
     # Same keys as Python-repr-style single-quoted string values.
     re.compile(
-        r"(?i)('(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)'\\s*:\\s*')[^']*(')"
+        r"(?i)('(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)'\s*:\s*')[^']*(')"
     ),
     # Same keys in bare key=value form. An OAuth token endpoint echoing its
     # form-encoded request body is the realistic leak shape here, and the
