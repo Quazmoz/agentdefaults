@@ -24,29 +24,56 @@ _SENSITIVE_KEYS = {
     "api_key",
     "apikey",
     "password",
+    "secret",
+    "secret_key",
+    "secret_value",
+    "token",
+    "oauth_token",
+    "bearer_token",
+    "bws_access_token",
+    "credentials",
+    "credentials_json",
+    "service_account_json",
 }
+
+# Credential fields may be vendor-prefixed, e.g. play_service_account_credentials_json.
+_SENSITIVE_SUFFIXES = (
+    "_password",
+    "_api_key",
+    "_access_token",
+    "_refresh_token",
+    "_client_secret",
+    "_signing_secret",
+    "_private_key",
+    "_credentials_json",
+)
+
 
 # Conservative string patterns for the credential formats this toolkit handles.
 _PATTERNS = (
-    re.compile(r"(?i)(authorization\s*[:=]\s*bearer\s+)[^\s,}\]]+"),
+    re.compile(r"(?i)(authorization\s*[:=]\s*(?:bearer|basic)\s+)[^\s,}\]]+"),
     re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{8,}"),
     re.compile(r"\bsk_[A-Za-z0-9._-]{8,}\b"),
-    re.compile(r"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----", re.DOTALL),
+    re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----.*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", re.DOTALL),
     re.compile(
-        r'(?i)("(?:access_token|refresh_token|client_secret|private_key|signing_secret|api_key)"\s*:\s*")[^"]*(")'
+        r'(?i)("(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)"\s*:\s*")[^"]*(")'
+    ),
+    # Same keys as Python-repr-style single-quoted string values.
+    re.compile(
+        r"(?i)('(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)'\\s*:\\s*')[^']*(')"
     ),
     # Same keys in bare key=value form. An OAuth token endpoint echoing its
     # form-encoded request body is the realistic leak shape here, and the
     # JSON-quoted pattern above does not match it.
     re.compile(
-        r"(?i)\b((?:access_token|refresh_token|client_secret|private_key|signing_secret|api_key)\s*=\s*)[^\s&,;}\]]+"
+        r"(?i)\b((?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)\s*=\s*)[^\s&,;}\]]+"
     ),
 )
 
 
 def _key_is_sensitive(key: object) -> bool:
     normalized = str(key).strip().lower().replace("-", "_")
-    return normalized in _SENSITIVE_KEYS or normalized.endswith("_password")
+    return normalized in _SENSITIVE_KEYS or normalized.endswith(_SENSITIVE_SUFFIXES)
 
 
 def redact_text(text: str) -> str:
