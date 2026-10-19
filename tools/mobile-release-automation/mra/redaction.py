@@ -56,23 +56,25 @@ _PATTERNS = (
     re.compile(r"\bsk_[A-Za-z0-9._-]{8,}\b"),
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----.*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", re.DOTALL),
     re.compile(
-        r'(?i)("(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)"\s*:\s*")[^"]*(")'
+        r'(?i)("(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)"\s*:\s*")[^"]*(")'
     ),
     # Same keys as Python-repr-style single-quoted string values.
     re.compile(
-        r"(?i)('(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)'\s*:\s*')[^']*(')"
+        r"(?i)('(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)'\s*:\s*')[^']*(')"
     ),
     # Same keys in bare key=value form. An OAuth token endpoint echoing its
     # form-encoded request body is the realistic leak shape here, and the
     # JSON-quoted pattern above does not match it.
     re.compile(
-        r"(?i)\b((?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|bws_access_token|service_account_credentials_json|play_service_account_credentials_json|oauth_token|secret_key|secret_value)\s*=\s*)[^\s&,;}\]]+"
+        r"(?i)\b((?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)\s*=\s*)[^\s&,;}\]]+"
     ),
 )
 
 
 def _key_is_sensitive(key: object) -> bool:
-    normalized = str(key).strip().lower().replace("-", "_")
+    # Vendor APIs use both snake_case and camelCase for sensitive fields.
+    name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", str(key).strip())
+    normalized = name.lower().replace("-", "_")
     return normalized in _SENSITIVE_KEYS or normalized.endswith(_SENSITIVE_SUFFIXES)
 
 
