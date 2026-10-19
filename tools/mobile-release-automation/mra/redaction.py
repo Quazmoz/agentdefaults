@@ -66,12 +66,12 @@ _PATTERNS = (
     # form-encoded request body is the realistic leak shape here, and the
     # JSON-quoted pattern above does not match it.
     re.compile(
-        r"(?i)\b((?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)\s*=\s*)[^\s&,;}\]]+"
+        r"(?i)(?<![\w-])((?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)\s*=\s*)[^\s&,;}\]]+"
     ),
 )
 
 
-def _key_is_sensitive(key: object) -> bool:
+def is_sensitive_key(key: object) -> bool:
     # Vendor APIs use both snake_case and camelCase for sensitive fields.
     name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", str(key).strip())
     normalized = name.lower().replace("-", "_")
@@ -94,7 +94,7 @@ def redact(value: Any) -> Any:
     """Recursively redact common credential fields while preserving useful shape."""
     if isinstance(value, dict):
         return {
-            key: REDACTED if _key_is_sensitive(key) else redact(item)
+            key: REDACTED if is_sensitive_key(key) else redact(item)
             for key, item in value.items()
         }
     if isinstance(value, list):
