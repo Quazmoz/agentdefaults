@@ -24,7 +24,7 @@ def emit(payload) -> int:
 
 
 def note(message: str) -> None:
-    print(message, file=sys.stderr)
+    print(redaction.redact_text(message), file=sys.stderr)
 
 
 def _auth_profile(slug: str) -> config.Profile:
