@@ -14,6 +14,57 @@ For the cross-platform desired-state workflow, start with
 [`AUTOMATION.md`](AUTOMATION.md) and
 [`desired-state.example.json`](desired-state.example.json).
 
+## Which MRA command should I use?
+
+MRA is **optional executable tooling**, not just an agent prompt. Use it only after installation and local authentication.
+
+| Entry point | Who uses it | Typical use |
+|---|---|---|
+| `mra-agent` | Local operator or constrained agent | Credential readiness, binding Bitwarden UUID references, local signing setup/status/build |
+| `mra` | Trusted **operator CLI** | App profiles, Play/AdMob operations, dry-runs, deliberate writes with exact `--yes` authorization |
+| `mra-mcp` / `mra-agent-mcp` | MCP-capable AI client | Supported **risk-gated** local MCP server; reads/planning, contained writes, native approval for high-risk changes |
+| `python -m mra.mcp_server` | Legacy compatibility only | **Do not use for new clients**; real mutations still require separate native approval |
+
+### First successful run (macOS)
+
+1. [Install/update MRA](INSTALL.md) in `tools/mobile-release-automation/.venv` and activate that environment or use the full `.venv/bin/` executable path. Install the official Bitwarden Secrets Manager `bws` CLI separately.
+2. Set up [credential bindings](#secret-architecture) **locally**: Bitwarden machine account in Keychain, Google Play publisher credential by UUID, separate RevenueCat Play validation credential by UUID, official RevenueCat CLI **browser OAuth**, and optional AdMob desktop OAuth.
+3. Diagnose before any mutations:
+
+   ```bash
+   # From tools/mobile-release-automation after activating .venv:
+   mra-agent doctor
+   mra --help
+   mra-agent signing status --name play-upload
+   ```
+
+   Signing is optional; its status can report not configured until you set it up. Other checks may fail until their credentials have been provisioned.
+4. Create a non-secret app profile and inspect current state:
+
+   ```bash
+   mra profile set --slug myapp --package-name com.example.myapp
+   mra play listings --profile myapp
+   ```
+
+5. Connect your AI client to the **supported** risk-gated MCP server, then have it call `approval_policy`, `profile_get`, and the appropriate vendor read tools before proposing changes. For Claude Code, substitute the **absolute path** to your checkout:
+
+   ```bash
+   claude mcp add mobile-release-automation -- \
+     /absolute/path/to/agentdefaults/tools/mobile-release-automation/.venv/bin/mra-agent-mcp
+   ```
+
+   Agent tool call example (not a shell command):
+
+   ```text
+   approval_policy()
+   profile_get(profile="myapp")
+   play_list_tracks(profile="myapp")
+   ```
+
+   For declarative changes, follow [`AUTOMATION.md`](AUTOMATION.md) and supply secret-free desired state to `mra_plan` → review → `mra_apply` → `mra_verify`. For end-to-end tasks, see the [mobile automation quickstart](../../docs/quickstarts/mobile-release-automation.md).
+
+**Authorization:** reads, dry-runs, and some contained MCP changes can run directly; high-risk MCP writes require native local operator approval. The operator CLI's `--yes` is **not** a general-purpose agent bypass: use it only for the specific action and target the user explicitly authorized. Do not put plaintext credentials in MCP arguments, task prompts, Git, Gradle source, or logs. [Security model and shell-access limitation](SECURITY.md): MCP redaction does not isolate credentials from an agent with unrestricted same-user macOS shell/Keychain access.
+
 ## Platform model
 
 | Platform | Authentication | Automation status |
