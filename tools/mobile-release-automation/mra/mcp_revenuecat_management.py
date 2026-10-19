@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import config, human_approval
+from . import config, human_approval, redaction
 from . import revenuecat as rc_module
 from . import revenuecat_management
 from . import secrets as secret_provider
@@ -28,7 +28,7 @@ def _client(profile: config.Profile) -> revenuecat_management.RevenueCatManageme
 
 
 def _tag(result: dict, risk: str, approved: bool = False) -> dict:
-    return {**result, "_mra": {"risk": risk, "human_approved": approved}}
+    return redaction.redact({**result, "_mra": {"risk": risk, "human_approved": approved}})
 
 
 def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:

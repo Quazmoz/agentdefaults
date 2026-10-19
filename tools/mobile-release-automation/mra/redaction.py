@@ -24,29 +24,58 @@ _SENSITIVE_KEYS = {
     "api_key",
     "apikey",
     "password",
+    "secret",
+    "secret_key",
+    "secret_value",
+    "token",
+    "oauth_token",
+    "bearer_token",
+    "bws_access_token",
+    "credentials",
+    "credentials_json",
+    "service_account_json",
 }
+
+# Credential fields may be vendor-prefixed, e.g. play_service_account_credentials_json.
+_SENSITIVE_SUFFIXES = (
+    "_password",
+    "_api_key",
+    "_access_token",
+    "_refresh_token",
+    "_client_secret",
+    "_signing_secret",
+    "_private_key",
+    "_credentials_json",
+)
+
 
 # Conservative string patterns for the credential formats this toolkit handles.
 _PATTERNS = (
-    re.compile(r"(?i)(authorization\s*[:=]\s*bearer\s+)[^\s,}\]]+"),
+    re.compile(r"(?i)(authorization\s*[:=]\s*(?:bearer|basic)\s+)[^\s,}\]]+"),
     re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{8,}"),
     re.compile(r"\bsk_[A-Za-z0-9._-]{8,}\b"),
-    re.compile(r"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----", re.DOTALL),
+    re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----.*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", re.DOTALL),
     re.compile(
-        r'(?i)("(?:access_token|refresh_token|client_secret|private_key|signing_secret|api_key)"\s*:\s*")[^"]*(")'
+        r'(?i)("(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)"\s*:\s*")[^"]*(")'
+    ),
+    # Same keys as Python-repr-style single-quoted string values.
+    re.compile(
+        r"(?i)('(?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)'\s*:\s*')[^']*(')"
     ),
     # Same keys in bare key=value form. An OAuth token endpoint echoing its
     # form-encoded request body is the realistic leak shape here, and the
     # JSON-quoted pattern above does not match it.
     re.compile(
-        r"(?i)\b((?:access_token|refresh_token|client_secret|private_key|signing_secret|api_key)\s*=\s*)[^\s&,;}\]]+"
+        r"(?i)(?<![\w-])((?:access_token|refresh_token|id_token|client_secret|private_key|signing_secret|api_key|apikey|password|authorization_header|authorizationHeader|bws_access_token|bwsAccessToken|service_account_credentials_json|serviceAccountCredentialsJson|play_service_account_credentials_json|playServiceAccountCredentialsJson|oauth_token|secret_key|secret_value|token|secret|credentials|service_account_json|clientSecret|accessToken|refreshToken|idToken|privateKey|apiKey|signingSecret)\s*=\s*)[^\s&,;}\]]+"
     ),
 )
 
 
-def _key_is_sensitive(key: object) -> bool:
-    normalized = str(key).strip().lower().replace("-", "_")
-    return normalized in _SENSITIVE_KEYS or normalized.endswith("_password")
+def is_sensitive_key(key: object) -> bool:
+    # Vendor APIs use both snake_case and camelCase for sensitive fields.
+    name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", str(key).strip())
+    normalized = name.lower().replace("-", "_")
+    return normalized in _SENSITIVE_KEYS or normalized.endswith(_SENSITIVE_SUFFIXES)
 
 
 def redact_text(text: str) -> str:
@@ -65,7 +94,7 @@ def redact(value: Any) -> Any:
     """Recursively redact common credential fields while preserving useful shape."""
     if isinstance(value, dict):
         return {
-            key: REDACTED if _key_is_sensitive(key) else redact(item)
+            key: REDACTED if is_sensitive_key(key) else redact(item)
             for key, item in value.items()
         }
     if isinstance(value, list):

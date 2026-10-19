@@ -453,6 +453,34 @@ class ReconcilePlanTest(unittest.TestCase):
                 with self.assertRaises(reconcile.ReconcileError):
                     reconcile.validate_desired_state(desired)
 
+    def test_literal_credential_aliases_are_rejected(self) -> None:
+        """Reject provider camelCase names before planning or mutations."""
+        fields = (
+            "refreshToken",
+            "clientSecret",
+            "apiKey",
+            "privateKey",
+            "playServiceAccountCredentialsJson",
+            "webhook-signing-secret",
+            "secret",
+            "access_token",
+        )
+        for field in fields:
+            with self.subTest(field=field):
+                with self.assertRaises(reconcile.ReconcileError):
+                    reconcile.validate_desired_state(
+                        {"revenuecat": {"webhooks": [{field: "credential-canary"}]}}
+                    )
+
+    def test_nonsecret_identifiers_remain_accepted(self) -> None:
+        reconcile.validate_desired_state({
+            "profile": {
+                "secret_id": "uuid-reference-not-a-secret",
+                "token_source": "macOS-keychain",
+                "passwords_ready": True,
+            }
+        })
+
     def test_secret_reference_is_allowed(self) -> None:
         reconcile.validate_desired_state(
             {

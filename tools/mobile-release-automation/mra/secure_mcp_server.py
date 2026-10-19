@@ -247,7 +247,7 @@ def profile_update_identifiers(
 @server.tool()
 def play_list_tracks(profile: str) -> list[dict]:
     """List Google Play tracks for a configured app profile."""
-    return play_module.track_status(_package(profile))
+    return redaction.redact(play_module.track_status(_package(profile)))
 
 
 @server.tool()

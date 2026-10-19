@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from . import config, human_approval
+from . import config, human_approval, redaction
 from . import mcp_play_management, mcp_play_monetization, mcp_reconcile
 from . import play as play_module
 
@@ -23,7 +23,7 @@ def _is_internal(track: str) -> bool:
 
 
 def _tag(result: dict, risk: str, approved: bool = False) -> dict:
-    return {**result, "_mra": {"risk": risk, "human_approved": approved}}
+    return redaction.redact({**result, "_mra": {"risk": risk, "human_approved": approved}})
 
 
 def _gate(title: str, detail: str) -> tuple[bool, dict[str, Any]]:
