@@ -12,13 +12,13 @@ import getpass
 import json
 import sys
 
-from . import admob_credentials, android_signing, auth, config, play_credentials, revenuecat_cli
+from . import admob_credentials, android_signing, auth, config, play_credentials, redaction, revenuecat_cli
 from . import revenuecat as rc_module
 from . import secrets as secret_provider
 
 
 def emit(payload) -> int:
-    json.dump(payload, sys.stdout, indent=2, sort_keys=True, default=str)
+    json.dump(redaction.redact(payload), sys.stdout, indent=2, sort_keys=True, default=str)
     sys.stdout.write("\n")
     return 0
 
