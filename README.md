@@ -4,7 +4,7 @@
 
 **Reusable, production-minded defaults for AI agents, skills, prompts, orchestration loops, schemas, examples, and cross-tool wrappers.**
 
-[User Guide](docs/user-guide.md) · [Human Index](INDEX.md) · [Loop Quick Reference](docs/loops/QUICK_REFERENCE.md) · [Agent Loops](docs/loops/README.md) · [Agents](agents/README.md) · [Skills](skills/README.md) · [Validation](scripts/README.md)
+[Quick Start](#start-in-60-seconds) · [How to Use It](#using-agentdefaults-in-a-real-task) · [Runnable Tools](#runnable-tools-and-installation) · [MRA Setup](tools/mobile-release-automation/INSTALL.md) · [All Stacks](INDEX.md) · [User Guide](docs/user-guide.md)
 
 </div>
 
@@ -44,10 +44,109 @@ cd agentdefaults
 python3 scripts/validate-agentdefaults.py
 ```
 
-Then choose what you are trying to do:
+The validation command checks this **library**, not a target app or infrastructure deployment. Cloning alone does not install global agents, register MCP servers, or enable runtime hooks. Most agents, skills, and prompts are Markdown files that your AI client **reads when needed**; executable tooling has separate setup.
+
+To get work done, start with [a real task](#using-agentdefaults-in-a-real-task). To install executable tooling, see [Runnable Tools](#runnable-tools-and-installation). For a complete list of specialized workflows, use the [Quickstart Directory](#full-quickstart-directory) or [Human Index](INDEX.md).
+
+## Using AgentDefaults in a Real Task
+
+AgentDefaults is **a library, not a single executable agent**. The normal workflow is to give an AI coding client access to the relevant files, choose one task owner, and ask it to work on a specific target repository. You do **not** need to install every agent, skill, or prompt.
+
+### 1. Give your coding client the right files
+
+| Where you work | What to do |
+|---|---|
+| In this AgentDefaults checkout | Start the client here. Codex uses [`AGENTS.md`](AGENTS.md); Claude Code uses [`CLAUDE.md`](CLAUDE.md) (which imports `AGENTS.md`). Follow the [runtime entrypoints](#tool-entrypoints) for other clients. |
+| In a separate app/infrastructure repo | Keep that repo's own instructions authoritative. Make the relevant AgentDefaults files accessible through a separate checkout, attached context, or a connected GitHub repository, and **explicitly reference them in the task**. A GitHub URL is not proof a client has fetched the file. |
+| In GitHub Copilot | Use [`.github/agents/`](.github/agents/) custom agents or [`.github/prompts/`](.github/prompts/) adapters where available; they point to canonical definitions rather than reimplementing them. |
+| In a chat client without filesystem access | Provide the chosen agent/skill/prompt documents as context. This supplies instructions, **not** the ability to execute code or call vendor tools. |
+
+Select only the files you need: [`ENGINEERING_AGENTS_INDEX.md`](ENGINEERING_AGENTS_INDEX.md) for engineering routing or [`INDEX.md`](INDEX.md) for other topics, then **one** agent from `agents/`, its required skill(s) from `skills/`, and optionally a task prompt from `prompts/`. Follow [`docs/tool-integration-guide.md`](docs/tool-integration-guide.md) for client-specific scope.
+
+### 2. Tell the agent exactly what to do
+
+For example, when the client can access this library and the target code:
+
+```text
+Work in <target-repository> on <target-branch>.
+Use AgentDefaults AGENTS.md and ENGINEERING_AGENTS_INDEX.md to select the
+smallest correct owning agent. Load only its required skill and the
+task-relevant prompt. Inspect the real target code before making changes.
+Goal: <specific outcome>.
+Constraints: <non-goals and approval boundaries>.
+Done when: <objective acceptance criteria and executed tests>.
+Report implemented, verified, unverified, and remaining risks separately.
+```
+
+Do not copy the entire library into every prompt. For common tasks, start with:
+
+| Task | Agent/quickstart | Task prompt or tool |
+|---|---|---|
+| Debug an agent, MCP, RAG, or inference app | [Principal AI Engineer](docs/quickstarts/principal-ai-engineer.md) | [AI engineering task prompt](prompts/implementation/principal-ai-engineer-task.md) |
+| Improve Terraform, Ansible, Kubernetes, Jenkins, or CI/CD | [Principal DevOps Engineer](docs/quickstarts/principal-devops-engineer.md) | [DevOps task prompt](prompts/implementation/principal-devops-task.md) |
+| Repair GitHub Actions workflows or runners | [GitHub Actions Engineer](docs/quickstarts/github-actions-engineer.md) | [Actions task prompt](prompts/implementation/github-actions-task.md) |
+| Clean up AI-generated code without changing behavior | [Codebase Maintenance](docs/quickstarts/codebase-maintenance-engineer.md) | [De-slop task prompt](prompts/implementation/codebase-de-slop-task.md) |
+| Create or assess an agent | [Agent Builder](docs/quickstarts/agent-builder.md) | [Agent build prompt](prompts/planning/build-ai-agent.md) |
+| Automate Android/Wear releases and monetization | [Mobile Release Automation](docs/quickstarts/mobile-release-automation.md) | [MRA toolkit](tools/mobile-release-automation/README.md) |
+
+### 3. Run and verify
+
+Agent instructions do not install dependencies, grant permissions, or execute tools on their own. Run the relevant build/tests in the **target repository**. For changes to this library, run `python3 scripts/validate-agentdefaults.py`; see [Validation](#validation). Privileged writes require the target system's actual permissions and the documented approvals.
+
+## Runnable Tools and Installation
+
+These are the parts of the repository you can execute. They are **separate** from the Markdown agent/skill/prompt library.
+
+| Tool | What it does | Setup / usage |
+|---|---|---|
+| **Ponytail + Graft** (`.agent-tools/ponytail-graft/`) | Opt-in, repo-local agent memory/context tooling | [Installer and multi-repo handoff](prompts/ponytail-graft/README.md); [bootstrap and runtime](docs/AGENT_TOOLING.md) |
+| **Bounded Completion CLI** (`scripts/bounded-completion.py`) | Stateful, bounded implementation + verification + reviewer gates | [Short command reference](docs/loops/QUICK_REFERENCE.md) |
+| **Mobile Release Automation (MRA)** (`tools/mobile-release-automation/`) | Local operator CLI and risk-gated MCP for signing, Google Play, RevenueCat, and AdMob | [Install/update](tools/mobile-release-automation/INSTALL.md); [operator manual](tools/mobile-release-automation/README.md); [security model](tools/mobile-release-automation/SECURITY.md) |
+| **Video helpers** (`tools/video/`) | Transcription and FFmpeg edit/EDL/QC utilities | [Claude video workflow](docs/quickstarts/claude-video-editing.md); [video tool tests](tools/video/test_video_tools.py) |
+| **Validators** (`scripts/validate-*.py`) | Check AgentDefaults contracts, wrappers, and stacks | [Scripts and validation guide](scripts/README.md) |
+
+**Ponytail + Graft in this checkout:** install local dependencies and regenerate ignored runtime state after each fresh clone, *only if you intend to use that stack*. Requires Node.js/npm:
+
+```bash
+# From the agentdefaults root:
+node .agent-tools/ponytail-graft/bootstrap.cjs
+# Use this repo-pinned launcher, not a global graft binary:
+node .agent-tools/ponytail-graft/bin/graft.cjs --help
+```
+
+To install or repair Ponytail + Graft in **another repository**, use the tested [cross-repo handoff](prompts/ponytail-graft/CROSS_REPO_HANDOFF.md) and pass an explicit `TARGET_DIR`; do not blindly copy this checkout's generated hooks.
+
+**Bounded Completion:** supply an actual task contract rather than using the example's placeholder targets:
+
+```bash
+# From the agentdefaults root (replace with a real contract file):
+python3 scripts/bounded-completion.py init --contract path/to/contract.json
+python3 scripts/bounded-completion.py status
+python3 scripts/bounded-completion.py verify
+python3 scripts/bounded-completion.py gate
+```
+
+See the [full lifecycle](docs/loops/QUICK_REFERENCE.md): an agent/reviewer must perform the work and record evidence; calling `gate` by itself does not complete a task.
+
+**MRA:** install the optional Python package in its own environment, authenticate vendors locally, and connect the secure MCP server only after following the [credential setup](tools/mobile-release-automation/INSTALL.md). From the AgentDefaults checkout:
+
+```bash
+cd tools/mobile-release-automation
+python3 -m venv .venv
+.venv/bin/python -m pip install -e ".[mcp]"
+.venv/bin/mra-agent doctor
+```
+
+Then use [the MRA quickstart](docs/quickstarts/mobile-release-automation.md) for Bitwarden UUID bindings, RevenueCat browser OAuth, profiles, agent MCP registration, and approval rules. `mra` is the operator CLI; `mra-agent` is the restricted agent-facing CLI; `mra-mcp` and `mra-agent-mcp` both launch the supported risk-gated MCP server. **Never paste credentials into chat, prompts, or repository files.** Even though MRA redacts known secret formats, a coding agent with unrestricted shell access under your macOS account might be able to read Keychain credentials directly; see [MRA's trust boundary](tools/mobile-release-automation/SECURITY.md#trust-boundary).
+
+**Video helpers:** these are not installed by cloning and require their own model/backend dependencies and FFmpeg as appropriate. Start with the [local video-editing quickstart](docs/quickstarts/claude-video-editing.md); for a safe command overview, run `python3 tools/video/edl.py --help` from the repository root.
+
+## Full Quickstart Directory
 
 | Need | Start here |
 |---|---|
+| **Use agents and prompts in an actual coding session** | [Practical usage below](#using-agentdefaults-in-a-real-task) |
+| **Install or run executable tools** (Ponytail/Graft, MRA, loop CLI, video helpers) | [Runnable tools below](#runnable-tools-and-installation) |
 | Understand the repository and documentation layout | [`docs/README.md`](docs/README.md) |
 | Choose a canonical agent | [`agents/README.md`](agents/README.md) |
 | Engineer, debug, harden, or qualify GitHub Actions | [`docs/quickstarts/github-actions-engineer.md`](docs/quickstarts/github-actions-engineer.md) |
@@ -322,12 +421,17 @@ agentdefaults/
 │   └── README.md
 ├── config/
 │   └── README.md
+├── .agent-tools/ponytail-graft/  # repo-local Ponytail + Graft launchers
 ├── .claude/
 │   └── README.md
+├── .agents/skills/          # compatible local skill adapters
 ├── .github/
 │   ├── agents/README.md
 │   └── prompts/README.md
 ├── .cursor/
+├── tools/
+│   ├── mobile-release-automation/  # Python CLI and MCP
+│   └── video/                 # transcription / FFmpeg EDL helpers
 └── agentdefaults.manifest.json
 ```
 
