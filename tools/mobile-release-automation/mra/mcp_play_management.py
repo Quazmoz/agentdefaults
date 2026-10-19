@@ -6,7 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from . import config, human_approval
+from . import config, human_approval, redaction
 from . import play as play_module
 from . import play_management
 from .mcp_play_monetization import _failure
@@ -24,7 +24,7 @@ def _client(profile: str) -> play_management.PlayManagementClient:
 
 
 def _tag(result: dict, risk: str, approved: bool = False) -> dict:
-    return {**result, "_mra": {"risk": risk, "human_approved": approved}}
+    return redaction.redact({**result, "_mra": {"risk": risk, "human_approved": approved}})
 
 
 def _read(action: Callable[[], Any]) -> Any:
@@ -34,7 +34,7 @@ def _read(action: Callable[[], Any]) -> Any:
     which hides Play's actionable message.
     """
     try:
-        return action()
+        return redaction.redact(action())
     except play_module.PlayError as error:
         return _failure(error, "observe", False)
 
