@@ -28,7 +28,7 @@ def _client(profile: str | None, publisher_id: str | None) -> admob_module.AdMob
 
 
 def _tag(result: dict, risk: str = "contained", approved: bool = False) -> dict:
-    return {**result, "_mra": {"risk": risk, "human_approved": approved}}
+    return redaction.redact({**result, "_mra": {"risk": risk, "human_approved": approved}})
 
 
 def _access_payload(
@@ -64,7 +64,7 @@ def _access_payload(
 
 def _read(operation: Callable[[], Any]) -> Any:
     try:
-        return operation()
+        return redaction.redact(operation())
     except admob_module.AdMobError as error:
         return _access_payload(error)
 
