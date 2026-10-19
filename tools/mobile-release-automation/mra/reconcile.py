@@ -9,26 +9,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import admob, auth, config, play, play_management
+from . import admob, auth, config, play, play_management, redaction
 from . import revenuecat as rc_module
 from . import revenuecat_management
 
 
 class ReconcileError(RuntimeError):
     pass
-
-
-_FORBIDDEN_DESIRED_KEYS = {
-    "authorization",
-    "authorization_header",
-    "access_token",
-    "refresh_token",
-    "client_secret",
-    "private_key",
-    "signing_secret",
-    "api_key",
-    "password",
-}
 
 
 def validate_desired_state(desired: dict[str, Any]) -> None:
@@ -38,8 +25,7 @@ def validate_desired_state(desired: dict[str, Any]) -> None:
     def walk(value: Any, path: str) -> None:
         if isinstance(value, dict):
             for key, item in value.items():
-                normalized = str(key).strip().lower().replace("-", "_")
-                if normalized in _FORBIDDEN_DESIRED_KEYS:
+                if redaction.is_sensitive_key(key):
                     raise ReconcileError(
                         f"desired_state contains secret-like field {path + '.' if path else ''}{key!s}; "
                         "store the value in Bitwarden and pass a *_secret_id reference instead"

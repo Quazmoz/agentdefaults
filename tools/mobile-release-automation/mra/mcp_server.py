@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from . import admob as admob_module
-from . import auth, config
+from . import auth, config, human_approval, play_credentials, redaction
 from . import play as play_module
 from . import revenuecat as rc_module
 from . import revenuecat_cli
@@ -38,9 +38,21 @@ except ImportError:  # pragma: no cover - SDK version fallback
 server = _Server("mobile-release-automation")
 
 UNCONFIRMED = (
-    "Refused: this changes live platform state. Re-call with confirm=true only "
-    "after the operator has approved this exact action."
+    "Refused: this changes live platform state. Use the supported risk-gated MCP "
+    "server, or set confirm=true to request a separate local operator approval."
 )
+
+
+def _require_local_approval(title: str, detail: str) -> dict | None:
+    """Legacy confirm is only an intent flag, never proof of operator consent."""
+    decision = human_approval.request(title, detail)
+    if decision.get("approved"):
+        return None
+    return {
+        "status": "refused",
+        "detail": "Local operator approval was not granted; operation not executed.",
+        "approval": decision,
+    }
 
 
 def _package(package_name: str | None, profile: str | None) -> str:
@@ -88,7 +100,7 @@ def doctor() -> dict:
             report["checks"][name] = {"status": "fail", "detail": str(error)}
     report["admob_token_cached"] = config.path_for(config.ADMOB_TOKEN).is_file()
     report["profiles"] = sorted(config.load_profiles())
-    return report
+    return redaction.redact(report)
 
 
 # ---- Google Play -----------------------------------------------------------
@@ -97,17 +109,17 @@ def doctor() -> dict:
 @server.tool()
 def play_list_tracks(package_name: str | None = None, profile: str | None = None) -> list[dict]:
     """Read every Play track and its current releases. Read-only."""
-    return play_module.track_status(_package(package_name, profile))
+    return redaction.redact(play_module.track_status(_package(package_name, profile)))
 
 
 @server.tool()
 def play_list_products(package_name: str | None = None, profile: str | None = None) -> dict:
     """List Play subscriptions and in-app products. Read-only."""
     client = play_module.PlayClient(_package(package_name, profile))
-    return {
+    return redaction.redact({
         "subscriptions": client.list_subscriptions(),
         "in_app_products": client.list_in_app_products(),
-    }
+    })
 
 
 @server.tool()
@@ -126,16 +138,23 @@ def play_publish_bundle(
     Defaults to dry_run, which validates the edit and discards it so nothing
     reaches testers. A real publish requires dry_run=false and confirm=true.
     """
-    if not dry_run and not confirm:
-        return {"status": "refused", "detail": UNCONFIRMED}
-    return play_module.publish_bundle(
+    if not dry_run:
+        if not confirm:
+            return {"status": "refused", "detail": UNCONFIRMED}
+        refusal = _require_local_approval(
+            "Approve legacy Google Play release",
+            f"Package: {_package(package_name, profile)}\nTrack: {track}\nAAB: {aab_path}",
+        )
+        if refusal is not None:
+            return refusal
+    return redaction.redact(play_module.publish_bundle(
         _package(package_name, profile),
         Path(aab_path).expanduser(),
         track=track,
         status=status,
         release_notes={"en-US": release_notes_en_us} if release_notes_en_us else None,
         dry_run=dry_run,
-    )
+    ))
 
 
 @server.tool()
@@ -153,16 +172,23 @@ def play_promote(
 
     Promotion moves the already-qualified artifact; it never rebuilds.
     """
-    if not dry_run and not confirm:
-        return {"status": "refused", "detail": UNCONFIRMED}
-    return play_module.promote(
+    if not dry_run:
+        if not confirm:
+            return {"status": "refused", "detail": UNCONFIRMED}
+        refusal = _require_local_approval(
+            "Approve legacy Google Play promotion",
+            f"Package: {_package(package_name, profile)}\nFrom: {source_track}\nTo: {target_track}",
+        )
+        if refusal is not None:
+            return refusal
+    return redaction.redact(play_module.promote(
         _package(package_name, profile),
         from_track=source_track,
         to_track=target_track,
         status=status,
         user_fraction=user_fraction,
         dry_run=dry_run,
-    )
+    ))
 
 
 # ---- AdMob -----------------------------------------------------------------
@@ -175,19 +201,19 @@ def admob_probe_access(publisher_id: str | None = None) -> dict:
     AdMob's create methods are limited access and are unlocked per account by a
     Google account manager. Run this before promising any AdMob automation.
     """
-    return admob_module.AdMobClient(publisher_id).probe_monetization_access()
+    return redaction.redact(admob_module.AdMobClient(publisher_id).probe_monetization_access())
 
 
 @server.tool()
 def admob_list_apps(publisher_id: str | None = None) -> list[dict]:
     """List AdMob apps. Read-only."""
-    return admob_module.AdMobClient(publisher_id).list_apps()
+    return redaction.redact(admob_module.AdMobClient(publisher_id).list_apps())
 
 
 @server.tool()
 def admob_list_ad_units(publisher_id: str | None = None) -> list[dict]:
     """List AdMob ad units. Read-only."""
-    return admob_module.AdMobClient(publisher_id).list_ad_units()
+    return redaction.redact(admob_module.AdMobClient(publisher_id).list_ad_units())
 
 
 @server.tool()
@@ -204,12 +230,18 @@ def admob_create_app(
     """
     if not confirm:
         return {"status": "refused", "detail": UNCONFIRMED}
+    refusal = _require_local_approval(
+        "Approve legacy AdMob app creation",
+        f"App: {display_name}\nPlatform: {platform}\nStore link: {app_store_id or '(none)'}",
+    )
+    if refusal is not None:
+        return refusal
     try:
-        return admob_module.AdMobClient(publisher_id).create_app(
+        return redaction.redact(admob_module.AdMobClient(publisher_id).create_app(
             display_name, platform, app_store_id
-        )
+        ))
     except admob_module.AdMobAccessDenied as error:
-        return {"status": "access_denied", "detail": str(error)}
+        return {"status": "access_denied", "detail": redaction.redact_text(str(error))}
 
 
 @server.tool()
@@ -224,12 +256,18 @@ def admob_create_ad_unit(
     """Create an AdMob ad unit. Limited access: may return 403."""
     if not confirm:
         return {"status": "refused", "detail": UNCONFIRMED}
+    refusal = _require_local_approval(
+        "Approve legacy AdMob ad-unit creation",
+        f"App: {app_id}\nUnit: {display_name}\nFormat: {ad_format}",
+    )
+    if refusal is not None:
+        return refusal
     try:
-        return admob_module.AdMobClient(publisher_id).create_ad_unit(
+        return redaction.redact(admob_module.AdMobClient(publisher_id).create_ad_unit(
             app_id, display_name, ad_format, ad_types
-        )
+        ))
     except admob_module.AdMobAccessDenied as error:
-        return {"status": "access_denied", "detail": str(error)}
+        return {"status": "access_denied", "detail": redaction.redact_text(str(error))}
 
 
 # ---- RevenueCat ------------------------------------------------------------
@@ -238,13 +276,13 @@ def admob_create_ad_unit(
 @server.tool()
 def rc_list_projects() -> list[dict]:
     """List RevenueCat projects through the official CLI OAuth session."""
-    return rc_module.RevenueCatClient().list_projects()
+    return redaction.redact(rc_module.RevenueCatClient().list_projects())
 
 
 @server.tool()
 def rc_list_apps(project_id: str | None = None, profile: str | None = None) -> list[dict]:
     """List apps in a RevenueCat project through OAuth. Read-only."""
-    return rc_module.RevenueCatClient().list_apps(_project(project_id, profile))
+    return redaction.redact(rc_module.RevenueCatClient().list_apps(_project(project_id, profile)))
 
 
 @server.tool()
@@ -262,13 +300,18 @@ def rc_create_play_app(
     """
     if not confirm:
         return {"status": "refused", "detail": UNCONFIRMED}
-    key_path = config.require_file(config.PLAY_SERVICE_ACCOUNT, auth.PLAY_HINT)
-    return rc_module.RevenueCatClient().create_play_app(
+    refusal = _require_local_approval(
+        "Approve legacy RevenueCat Play app creation",
+        f"Project: {_project(project_id, profile)}\nApp: {name}\nPackage: {_package(package_name, profile)}",
+    )
+    if refusal is not None:
+        return refusal
+    return redaction.redact(rc_module.RevenueCatClient().create_play_app(
         _project(project_id, profile),
         name,
         _package(package_name, profile),
-        key_path.read_text(encoding="utf-8"),
-    )
+        play_credentials.revenuecat_json(),
+    ))
 
 
 def main() -> None:
