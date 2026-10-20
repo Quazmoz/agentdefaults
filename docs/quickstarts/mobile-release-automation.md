@@ -111,7 +111,7 @@ This is a one-time operator action, not an agent prompt:
 ```bash
 mra-agent signing configure \
   --name play-upload \
-  --keystore /Users/quinnfavo/my-release-key.jks \
+  --keystore /path/to/upload-key.jks \
   --alias my-key-alias
 mra-agent signing status --name play-upload
 ```

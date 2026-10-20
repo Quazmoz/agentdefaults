@@ -10,6 +10,8 @@
 
 ---
 
+> **Here from the Google Play MCP video?** The tool in that video is **Mobile Release Automation (MRA)**, in [`tools/mobile-release-automation/`](tools/mobile-release-automation/). Read the [MRA overview](tools/mobile-release-automation/README.md), follow the [install and credential setup](tools/mobile-release-automation/INSTALL.md), then use the [end-to-end quickstart](docs/quickstarts/mobile-release-automation.md). You don't need the rest of this library to use MRA.
+
 ## Purpose
 
 AgentDefaults is a reusable library for building and operating AI-assisted engineering workflows without rewriting the same role definitions, safety boundaries, task prompts, evidence rules, and tool-specific wrappers for every repository.
@@ -31,10 +33,10 @@ Use it to:
 
 These walkthroughs cover practical workflows and design concerns represented in AgentDefaults. They are companion demos, not version-specific release documentation.
 
-| Token-efficient AI workflows | Autonomous DevOps agent workflow |
-| :---: | :---: |
-| [![Stop Burning Copilot Credits: 6 Ways to Cut AI Token Usage](https://img.youtube.com/vi/ctt0fKDYvRM/0.jpg)](https://www.youtube.com/watch?v=ctt0fKDYvRM) | [![I Built an AI DevOps Engineer That Writes, Reviews, and Merges Code](https://img.youtube.com/vi/H24JClpjhNo/0.jpg)](https://www.youtube.com/watch?v=H24JClpjhNo) |
-| **[6 Ways to Cut AI Token Usage](https://www.youtube.com/watch?v=ctt0fKDYvRM)** | **[AI DevOps Engineer Workflow](https://www.youtube.com/watch?v=H24JClpjhNo)** |
+| Google Play automation with MCP | Token-efficient AI workflows | Autonomous DevOps agent workflow |
+| :---: | :---: | :---: |
+| [![I Connected AI to Google Play Console Using MCP](https://img.youtube.com/vi/L4ACSLSWfvQ/0.jpg)](https://www.youtube.com/watch?v=L4ACSLSWfvQ) | [![Stop Burning Copilot Credits: 6 Ways to Cut AI Token Usage](https://img.youtube.com/vi/ctt0fKDYvRM/0.jpg)](https://www.youtube.com/watch?v=ctt0fKDYvRM) | [![I Built an AI DevOps Engineer That Writes, Reviews, and Merges Code](https://img.youtube.com/vi/H24JClpjhNo/0.jpg)](https://www.youtube.com/watch?v=H24JClpjhNo) |
+| **[AI + Google Play Console via MCP](https://www.youtube.com/watch?v=L4ACSLSWfvQ)** ([MRA](tools/mobile-release-automation/README.md)) | **[6 Ways to Cut AI Token Usage](https://www.youtube.com/watch?v=ctt0fKDYvRM)** | **[AI DevOps Engineer Workflow](https://www.youtube.com/watch?v=H24JClpjhNo)** |
 
 ## Start in 60 Seconds
 

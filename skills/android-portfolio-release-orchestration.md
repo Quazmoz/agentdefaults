@@ -150,7 +150,7 @@ operator-interactive local command:
 ```bash
 mra-agent signing configure \
   --name play-upload \
-  --keystore /Users/quinnfavo/my-release-key.jks \
+  --keystore /path/to/upload-key.jks \
   --alias my-key-alias
 ```
 

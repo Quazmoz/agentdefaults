@@ -14,6 +14,24 @@ For the cross-platform desired-state workflow, start with
 [`AUTOMATION.md`](AUTOMATION.md) and
 [`desired-state.example.json`](desired-state.example.json).
 
+**Video walkthrough:** [I Connected AI to Google Play Console Using MCP](https://www.youtube.com/watch?v=L4ACSLSWfvQ)
+gives a short overview of what MRA does and how an agent uses it.
+
+## At a glance
+
+| | |
+|---|---|
+| What you get | An operator CLI (`mra`) and a local MCP server (`mra-agent-mcp`) that let Claude Code, Codex, or another MCP client read and change Google Play, RevenueCat, and AdMob state, with approval gates on risky writes |
+| OS | macOS is the supported platform. Credential storage uses Keychain, and high-risk MCP writes need a native macOS approval dialog. Elsewhere, reads can work with `BWS_ACCESS_TOKEN` injected, but high-risk MCP writes are denied |
+| Runtime | Python 3.10 or newer |
+| External tools | Bitwarden Secrets Manager CLI (`bws`); RevenueCat CLI (`rc`) if you use RevenueCat |
+| Accounts | A Google Play developer account and a Google Cloud project for the service account; RevenueCat and AdMob are optional |
+| Setup docs | [INSTALL.md](INSTALL.md) (install and first-time credentials), [quickstart](../../docs/quickstarts/mobile-release-automation.md) (end-to-end tasks), [SECURITY.md](SECURITY.md) (trust boundary) |
+
+MRA is an independent project. It is not affiliated with or endorsed by Google,
+RevenueCat, or Bitwarden. It can publish releases and change live store and
+monetization settings, so start with reads and dry-runs on an internal track.
+
 ## Which MRA command should I use?
 
 MRA is **optional executable tooling**, not just an agent prompt. Use it only after installation and local authentication.
@@ -124,7 +142,7 @@ For an MCP-capable client:
 
 ```bash
 claude mcp add mobile-release-automation-agent -- \
-  /absolute/path/to/tools/mobile-release-automation/.venv/bin/python \
+  /absolute/path/to/agentdefaults/tools/mobile-release-automation/.venv/bin/python \
   -m mra.secure_mcp_server
 ```
 
@@ -244,7 +262,7 @@ One-time setup is intentionally operator-interactive:
 ```bash
 mra-agent signing configure \
   --name play-upload \
-  --keystore /Users/quinnfavo/my-release-key.jks \
+  --keystore /path/to/upload-key.jks \
   --alias my-key-alias
 ```
 
@@ -626,8 +644,8 @@ this preauthorized operator batch.
 MRA 1.8.0 adds a deterministic pricing-plan workflow for modern Google Play `OneTimeProduct` purchase options. Planning reads live Play state and uses Google's `convertRegionPrices` calculation endpoint; it does not mutate catalog state. The resulting plan is persisted and content-addressed by `plan_id`.
 
 ```bash
-mra play pricing-plan --profile medtick \\
-  --product-id <product-id> \\
+mra play pricing-plan --profile medtick \
+  --product-id <product-id> \
   --purchase-option-id <purchase-option-id>
 ```
 
@@ -748,7 +766,7 @@ install/open/pre-registration clicks and a click-through rate: intent, not
 outcome.
 
 The bulk export and the Console are not on the same schedule: as of September
-2026 data this account's `store_performance` CSVs still carry the legacy
+2026 data, the `store_performance` CSVs on the maintainer's account still carry the legacy
 `Store listing acquisitions`, `Store listing visitors`, and
 `Store listing conversion rate` columns. So MRA reads the report's actual header
 rather than assuming either schema:
@@ -785,7 +803,7 @@ figure never has to be trusted on its own.
 - Report families are generated per account, not guaranteed. An account can
   legitimately have no `acquisition/` or `financial-stats/` directory at all,
   which MRA reports as `report_not_generated` rather than as a failure.
-- Bulk report families do not advance together. Measured on this account,
+- Bulk report families do not advance together. Measured on one account,
   ratings were two days behind while the installs export had not been rewritten
   in eight and its newest row was thirteen days old. Probe each family; do not
   infer one from another.

@@ -58,6 +58,27 @@ rc auth login
 
 MRA 1.7.0 uses the official `rc` CLI as its RevenueCat API transport. It does not require a RevenueCat `sk_...` secret key in Bitwarden or in an MRA profile.
 
+## First-time Google Play credential setup
+
+You do this once per developer account. MRA never stores the key file on disk or shows it to the agent. It reads the key from Bitwarden Secrets Manager at call time.
+
+1. **Create the service account.** In the Google Cloud console, pick or create a project, open the Google Play Android Developer API page and click **Enable**, then go to **Service Accounts** → **Create service account**. Open the new account, go to **Keys** → **Add key** → **Create new key** → **JSON**, and download the file.
+2. **Grant it access in Play Console.** Go to **Users and permissions** → **Invite new users**, enter the service account's email address, and give it only the app permissions you plan to use (for example, viewing app information and releasing to testing tracks). Production releases, store listing edits, and financial reports each need their own permission. The [reporting section of the README](README.md#required-scopes-and-permissions) lists what analytics reads need.
+3. **Store the key in Bitwarden Secrets Manager.** Install the [Secrets Manager CLI (`bws`)](https://bitwarden.com/help/secrets-manager-cli/). In the Bitwarden web app, create a project (for example `mobile-release-automation`). Add a secret whose value is the **entire JSON key file**, then copy the secret's ID (a UUID). Delete the downloaded JSON file afterwards.
+4. **Give MRA read access to Bitwarden.** Create a machine account with read access to that project and generate an access token. Store the token in macOS Keychain as shown in [Bitwarden machine account](README.md#bitwarden-machine-account). Don't put it in a shell startup file.
+5. **Bind and check:**
+
+   ```bash
+   mra-agent auth bind-play --secret-id <PLAY_SERVICE_ACCOUNT_SECRET_UUID>
+   mra-agent doctor
+   mra profile set --slug myapp --package-name com.example.myapp
+   mra play tracks --profile myapp
+   ```
+
+   If `play tracks` returns your tracks, Play access works. A 403 here usually means step 2 isn't finished. Play Console can take a while to apply a new user's permissions.
+
+RevenueCat validates Play purchases with a **separate** service account. Create it the same way and bind it with `mra-agent auth bind-revenuecat-play` (see [Security defaults](#security-defaults)).
+
 ## If `mra-agent` is not found
 
 Check the local checkout first:
@@ -92,7 +113,7 @@ local terminal:
 ```bash
 mra-agent signing configure \
   --name play-upload \
-  --keystore /Users/quinnfavo/my-release-key.jks \
+  --keystore /path/to/upload-key.jks \
   --alias my-key-alias
 ```
 
