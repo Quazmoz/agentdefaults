@@ -11,6 +11,7 @@ Copy/paste prompts for app marketing production. Each prompt is a plain `.txt` f
 | [`app-launch-film.txt`](app-launch-film.txt) | Produce a 75–90 s narrated 16:9 YouTube launch film built entirely in code: rebuilt app UI on a 3D phone, local-TTS voiceover driving a word clock, locally composed music on a beat grid, and deterministic 60 fps rendering. |
 | [`app-launch-film-v2.txt`](app-launch-film-v2.txt) | Revised launch film prompt that detects phone, watch, or phone + Wear OS companion, and adapts the story, device staging, and claims to that mode, with explicit QC gates. |
 | [`app-product-film-silent.txt`](app-product-film-silent.txt) | Produce a 25–35 s narration-free product film in the style of an Apple app ad: the app's own UI lifted out of the device and demonstrating itself, almost no on-screen text, music on a beat grid. |
+| [`app-product-film-silent-phone-watch.txt`](app-product-film-silent-phone-watch.txt) | The narration-free product film with a hard requirement: when the product has both an Android phone app and a Wear OS app, the film must feature both, each demonstrating its own real UI. |
 
 ## App Promo Video
 
@@ -55,6 +56,8 @@ The voice rules were tightened after the MedTick film shipped with a voice that 
 ## Narration-Free Product Film
 
 [`app-product-film-silent.txt`](app-product-film-silent.txt) is for when you want an Apple-style app ad instead of an explained film. It has no voice at all. The app's own components (cards, inputs, rows, badges) are rebuilt from source, shown large, and lifted out of the device to act out the story: something gets picked, typed into the real input field, answered, and rewarded. There's one breadth shot of every real item and one payoff hold, and it closes on the icon, the wordmark, and a typed tagline. On-screen text is capped at four supers of five words or fewer. It defaults to 30 s at 4:5 and 60 fps, with 16:9 and 9:16 as recomposed overrides. Music composed in code sets the pacing on a beat grid. An optional `REFERENCE_VIDEO` gets a timed shot-list study, and the agent learns the grammar from it without copying the content. Truth, rights, fidelity, flash-safety, and muted-test gates match the launch film.
+
+[`app-product-film-silent-phone-watch.txt`](app-product-film-silent-phone-watch.txt) is the same film for products that ship on the phone and the wrist. It defines when each app counts as present (a watch module needs a real user surface; a setup-only phone module or a headless watch module doesn't count) and can read a second repository through `COMPANION_REPO`. When both are present, each device must be the focal subject for at least 25% of the running time and perform at least one real action and result. A shared shot at real relative scale is required, and both devices have to be established within 8 s. The story budget swaps in separate phone and watch beats. Without a runtime-proven link (`PAIR_INDEPENDENT`), nothing may cross between the devices on screen, and the tagline can't imply they work together. A watch that can't be captured is rebuilt from source with partial fidelity instead of being dropped, and gate G5.10 fails the film if either app is missing.
 
 Notes:
 
