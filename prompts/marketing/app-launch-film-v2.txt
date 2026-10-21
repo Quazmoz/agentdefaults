@@ -27,7 +27,9 @@ Never trade a higher priority for a lower one. Cut or shorten a scene before you
 - Video count: exactly one film. Alternatives (voices, music, lockup lines) are candidates for selection, not extra deliverables.
 - Cost: zero beyond the agent session itself.
 - Interaction: work autonomously and log defaults in BRIEF.md. Ask only when genuinely blocked. If I am available interactively, offer the music shortlist once before locking the edit; otherwise pick and log why.
-- CHECKPOINTS: none (default), script, or script+voice. With script, stop at GATE G2 and wait for my approval of the PROPOSITION, scene plan, and script before any voice synthesis or rendering. With script+voice, also stop after the voice bake-off so I can pick the voice by ear.
+- VOICE_PROFILE: adult male, low baritone, General American accent, sounds 35–55. Grounded, plain-spoken, assured: a documentary or keynote narrator who states facts and does not perform them. I may override any part of it.
+- VOICE_SOURCE: tts (default) or recording. With recording, I supply a WAV of myself or a consenting speaker reading the locked script. Skip synthesis and the bake-off, and run the same edge, processing, alignment, and word-clock steps on that recording.
+- CHECKPOINTS: voice (default), none, script, or script+voice. With voice, stop after the voice bake-off and wait for me to pick the voice by ear (Phase 4). With script, stop at GATE G2 and wait for my approval of the PROPOSITION, scene plan, and script before any voice synthesis or rendering. script+voice does both. none is allowed only when I have already approved a voice by ear for this app, recorded in BRIEF.md with the model, preset, and settings.
 
 ======================================================================
 2. AUTHORITY AND BOUNDARIES
@@ -207,6 +209,7 @@ PHASE 4 — VOICE, MUSIC, SOUND, AND MIX
 Before using any model, verify that its current license permits commercial advertising use. Record every tool and model with its version and license in ASSETS.md. Cache each voice clip and music render by a hash of its inputs (model, voice, settings, text, seed) so re-renders are fast and identical.
 
 Voiceover (the goal is a voice a first-time viewer takes for a calm human narrator, not a TTS demo)
+- Why this section is strict: an earlier film picked a voice on transcript and pitch scores alone, nobody heard it before delivery, and the result was the wrong voice for the brand. Measurements catch broken takes. Only a human ear can approve a voice.
 - Model shortlist. Use a local open-weight model whose weights AND voices permit commercial advertising use. Check the current license text on each model card, because these change. As of late 2026, likely candidates are:
   - Chatterbox (MIT; Turbo or Multilingual): expressive, with exaggeration and cfg_weight controls. Every output carries an imperceptible PerTh watermark; record it in ASSETS.md.
   - Qwen3-TTS (Apache 2.0): preset speakers, plus plain-language direction of tone and pacing.
@@ -215,17 +218,21 @@ Voiceover (the goal is a voice a first-time viewer takes for a calm human narrat
   - Dia (Apache 2.0): only for a second speaker.
 - Do not use these, because their weights, voices, or outputs are non-commercial or research-only: XTTS v2, F5-TTS weights, Fish Audio S2, Breeze TTS, VibeVoice, IndexTTS without a bilibili agreement, Voxtral reference voices, or any Piper voice whose dataset license is not commercial.
 - Voice identity: use a model's built-in preset voice. Clone only from a reference recording I supply and state I have consent for. Never clone a real person from the internet, a dataset speaker, or a celebrity sound-alike.
-- Voice brief: one paragraph in BRIEF.md. For example: "warm, unhurried, conversational, mid-low pitch, a slight smile, explaining something to a friend across the table, never announcing or selling." Use it to choose the preset, as the direction prompt for models that accept one, and as the listening rubric.
-- Bake-off before full synthesis: render the same three test lines (the opening line, the line with the app name, and the pivot question) with each shortlisted model and voice that runs on this machine, using 2–3 settings each. Give the files neutral names, compare them blind, pick one, and record why.
+- Voice brief: one paragraph in BRIEF.md, written from VOICE_PROFILE. Default: "Low, grounded, unhurried. Plain statements that end with a firm, falling pitch. Confident without selling, like a documentary narrator explaining how something works. Even energy from line to line; emphasis comes from pauses and word choice, not from swooping pitch." Use it to choose presets, as the direction prompt for models that accept one, and as the listening rubric.
+- Delivery to avoid. These are the usual ways TTS sounds wrong for a product film: sing-song or swooping intonation, a rising pitch at the end of statements, stretched or breathy vowels, a smiling or flirtatious tone, over-crisp or lisped sibilants, and announcer or sales-pitch energy. On expressive models (Chatterbox exaggeration, Qwen direction prompts), start at the calm end of the range and raise expressiveness only if a take sounds flat to a listener.
+- Candidate pool: list every preset voice of every shortlisted model, with its documented gender, accent, and description. Shortlist at least four presets that match VOICE_PROFILE, from at least two models. A model with only one built-in voice is one candidate, never the default pick. Discard presets that clearly miss the profile, for example a different gender or accent, before scoring anything.
+- Bake-off before full synthesis: render the same three test lines (the opening line, the line with the app name, and the pivot question) with each shortlisted preset, using 2–3 settings each, plus one 20–25 s paragraph from the script so the voice can be judged over a full thought. Give the files neutral names and score them. Measurements only remove broken candidates (failures of (a) or (d) below, or a median F0 or rate outside the targets). They never choose the winner.
+- Audition reel: build audio/vo/audition/ with the 3–4 strongest surviving candidates reading the same paragraph, one neutral file each (A.wav, B.wav, …), and a one-line command for each that re-synthesizes the whole narration with that voice. Keep the key in KEY.json.
+- Voice approval by ear (GATE G4a): stop and ask me to listen and pick, unless VOICE_SOURCE is recording or CHECKPOINTS is none with an approval already on file. Record who approved which file, and when, in BRIEF.md. Do not synthesize the full narration, mix, or render the final film with an unapproved voice. If I am unavailable, finish everything that does not depend on the voice, render a review cut with the top-scoring candidate marked "VOICE UNAPPROVED" in the README and the status, and report the run as partial. A film whose voice nobody has heard is never reported as completed.
 - Synthesize by thought, not by line. One clip per beat or paragraph (2–4 script lines) gives the model context, so intonation rises and falls across sentences the way a person's does. Line-by-line synthesis produces list-reading cadence and is not allowed except to fix a single word. Cache each chunk by its input hash.
 - Takes: render 3–5 takes per chunk with different seeds or temperatures, then score each take:
   (a) faster-whisper transcript against the script: every content word and the app name are correct;
   (b) speaking rate of 2.3–2.6 words per second;
-  (c) pitch movement: reject takes whose F0 contour is markedly flatter than the other takes (monotone) or that jumps erratically;
+  (c) pitch: the median F0 fits VOICE_PROFILE (default low baritone: about 85–120 Hz). The F0 spread stays inside a band of about 2–4 semitones, so reject both monotone and swooping takes, and reject statements that end on a rising pitch. More movement is not better;
   (d) no artifacts: no metallic or robotic tone, clipped word starts, mid-word cuts, stutters, or internal silence over 0.8 s.
   (e) Optionally, an automatic naturalness predictor (a MOS model) if its license permits.
   Keep the best take per chunk, and write the scores to qc/reports/voice.md.
-- Listening: an agent may not be able to hear audio. Never claim you listened unless you actually did. If you cannot listen, select takes on the measured scores, mark naturalness as UNVERIFIED, and, if I am available, give me the two best takes of each chunk to choose between. A take that fails (a) or (d) after 5 tries means the line itself is the problem: rewrite it for the ear.
+- Listening: an agent may not be able to hear audio. Never claim you listened unless you actually did. Takes within the approved voice may be chosen on the measured scores. Mark naturalness UNVERIFIED until someone has heard the mix, and, if I am available, give me the two best takes of any chunk whose scores are close. A take that fails (a) or (d) after 5 tries means the line itself is the problem: rewrite it for the ear.
 - Pronunciation: fixes go into the TTS input only, as phonetic respelling or phoneme markup. Captions and on-screen text keep the real spelling, and the alignment step maps respelled tokens back.
 - Light, transparent processing only:
   - a high-pass filter around 70–80 Hz and a gentle de-esser;
@@ -257,7 +264,7 @@ Mix
 - Master to about −14 LUFS integrated with true peak at or below −1 dBTP. Measure both the WAV master and the encoded AAC.
 - Deliver a 48 kHz stereo WAV master plus voice, music, and SFX stems.
 
-GATE G4 (Audio): the bake-off and take scores are recorded, every chunk is aligned with no content-word mismatches, listening is reported as done (by you or by me) or as UNVERIFIED, the music is chosen and analyzed, and loudness and true peak are measured and within target.
+GATE G4 (Audio): the candidate pool, bake-off, and take scores are recorded; the voice was approved by ear (G4a) with who and when, or the run is marked partial with VOICE UNAPPROVED; every chunk is aligned with no content-word mismatches; listening to the final mix is reported as done (by whom) or UNVERIFIED; the music is chosen and analyzed; and loudness and true peak are measured and within target.
 
 ======================================================================
 PHASE 5 — PROJECT AND RENDER PIPELINE
@@ -317,7 +324,9 @@ BLOCKERS
 If a capability is genuinely unavailable, finish everything that does not depend on it, then report the exact blocker and the smallest command or input that clears it. Common cases:
 - No Wear OS system image, or the watch AVD will not boot: report the sdkmanager package needed; the watch fidelity check is partial.
 - Pairing fails: the mode falls to PAIR_INDEPENDENT; cross-device scenes are cut, not faked.
-- No free, commercially licensed TTS works locally: the film is blocked, not delivered silent or unnarrated.
+- No free, commercially licensed TTS works locally: the film is blocked, not delivered silent or unnarrated. Offer VOICE_SOURCE=recording, or the narration-free prompt app-product-film-silent.txt, as the way forward.
+- No preset matches VOICE_PROFILE: report the closest candidates with the audition reel and ask whether to relax the profile or switch to VOICE_SOURCE=recording. Never quietly substitute a voice outside the profile.
+- Voice not approved by ear: partial delivery with a review cut, as described under Voice approval (G4a).
 - No GPU in headless Chromium: report it, render with software WebGL only if the output is visually identical on test stills, and note the render-time cost.
 - FFmpeg missing: report the install command and wait for permission.
 Never cover a gap with fabricated UI, a faked sync, a silent film, or an unnarrated cut presented as finished.
@@ -333,7 +342,7 @@ FINAL RESPONSE (short)
 - Status (completed, partial, or blocked), the app identity, FORM_FACTOR_MODE with its one-line evidence, the hero device, the PROPOSITION, and the lockup line.
 - Paths: MP4, captions, thumbnail, audio, source, BRIEF.md, ASSETS.md, COPY.md, qc/.
 - Claims used and rejected, including cross-device and standalone claims; the fidelity result per device.
-- Voice model and preset, the bake-off result, and whether naturalness was heard (by whom) or is UNVERIFIED; music candidates and the choice, tempo and key, loudness and true peak.
+- Voice model and preset, the bake-off result, who approved the voice by ear and from which audition file (or VOICE UNAPPROVED), and whether the final mix was heard (by whom) or is UNVERIFIED; music candidates and the choice, tempo and key, loudness and true peak.
 - Render commands, the full-render count, and each gate's result, separating executed from unexecuted checks and naming anything not watched or heard at normal speed.
 
-Start now: inspect the repository, decide the form-factor mode, run the app on disposable emulators and capture references, write BRIEF.md and the script, synthesize and align the voice, compose and choose the music, build the scenes against the word clock and beat grid, check stills after every change, then render and deliver ONE finished film.
+Start now: inspect the repository, decide the form-factor mode, run the app on disposable emulators and capture references, write BRIEF.md and the script, run the voice bake-off and get the voice approved by ear, synthesize and align the narration, compose and choose the music, build the scenes against the word clock and beat grid, check stills after every change, then render and deliver ONE finished film.

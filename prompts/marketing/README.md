@@ -10,6 +10,7 @@ Copy/paste prompts for app marketing production. Each prompt is a plain `.txt` f
 | [`app-promo-video-real-usage.txt`](app-promo-video-real-usage.txt) | Produce a polished launch film with real emulator-recorded typing/taps, bespoke motion graphics, coherent scene flow, and a synchronized musical soundtrack. |
 | [`app-launch-film.txt`](app-launch-film.txt) | Produce a 75–90 s narrated 16:9 YouTube launch film built entirely in code: rebuilt app UI on a 3D phone, local-TTS voiceover driving a word clock, locally composed music on a beat grid, and deterministic 60 fps rendering. |
 | [`app-launch-film-v2.txt`](app-launch-film-v2.txt) | Revised launch film prompt that detects phone, watch, or phone + Wear OS companion, and adapts the story, device staging, and claims to that mode, with explicit QC gates. |
+| [`app-product-film-silent.txt`](app-product-film-silent.txt) | Produce a 25–35 s narration-free product film in the style of an Apple app ad: the app's own UI lifted out of the device and demonstrating itself, almost no on-screen text, music on a beat grid. |
 
 ## App Promo Video
 
@@ -48,6 +49,12 @@ Its craft principles draw on Apple's app and device ads ("Privacy. That's iPhone
 Before anything is rendered, the prompt checks licenses for each TTS voice (not just the engine) and for the app's font, uses Google's badge and trademark rules, and runs a WCAG 2.3.1 flash-safety scan. `COPY.md` gets a Play promo upload checklist. An optional `CHECKPOINTS` setting stops for approval after the script (`script`), and also after the voice bake-off (`script+voice`).
 
 The voiceover is built to sound like a human narrator. The prompt gives a commercially licensed model shortlist (Chatterbox, Qwen3-TTS, Kokoro as the baseline) and lists the non-commercial models to avoid (XTTS v2, F5-TTS weights, Fish Audio, VibeVoice, and others). It runs a blind bake-off and synthesizes each beat or paragraph rather than each line, so intonation carries across sentences. Each chunk gets 3–5 takes scored on transcript accuracy, rate, pitch movement, and artifacts. Scripts are written for the ear, processing stays light, and pauses vary with meaning. Because an agent may not be able to hear audio, it reports naturalness as UNVERIFIED unless someone actually listened.
+
+The voice rules were tightened after the MedTick film shipped with a voice that was wrong for the brand. That pick was made on transcript and pitch scores alone, the rubric rewarded more pitch movement, and nobody heard it before delivery. Now a `VOICE_PROFILE` setting (default: a low, grounded, General American male narrator) drives the voice brief. The bake-off draws at least four matching presets from at least two models. Pitch has to land inside a band, so both monotone and swooping takes are rejected, along with statements that end on a rising pitch. `CHECKPOINTS` now defaults to `voice`: the agent builds an audition reel and stops until a person picks the voice by ear. If nobody approves it, the run is reported as partial. `VOICE_SOURCE=recording` swaps in a human read of the script instead of TTS.
+
+## Narration-Free Product Film
+
+[`app-product-film-silent.txt`](app-product-film-silent.txt) is for when you want an Apple-style app ad instead of an explained film. It has no voice at all. The app's own components (cards, inputs, rows, badges) are rebuilt from source, shown large, and lifted out of the device to act out the story: something gets picked, typed into the real input field, answered, and rewarded. There's one breadth shot of every real item and one payoff hold, and it closes on the icon, the wordmark, and a typed tagline. On-screen text is capped at four supers of five words or fewer. It defaults to 30 s at 4:5 and 60 fps, with 16:9 and 9:16 as recomposed overrides. Music composed in code sets the pacing on a beat grid. An optional `REFERENCE_VIDEO` gets a timed shot-list study, and the agent learns the grammar from it without copying the content. Truth, rights, fidelity, flash-safety, and muted-test gates match the launch film.
 
 Notes:
 
