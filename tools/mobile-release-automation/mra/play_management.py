@@ -12,6 +12,10 @@ import mimetypes
 
 from . import play as play_module
 
+# A listing commit must not cancel an unrelated submission already in review,
+# which is what Play's default (CANCEL_IN_REVIEW_AND_SUBMIT) does.
+LISTING_REVIEW_BEHAVIOR = "ERROR_IF_IN_REVIEW"
+
 
 class PlayManagementClient:
     def __init__(self, package_name: str, client: play_module.PlayClient | None = None) -> None:
@@ -52,7 +56,9 @@ class PlayManagementClient:
         }
         if video:
             body["video"] = video
-        with self.client.edit(commit=not dry_run, validate=True) as edit_id:
+        with self.client.edit(
+            commit=not dry_run, validate=True, changes_in_review_behavior=LISTING_REVIEW_BEHAVIOR
+        ) as edit_id:
             if expected_current is not None:
                 current = self.client._request(  # noqa: SLF001
                     "GET", f"/edits/{edit_id}/listings/{language}",
@@ -93,7 +99,9 @@ class PlayManagementClient:
             "shortDescription": short_description,
             "fullDescription": full_description,
         }
-        with self.client.edit(commit=not dry_run, validate=True) as edit_id:
+        with self.client.edit(
+            commit=not dry_run, validate=True, changes_in_review_behavior=LISTING_REVIEW_BEHAVIOR
+        ) as edit_id:
             existing = self.client._request(  # noqa: SLF001
                 "GET", f"/edits/{edit_id}/listings", "check existing listing locales"
             ).get("listings")

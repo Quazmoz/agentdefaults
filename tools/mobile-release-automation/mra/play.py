@@ -8,10 +8,12 @@ from __future__ import annotations
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, Sequence
+import fcntl
 import json
+import os
 import re
 
-from . import auth, redaction
+from . import auth, config, redaction
 
 BASE = "https://androidpublisher.googleapis.com/androidpublisher/v3"
 UPLOAD_BASE = "https://androidpublisher.googleapis.com/upload/androidpublisher/v3"
@@ -25,6 +27,29 @@ RELEASE_STATUSES = ("draft", "inProgress", "halted", "completed")
 
 class PlayError(RuntimeError):
     pass
+
+
+# Play allows one open edit per user per app; creating another invalidates the
+# first ("This Edit has been deleted"). Every MRA process acts as the same
+# service account, so concurrent calls for one app must take turns. Different
+# apps stay parallel. ponytail: machine-local flock; edits from other machines,
+# tools or the Console can still invalidate ours (classified edit_invalidated).
+_PACKAGE_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+\Z")
+
+
+@contextmanager
+def _package_edit_lock(package_name: str) -> Iterator[None]:
+    if not _PACKAGE_NAME.match(package_name):
+        raise PlayError(f"invalid package name for a Play edit: {package_name!r}")
+    lock_dir = config.home() / "locks"
+    lock_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(lock_dir / f"play-edit-{package_name}.lock", os.O_RDWR | os.O_CREAT, 0o600)
+    with os.fdopen(fd, "r+") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
 
 
 def _publisher_identity() -> str | None:
@@ -76,6 +101,34 @@ def classify_play_failure(
             " Console user that holds that permission",
             "a monetization write and a read can differ in what they require, so"
             " succeeding reads do not establish that this write is permitted",
+        ]
+    message = api_message or ""
+    if "Edit has been deleted" in message:
+        return "edit_invalidated", [
+            "Play deletes an open edit when the same identity opens another edit"
+            " for this app, or when anyone commits an edit or changes the app in"
+            " Play Console",
+            "MRA serializes its own edits per app on this machine, so look for"
+            " another machine, tool or Console session acting on this app",
+            "nothing from the deleted edit was committed; a read can be retried,"
+            " but re-read live state before retrying any write",
+        ]
+    if "CHANGES_ALREADY_IN_REVIEW" in message or "already have changes in review" in message:
+        return "changes_in_review", [
+            "Play has a submission in review for this app and MRA refused to"
+            " cancel it (changesInReviewBehavior=ERROR_IF_IN_REVIEW)",
+            "nothing was committed; wait for the review or resolve it in Play"
+            " Console Publishing overview, then re-read state and retry",
+        ]
+    if "changesNotSentForReview" in message or "sent for review automatically" in message:
+        return "review_submission_blocked", [
+            "Play refused to send this edit for review automatically; nothing was"
+            " committed",
+            "this usually follows a rejection or a Console state that requires"
+            " sending changes manually: check Publishing overview and Policy status",
+            "committing with changesNotSentForReview queues the change unsent"
+            " behind other pending changes; that is an operator decision, not a"
+            " retry",
         ]
     if status_code == 400:
         return "malformed_request", [
@@ -195,33 +248,38 @@ class PlayClient:
         commit: bool,
         changes_not_sent_for_review: bool = False,
         validate: bool = True,
+        changes_in_review_behavior: str | None = None,
     ) -> Iterator[str]:
         """Open a Play edit, and always clean it up.
 
         An abandoned edit blocks nothing, but leaving them behind makes the
         Console confusing, so a failed or dry-run edit is deleted explicitly.
+        Reads use edits too, so every edit holds this package's edit lock.
         """
-        created = self._request("POST", "/edits", "create edit")
-        edit_id = created["id"]
-        committed = False
-        try:
-            yield edit_id
-            if commit:
-                params = {}
-                if changes_not_sent_for_review:
-                    params["changesNotSentForReview"] = "true"
-                self._request(
-                    "POST",
-                    f"/edits/{edit_id}:commit",
-                    "commit edit",
-                    params=params,
-                )
-                committed = True
-            elif validate:
-                self._request("POST", f"/edits/{edit_id}:validate", "validate edit")
-        finally:
-            if not committed:
-                self._delete_edit_quietly(edit_id)
+        with _package_edit_lock(self.package_name):
+            created = self._request("POST", "/edits", "create edit")
+            edit_id = created["id"]
+            committed = False
+            try:
+                yield edit_id
+                if commit:
+                    params = {}
+                    if changes_not_sent_for_review:
+                        params["changesNotSentForReview"] = "true"
+                    if changes_in_review_behavior:
+                        params["changesInReviewBehavior"] = changes_in_review_behavior
+                    self._request(
+                        "POST",
+                        f"/edits/{edit_id}:commit",
+                        "commit edit",
+                        params=params,
+                    )
+                    committed = True
+                elif validate:
+                    self._request("POST", f"/edits/{edit_id}:validate", "validate edit")
+            finally:
+                if not committed:
+                    self._delete_edit_quietly(edit_id)
 
     def _delete_edit_quietly(self, edit_id: str) -> None:
         try:

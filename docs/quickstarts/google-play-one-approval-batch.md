@@ -99,7 +99,7 @@ The file contains `schema_version: 1`, `created_at`, `expires_at` UTC timestamp 
      --sha256 <approved-64-hex-digest>
    ```
 
-5. MRA rechecks the full batch before any write, then checks each item again before mutation. Existing exact desired state is an idempotent no-op. Each committed item is verified against Play; pricing also validates protected US/GB prices, active purchase option, region version and other fields through the existing pricing engine.
+5. MRA rechecks the full batch before any write, then checks each item again before mutation. Existing exact desired state is an idempotent no-op. Each committed item is verified against Play; pricing also validates protected US/GB prices, active purchase option, region version and other fields through the existing pricing engine. Listing commits use `changesInReviewBehavior=ERROR_IF_IN_REVIEW`, so an item fails with `changes_in_review` instead of cancelling a submission already in review. A `review_submission_blocked` failure means Play needs the change sent from Publishing overview. Neither is retried automatically. See "Play edits, concurrency, and review state" in `tools/mobile-release-automation/README.md`.
 6. On any failure, halt remaining actions and return partial results. **Google Play changes across apps are not atomic.** Do not automatically roll back previously verified updates or blindly retry an uncertain operation. Re-read remote state, distinguish already-applied from drift and report any new proposed plan for a *new* one-time approval.
 7. A successful Play API read-back does **not** prove public publication. Inspect managed publishing, Console review queue and public listing propagation separately.
 
