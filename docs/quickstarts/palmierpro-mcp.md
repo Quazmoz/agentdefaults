@@ -255,7 +255,25 @@ Use:
 docs/palmierpro-mcp-acceptance-tests.md
 ```
 
-This includes provider parity, original-timeline preservation, transcript-index invalidation, technical-truth preservation, caption policy, paid-action gating, current export enum examples, and bounded termination.
+This includes provider parity, original-timeline preservation, transcript-index invalidation, technical-truth preservation, caption policy, paid-action gating, current export enum examples, and bounded termination. It is a grading spec, so do not load it into the agent's runtime context.
+
+### Replay a prompt against the mock
+
+```bash
+python3 tools/video/palmier_mock/mock_palmier.py --port 19790 --trace /tmp/trace.jsonl &
+claude mcp add --transport http palmier-mock http://127.0.0.1:19790/mcp     # or: codex mcp add palmier-mock --url ...
+# run a prompt from prompts/palmierpro/ against palmier-mock, then:
+python3 tools/video/palmier_mock/trace_check.py /tmp/trace.jsonl --profile first-pass   # first-pass | full-edit | short | transcript-cleanup | story-assembly
+```
+
+## Seam Audit Setup
+
+Palmier MCP cannot play audio to the agent, so dialogue seams are checked mechanically. Install FFmpeg and the Parakeet transcriber from the Claude Code local stack (`docs/quickstarts/claude-video-editing.md`). After speech cuts, the agent exports a scratch FCPXML (the only export allowed without a request) and runs:
+
+```bash
+python3 tools/video/palmier_seams.py <project>/.agentdefaults-qc/seams.fcpxml \
+  --transcripts <project>/.agentdefaults-qc/transcripts --source-root <media folder>
+```
 
 ## Related Files
 
@@ -272,6 +290,9 @@ prompts/palmierpro/transcript-cleanup-pass.md
 prompts/palmierpro/youtube-short-from-long-form.md
 docs/palmierpro-mcp-tool-map.md
 docs/palmierpro-mcp-acceptance-tests.md
+config/video-editing/channel-style.md
+tools/video/palmier_seams.py
+tools/video/palmier_mock/
 examples/palmierpro-mcp-workflow.md
 ```
 

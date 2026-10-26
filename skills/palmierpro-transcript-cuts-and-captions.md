@@ -2,6 +2,8 @@
 
 ## Purpose
 
+This skill is the single source of truth for the Dialogue Boundary Invariant and the seam audit. Agents, other skills, and prompts point here instead of restating them.
+
 Provide a reusable, provider-neutral workflow for transcript-driven editing, filler/retake cleanup, dead-air reduction, and caption creation in Palmier Pro through external MCP.
 
 Use this skill from Claude Code or OpenAI Codex when tightening talking-head, tutorial, demo, podcast/interview, or screen-recording footage.
@@ -42,7 +44,7 @@ For long-form comprehension, use segment-level transcript granularity first when
 4. get_transcript in word mode for the target window
 5. remove_words using current exact indices
 6. get_transcript again
-7. verify the local dialogue seam against actual audio/source handles where the tool surface permits
+7. keep the handles in Cut Handles below; audit seams in a batch after the cleanup pass (Seam Audit)
 8. repeat only where needed
 9. verify meaning, cadence, and word integrity
 ```
@@ -62,7 +64,7 @@ Every edit that closes a gap in spoken dialogue must preserve complete speech bo
 - retake replacement
 - clip removal that joins two spoken regions
 
-For each resulting seam, verify as far as the available Palmier/client surface permits:
+For each resulting seam, the edit must satisfy the checks below. Cut Handles and the Seam Audit are how the agent enforces them without audio playback:
 
 ### Before the cut
 
@@ -110,7 +112,37 @@ If a seam is bad:
 4. recover source handles/pre-roll/post-roll where possible
 5. use a short fade only for clicks or room-tone discontinuities, never to smear overlapping speech
 
-If the connected tool surface cannot reliably validate the actual acoustic seam, do not claim the cut is acoustically verified. Leave a review marker or report the exact seam for human listening.
+Palmier MCP has no audio-inspection tool, so the agent cannot listen to a seam. Validate seams with the Seam Audit below. Any seam the audit cannot clear gets an `open` review marker. Never claim a seam is acoustically verified from transcript text alone.
+
+## Cut Handles
+
+Transcript word timestamps are the only boundary signal the agent has, so turn them into concrete margins:
+
+| Boundary | Minimum handle | At 30 fps |
+|---|---|---|
+| Before the first kept word's transcript `start` | 0.10 s | 3 frames |
+| After the last kept word's transcript `end` | 0.15 s | 4-5 frames |
+| Short-form `tight` mode | Same minimums; tighten pauses, never handles | |
+
+Words ending in a plosive or fricative (t, k, p, s, sh, ch) decay longer than their timestamp says, so give them the upper end of the margin. When a handle would pull in an unwanted sound, move the cut to the next natural pause instead of shrinking the handle.
+
+## Seam Audit
+
+Run once after the cleanup pass, and again after any fix pass that changed speech:
+
+```text
+1. export_project mode=fcpxml overwrite=false outputPath=<project folder>/.agentdefaults-qc/seams.fcpxml
+   (the seam-QC carve-out in skills/palmierpro-mcp-setup-and-safety.md; not a user export)
+2. if not already present: python3 tools/video/parakeet_transcribe.py <source> -o <qc dir>/transcripts/<stem>.json  (once per source)
+3. python3 tools/video/palmier_seams.py <qc dir>/seams.fcpxml --transcripts <qc dir>/transcripts --source-root <media folder> --json
+4. ERROR seams (cut inside a word, repeated content): fix them (undo if attributable, or widen the cut to the
+   nearest word gap), then re-export and re-audit
+5. WARN seams (thin handle, active audio at the boundary): widen when the fix is obvious; otherwise add an `open`
+   manage_markers marker at the reported timeline_frame, with the reason in its note
+6. report: seams audited, errors fixed, markers left
+```
+
+If the client cannot run local commands (no shell), skip steps 2-5, mark every speech seam the pass created with a single range marker per section, and say in the completion note that no seams were audited. The audit checks word boundaries and level; it is not a substitute for a human listen on brand-critical output.
 
 ## What To Remove By Default
 
@@ -322,7 +354,7 @@ Check:
 - technical caveats remain
 - no stale-index assumptions
 
-Then inspect/listen to each speech seam created by the cleanup, as the connected Palmier/client surface permits. Check:
+Then run the Seam Audit. For seams it flags, or when it cannot run, mark them for a human listen. A listener checks for:
 
 - no word begins late
 - no word ends early

@@ -2,9 +2,26 @@
 
 ## Purpose
 
-This is the mutable taste profile for the Claude Code local YouTube editing stack. It covers AI engineering, DevOps, Claude/Codex/agent workflows, Android and Wear OS apps, demos, comparisons, tutorials, and app launch/update videos.
+This is the mutable taste profile shared by both video-editing stacks: the Claude Code local stack (`agents/claude-code-video-editor-agent.md`) and the Palmier Pro MCP stack (`agents/palmierpro-mcp-video-editor-agent.md`). Prompts in `prompts/palmierpro/` and `prompts/video-editing/` read channel identity and hook style from here instead of hardcoding them. It covers AI engineering, DevOps, Claude/Codex/agent workflows, Android and Wear OS apps, demos, comparisons, tutorials, and app launch/update videos.
 
 Workflow and safety rules belong in the canonical agent and skill. Nothing here can override truthfulness, licensing, raw-media, or approval gates. Defaults are the baseline. Learned rules refine or override them, with the more specific scope winning.
+
+## Channel Profile
+
+Who the videos are for and what they should feel like. Prompts refer to "the channel" and read this section. Fork this repo and replace it with your own channel.
+
+```text
+creator:        Quinn Favo
+positioning:    a real AI/DevOps engineer and automation builder showing the actual workflow, not a generic AI influencer
+viewers:        AI builders, DevOps engineers, app builders, technical creators
+topics:         AI engineering, DevOps, coding agents, MCP workflows, local AI (NPU/GPU, OpenVINO), Android and Wear OS apps,
+                Google Play releases, open-source tooling, automation experiments
+proof moments:  a working agent result, a working app or demo, a Play Store approval or rejection lesson, a local-AI benchmark,
+                an MCP workflow changing real state, a repo/terminal result, a before/after automation
+hook style:     short, accurate, all-caps when on screen ("AI EDITED THIS", "PLAY STORE RESULT", "LOCAL AI TEST",
+                "MCP WORKFLOW", "THIS AGENT DID IT"), used only when the footage supports it
+never imply:    free, unlimited, a hack, guaranteed approval, medical or therapy benefits, or performance the footage does not show
+```
 
 ## Brand Tokens
 
@@ -57,8 +74,21 @@ These are reusable HyperFrames compositions or registry blocks the user has appr
 ### Captions
 
 - Long-form 16:9: deliver an SRT. Burn captions in only on request.
-- Shorts/vertical: readable burned-in captions, kept clear of the platform UI zones.
+- Shorts/vertical: readable burned-in captions, kept clear of the platform UI zones (see Shorts Safe Zones).
 - Correct technical terms, app names, model names, commands, and acronyms by hand.
+
+### Shorts Safe Zones
+
+For a 1080x1920 YouTube Short, the player UI covers the bottom of the frame (title, channel, description) and a right-hand action rail (like, comment, share, remix). TikTok and Reels are similar. Keep captions, hook text, facecam, and the proof itself inside the safe area:
+
+```text
+top     ~ 0-250 px       avoid (status bar, search, top controls)
+bottom  ~ 1500-1920 px   avoid (title, channel, description)
+right   ~ 900-1080 px    avoid from y ~ 700 down (action rail)
+safe    ~ x 60-900, y 250-1500   captions, hook text, facecam, key UI
+```
+
+Place captions in the lower third of the safe area (around y 1150-1450), not at the very bottom. These are working values, not platform-published specs; verify on a real device preview before publishing.
 
 ### Sound
 

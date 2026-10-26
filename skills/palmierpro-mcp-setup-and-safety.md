@@ -169,8 +169,16 @@ Do not create a copy for every trivial adjustment; use it where rollback/reviewa
 
 Use it only when the requested output or project intent requires that structural change. Do not change project settings as incidental cleanup.
 
+### Scope check (required before any settings change)
+
+A timeline copy does not protect the original if the settings are project-wide. Before calling `set_project_settings`, read its live schema description and the `get_timeline` result to find whether fps, resolution, and aspect apply to one timeline or to the whole project.
+
+- **Per-timeline** (the schema takes a `timelineId`, or the description says it applies to the active timeline): copy first with `create_timeline`, make the copy active, then change settings on the copy only.
+- **Project-wide, or unclear:** do not change settings in a project that holds another edit, such as a long-form cut you are deriving a Short from. Stop and tell the user that the vertical version needs its own Palmier project. Offer to create one with `manage_project` and import the same source media, and wait for a yes. Treat an unclear scope as project-wide.
+
 Before changing settings:
 
+- complete the scope check above
 - read the current values
 - preserve a source timeline for broad transformations when appropriate
 - apply only the requested/necessary fields
@@ -317,6 +325,12 @@ Do not delete source media/folders during ordinary editing.
 If the user asks for library cleanup, identify exact targets first and avoid broad deletion based on filenames alone.
 
 ## Export Guardrail
+
+### Seam-QC carve-out
+
+"Do not export unless requested" has one exception. After speech-affecting cuts, the agent may run `export_project mode=fcpxml` with `overwrite=false` to a scratch path outside the user's export locations (default `<project folder>/.agentdefaults-qc/seams.fcpxml`), solely to run `tools/video/palmier_seams.py`. FCPXML is an interchange file, not a render, and costs no credits. Never use `mode=video`, `mode=xml`, or `mode=palmier` under this carve-out, and never report the QC file as an export.
+
+### User-requested exports
 
 When the user explicitly asks for a normal YouTube review/final render and gives no conflicting settings, current guidance is:
 
