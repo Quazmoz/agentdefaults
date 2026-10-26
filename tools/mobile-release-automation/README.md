@@ -570,6 +570,37 @@ retry. A successful API commit does **not** prove public publication; verify
 Play Console Publishing overview and public locale propagation. Neither the
 CLI's `--yes` nor this documentation grants blanket authorization.
 
+### Play edits, concurrency, and review state
+
+Every Play call that touches listings, tracks, images or testers runs inside a
+Play edit, reads included. Play allows one open edit per identity per app and
+[deletes the older edit](https://developers.google.com/android-publisher/edits)
+when another is created or when anyone commits a change. All MRA processes act
+as the same service account, so MRA holds a per-app lock
+(`$MRA_HOME/locks/play-edit-<package>.lock`) for each edit's lifetime.
+Concurrent `mra` calls for one app take turns. Different apps still run in
+parallel, so portfolio-wide reads can fan out across apps safely.
+
+The lock only covers this machine. An edit opened on another machine, by
+another tool using the same identity, or a Play Console change can still
+delete an MRA edit. MRA reports that as `classification: edit_invalidated`.
+Nothing from that edit was committed: retry a read, but re-read live state
+before retrying a write.
+
+Listing commits (`listing-create`, `listing-update`, and growth-batch listing
+actions) send `changesInReviewBehavior=ERROR_IF_IN_REVIEW`, so they never
+cancel a submission already in review. Play's default would cancel it and
+resubmit everything. Two related refusals have their own classifications:
+
+- `changes_in_review`: a submission is in review. Nothing was committed. Wait,
+  or resolve it in Publishing overview.
+- `review_submission_blocked`: Play will not send this edit for review
+  automatically, which usually follows a rejection or a Console state that
+  needs a manual send. Nothing was committed. MRA never sets
+  `changesNotSentForReview` on listing writes, because that would queue the
+  change unsent behind other pending work. Resolve it in Publishing overview
+  and Policy status first.
+
 ### No-build portfolio growth audit — live MRA verification required
 
 For Codex, Claude Code, or another agent with shell/MRA access, load
