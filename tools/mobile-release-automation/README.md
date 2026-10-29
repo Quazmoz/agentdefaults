@@ -470,7 +470,12 @@ MRA currently automates:
 - approval-bound localized one-time-product pricing plans
 - localized store listings
 - read-only listing inventory/single-locale fetch for translation audits
-- screenshots/images
+- screenshots/images; `play_replace_image_set` swaps one locale's whole
+  phone or Wear carousel in a single edit: it checks the live set against
+  the caller's sha256 snapshot, uploads in filename order, verifies hashes
+  in the edit, validates, commits once and reads back. An identical set is
+  skipped; any failure discards the edit. Dry-run first, then pass its
+  `before` hashes as `expected_current`
 - Google Group tester configuration
 - country availability
 - reviews and developer replies
@@ -587,8 +592,8 @@ delete an MRA edit. MRA reports that as `classification: edit_invalidated`.
 Nothing from that edit was committed: retry a read, but re-read live state
 before retrying a write.
 
-Listing commits (`listing-create`, `listing-update`, and growth-batch listing
-actions) send `changesInReviewBehavior=ERROR_IF_IN_REVIEW`, so they never
+Listing commits (`listing-create`, `listing-update`, growth-batch listing
+actions, and the image tools) send `changesInReviewBehavior=ERROR_IF_IN_REVIEW`, so they never
 cancel a submission already in review. Play's default would cancel it and
 resubmit everything. Two related refusals have their own classifications:
 

@@ -154,6 +154,53 @@ def play_upload_image(
     return _tag(result, "observe" if dry_run else "high", approved)
 
 
+def play_replace_image_set(
+    profile: str,
+    package_name: str,
+    language: str,
+    image_type: str,
+    image_paths: list[str],
+    expected_current: list[str] | None = None,
+    dry_run: bool = True,
+) -> dict:
+    """Atomically replace one locale's screenshot set in one Play edit.
+
+    Run with dry_run first; pass its ``before`` sha256 list as
+    ``expected_current`` for the approval-gated commit.
+    """
+    try:
+        if _package(profile) != package_name:
+            raise play_module.PlayError(
+                f"profile {profile!r} is not package {package_name!r}; refusing"
+            )
+        desired = play_management.local_screenshot_set(image_type, [Path(p) for p in image_paths])
+    except (play_module.PlayError, ValueError) as error:
+        return {"status": "refused", "detail": str(error)}
+    if not dry_run:
+        approved, refusal = _gate(
+            "Approve Google Play screenshot set replacement",
+            f"Package: {package_name}\nLanguage: {language}\nType: {image_type}\n"
+            f"Replace {len(expected_current or [])} live image(s) with {len(desired)}:\n"
+            + "\n".join(f"{item['name']}  {item['sha256'][:12]}" for item in desired)
+            + "\nThis changes public Play Store screenshots.",
+        )
+        if not approved:
+            return refusal
+    else:
+        approved = False
+    try:
+        result = _client(profile).replace_image_set(
+            language,
+            image_type,
+            [Path(p) for p in image_paths],
+            expected_current=expected_current,
+            dry_run=dry_run,
+        )
+    except play_module.PlayError as error:
+        return _failure(error, "observe" if dry_run else "high", approved)
+    return _tag(result, "observe" if dry_run else "high", approved)
+
+
 def play_update_testers(
     profile: str,
     track: str,
@@ -249,6 +296,7 @@ def register(server) -> None:
         play_list_reviews,
         play_update_listing,
         play_upload_image,
+        play_replace_image_set,
         play_update_testers,
         play_reply_review,
         play_upload_deobfuscation_file,
