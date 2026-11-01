@@ -17,6 +17,13 @@ Run a bounded local three-photo pilot from Hark's Google Photos export, producin
 5. If satisfied, send the prompt's exact UPLOAD_DRAFT follow-up using the generated batch ID/digest and filenames. Be signed into your own contributor account in the browser the automation can actually control. Do not enter credentials into Codex.
 6. Inspect the live **Not submitted** entries. Only then can a separate, fresh SUBMIT_APPROVED request authorize clicking Submit for review. You can instead finish manually.
 
+## Vivaldi authentication and browser selection
+- **Use Vivaldi, not Chrome, on the MacBook.** Confirm `/Applications/Vivaldi.app` exists (or ask for its actual location); an automation tool must be explicitly configured to target the Vivaldi executable/session. Never rely on a tool's Chrome/default-browser selection.
+- Sign in interactively at https://submit.shutterstock.com **in Vivaldi**. Already being signed into Vivaldi does not prove automation can control that session; test a read-only page visit before any upload approval.
+- Never copy/extract session cookies, use the user's profile as an unapproved debugging target, or expose a remote debugging endpoint. If a safe automation-controlled Vivaldi session requires separate authorization or authentication, ask for it.
+- If the installed browser controller only supports Chrome, **stop** and report the limitation; do not launch Chrome, Chromium, or an alternative without the operator's new explicit approval.
+- For an authentication-only smoke test, use [the Vivaldi preflight prompt](../../prompts/implementation/shutterstock-vivaldi-auth-preflight.md). It makes no Shutterstock mutations.
+
 ## Access and automation
 - Supported upload methods per Shutterstock: website and FTPS. Website upload is a suitable pilot path; do not invent a contributor management API.
 - Browser automation must be tested with the installed client before claiming it works. It may require installing an authorized browser tool or using manual browser steps. Handle MFA/CAPTCHA manually. Stop rather than attempting evasion.
