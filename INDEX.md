@@ -17,6 +17,7 @@ Provide a compact human-readable routing and navigation layer for AgentDefaults 
 | Apply the Token Economy stack | [`docs/quickstarts/token-economy.md`](docs/quickstarts/token-economy.md) |
 | Use OpenAI Codex | [`docs/quickstarts/codex.md`](docs/quickstarts/codex.md) |
 | Use Claude Code | [`docs/quickstarts/claude.md`](docs/quickstarts/claude.md) |
+| Prepare and stage original Google Photos/Hark images for Shutterstock with Codex | [Shutterstock contributor quickstart](docs/quickstarts/shutterstock-contributor.md) |
 | Edit local YouTube footage with Claude Code | [`docs/quickstarts/claude-video-editing.md`](docs/quickstarts/claude-video-editing.md) |
 | Understand Claude project hooks / Graft adapter | [`.claude/README.md`](.claude/README.md) |
 | Use GitHub Copilot custom agents | [`.github/agents/`](.github/agents/) |
