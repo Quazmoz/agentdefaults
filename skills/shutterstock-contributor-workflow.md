@@ -38,12 +38,12 @@ Do not use for AI-generated stock images, unowned media, bulk public scraping, a
 ## Metadata contract
 For each eligible asset, provide:
 - actual local filename (exact Shutterstock upload filename), actual SHA-256, dimensions, megapixels, bytes, format, color profile, and source-to-derivative mapping;
-- factual English description of no more than 150 characters that describes what is visibly present (do not infer location, date, species, or brand);
+- factual, complete English description of 5 or more words and no more than 150 characters that describes what is visibly present (do not infer location, date, species, or brand);
 - 7 to 50 distinct, relevant English keywords, with a practical target of 20–35 if justified; no keyword stuffing, speculation, irrelevant trends, brand terms in commercial descriptions, or fictitious model/property releases;
 - one valid Shutterstock category (optional second), checked against the provider's current allowed categories;
 - explicitly marked eligibility: PASS, HOLD, or REJECT, each with rationale and unresolved questions.
 
-Build CSV with the provider-documented headers: Filename, Description, Keywords, Categories; add optional tags only when appropriate and supported. Use the exact upload-ready filename as the join key. In CSV, a keyword list belongs in one properly quoted field. Verify the provider's current import behavior before uploading a CSV; upload image assets before CSV.
+Build CSV with the provider-documented headers: Filename, Description, Keywords, Categories; add optional tags only when appropriate and supported. Use the exact upload-ready filename as the join key. In CSV, a keyword list belongs in one properly quoted field. Verify the provider's current import behavior before uploading a CSV; upload image assets before CSV and use the Submit-page CSV control.
 
 ## Durable local state
 Maintain a private machine-readable ledger in the pilot working directory. Include batch ID/digest, original/derivative hashes, exact filenames, local QA results, metadata version/digest, mode, operator approval reference, attempts, remote asset IDs where visible, timestamps, and observed remote status.
@@ -68,6 +68,7 @@ Maintain a private machine-readable ledger in the pilot working directory. Inclu
 - Photo submission workflow: https://submit.shutterstock.com/help/en/articles/10594645-how-do-i-submit-photos-for-review
 - Metadata CSV: https://submit.shutterstock.com/help/en/articles/10617486-how-do-i-include-existing-metadata-with-my-content-submission
 - Contextual metadata: https://submit.shutterstock.com/help/en/articles/10617427-content-publishing-standards-contextual-metadata
+- Minimum title wording: https://submit.shutterstock.com/help/en/articles/12136367-why-was-my-content-rejected-for-title-or-keywords
 - Legal releases: https://submit.shutterstock.com/help/en/articles/10617411-content-publishing-standards-legal-documentation
 - AI-generated content policy: https://submit.shutterstock.com/help/en/articles/10594622-content-policy-updates-ai-generated-content
 
