@@ -72,6 +72,10 @@ prompts/ponytail-graft/ponytail-graft.md
 
 Do not manually combine or rewrite those prompt bodies merely to make setup look simpler; the compatibility entrypoint already routes them in the required order. The setup is opt-in. Do not install or bootstrap Ponytail/Graft merely because AgentDefaults is present in a repository.
 
+## Shutterstock contributor pilot
+
+Use [Shutterstock photo pilot](implementation/shutterstock-photo-pilot.md) with [the canonical workflow](../skills/shutterstock-contributor-workflow.md) and [Codex skill](../.agents/skills/shutterstock-contributor/SKILL.md). It defaults to local-only PREPARE, requiring separate explicit approvals for draft upload and final submission.
+
 ## Formal Loop Prompts
 
 The bounded-completion prompt set is operationally different from ordinary task prompts.
