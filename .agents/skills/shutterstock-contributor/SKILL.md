@@ -9,6 +9,9 @@ Use the canonical procedure in [skills/shutterstock-contributor-workflow.md](../
 
 For the Hark-to-Mac three-photo pilot, invoke the reusable [pilot prompt](../../../prompts/implementation/shutterstock-photo-pilot.md) and follow the [Codex quickstart](../../../docs/quickstarts/shutterstock-contributor.md).
 
+## Required local browser: Vivaldi
+**Vivaldi is the only default authorized browser for this user's Shutterstock workflow on macOS.** Before website access, confirm the actual Vivaldi executable/session and verify the automation tool can target it explicitly. Do **not** start Chrome, Chrome Canary, generic Chromium, or a hidden browser fallback. If Vivaldi control is unavailable, use the local-only PREPARE path or request a supported Vivaldi integration; do not switch browsers without a fresh explicit user instruction. Log in interactively within Vivaldi, never by extracting browser credentials, cookies or session tokens.
+
 ## Default behavior
 1. Start in **PREPARE** unless a fresh user instruction explicitly authorizes **UPLOAD_DRAFT** for an exact previously prepared batch.
 2. Inspect only the supplied local files and work in a private directory outside Git. Do not commit images, EXIF, private manifests, contact sheets, credentials, or release documents.
