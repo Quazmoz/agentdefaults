@@ -1,6 +1,6 @@
 ---
 name: shutterstock-contributor
-description: Prepare original photographs from a Hark or Google Photos ZIP for Shutterstock Contributor, including private local intake, image quality validation, copyright/release screening, accurate metadata and CSV, duplicate-safe draft browser uploads, and approval-gated submission. Trigger on Shutterstock photo intake, metadata, draft upload, or contributor portfolio workflows.
+description: Prepare original photos for Shutterstock Contributor using Vivaldi-only browser access on macOS; includes Hark/Google Photos ZIP intake, image quality and release checks, compliant metadata and CSV, duplicate-safe drafts, and approval-gated submission. Trigger on Shutterstock photo intake, metadata, draft upload, or contributor portfolio workflows.
 ---
 
 # Shutterstock contributor workflow for Codex
