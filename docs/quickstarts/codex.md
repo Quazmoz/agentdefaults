@@ -70,6 +70,9 @@ Codex supports scoped repository instructions through the `AGENTS.md` hierarchy.
 
 Use nested `AGENTS.md` or `AGENTS.override.md` only when a subtree has a real persistent scoping requirement, such as different build/test commands or directory-specific constraints. Do **not** create nested files merely to route DevOps versus AI work; `ENGINEERING_AGENTS_INDEX.md` handles that selection without duplicating instructions.
 
+## MacBook browser preference (operator-specific)
+For browser automation initiated by Codex on this operator's MacBook, **prefer Vivaldi and explicitly target its executable or controlled session**. Do not launch Google Chrome, Chrome Canary, or generic Chromium as an automatic fallback. The Shutterstock Contributor workflow makes Vivaldi mandatory; read its [quickstart](shutterstock-contributor.md) and [native Codex skill](../../.agents/skills/shutterstock-contributor/SKILL.md). If a connector cannot control Vivaldi, report the incompatibility and request fresh authorization before using a different browser. Do not reuse or export private browser profile data/cookies.
+
 ## Validation
 
 After changing AgentDefaults:

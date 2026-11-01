@@ -155,6 +155,9 @@ Update canonical behavior at its canonical source. A wrapper may summarize, rout
 - Report executed checks separately from checks that did not run.
 - Never claim production readiness, security, or tool compatibility solely from documentation or configuration edits.
 
+## Operator MacBook Browser Preference
+When Codex or other local coding agents automate browser tasks on this operator's MacBook, **use Vivaldi, not Chrome, by default**, and explicitly verify the selected browser executable/session. Never silently fall back to Google Chrome or generic Chromium merely because an automation tool defaults to it. If Vivaldi cannot be controlled, report the limitation and obtain fresh user authorization before choosing an alternative. Do not extract browser cookies/credentials or attach remote debugging to sensitive profiles without explicit authorization. For Shutterstock, Vivaldi is mandatory under `skills/shutterstock-contributor-workflow.md`.
+
 ## Human-Facing Prose
 
 Run the Humanizer pass in [`skills/humanizer.md`](skills/humanizer.md) on prose an agent writes for people to read: Play Store listings, release notes and "What's new" text, READMEs and marketing docs, social posts and captions, YouTube titles and descriptions, and emails. Skip it for code, commit messages, and terse technical docs. It edits wording only and never adds a claim, number, or keyword. Native skill copies: `.claude/skills/humanizer/` and `.agents/skills/humanizer/`.

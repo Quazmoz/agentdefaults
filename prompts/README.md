@@ -76,6 +76,8 @@ Do not manually combine or rewrite those prompt bodies merely to make setup look
 
 Use [Shutterstock photo pilot](implementation/shutterstock-photo-pilot.md) with [the canonical workflow](../skills/shutterstock-contributor-workflow.md) and [Codex skill](../.agents/skills/shutterstock-contributor/SKILL.md). It defaults to local-only PREPARE, requiring separate explicit approvals for draft upload and final submission.
 
+For authentication-only preflight on macOS, use the [Vivaldi-only Shutterstock preflight](implementation/shutterstock-vivaldi-auth-preflight.md); do not let a browser connector silently start Chrome or Chromium.
+
 ## Formal Loop Prompts
 
 The bounded-completion prompt set is operationally different from ordinary task prompts.
