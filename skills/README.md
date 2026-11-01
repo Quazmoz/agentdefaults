@@ -60,6 +60,10 @@ If a skill is required for essentially every invocation of an agent, that relati
 | [`devops-documentation-engineering.md`](devops-documentation-engineering.md) | Evidence-backed DevOps docs-as-code/runbook/diagram behavior. |
 | [`devsecops-security-engineering.md`](devsecops-security-engineering.md) | Security analysis/hardening across DevOps/IaC/CI/CD/GitOps surfaces. |
 
+### Shutterstock stock photo intake and contributor uploads
+
+- [Shutterstock Contributor Workflow](shutterstock-contributor-workflow.md): local Hark/Google Photos export QA, compliant metadata/CSV, duplicate-safe browser draft uploads, and separate approval for final submission. Codex skill: [native entrypoint](../.agents/skills/shutterstock-contributor/SKILL.md). Start with [the quickstart](../docs/quickstarts/shutterstock-contributor.md).
+
 ### Human-facing writing
 
 | Skill | Use |
