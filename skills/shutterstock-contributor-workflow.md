@@ -28,6 +28,13 @@ Do not use for AI-generated stock images, unowned media, bulk public scraping, a
 5. Credentials stay in a user-controlled authenticated browser or a supported OS secret store. Do not ask for or print passwords, 2FA codes, cookies, or token material. Stop if CAPTCHA, MFA, or account lock requires user action.
 6. Do not evade anti-bot checks or site controls. Do not assume a contributor API or unsupported CSV columns exist.
 
+## Browser policy — Vivaldi only on the user's MacBook
+- **Use Vivaldi for all Shutterstock Contributor website access**, including authentication preflight, read-only portfolio inspection, draft uploads, metadata editing, and submission verification. Never launch or silently switch to Google Chrome, Chrome Canary, or generic Chromium for this workflow. A browser integration's default executable does not override this policy.
+- Confirm Vivaldi is installed locally (typically `/Applications/Vivaldi.app` on macOS); resolve and use its actual executable or explicitly controlled Vivaldi window/session. Do not mistake a Chromium-compatible automation protocol for permission to start another browser.
+- Browser automation must be proven compatible with Vivaldi, including the ability to select its executable/session explicitly. If the current connector is Chrome-only or a tool silently opens Chrome, stop that browser path and report the blocker. Do not install, launch, or authenticate another browser without a **new, explicit** user authorization.
+- Authenticate interactively **in Vivaldi** under the user's control. Browser sessions are not interchangeable: being logged into Vivaldi does not mean Codex controls it. Never read, duplicate, or export Vivaldi profile secrets/cookies; do not enable remote debugging for an existing sensitive profile or expose a debugging endpoint without explicit user approval and a secure isolated configuration.
+- PREPARE remains usable entirely offline; optional remote duplicate checks require Vivaldi or are marked UNVERIFIED. On any remote operation record the actual browser identity and whether authenticated control and per-asset read-back were truly verified.
+
 ## Technical and rights QA — deterministic checks before judgement
 - For still photographs, use JPEG or TIFF accepted by Shutterstock; prefer JPEG with embedded sRGB profile. Verify dimensions are at least 4,000,000 pixels, JPEG size at most 50 MB, and image can be fully decoded. Confirm any current provider changes against official documentation.
 - Prevent automatic upscaling and generative fill/retouching. Preserve framing unless the user directs a crop. A derivative may be converted to sRGB/JPEG without altering the source.
