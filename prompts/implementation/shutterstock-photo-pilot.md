@@ -36,7 +36,7 @@ For each of the three photographs:
 
 PHASE 3: METADATA
 For every PASS:
-- Write an English description <=150 characters, accurately describing the visible content.
+- Write a complete English sentence of at least five words and <=150 characters, accurately describing the visible content.
 - Generate 7-50 unique relevant English keywords (aim 20-35 only when warranted).
 - Select valid provider category/categories.
 - Generate a properly escaped Shutterstock metadata CSV with exact Filename, Description, Keywords, Categories columns, using exact upload-ready filenames.
@@ -54,7 +54,7 @@ In PREPARE mode, DO NOT upload or submit anything. Show:
 Do not claim a technical or legal check passed unless it actually ran. If any image is unsuitable, do not silently replace it by scraping a different source.
 
 FOLLOW-UP MODES (DO NOT EXECUTE NOW)
-UPLOAD_DRAFT: only upon a later explicit instruction naming the PREPARE batch ID/digest and exact PASS files. With authenticated Shutterstock browser access, upload only those, apply/read back metadata, persist remote state, then STOP before clicking Submit for review. If CSV upload is chosen, upload photos before CSV.
+UPLOAD_DRAFT: only upon a later explicit instruction naming the PREPARE batch ID/digest and exact PASS files. With authenticated Shutterstock browser access, upload only those, apply/read back metadata, persist remote state, then STOP before clicking Submit for review. If CSV upload is chosen, upload photos first, then import the CSV using the Submit-page CSV control (never via the image uploader or FTPS).
 SUBMIT_APPROVED: only after another fresh explicit approval naming the exact uploaded assets and unmodified batch metadata. Reconcile state before submitting, then independently verify Pending status.
 Never bypass CAPTCHA/2FA or fabricate browser automation support.
 
