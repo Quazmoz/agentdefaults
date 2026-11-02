@@ -1,5 +1,8 @@
 # Codex: Vivaldi-Only Shutterstock Contributor Authentication Preflight
 
+## Purpose
+Verify authenticated Vivaldi control without changing the contributor account, then run local PREPARE for the supplied photo source.
+
 ## Use with
 - Native skill: `.agents/skills/shutterstock-contributor/SKILL.md`
 - Canonical behavior: `skills/shutterstock-contributor-workflow.md`

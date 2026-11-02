@@ -1,21 +1,21 @@
 # Shutterstock Contributor: Hark -> Mac -> Codex
 
-## Goal
-Run a bounded local three-photo pilot from Hark's Google Photos export, producing stock-ready photographs and an auditable metadata package. Optionally stage draft uploads through an authenticated Shutterstock Contributor browser and later submit only with separate explicit approval.
+## Purpose
+Prepare every original photo in a supplied Hark export, stage eligible photos with verified metadata, and review and submit them manually in Vivaldi. PREPARE remains available for local-only work.
 
 ## Canonical files
 - [Skill](../../skills/shutterstock-contributor-workflow.md) — behavior, trust model, provider QA, state and approval semantics.
 - [Codex skill entrypoint](../../.agents/skills/shutterstock-contributor/SKILL.md) — discovery and routing.
-- [Three-photo pilot prompt](../../prompts/implementation/shutterstock-photo-pilot.md) — copy-paste invocation.
+- [Photo batch prompt](../../prompts/implementation/shutterstock-photo-pilot.md) — copy-paste invocation; the existing path is retained.
 - [Acceptance scenarios](../shutterstock-contributor-acceptance-tests.md) — behavioral checks.
 
 ## MacBook instructions
 1. Clone or pull AgentDefaults into a local checkout, then open that checkout in Codex. The .agents/skills directory is repository-scoped; a GitHub link by itself does not make a skill available to a different working directory.
-2. Download Hark's three original photos plus metadata to the Mac. Put the trusted received ZIP at ~/Downloads/shutterstock-google-photos-pilot.zip, or tell Codex the explicit local directory.
-3. Review [the pilot prompt](../../prompts/implementation/shutterstock-photo-pilot.md) and run it in **PREPARE** mode. Codex must not upload or submit during this run.
-4. Review the actual photos, contact sheet, description/keywords/categories, rights assessment, and batch ID. The output lives outside Git under ~/Pictures/ShutterstockPilot.
-5. If satisfied, send the prompt's exact UPLOAD_DRAFT follow-up using the generated batch ID/digest and filenames. Be signed into your own contributor account in the browser the automation can actually control. Do not enter credentials into Codex.
-6. Inspect the live **Not submitted** entries. Only then can a separate, fresh SUBMIT_APPROVED request authorize clicking Submit for review. You can instead finish manually.
+2. Download the original photos and metadata to the Mac and give Codex the exact ZIP or directory path. Every original is inventoried; existing upload derivatives are paired with originals rather than uploaded twice.
+3. Invoke [the batch prompt](../../prompts/implementation/shutterstock-photo-pilot.md) with that source. Its **UPLOAD_DRAFT** mode authorizes preparing the frozen source inventory, uploading every PASS file, and applying metadata. Codex records the resulting batch digest and that instruction as approval; it does not ask again within that scope. To inspect locally first, explicitly request **PREPARE** instead.
+4. Review the photos, contact sheet, descriptions/keywords/categories, per-file holds, and batch ID. The output lives outside Git under ~/Pictures/ShutterstockPilot. HOLD, REJECT, and duplicate files are reported and excluded from upload.
+5. For a PREPARE-only run, use the filled-in UPLOAD_DRAFT follow-up to authorize the exact prepared batch later. Sign in interactively in the Vivaldi session Codex can actually control; do not enter credentials into Codex.
+6. Inspect the live **Not submitted** entries and their metadata, then manually click **Submit for review** in Shutterstock when satisfied. Draft-upload authority never authorizes Codex to submit.
 
 ## Vivaldi authentication and browser selection
 - **Use Vivaldi, not Chrome, on the MacBook.** Confirm `/Applications/Vivaldi.app` exists (or ask for its actual location); an automation tool must be explicitly configured to target the Vivaldi executable/session. Never rely on a tool's Chrome/default-browser selection.
@@ -31,12 +31,13 @@ Run a bounded local three-photo pilot from Hark's Google Photos export, producin
 - Shutterstock may delete files left not submitted after its stated retention window. Confirm current policy before depending on the draft queue as durable storage.
 
 ## Privacy and scale
-Do not commit personal photos, EXIF/GPS, ZIP files, credentials, release forms, generated CSVs, or the local ledger to AgentDefaults. Keep originals byte-identical, and prepare privacy-safe upload copies. Scale to larger batches only after three images and duplicate-safe recovery have been verified.
+Do not commit personal photos, EXIF/GPS, ZIP files, credentials, release forms, generated CSVs, or the local ledger to AgentDefaults. Keep originals byte-identical and prepare privacy-safe upload copies. Record finite source counts and bytes, process larger batches in bounded chunks, and reconcile uncertain uploads before retrying.
 
 ## Authority
 PREPARE -> no remote changes.
-UPLOAD_DRAFT -> requires specific separate upload approval for a prepared batch.
-SUBMIT_APPROVED -> requires an additional fresh approval and remote read-back.
+UPLOAD_DRAFT -> requires explicit authority for an exact prepared batch or preparation and draft upload from an exact frozen source inventory.
+Manual review/submission -> operator inspects Not submitted and clicks Submit in Vivaldi.
+SUBMIT_APPROVED -> agent submission, if separately requested, still requires fresh exact approval and remote read-back.
 An approved upload is not an approved submission.
 
 ## Sources
