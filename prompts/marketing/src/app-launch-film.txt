@@ -1,0 +1,117 @@
+You are a senior motion designer, creative technologist, and AI audio/video engineer. Make a 75–90 second landscape launch film for the Android phone and/or Wear OS app in the current repository, for YouTube and as a Google Play promo-video candidate.
+
+The bar is a big-tech launch film: calm, confident, and premium, with smooth 60 fps motion and a narrator who explains the product to someone who has never heard of it. No stock footage and no desktop video editor. Build the whole film in code as a local web page, rendered frame by frame. A storyboard, scaffold, or folder of frames is not a finished result.
+
+OPTIONAL OVERRIDES (use these defaults unless I set them)
+- Duration: 75–90 s. Picture: 1920×1080, 16:9, 60 fps.
+- Output dir: marketing/launch-film/ (a fresh subdirectory if it already holds assets you would overwrite). Called OUTPUT_DIR below.
+- Cost: zero beyond the Claude Code or Codex session itself.
+- CTA: the Google Play badge only after verifying that the live listing belongs to this app; otherwise a neutral CTA.
+- Video count: exactly one film. Alternatives (voices, music options, slogans) are candidates for selection, not extra deliverables.
+
+AUTHORITY AND BOUNDARIES
+{{include _shared-guardrails.txt}}
+
+TRUTH RULES FOR A CODE-BUILT FILM
+Every app screen in this film is rebuilt in HTML/CSS so it can animate perfectly. That only works if the rebuild is faithful:
+- Rebuild only screens and states that exist and are reachable in the app. Take layout, copy, colors, fonts, icons, and spacing from the source (Compose/XML layouts, strings.xml, theme files, drawables). Copy UI text from strings.xml; never paraphrase a label.
+- Capture reference screenshots of the same states from a local emulator (debug build, disposable AVD, explicit serial, SystemUI demo mode, synthetic demo data). Put each rebuild next to its reference in qc/fidelity/ and fix differences in layout, text, color, and order. If capture is impossible, compare against current repository screenshots and report the fidelity check as partial.
+- Animated flows follow the real order of actions and real results. A rebuilt screen may simplify scrollable content, but it may not add a control, value, feature, or outcome the app does not have.
+- Claims follow the SHARED GUARDRAILS; each VERIFIED entry in BRIEF.md records file:line plus runtime proof where needed.
+- When the story shows other apps or people (the "old way", contacts, content inside the app), make them fictional: invented names, generic layouts, no real brand names, logos, trade dress, or real people. Draw demo images as vector or CSS art, and never make them look like a competitor's product.
+
+PHASE 1 — DISCOVERY, CLAIMS, AND SCRIPT
+Write OUTPUT_DIR/BRIEF.md first, then keep it current:
+1. Identity: name (strings.xml), applicationId, form factors, brand hex colors, fonts, icon path (render adaptive icon layers; never redraw branding), revision.
+2. Claims ledger: claim → SHOWN or EXPLAINED → file:line → runtime proof → VERIFIED or REJECTED with reason.
+3. Countable facts: anything you can count in the source or measure on the emulator (steps, taps, seconds, presets, languages), with how you counted it. These power counters and breadth scenes.
+4. The story, using the default structure below, with a timecoded scene plan and, for each scene, the claim it proves.
+5. The narration script: one line per beat, plain spoken English, 2.3–2.6 words per second, no line longer than about 14 words. Name the category and who it is for within the first 15 s. Add a pronunciation note for the app name.
+6. Music brief: mood per part, tempo range, instrumentation, and where the energy lifts and resolves.
+
+Default story (adapt it to the app; keep the shape):
+- Intro (0–5 s): one brand motif, derived from the icon or brand shape (a dot, a stroke, a card), enters and builds the app name, with tactile sound.
+- Act 1, the old way (about 15–20 s): the viewer's problem shown concretely and slowly enough to follow, on fictional generic surfaces. If you measured the old way, show a visible counter (taps, steps, seconds, open apps) and end on the total. Close with one pivot line, a question the app answers ("What if…?").
+- Meet the app (about 5 s): the motif morphs into the app's first real control or input, and the first action happens.
+- Act 2, the app way (about 25–35 s): two or three real workflows in the rebuilt UI, the same tasks as Act 1 where the app truly covers them, with the same counter now showing the app's measured count. Put the strongest workflow second, once the viewer understands the pattern. Show each input or command as a chip directly under the headline, where the viewer is already reading.
+- Act 3, breadth (about 10–15 s): result cards (input → result) on the beat grid, then a dimensional cloud or grid of the verified countable items with colorful category icons and one line that states the scope honestly.
+- Differentiators (about 10 s): one or two EXPLAINED claims as clean motion diagrams: the strongest form factor, surface, or integration the code proves. Keep them clean: no glow, no bokeh, no particle spam.
+- Trust (about 5 s, only if VERIFIED): the exact data or account behavior the code proves, ending on one simple symbol.
+- Outro (about 8 s): the motif resolves into a finale (a burst, an orbit, a fold), then the exact icon, app name, a slogan of 5 words or fewer, and the CTA, held for at least 3 s with a musical resolution.
+
+PHASE 2 — LOOK AND MOTION SYSTEM
+Look:
+- One light editorial field (default white, near-black type #111) with the device and the app's own UI as the only dark or saturated objects, unless the brand clearly calls for a dark world. One accent color from the brand.
+- Typography: the app's font, otherwise Inter or a similar licensed neo-grotesk. Headlines semibold, tracking about −0.035 em at display sizes, text-rendering: geometricPrecision. Headlines at least 64 px at 1080p, supporting text at least 32 px, contrast at least 4.5:1, inside the 16:9 title-safe area (5% margin each side).
+- Device: a real 3D phone (and round watch, for watch UI only) in Three.js, with the live HTML screen mapped onto it (CSS3DRenderer or an HTML-to-texture path) and a subtle glass/reflection layer above the screen. Generic hardware, correct corner radius and punch-hole, no OEM logos. Record any model's license.
+- Content inside the app: vector-drawn or CSS-built, never real people, real brands, or copyrighted art.
+
+Motion rules:
+- Every frame is a pure function render(t): any frame renders on its own, out of order, identically every time. No wall-clock timers, requestAnimationFrame-driven state, unseeded randomness, or free-running CSS transitions/animations; drive everything from t, seed every random source, and wait for fonts, images, and WebGL before capture.
+- One role per easing curve: expo-out for entrances, expo-in or back-in for exits, expo-in-out for travel and camera. UI elements use a few named springs (pop, snappy, ui, move) defined once in config.
+- Never hard-cut. Every scene hands off through a morph of a shared element (the motif becomes an input, the input becomes the phone, the phone becomes cards, cards become the cloud).
+- Each scene gets a subtle camera breath (scale 1 → 1.03 → 1) so holds never freeze.
+- Text reveals word by word on the voice's word clock: each word rises a few pixels, unblurs, and fades in, then the line holds still and readable.
+- Taps: a visible fingertip or touch indicator lands on the true hit target of the rebuilt control, with a short press state, and the UI responds on the next beat. Pace every tap so a first-time viewer can follow it. Calm beats fast.
+
+PHASE 3 — VOICE, MUSIC, AND SOUND
+Everything in this phase is free. Before using a model, verify its current license permits commercial advertising use. Record every tool and model with version and license in ASSETS.md, and cache each voice clip and music render by a hash of its inputs (model, voice, settings, text, seed) so re-renders are fast and identical.
+
+Voiceover:
+- Synthesize each script line as its own clip with a local open-weight TTS (for example Kokoro or Piper), using one calm, warm narrator voice and a second voice only where the story has a second speaker. Trim leading and trailing silence with FFmpeg, keep natural breaths, and leave 0.3–0.6 s between lines.
+- Listen to each line. Regenerate lines that mispronounce the app name, rush, or sound flat (at most 3 tries per line, then rewrite the line).
+
+Word clock:
+- Transcribe each clip with faster-whisper (medium.en or better, word timestamps). Align the transcript to the script tokens; a mismatched word means a mispronunciation or misread line, so fix the clip, not the timing.
+- Build a word clock W(line, word) → seconds on the film timeline, and drive every text reveal, chip, tap, and scene event from it. Moving a line moves everything tied to it.
+- Export caption files (.srt and .vtt) from the same word clock for YouTube.
+
+Music:
+- Compose the score locally in code (Python/NumPy synthesis, or a free local synth/DAW already on the machine), seeded and regenerable from a script. Make 2–3 candidates per part: a calm, spacious opening for Act 1, and a confident, warmer groove from "Meet the app" on (for example deep, clean electronic house). Do not imitate a named artist or a recognizable melody. Make it musical: real harmony, groove, phrasing, and variation, not a drone or click track.
+- Pick the best candidates, record why in BRIEF.md, and keep the rest in audio/candidates/ with a one-line command to swap them in. If I am available interactively, offer me the shortlist before locking the edit.
+- Join the parts at a phrase boundary with an intentional transition, and give the film a real ending with a tail.
+
+Beat grid:
+- Analyze the final music with librosa (or similar): tempo, beat and downbeat times, drops/section changes, and key. Verify it against the waveform; do not trust the intended BPM.
+- Put cards, cloud entrances, major transitions, and the outro finale on the beat grid. Taps and text stay on the word clock; arrange around them rather than forcing them onto beats.
+
+Sound design (synthesized in Python/NumPy, or CC0 libraries such as Kenney UI sounds, recorded with license):
+- A deep, soft keyboard "thock" for typing, soft tonal notes (e.g., marimba) tuned to the music's key for cards and chips, light taps for touches, and a sub hit with a chord bloom in key for the outro finale. Sparse, clean transients, no harsh whooshes.
+
+Mix:
+- Duck the music to about 50% (−6 dB) under the voice with raised-cosine ramps of about 150–250 ms. The voice must be clearly intelligible on laptop speakers.
+- Master to about −14 LUFS integrated with true peak ≤ −1 dBTP; measure the WAV master and the encoded AAC. Deliver a 48 kHz stereo WAV master plus voice, music, and SFX stems.
+
+PHASE 4 — RENDER PIPELINE
+- Serve the film as a local web page that exposes render(t). Capture it with Playwright (headless Chromium with GPU acceleration; confirm the GPU is actually active, since software WebGL is slow and can differ) at the output rate, 60 fps at most (one capture per output frame, no supersampling), split by frame range across parallel workers (default 4; match the machine).
+- No sub-frame motion blur. If a fast move needs blur, draw it inside render(t) on the moving shape (a short directional blur scaled by its velocity), never on text or UI the viewer is reading. Text in holds must stay crisp.
+- Encode H.264 High, yuv420p, BT.709, CRF 16, constant 60 fps, +faststart, AAC 48 kHz stereo, muxed with the master.
+- When a change touches one scene, re-render only that time range plus a short margin and splice it at frame-exact boundaries, then run full QC on the joined file.
+- One-line commands for: render the full film, render a time range, render stills at named timestamps, rebuild the audio mix.
+
+PHASE 5 — CHECK EVERY CHANGE (at most 5 full renders)
+- After every change, render stills at the key moments (frame 0, each scene's settle, every morph midpoint, the outro hold), look at them, and fix overlaps, clipped text, safe-area breaks, and timing before you render the film or show me anything.
+- Probe the final MP4 with ffprobe and decode the whole file. Watch it at normal speed muted, then with sound; if playback is unavailable, inspect dense frame sequences around every transition and tap and say that normal-speed playback was unverified. Report listening separately from loudness measurements.
+- Check the word clock against the picture: each word's reveal within one frame of its spoken time, every tap landing on its control, no motion during text the viewer must read.
+- Check fidelity frames, claims, spelling of the app name, rights for every asset, and the absence of real brands, real people, and personal data.
+- Explanation test: from the film alone, write three sentences in BRIEF.md: what the app is, what you do with it, and why you would pick it. If one is vague or impossible, fix the script or scenes.
+
+DELIVERABLES
+- OUTPUT_DIR/out/<app-slug>-launch-film-16x9.mp4
+- OUTPUT_DIR/out/<app-slug>-launch-film.srt and .vtt captions
+- OUTPUT_DIR/out/<app-slug>-thumbnail-1280x720.png: the icon, the name, and one bold idea; readable at small size.
+- OUTPUT_DIR/audio/: WAV master, stems, chosen and candidate music, voice clips
+- OUTPUT_DIR/COPY.md: YouTube title options, a description with chapter timestamps from the scene plan, and the slogan, all traced to VERIFIED claims. Nothing is posted.
+- Source project, README.md (setup, render/range/stills/audio commands, how to retarget another app), BRIEF.md, ASSETS.md (every asset, tool, local model, font, and sound with origin and license), qc/ (fidelity pairs, stills, contact sheet, probe and loudness reports).
+
+BLOCKERS
+If a capability is genuinely unavailable (no emulator capture, no free commercially licensed TTS, no GPU, no FFmpeg), finish everything that does not depend on it, then report the exact blocker and the smallest command or input that clears it. Project-scoped installs inside OUTPUT_DIR are allowed; system-wide installs need my permission. Never cover a gap with fabricated UI, a silent film, or an unnarrated cut presented as finished.
+
+FINAL RESPONSE (short)
+- Status (completed, partial, blocked), app identity, form factors.
+- Paths: MP4, captions, thumbnail, audio, source, BRIEF.md, ASSETS.md, COPY.md, qc/.
+- Claims used and rejected; fidelity-check result.
+- Voice model, music candidates and choice, tempo/key, loudness and true peak.
+- Render commands, render count, and executed versus unexecuted checks, including what was not watched or heard at normal speed.
+
+Start now: inspect the repository and run the app on an emulator, write BRIEF.md and the script, synthesize and align the voice, compose and choose the music, build the scenes against the word clock and beat grid, check stills after every change, then render and deliver ONE finished film.

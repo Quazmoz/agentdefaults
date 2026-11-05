@@ -122,8 +122,10 @@ inspect/search source as needed
 remove_silence / remove_words / ripple_delete_ranges
 layout/text/audio/finishing only where useful
 manage_markers for subjective decisions
-inspect_timeline hook + representative demo + overlays
+inspect_timeline hook + representative demo + overlays + head/tail fades
 get_transcript verification
+export_project mode=fcpxml -> palmier_seams.py   # seam-QC carve-out, scratch path
+manage_markers for seams the audit could not clear
 stop for user review
 ```
 
@@ -161,7 +163,9 @@ get_media
 create_timeline from=<active timelineId>
 get_timeline
 search_media / get_transcript for one strong proof moment
-set_project_settings aspect/resolution only when requested/appropriate
+settings scope check (setup-and-safety skill)
+  per-timeline -> set_project_settings on the copy only
+  project-wide/unclear -> stop; offer a separate project via manage_project
 assemble/tighten segment
 add_captions
 inspect_timeline for mobile framing/caption placement
@@ -226,7 +230,8 @@ Omit `outputPath` unless the user supplies one.
 - Live MCP schema overrides this document if they differ.
 - Broad edits should preserve the source timeline with `create_timeline` when rollback/reviewability matters.
 - Re-read state after timeline copy/switch/undo or stale-state errors.
-- `set_project_settings` is structural; never use it casually.
+- `set_project_settings` is structural; never use it casually, and never on project-wide scope in a project that holds another edit.
+- The only export without a user request is the seam-QC FCPXML to a scratch path.
 - `remove_words` is primary for speech; re-read indices after mutation.
 - `remove_silence` is for quiet/speech-free pauses and must fail safe.
 - `detect_beats` supplies rhythm timing; editorial intent decides which beats become cuts.

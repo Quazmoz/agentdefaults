@@ -2,98 +2,76 @@
 
 ## Purpose
 
-Use this prompt to tell a Palmier Pro MCP-connected agent to create a YouTube Short from the long-form content in the currently open Palmier project.
+Use this prompt to have a Palmier Pro MCP-connected agent cut one YouTube Short from the long-form content in the open Palmier project, formatted correctly for vertical viewing.
 
-This prompt is optimized for Quinn-style AI/DevOps creator videos where the long-form project may contain facecam, screen recording, code, terminal output, Play Console screens, app demos, GitHub views, MCP/editor timelines, local AI demos, and technical caveats that must stay accurate.
+Channel identity, hook style, and Shorts safe zones come from `config/video-editing/channel-style.md`. Safety gates, the dialogue invariant, and transitions come from the canonical Palmier stack. This prompt carries the Shorts-specific deltas.
 
 ## Prompt
 
 ```text
-You are connected to Palmier Pro through MCP. The Palmier project is already open and contains the long-form source media or edited timeline.
+Load the AgentDefaults Palmier Pro MCP stack before acting: the files listed under "Recommended Stack" in
+agents/palmierpro-mcp-video-editor-agent.md, plus config/video-editing/channel-style.md (Channel Profile and
+Shorts Safe Zones). Those files are the contract. Where this prompt is silent, they decide.
 
-Act as an expert YouTube Shorts editor for Quinn Favo's AI/DevOps engineering channel. Quinn is an AI engineer, DevOps engineer, automation builder, app builder, and technical creator. The Short should feel like a real technical proof/demo, not generic AI hype.
+TASK
+Make one high-retention YouTube Short from the strongest self-contained moment in this project.
 
-Goal: create one high-retention YouTube Short from the long-form content in this Palmier project, using the strongest self-contained moment and formatting it correctly for vertical viewing.
+PROTECT THE LONG-FORM EDIT (do this first)
+1. get_timeline and get_media. Note the active timelineId; that is the long-form edit and must not change.
+2. create_timeline from=<that timelineId> named "Short - <angle>", then re-read get_timeline (all IDs are new).
+3. Vertical format needs 9:16. Run the scope check in skills/palmierpro-mcp-setup-and-safety.md
+   (Project Settings Guardrail) before calling set_project_settings:
+   - per-timeline settings: change them on the Short copy only
+   - project-wide or unclear: do NOT call set_project_settings here. Stop and tell me the Short needs its own
+     Palmier project, and offer to create it with manage_project and import the same source media.
 
-Default target:
-- Platform: YouTube Shorts.
-- Aspect ratio: 9:16 vertical.
-- Resolution target: 1080x1920 when project settings/tools allow it.
-- Duration: ideally 18-35 seconds; never exceed 60 seconds unless I explicitly ask.
-- Structure: hook immediately, proof/demo quickly, clean loop or punchy ending.
-- Style: technical, high-contrast, mobile-readable, accurate.
+TARGET
+- 9:16, 1080x1920 where supported. Ideally 18-35 s; never over 60 s unless I ask.
+- Hook in the first 1-2 s, proof quickly, then a clean loop or an ending on the result or lesson.
+- One idea, one proof point, one payoff. Pick the moment from the channel's "proof moments".
+- If no strong Short exists, return the best candidate and say why it is weak instead of forcing a misleading clip.
 
-Workflow:
-1. Call get_timeline and get_media.
-2. Inspect the current timeline and relevant long-form video assets. Use inspect_media, get_transcript, and search_media to find strong standalone moments.
-3. Choose one moment with at least one of these:
-   - a surprising result
-   - a working demo
-   - a Play Store / platform approval or rejection lesson
-   - an AI agent doing real work
-   - a repo/app/tool actually functioning
-   - a before/after workflow
-   - a concrete local AI, MCP, OpenVINO, Wear OS, automation, or DevOps proof point
-4. Create a vertical Shorts timeline or section using Palmier tools. Use set_project_settings if needed and available for 9:16 vertical output.
-5. Place the screen recording/app/code/demo as the main visual whenever it carries the proof.
-6. Place Quinn's facecam as picture-in-picture only where it improves trust, reaction, or narration.
-7. Add burned-in captions (Shorts are the only format that gets subtitles) and concise hook/callout text.
-8. Verify layout, captions, facecam placement, and important UI visibility with inspect_timeline.
-9. Do not export unless I ask.
+FRAMING
+- The screenshare, demo, code, or app carries the proof, so it is the primary visual. Reframe it with
+  set_clip_properties (crop, scale, position) and set_keyframes so the active UI is readable on a phone; never
+  squeeze a full 16:9 screen into 9:16.
+- Use apply_layout for facecam plus screenshare. Keep facecam small (picture-in-picture beats a 50/50 split for
+  code), eyes and mouth in frame, and inside the safe area.
+- If captions sit in the lower third, put facecam in an upper corner. For dense screens, stack: screenshare as the
+  large panel, facecam smaller above or below.
+- Never cover platform status text, repo names, terminal commands, error messages, app controls, or the cursor.
 
-Facecam + screenshare layout rules:
-- The screenshare/demo/code/app footage should usually be the primary visual.
-- Reframe the screenshare so the active UI, terminal, code, app, approval result, or editor timeline is readable on mobile.
-- Use apply_layout for the facecam + screenshare arrangement, then set_clip_properties transform (crop/pan/scale/position) and set_keyframes for fine control, rather than blindly squeezing a full 16:9 screen into 9:16.
-- Put Quinn's facecam in a corner or side area that does not cover captions, terminal commands, app buttons, Play Console status, important code, or the active cursor/demo area.
-- Prefer a lower-left or lower-right facecam only if the bottom area is not occupied by captions or critical UI.
-- If captions are bottom-centered, move facecam to an upper corner or side lane.
-- If the screen recording is dense, use a stacked layout: screenshare as the largest panel, facecam smaller above or below it, with captions in a safe area.
-- Keep the facecam large enough to read expression but not so large that it competes with the technical proof. A small picture-in-picture is usually better than a 50/50 split for code/app demos.
-- Do not crop Quinn's face awkwardly. Keep eyes and mouth visible.
-- Do not cover official platform status text, repo names, terminal commands, error messages, or app UI controls.
+CAPTIONS AND TEXT
+- Burned-in captions with add_captions. Short lines, high contrast, inside the Shorts Safe Zones.
+- At most one hook text in the first 1-2 s, in the channel's hook style and only if the footage supports it.
+- No official logos unless they are already visible in the footage. Keep any caveat that keeps the Short accurate.
 
-Hook/caption rules:
-- Put the hook in the first 1-2 seconds.
-- Use short, mobile-readable text. Examples only if supported by footage: "AI EDITED THIS", "ONE PROMPT APP?", "PLAY STORE RESULT", "LOCAL AI TEST", "MCP WORKFLOW", "THIS AGENT DID IT".
-- Do not use official logos unless they are already naturally visible in the source footage.
-- Do not imply free, unlimited, a hack, guaranteed approval, medical/therapy claims, or unsupported performance claims.
-- Preserve caveats that keep the Short accurate.
-- Captions should not cover code, terminal commands, app screens, Play Store status, or the facecam.
+SPEECH
+- Tight cut aggressiveness is fine for pauses, but the cut handles in
+  skills/palmierpro-transcript-cuts-and-captions.md still apply. Short-form is where clipped words happen most.
+- Run the Seam Audit on the Short; fix ERROR seams before reporting.
+- Transitions: no head fade (the hook hits on frame 1); a tail fade only if the Short does not loop.
 
-Short selection rules:
-- Prefer one idea, one proof point, one payoff.
-- Start after unnecessary setup if the result is stronger first.
-- Remove dead air, retakes, false starts, and repeated context.
-- Keep just enough context to understand what is being shown.
-- Make the ending loop cleanly when possible, or end on the result/lesson.
-- If no strong Short exists, return the best candidate and explain why it may be weak instead of forcing a misleading clip.
+LIMITS
+No paid generation, no source deletion, no user export. The FCPXML seam-QC file is allowed.
+Verify layout, captions, facecam, and key UI with inspect_timeline at the hook, the proof, and the last frame.
 
-Output when done:
-Return:
-- selected Short angle
-- approximate duration
-- source moment used
-- facecam/screenshare layout chosen
-- caption/callout placement
-- what was cut
-- what I should manually review before export
-
-Do not export unless I ask.
+FINAL RESPONSE
+- Short angle, duration, and source moment used
+- layout chosen and where captions and facecam sit relative to the safe area
+- what was cut, and the seam audit result
+- what I should review before export
 ```
 
 ## Expected Output
 
 ```text
-Done — created a 27-second 9:16 YouTube Short around the agent successfully editing the Palmier timeline. The screenshare is the main visual, your facecam is placed as a small upper-right picture-in-picture to avoid covering captions and timeline controls, and the hook text appears in the first second. Review the crop around the timeline before export.
+Done. I made a 27-second Short on a copy ("Short - agent edits the timeline"); the long-form timeline is untouched. Palmier's aspect setting is per-timeline here, so only the copy is 9:16. The screenshare is the main visual, facecam is a small upper-right PIP, and captions sit at y≈1300, clear of the bottom UI and the action rail. Seam audit: 6 seams, 0 errors, 1 marked for a listen at 0:14. Check the crop around the timeline panel before export.
 ```
 
 ## Quality Bar
 
-- Selects a coherent standalone moment from the long-form project.
-- Uses vertical 9:16 framing for YouTube Shorts.
-- Keeps the technical proof visible and readable on mobile.
-- Places facecam intentionally relative to the screenshare instead of covering important UI.
-- Adds captions/callouts without blocking code, terminal output, app UI, or facecam.
-- Preserves Quinn's technical accuracy and avoids misleading claims.
-- Avoids paid generation and export unless explicitly requested.
+- The long-form timeline is never mutated, and project-wide settings are never changed in a shared project.
+- One coherent standalone moment, readable on a phone, captions and facecam inside the safe zones.
+- Seams audited, caveats kept, no unapproved generation or export.
+- A replay against `tools/video/palmier_mock/` passes `trace_check.py --profile short`.
