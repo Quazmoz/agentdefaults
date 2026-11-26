@@ -31,6 +31,17 @@ authorization       the operator's approval naming this track
 
 Service account JSON with scope `https://www.googleapis.com/auth/androidpublisher`. Play Console permission propagation after a new invite is not immediate; a 401 or 403 shortly after granting access is usually propagation, not misconfiguration.
 
+## Resolved SDK release gate
+
+Before any Android/Wear AAB upload (including testing tracks), qualify the exact release variant, not merely declared version-catalog entries.
+
+- Resolve each shipped application's release runtime classpath, including transitive dependencies and dynamic feature modules where applicable. Retain a dependency inventory alongside candidate SHA, variant, version code and AAB digest. For a simple app use `./gradlew :app:dependencies --configuration releaseRuntimeClasspath`; discover actual flavored/module configurations before substituting.
+- Check the resolved SDK versions against current Google Play Console SDK warnings, official SDK Index/vendor guidance and release lint findings. AndroidX/Compose BOMs do not cover every SDK. A new direct dependency or BOM does not prove the old transitives were removed. Keep AAB dependency metadata enabled.
+- For each flagged SDK, trace its actual parent(s) with `dependencyInsight --dependency GROUP:ARTIFACT --configuration releaseRuntimeClasspath`. Prefer upgrading the introducing dependency; otherwise use a compatible, verified stable constraint. Add a deterministic rejection/check for known flagged versions in the affected application. Do not blindly force all libraries to the latest, hide warnings, or add unused SDKs.
+- Run release lint, unit tests and the release packaging gate, then inspect the selected versions again for the exact candidate. Exercise affected integrations (e.g. billing, ad consent, navigation) where relevant.
+- Treat unresolved outdated, deprecated, policy-blocked, or vulnerable SDK notices as an internal upload blocker until remediated or an explicit, evidence-backed exception is approved. Missing live advisory data or unresolved dependency graphs means UNVERIFIED, not PASS. Check Play Console again after upload and reconcile every affected active track before declaring a warning cleared.
+- Reuse the normal local/manual release workflow rather than triggering hosted Android builds on routine commits. Do not claim a build or upload happened unless observed.
+
 ## The Edit Lifecycle
 
 Every mutation happens inside an edit, and an edit is a transaction:
